@@ -1,0 +1,20 @@
+{
+ "org": "f887b7cc-6832-416c-8e7e-c730aec70a21",
+ "app": "6cb4d051-a33c-4bf9-b56f-5f47f0e85dc9",
+ "sections": {
+  "Contacts": "6aa8a3a93e5e4ad5b852a6d3"
+ },
+ "worksheets": {
+  "Contacts": "6aa8a3b34a22ad87b728c4fe"
+ },
+ "workflows": {
+  "Archive": "6aa8a565e589b8933dd4cc6d",
+  "Unarchive": "6aa8a567e589b8933dd4ccd7",
+  "Contacts: copy company details to its contact": "6aa8a7ff8475f61d4cc65bb9",
+  "Contacts: push company address and Tax ID to its contacts": "6aa8a8048475f61d4cc65ebe"
+ },
+ "buttons": {
+  "Archive": "6aa8a5654720c515252bda3d",
+  "Unarchive": "6aa8a5674a73a3142152ca18"
+ }
+}

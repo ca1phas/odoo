@@ -8,6 +8,8 @@ Everything here was derived from this checkout at `7bbce824` (branch `19.0`) and
 live Nocoly tenant, read-only, on 14 Sep 2026.
 
 ```
+worksheets/  one hand-off per worksheet: requirements, build, test list — start here
+build/       the scripts that build each worksheet with the hap CLI, and ids.json
 artifacts/   the three published plans, as standalone HTML
 plan/        phases.json — the same plan, machine-readable
 tools/       the checks worth re-running + a HAP v3 client
@@ -15,6 +17,24 @@ analysis/    the one-off scripts behind the figures in the pages
 data/        their output
 sources/     page sources the two ground-up pages are built from
 ```
+
+## Where the build stands
+
+Decided on 15 Sep 2026, and overriding the published plan where they differ:
+
+- **One master app, ERP Master**, holds every Odoo app. A client gets a copy with the unneeded menu groups
+  deleted — so there are no cross-app Relations to prove.
+- **Optional feature bundles are excluded for now.** Phase 1 is the seven core worksheets, built one at a
+  time: analyse the Odoo model → build it with the hap CLI → test it in the Nocoly UI against Odoo →
+  write the hand-off in `worksheets/` for a colleague to check.
+- **Menu groups follow Odoo's apps:** Contacts · Products · Invoicing for Phase 1.
+
+| # | Worksheet | State |
+|---|---|---|
+| 01 | Contacts | built · UI cross-check pending |
+| 02–07 | Units & Packagings · Products · Product Variants · Journals · Invoices · Invoice Lines | not started |
+
+Run the build scripts with the CLI's own interpreter: `~/.hap-venv/bin/python nocoly/build/contacts.py show`.
 
 ## Start here
 
