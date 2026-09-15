@@ -30,6 +30,18 @@ hap auth whoami
 5. **UI test** in the Nocoly UI against the test list, reading stored values back with the CLI.
 6. **Hand-off:** results into section 3, the review page into `artifacts/`, then commit and push to `19.0`.
 
+## Review pages
+
+Each worksheet's hand-off is also published as a page for the reviewer, kept in `artifacts/worksheet-NN-<name>.html`.
+
+- **Start from `artifacts/worksheet-02-units.html`** — it uses the shared stylesheet `artifacts/review.css` (the
+  Contacts page predates it and carries its styles inline). Keep its order: identity block and score chips, one
+  callout for what the reviewer must know or decide, then Requirements · Build · Tests and differences.
+- The page mirrors `worksheets/NN-name.md`; the markdown stays the source of truth. Edit both together.
+- Publish it as an artifact with the stylesheet alongside — `files: {"review.css": "nocoly/artifacts/review.css"}` —
+  and republish from the same file path to keep its URL.
+- Record the URL in the status table in `REVIEWING.md`, and commit the page with the results it shows.
+
 ## Conventions
 
 - **Aliases are Odoo field names** (`parent_id`, `relative_factor`); names and labels are Odoo's English labels.
