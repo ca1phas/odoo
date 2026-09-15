@@ -41,3 +41,15 @@ the owner's direction. Newest last.
 | 15 Sep 2026 | UN/ECE Code waits for e-invoicing; packaging Barcodes wait for Products | `unece_code` comes from `account_edi_ubl_cii`; barcodes live on products | planner |
 | 15 Sep 2026 | Absolute Quantity is kept correct down the whole reference chain, though hidden as in Odoo | Every later unit conversion uses it | planner |
 | 15 Sep 2026 | Seed Odoo's 30 standard units | Odoo ships them as data; Products needs them | planner |
+| 15 Sep 2026 | Add a **recursion check** (hidden Parent Path + "Recursion Detected." rule) and Odoo's "Reference unit of measure is missing." rule | A reference loop (km → m → km) would make HAP recompute Absolute Quantity endlessly; both mirror checks Odoo enforces (`_parent_store`, `_check_factor`) | implementation agent, accepted by planner |
+| 15 Sep 2026 | Sequence is a formula that follows Contains; lists sort by Sequence, then Unit Name | HAP rows cannot be dragged; Odoo sets Sequence once at creation and orders by `sequence, relative_uom_id, id` — close enough to review | implementation agent, accepted by planner |
+
+## Worksheet 03 · Products
+
+| Date | Decision | Why | By |
+|---|---|---|---|
+| 15 Sep 2026 | Products sits in menu group Products, **before** Units & Packagings | Odoo's catalogue order: products first, units under configuration | planner |
+| 15 Sep 2026 | **Scope is the `product` module's own fields** plus Sales Description; Sales, Invoicing, Project, Purchase and Inventory fields on products are appended when those apps or bundles land | The bridge-pack rule: an app appends its fields to Products, it does not arrive pre-built | planner |
+| 15 Sep 2026 | Product Type offers **Goods and Service**; Combo waits for the Product Combos bundle | A Combo product is meaningless without Combo Choices | planner |
+| 15 Sep 2026 | Views open on a **gallery**, then List and Archived; favourites first, then by name | Odoo's Products action opens in Kanban; its order is `is_favorite desc, name` | planner |
+| 15 Sep 2026 | Seed the 14 products; the monitor's, chair's and desk's variants wait for Product Variants (04) and its bundle | Without the Product Variants bundle each product has exactly one variant | planner |

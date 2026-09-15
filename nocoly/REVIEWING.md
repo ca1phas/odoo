@@ -42,8 +42,8 @@ record was seeded from the Odoo tenant.
 | # | Worksheet | Odoo model | State | Hand-off |
 |---|---|---|---|---|
 | 01 | Contacts | `res.partner` | Built, UI-tested 13/13 — display-name change in progress | [md](worksheets/01-contacts.md) · [page](https://claude.ai/artifact/JHfvYa7uKiucMfkPnyH2Xu) |
-| 02 | Units & Packagings | `uom.uom` | Being built | — |
-| 03 | Products | `product.template` | Next | — |
+| 02 | Units & Packagings | `uom.uom` | Built and seeded (30 units) — UI test in progress | [md](worksheets/02-units-and-packagings.md) |
+| 03 | Products | `product.template` | Being built | — |
 | 04 | Product Variants | `product.product` | Not started | — |
 | 05 | Journals | `account.journal` | Not started | — |
 | 06 | Invoices | `account.move` | Not started | — |

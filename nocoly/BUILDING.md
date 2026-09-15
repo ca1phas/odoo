@@ -48,11 +48,27 @@ hap auth whoami
 ### Worksheets and fields
 
 - `hap app create --sections` also creates an empty, unnamed section ("Unnamed Group").
+- `hap worksheet create` builds the icon URL on a Mingdao host; on Nocoly pass
+  `--icon-url https://www.nocoly.com/file/mdpub/customIcon/<icon>.svg`.
 - A new two-way Relation's reverse control comes back at row 9999, width 0, with no alias. Place it in a second save.
+  A **single Relation to its own worksheet always comes back two-way**, with a reverse control named "Child".
+- `worksheet add-fields` keeps a control's client-side 32-hex id, and a formula or text combination added that way
+  computes nothing until an `update-fields` save re-mints the id. Inside one `update-fields` save, references to
+  not-yet-minted ids (formula expressions, a lookup's source) are rewritten to the minted ids.
 - `hap worksheet update-fields` replaces the whole control set. Use it only on a worksheet with no records, or send
   back the full list you just read; add fields to a live worksheet with `add-fields`.
 - The Phone control validates numbers (libphonenumber): an unallocated number such as 03-1234 5678, or a placeholder
   like "NA", is refused.
+
+### Formulas and lookups
+
+- **Functions need a `c` prefix** in the stored expression — `cMIN`, `cINT`, `cROUNDUP`, `cABS`. Written as `MIN(…)`
+  the formula saves and computes empty. Plain arithmetic needs no prefix; a number formula has no IF.
+- A text combination can use the record id, `$rowid$`.
+- Stored lookups chain: saving a record updates the lookups pointing at it and the formulas built on them, level
+  after level — so a self-referencing chain (Absolute Quantity down a unit chain) works without workflows.
+- But the recompute HAP runs **after a formula or lookup definition changes** treats each record on its own and can
+  leave rows stale. Re-saving a record's unchanged relation brings its lookups up to date (`units.py refresh`).
 
 ### Views
 
@@ -67,7 +83,10 @@ hap auth whoami
 
 - Rule item types: 1 show · 2 hide · 4 read-only · 5 required · 6 error message · 7 whole record read-only.
   Filter operators: 2 equals · 6 not equals · 7 empty · 8 not empty.
-- A validation rule with `--check-type 1` is enforced on API writes too.
+- A validation rule with `--check-type 1` is enforced on API writes too — but the server checks it **only when one
+  of its condition fields is in the write**. A rule that tests only a lookup or formula never fires on the API; add
+  the field being edited as a condition. A refused write returns `resultCode 32` naming `<ruleId>:<rowid>`.
+- A rule condition can compare with the record id (`dynamicSource: [{cid: "rowid"}]`).
 - The CLI cannot delete a rule. Disable it (`save-rule --rule-id … --disabled`) and delete it in the UI: worksheet
   ⋯ › Set Worksheet › Business Rules › hover the rule › trash icon.
 
@@ -78,6 +97,7 @@ hap auth whoami
 - A button that runs a workflow gets a hidden workflow; while it has no steps, its trigger's `nextId` is `99`.
   Deleting the button deletes that workflow too.
 - A button's condition greys it out when unmet; it does not hide it.
+- `hap workflow trigger <processId> -s <rowid>` runs a button's workflow on one record — a CLI check of a button.
 
 ### Workflows
 
@@ -98,6 +118,7 @@ hap auth whoami
 ### Records
 
 - `hap worksheet record delete` needs the rowId UUID; given `_id` it reports success and deletes nothing.
+- `hap worksheet record list` returns hidden fields as empty strings; `record get` returns their values.
 - Value formats differ by field type and a wrong one is accepted silently — see `hap guide record` before writing.
 
 ### In the UI
