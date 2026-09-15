@@ -6,14 +6,14 @@
 | Worksheet | Journals |
 | Odoo model | `account.journal` |
 | Phase | 1 — core worksheet 5 of 7 |
-| Status | **CLI-built and HAP UI-validated — live Odoo source login pending** |
+| Status | **CLI-built; HAP UI and live Odoo source validated** |
 | Owner | **Teh Li Wei** (reviewing colleague) |
-| Reference | User-approved `account.journal` core plan; live `casimir.odoo.com` source and HAP form validation are pending |
+| Reference | [Live **ohyes.odoo.com** `account.journal` UI extract](../reference/odoo-19.4/account.journal.md), inspected read-only on 15 September 2026 |
 
 This document is the Journals handoff and current build record for the ERP Master app. The approved core slice
 was built through hap-cli on 15 September 2026. After the user manually completed Nocoly's Tencent CAPTCHA, the
-HAP field editor, list, Archived view and unsaved New form were validated. The live Odoo tenant comparison still
-requires a manual `casimir.odoo.com` login.
+HAP field editor, list, Archived view and unsaved New form were validated. The owner then provided the authenticated
+`ohyes.odoo.com` tenant; its Journals list and form were inspected read-only and used as the UI source of truth.
 
 ## 1 · Scope and ownership
 
@@ -63,7 +63,7 @@ the final build must follow what the user can actually see in that tenant.
 | 4 | Active | `active` | Checkbox | — | checked | Technical/archive state; hidden from the normal form |
 | 5 | Sequence | `sequence` | Number | — | 10 | Technical ordering field; hidden from the normal form |
 | 6 | Communication Type | `invoice_reference_type` | Single Select | — | `Based on Invoice` | `Based on Customer`, `Based on Invoice` |
-| 7 | Communication Standard | `invoice_reference_model` | Single Select | — | `Full Reference` | `Full Reference`, `European`, `Numbers only` |
+| 7 | Communication Standard | `invoice_reference_model` | Single Select | — | `Full Reference (INV/2024/00001)` | `Full Reference (INV/2024/00001)`, `European (RF83INV202400001)`, `Numbers only (202400001)` |
 
 Before build, confirm the exact Odoo labels and option wording in the live tenant. The communication fields may
 need the tenant's displayed labels even when the underlying 19.0 source names differ.
@@ -108,8 +108,8 @@ The build was executed after the Products handoff and correct Nocoly profile bec
 2. [x] The correct Nocoly CLI profile, Organization and ERP Master app are confirmed.
 3. [x] A CLI preflight confirmed that Journals did not already exist and reported worksheet/field/view/rule/workflow
    counts and record counts.
-4. [ ] The live Odoo Journals form, list, search and actions still require browser validation; the browser-control
-   approval service was unavailable during the source check.
+4. [x] The live `ohyes.odoo.com` Journals list and Sales/New forms were inspected read-only. The list has Journal
+   Name, Type, Sequence Prefix and Default Account; the core option wording and defaults were captured from the form.
 5. [x] Only the new Journals worksheet and its Invoicing menu placement were created through CLI; Web was not
    used to save HAP changes.
 6. [x] CLI post-check confirmed field types, defaults, required/hidden settings, view columns and
@@ -135,14 +135,27 @@ is therefore resolved as a wrong-profile/authentication-context issue, not an op
 - Views: `Journals` (`6aa8f5191204328eb1af162e`) and `Archived` (`6aa8f7074720c515252bf2c8`).
 - List columns: Journal Name, Type, Sequence Prefix; sort: Sequence then Journal Name, ascending.
 - Deferred relation-dependent fields were not created and there are no Phase 1 Relation controls.
+- `Communication Standard` was corrected through the checked-in edit-spec after the live Odoo read: the three
+  option IDs and default binding were preserved while the visible labels gained Odoo's example references.
 - `Sequence Prefix` carries the English hint `Enter up to 5 characters`, but the installed CLI schema exposes no
-  confirmed text maximum-length parameter. The HAP UI accepted `ABCDEF`, so hard enforcement is a confirmed gap.
-- HAP Web validation: passed for the built scope. Live Odoo source validation remains pending manual login.
+  confirmed text maximum-length parameter. Both HAP and the unsaved Odoo New form accepted `ABCDEF`; Odoo's
+  server-side save validation was not tested because the source tenant is read-only.
+- HAP Web validation and live `ohyes.odoo.com` source comparison: passed for the approved core scope.
+
+### Live Odoo differences retained by scope
+
+- Odoo's list includes `Default Account`; it remains deferred until the Chart of Accounts worksheet exists and is
+  not replaced with Text.
+- Odoo's Sales journal form also exposes Journal Items, Journal Entries/Advanced Settings tabs, Dedicated Credit
+  Note Sequence, Self Billing, Email Alias and Send Copy To. These type-specific or dependent features remain
+  deferred rather than being represented by inaccurate placeholder controls.
+- HAP currently renders the two communication fields in the main form instead of Odoo's Advanced Settings tab.
+  This is an accepted Phase 1 layout difference until the deferred settings make an Odoo-style tab useful.
 
 ### Evidence to retain after the build
 
 - CLI preflight and post-check output, including the final record count.
-- The live Odoo 19.4 reference for `account.journal` and the UI test notes.
+- The live `ohyes.odoo.com` reference for `account.journal` and the UI test notes.
 - Any field, option, relation or view that CLI/MCP exposes but the UI does not show, and any UI option that the
   tools cannot create or read.
 - The final HAP IDs only after an actual build; this planning commit must not modify `nocoly/build/ids.json`.

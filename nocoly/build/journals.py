@@ -62,9 +62,25 @@ COMMUNICATION_TYPE_OPTIONS = [
     option("3758ebd7-5b28-41ec-964d-9a3747316617", "Based on Invoice", 2, "#C3F2F2", True),
 ]
 COMMUNICATION_STANDARD_OPTIONS = [
-    option("09f530e3-f017-46fe-8a4f-2ba6fb5e6cb8", "Full Reference", 1, "#C9E6FC", True),
-    option("b7cc8520-1f95-455b-a0b7-1be84a127c27", "European", 2, "#C3F2F2"),
-    option("8ca4b321-5330-4f8f-be61-a4012450214b", "Numbers only", 3, "#C2F1D2"),
+    option(
+        "09f530e3-f017-46fe-8a4f-2ba6fb5e6cb8",
+        "Full Reference (INV/2024/00001)",
+        1,
+        "#C9E6FC",
+        True,
+    ),
+    option(
+        "b7cc8520-1f95-455b-a0b7-1be84a127c27",
+        "European (RF83INV202400001)",
+        2,
+        "#C3F2F2",
+    ),
+    option(
+        "8ca4b321-5330-4f8f-be61-a4012450214b",
+        "Numbers only (202400001)",
+        3,
+        "#C2F1D2",
+    ),
 ]
 
 

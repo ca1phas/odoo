@@ -7,8 +7,8 @@ everything a reviewer needs.
 ## What you need
 
 - **Access to ERP Master** in the Nocoly organisation — https://www.nocoly.com/app/6cb4d051-a33c-4bf9-b56f-5f47f0e85dc9
-- **Access to the reference Odoo**, casimir.odoo.com (Odoo saas~19.4). Treat it as read-only: don't create or change
-  records there while reviewing.
+- **Access to the reference Odoo** named by the worksheet hand-off. Most existing extracts use casimir.odoo.com;
+  Journals uses the owner's authenticated **ohyes.odoo.com** tenant. Treat every reference tenant as read-only.
 - **This folder** of the repository (`nocoly/`, branch `19.0`). Ask Casimir for either account.
 
 ## Where things are
@@ -45,7 +45,7 @@ record was seeded from the Odoo tenant.
 | 02 | Units & Packagings | `uom.uom` | Built, seeded (30 units), UI-tested 18/19 + 1 partly — ready for review | [md](worksheets/02-units-and-packagings.md) · [page](https://claude.ai/artifact/LDoy447FXWYd5gkdDUNDJo) |
 | 03 | Products | `product.template` | Built and seeded (14 products) — UI test next | [md](worksheets/03-products.md) |
 | 04 | Product Variants | `product.product` | Not started | — |
-| 05 | Journals | `account.journal` | CLI-built + HAP UI-validated — Teh Li Wei; live Odoo source login pending; implementation agents skip this worksheet | [md](worksheets/05-journals.md) · `build/journals.py` |
+| 05 | Journals | `account.journal` | CLI-built + HAP UI/live ohyes Odoo validated — Teh Li Wei; implementation agents skip this worksheet | [md](worksheets/05-journals.md) · `build/journals.py` |
 | 06 | Invoices | `account.move` | Not started | — |
 | 07 | Invoice Lines | `account.move.line` | Not started | — |
 
