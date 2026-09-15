@@ -111,7 +111,7 @@ to re-run; every id is in `nocoly/build/ids.json`.
 | Menu group | Contacts | `6aa8a3a93e5e4ad5b852a6d3` |
 | Worksheet | Contacts, alias `res_partner` | `6aa8a3b34a22ad87b728c4fe` |
 | Controls | 28: the 22 fields above (aliases are Odoo field names), 3 tabs, 3 dividers | — |
-| Rules | the 3 above, enabled; 3 more disabled — see below | — |
+| Rules | the 3 above | — |
 | Views | Contacts · Kanban · Archived | `6aa8a3b34a22ad87b728c502` · `6aa8a4d11204328eb1af06f9` · `6aa8a4d14a73a3142152ca08` |
 | Buttons | Archive · Unarchive, each running a one-step workflow that sets Active | `6aa8a5654720c515252bda3d` · `6aa8a5674a73a3142152ca18` |
 | Automation | Contacts: copy company details to its contact | `6aa8a7ff8475f61d4cc65bb9` |
@@ -123,13 +123,13 @@ Company Type retired, Company shown on every contact. A last pass copied Company
 archived companies out of the Company picker, and stopped the push automation running for contacts that have
 nobody under them.
 
-### For whoever deletes things in the UI
+### Cleanup, 15 Sep 2026
 
-- **3 disabled rules** left from the 19.0 build — *Company is hidden on companies*, *Job Position only for
-  persons*, *Company ID only on stand-alone companies*. The CLI cannot delete a rule; delete them in the form
-  designer.
-- **2 disabled workflows**, `6aa8a542d91d10186df35aa2` and `6aa8a543e589b8933dd4c83d`, left by a duplicate
-  Archive / Unarchive pair (the extra buttons were deleted with the owner's approval).
+- The 3 rules the 19.0 build left disabled — *Company is hidden on companies*, *Job Position only for persons*,
+  *Company ID only on stand-alone companies* — were deleted in the form designer with the owner's approval (the CLI
+  cannot delete a rule).
+- The workflows of the duplicate Archive / Unarchive pair, `6aa8a542d91d10186df35aa2` and
+  `6aa8a543e589b8933dd4c83d`, were already gone: HAP deletes a button's workflow with the button.
 
 ### Found while building — applies to every worksheet
 
@@ -166,8 +166,8 @@ Test records are named `TEST …`.
 
 1. **Display name.** Odoo names a company's contact "Company, Person" and a nameless address "Company, Delivery" —
    in lists, cards and every partner picker. Nocoly shows the Name alone, so a nameless address is blank in the list
-   and "Unnamed" on its card. This will matter when Invoices picks a customer; a *Display Name* formula as the
-   title field would fix it. **Decision for the owner.**
+   and "Unnamed" on its card. This will matter when Invoices picks a customer. **Owner's decision, 15 Sep: match
+   Odoo now** — a *Display Name* formula becomes the title field; the affected tests are rerun afterwards.
 2. **Archive / Unarchive.** The button that does not apply is greyed out rather than hidden.
 3. **"Modifying form data" bar.** After adding a contact from the Contacts tab, or picking a Salesperson, an open
    record keeps a *Modifying form data — Cancel / Save* bar although the change is already stored. Clicking Save

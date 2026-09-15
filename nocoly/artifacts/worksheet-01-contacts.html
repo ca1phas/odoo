@@ -232,14 +232,14 @@
     <div class="scoreline">
       <span class="chip pass">13 of 13 tests pass</span>
       <span class="chip note">4 differences from Odoo</span>
-      <span class="chip decide">1 decision needed</span>
+      <span class="chip decide">1 change in progress</span>
     </div>
   </header>
 
   <aside class="decision" aria-labelledby="decision-title">
-    <span class="chip decide small" style="justify-self:start">Decision for the owner</span>
-    <h2 id="decision-title">Should contacts show “Company, Person” like Odoo?</h2>
-    <p>Odoo names a company’s contact “Company, Person” and a nameless address “Company, Delivery” — in lists, cards and every partner picker. Nocoly shows the Name alone, so a nameless address is blank in the list and “Unnamed” on its card. It will matter when Invoices picks a customer. A <em>Display Name</em> formula as the title field would match Odoo.</p>
+    <span class="chip decide small" style="justify-self:start">Decided 15 Sep · being built</span>
+    <h2 id="decision-title">Contacts will show “Company, Person” like Odoo</h2>
+    <p>Odoo names a company’s contact “Company, Person” and a nameless address “Company, Delivery” — in lists, cards and every partner picker. Nocoly currently shows the Name alone, so a nameless address is blank in the list and “Unnamed” on its card. The owner chose to match Odoo now: a <em>Display Name</em> formula becomes the title field, then the affected tests are rerun and this page is updated.</p>
   </aside>
 
   <nav class="toc" aria-label="Sections">
@@ -390,7 +390,7 @@
           <tr><td class="label">Menu group</td><td>Contacts</td><td class="id">6aa8a3a93e5e4ad5b852a6d3</td></tr>
           <tr><td class="label">Worksheet</td><td>Contacts, alias <code>res_partner</code></td><td class="id">6aa8a3b34a22ad87b728c4fe</td></tr>
           <tr><td class="label">Controls</td><td>28 — the 22 fields, 3 tabs, 3 dividers; aliases are Odoo field names</td><td class="muted">—</td></tr>
-          <tr><td class="label">Rules</td><td>The 3 above, enabled; 3 more disabled, listed below</td><td class="muted">—</td></tr>
+          <tr><td class="label">Rules</td><td>The 3 above</td><td class="muted">—</td></tr>
           <tr><td class="label">Views</td><td>Contacts · Kanban · Archived</td><td class="id">6aa8a3b34a22ad87b728c502 · 6aa8a4d11204328eb1af06f9 · 6aa8a4d14a73a3142152ca08</td></tr>
           <tr><td class="label">Buttons</td><td>Archive · Unarchive, each running a one-step workflow that sets Active</td><td class="id">6aa8a5654720c515252bda3d · 6aa8a5674a73a3142152ca18</td></tr>
           <tr><td class="label">Automation</td><td>Copy company details to its contact</td><td class="id">6aa8a7ff8475f61d4cc65bb9</td></tr>
@@ -405,10 +405,10 @@
     </div>
 
     <div class="block">
-      <h3>Left for whoever deletes things in the UI</h3>
+      <h3>Cleanup</h3>
       <ul class="plain">
-        <li><strong>3 disabled rules</strong> from the 19.0 build — Company is hidden on companies, Job Position only for persons, Company ID only on stand-alone companies. The CLI cannot delete a rule; delete them in the form designer.</li>
-        <li><strong>2 disabled workflows</strong>, <code>6aa8a542d91d10186df35aa2</code> and <code>6aa8a543e589b8933dd4c83d</code>, left by a duplicate Archive / Unarchive pair whose buttons were deleted with the owner’s approval.</li>
+        <li>The 3 rules the 19.0 build left disabled — Company is hidden on companies, Job Position only for persons, Company ID only on stand-alone companies — were deleted in the form designer with the owner’s approval.</li>
+        <li>The workflows of a duplicate Archive / Unarchive pair were already gone: HAP deletes a button’s workflow with the button.</li>
       </ul>
     </div>
   </section>
@@ -441,7 +441,7 @@
     <div class="block">
       <h3>Differences from Odoo seen in testing</h3>
       <ol class="differences">
-        <li><span class="n">1</span><div class="head"><strong>Display name</strong><span class="chip decide small">Decision</span></div><p>Odoo shows “Company, Person” and “Company, Delivery”; Nocoly shows the Name alone. See the decision at the top.</p></li>
+        <li><span class="n">1</span><div class="head"><strong>Display name</strong><span class="chip decide small">Being fixed</span></div><p>Odoo shows “Company, Person” and “Company, Delivery”; Nocoly shows the Name alone. The owner chose to match Odoo — see the top of the page.</p></li>
         <li><span class="n">2</span><div class="head"><strong>Archive and Unarchive</strong><span class="chip note small">Note</span></div><p>The button that does not apply is greyed out rather than hidden.</p></li>
         <li><span class="n">3</span><div class="head"><strong>“Modifying form data” bar</strong><span class="chip note small">HAP behaviour</span></div><p>After adding a contact from the Contacts tab, or picking a Salesperson, an open record keeps a Modifying form data — Cancel / Save bar although the change is already stored. Clicking Save clears it.</p></li>
         <li><span class="n">4</span><div class="head"><strong>Kanban card</strong><span class="chip note small">Note</span></div><p>The image sits on top of the card; Odoo puts the avatar on the left.</p></li>
