@@ -7,7 +7,7 @@ set -euo pipefail
 
 python3 -m venv ~/.hap-venv
 ~/.hap-venv/bin/pip install --quiet --upgrade pip
-~/.hap-venv/bin/pip install --quiet "hap-cli==0.8.29"
+~/.hap-venv/bin/pip install --quiet "hap-cli==0.8.31"   # the version the build scripts were verified on
 mkdir -p ~/.local/bin && ln -sf ~/.hap-venv/bin/hap ~/.local/bin/hap
 export PATH="$HOME/.local/bin:$PATH"
 

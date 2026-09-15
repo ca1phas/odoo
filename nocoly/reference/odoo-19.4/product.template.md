@@ -209,9 +209,17 @@ Card: image, name, favorite star, variant count, Sales Price, Cost, Internal Ref
 - Filters: Goods · Services · Combo | Favorites | Sales · Purchase | Warnings | Archived.
 - Group by: Product Type · Product Category · Product Properties.
 
+## Defaults and order
+
+- `default_get`: Product Type **Goods** (`consu`), Sales ✓, Purchase ✓, Sales Price **1.0**, Unit **Units** (uom.uom id 1),
+  Create on Order Nothing, Active ✓, Reference Unit 0.
+- Model order (`_order`): `is_favorite desc, name`.
+
 ## Records (14)
 
-All active; none favourite; no barcodes; weight, volume and delivery time 0; every product has 1 sales tax.
+All active; none favourite; no barcodes, tags or packagings; weight, volume and delivery time 0; every product has 1
+sales tax; purchase descriptions empty. Only the Ergonomic Office Chair has an internal note, and it holds a stray
+pasted code snippet — do not seed it.
 
 | Name | Internal Ref | Type | Sales | Purchase | Sales Price | Cost | Unit | Invoicing Policy | Service Invoicing | Variants | Category |
 |---|---|---|---|---|---|---|---|---|---|---|---|
@@ -232,3 +240,22 @@ All active; none favourite; no barcodes; weight, volume and delivery time 0; eve
 
 "Create on Order" is Nothing on every product. The three products with no Internal Reference and a Cost of 0 are the
 ones with variants (monitor, chair, desk): Odoo hides both fields on the template once it has more than one variant.
+
+### Sales descriptions
+
+| Name | Sales Description |
+|---|---|
+| 27" 4K Monitor | 27-inch 4K IPS display, USB-C 90W power delivery. |
+| A4 Copy Paper (Box of 5 reams) | 80gsm A4 paper, 5 x 500 sheets per box. |
+| Annual Support Retainer | Priority support, 4-hour response SLA, 12 months. |
+| Business Laptop 14" i7 | 14-inch business laptop, 32GB RAM, 1TB NVMe, 3-year warranty. |
+| Docking Station USB-C | 11-in-1 dock, dual 4K output, gigabit ethernet. |
+| Ergonomic Office Chair | Mesh-back task chair with lumbar support and 4D armrests. |
+| Height-Adjustable Desk 140cm | Electric sit-stand desk, dual motor, memory presets. |
+| Implementation Consulting | Senior consultant day rate for implementation and configuration. |
+| Nocoly HAP Licence — Pro | Annual per-user licence, pro edition, unlimited records. |
+| Nocoly HAP Licence — Standard | Annual per-user licence, standard edition. 20-user minimum. |
+| Onsite Training (per day) | Full-day onsite training, up to 12 participants. |
+| Steel Filing Cabinet 4-Drawer | Lockable four-drawer cabinet, powder-coated steel. |
+| Whiteboard Marker Set | Assorted colours, chisel tip, pack of 8. |
+| Wireless Keyboard & Mouse Set | Low-profile wireless combo, multi-device pairing. |
