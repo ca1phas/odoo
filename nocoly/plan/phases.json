@@ -1,0 +1,1082 @@
+{
+ "generatedFrom": "ca1phas/odoo 7bbce824 (19.0 Community)",
+ "hoursModel": {
+  "core": 47.9,
+  "bundles": {
+   "btax": 3,
+   "bcoa": 4.2,
+   "bcat": 1.1,
+   "bterm": 4.9,
+   "bpay": 15.4,
+   "bvar": 12,
+   "bpl": 9.8,
+   "butm": 3.4,
+   "bteam": 3,
+   "bana": 6,
+   "bplan": 3.4,
+   "bgeo": 3.5,
+   "bfp": 6.8,
+   "binc": 1.1,
+   "bcur": 1.1,
+   "bcombo": 4.1,
+   "btag": 1.1
+  },
+  "bundleApp": 16.2,
+  "phases": {
+   "2": 35.8,
+   "3": 73.1,
+   "4": 76.6,
+   "5": 287.5,
+   "6": 96.6,
+   "7": 184.4,
+   "8": 48.9,
+   "9": 164.6,
+   "10": 367,
+   "11": 19.6
+  },
+  "week": 40
+ },
+ "core": [
+  {
+   "id": "contacts",
+   "name": "Contacts",
+   "model": "res.partner",
+   "deps": [],
+   "hardDeps": [],
+   "count": 1
+  },
+  {
+   "id": "units",
+   "name": "Units & Packagings",
+   "model": "uom.uom",
+   "deps": [],
+   "hardDeps": [],
+   "count": 1
+  },
+  {
+   "id": "products",
+   "name": "Products",
+   "model": "product.template",
+   "deps": [
+    "categories",
+    "units"
+   ],
+   "hardDeps": [],
+   "count": 1
+  },
+  {
+   "id": "variants",
+   "name": "Product Variants",
+   "model": "product.product",
+   "deps": [
+    "products"
+   ],
+   "hardDeps": [],
+   "count": 1
+  },
+  {
+   "id": "journals",
+   "name": "Journals",
+   "model": "account.journal",
+   "deps": [
+    "accounts"
+   ],
+   "hardDeps": [],
+   "count": 1
+  },
+  {
+   "id": "invoices",
+   "name": "Invoices",
+   "model": "account.move",
+   "deps": [
+    "contacts",
+    "journals",
+    "terms"
+   ],
+   "hardDeps": [],
+   "count": 1
+  },
+  {
+   "id": "invlines",
+   "name": "Invoice Lines",
+   "model": "account.move.line",
+   "deps": [
+    "invoices",
+    "variants",
+    "units",
+    "taxes",
+    "accounts"
+   ],
+   "hardDeps": [],
+   "count": 1
+  }
+ ],
+ "bundles": [
+  {
+   "id": "btax",
+   "name": "Taxes",
+   "odooToggle": null,
+   "neededBy": "the first invoice that carries tax — in practice, day one",
+   "worksheets": [
+    {
+     "id": "taxes",
+     "name": "Taxes",
+     "model": "account.tax",
+     "deps": [
+      "countries",
+      "accounts"
+     ],
+     "hardDeps": [
+      "countries"
+     ],
+     "count": 1
+    }
+   ]
+  },
+  {
+   "id": "bcoa",
+   "name": "Chart of Accounts",
+   "odooToggle": null,
+   "neededBy": "real double-entry — Phase 8 Finance",
+   "worksheets": [
+    {
+     "id": "accounts",
+     "name": "Chart of Accounts",
+     "model": "account.account",
+     "deps": [],
+     "hardDeps": [],
+     "count": 1
+    }
+   ]
+  },
+  {
+   "id": "bcat",
+   "name": "Product Categories",
+   "odooToggle": null,
+   "neededBy": "product reporting and stock valuation",
+   "worksheets": [
+    {
+     "id": "categories",
+     "name": "Product Categories",
+     "model": "product.category",
+     "deps": [],
+     "hardDeps": [],
+     "count": 1
+    }
+   ]
+  },
+  {
+   "id": "bterm",
+   "name": "Payment Terms",
+   "odooToggle": null,
+   "neededBy": "any due date beyond immediate payment",
+   "worksheets": [
+    {
+     "id": "terms",
+     "name": "Payment Terms",
+     "model": "account.payment.term",
+     "deps": [],
+     "hardDeps": [],
+     "count": 1
+    }
+   ]
+  },
+  {
+   "id": "bpay",
+   "name": "Payments",
+   "odooToggle": null,
+   "neededBy": "receipts as records rather than a paid-amount field",
+   "worksheets": [
+    {
+     "id": "paymeth",
+     "name": "Payment Methods",
+     "model": "account.payment.method",
+     "deps": [],
+     "hardDeps": [],
+     "count": 1
+    },
+    {
+     "id": "payments",
+     "name": "Payments",
+     "model": "account.payment",
+     "deps": [
+      "invoices",
+      "contacts",
+      "journals",
+      "paymeth"
+     ],
+     "hardDeps": [],
+     "count": 1
+    }
+   ]
+  },
+  {
+   "id": "bvar",
+   "name": "Product Variants",
+   "odooToggle": "product.group_product_variant",
+   "neededBy": "first product with options",
+   "worksheets": [
+    {
+     "id": "attrs",
+     "name": "Attributes",
+     "model": "product.attribute",
+     "deps": [],
+     "hardDeps": [],
+     "count": 1
+    },
+    {
+     "id": "attrvals",
+     "name": "Attribute Values",
+     "model": "product.attribute.value",
+     "deps": [
+      "attrs"
+     ],
+     "hardDeps": [],
+     "count": 1
+    },
+    {
+     "id": "attrlines",
+     "name": "Product Attribute Lines",
+     "model": "product.template.attribute.line",
+     "deps": [
+      "products",
+      "attrs",
+      "attrvals"
+     ],
+     "hardDeps": [],
+     "count": 1
+    },
+    {
+     "id": "tav",
+     "name": "Template Attribute Values",
+     "model": "product.template.attribute.value",
+     "deps": [
+      "attrlines",
+      "attrvals",
+      "variants"
+     ],
+     "hardDeps": [],
+     "count": 1
+    }
+   ]
+  },
+  {
+   "id": "bpl",
+   "name": "Pricelists",
+   "odooToggle": "product.group_product_pricelist",
+   "neededBy": "Phase 3 · Sales",
+   "worksheets": [
+    {
+     "id": "pricelists",
+     "name": "Pricelists",
+     "model": "product.pricelist",
+     "deps": [],
+     "hardDeps": [],
+     "count": 1
+    },
+    {
+     "id": "pricerules",
+     "name": "Price Rules",
+     "model": "product.pricelist.item",
+     "deps": [
+      "pricelists",
+      "products",
+      "variants",
+      "categories"
+     ],
+     "hardDeps": [],
+     "count": 1
+    }
+   ]
+  },
+  {
+   "id": "butm",
+   "name": "Marketing attribution",
+   "odooToggle": null,
+   "neededBy": "Phase 2 · CRM",
+   "worksheets": [
+    {
+     "id": "campaigns",
+     "name": "Campaigns",
+     "model": "utm.campaign",
+     "deps": [],
+     "hardDeps": [],
+     "count": 1
+    },
+    {
+     "id": "sources",
+     "name": "Sources",
+     "model": "utm.source",
+     "deps": [],
+     "hardDeps": [],
+     "count": 1
+    },
+    {
+     "id": "mediums",
+     "name": "Mediums",
+     "model": "utm.medium",
+     "deps": [],
+     "hardDeps": [],
+     "count": 1
+    }
+   ]
+  },
+  {
+   "id": "bteam",
+   "name": "Sales Teams",
+   "odooToggle": null,
+   "neededBy": "Phase 2 · CRM",
+   "worksheets": [
+    {
+     "id": "teams",
+     "name": "Sales Teams",
+     "model": "crm.team",
+     "deps": [],
+     "hardDeps": [],
+     "count": 1
+    }
+   ]
+  },
+  {
+   "id": "bana",
+   "name": "Analytic Accounting",
+   "odooToggle": "analytic.group_analytic_accounting",
+   "neededBy": "Phase 6 · Services",
+   "worksheets": [
+    {
+     "id": "anaacc",
+     "name": "Analytic Accounts",
+     "model": "account.analytic.account",
+     "deps": [
+      "contacts"
+     ],
+     "hardDeps": [],
+     "count": 1
+    },
+    {
+     "id": "analine",
+     "name": "Analytic Lines",
+     "model": "account.analytic.line",
+     "deps": [
+      "anaacc",
+      "variants",
+      "units"
+     ],
+     "hardDeps": [],
+     "count": 1
+    }
+   ]
+  },
+  {
+   "id": "bgeo",
+   "name": "Geography",
+   "odooToggle": null,
+   "neededBy": "before Fiscal Positions",
+   "worksheets": [
+    {
+     "id": "countries",
+     "name": "Countries",
+     "model": "res.country",
+     "deps": [],
+     "hardDeps": [],
+     "count": 1
+    },
+    {
+     "id": "states",
+     "name": "States",
+     "model": "res.country.state",
+     "deps": [
+      "countries"
+     ],
+     "hardDeps": [],
+     "count": 1
+    }
+   ]
+  },
+  {
+   "id": "bfp",
+   "name": "Fiscal Positions",
+   "odooToggle": null,
+   "neededBy": "first exempt customer",
+   "worksheets": [
+    {
+     "id": "fiscal",
+     "name": "Fiscal Positions",
+     "model": "account.fiscal.position",
+     "deps": [
+      "countries",
+      "taxes",
+      "accounts"
+     ],
+     "hardDeps": [
+      "countries",
+      "taxes"
+     ],
+     "count": 1
+    }
+   ]
+  },
+  {
+   "id": "binc",
+   "name": "Incoterms",
+   "odooToggle": null,
+   "neededBy": "first international shipment",
+   "worksheets": [
+    {
+     "id": "incoterms",
+     "name": "Incoterms",
+     "model": "account.incoterms",
+     "deps": [],
+     "hardDeps": [],
+     "count": 1
+    }
+   ]
+  },
+  {
+   "id": "bcur",
+   "name": "Multi-currency",
+   "odooToggle": "base.group_multi_currency",
+   "neededBy": "second currency",
+   "worksheets": [
+    {
+     "id": "currencies",
+     "name": "Currencies",
+     "model": "res.currency",
+     "deps": [],
+     "hardDeps": [],
+     "count": 1
+    }
+   ]
+  },
+  {
+   "id": "bcombo",
+   "name": "Product Combos",
+   "odooToggle": null,
+   "neededBy": "Phase 4 · Point of Sale",
+   "worksheets": [
+    {
+     "id": "combos",
+     "name": "Combo Choices",
+     "model": "product.combo",
+     "deps": [],
+     "hardDeps": [],
+     "count": 1
+    },
+    {
+     "id": "comboitems",
+     "name": "Combo Items",
+     "model": "product.combo.item",
+     "deps": [
+      "combos",
+      "variants"
+     ],
+     "hardDeps": [],
+     "count": 1
+    }
+   ]
+  },
+  {
+   "id": "bplan",
+   "name": "Activities",
+   "odooToggle": null,
+   "neededBy": "first scheduled follow-up",
+   "worksheets": [
+    {
+     "id": "acttypes",
+     "name": "Activity Types",
+     "model": "mail.activity.type",
+     "deps": [],
+     "hardDeps": [],
+     "count": 1
+    },
+    {
+     "id": "actplans",
+     "name": "Activity Plans",
+     "model": "mail.activity.plan",
+     "deps": [],
+     "hardDeps": [],
+     "count": 1
+    },
+    {
+     "id": "actsteps",
+     "name": "Plan Steps",
+     "model": "mail.activity.plan.template",
+     "deps": [
+      "actplans",
+      "acttypes"
+     ],
+     "hardDeps": [],
+     "count": 1
+    }
+   ]
+  },
+  {
+   "id": "btag",
+   "name": "Contact Tags",
+   "odooToggle": null,
+   "neededBy": "first segmented mailing",
+   "worksheets": [
+    {
+     "id": "tags",
+     "name": "Contact Tags",
+     "model": "res.partner.category",
+     "deps": [],
+     "hardDeps": [],
+     "count": 1
+    }
+   ]
+  }
+ ],
+ "phases": [
+  {
+   "phase": 2,
+   "name": "CRM",
+   "worksheets": [
+    {
+     "id": "stages",
+     "name": "Stages",
+     "model": "crm.stage",
+     "deps": [
+      "teams"
+     ],
+     "hardDeps": [],
+     "count": 1
+    },
+    {
+     "id": "lost",
+     "name": "Lost Reasons",
+     "model": "crm.lost.reason",
+     "deps": [],
+     "hardDeps": [],
+     "count": 1
+    },
+    {
+     "id": "recur",
+     "name": "Recurring Plans",
+     "model": "crm.recurring.plan",
+     "deps": [],
+     "hardDeps": [],
+     "count": 1
+    },
+    {
+     "id": "leads",
+     "name": "Leads",
+     "model": "crm.lead",
+     "deps": [
+      "contacts",
+      "stages",
+      "teams",
+      "lost",
+      "recur",
+      "campaigns",
+      "sources",
+      "mediums",
+      "tags"
+     ],
+     "hardDeps": [],
+     "count": 1
+    }
+   ]
+  },
+  {
+   "phase": 3,
+   "name": "Sales",
+   "worksheets": [
+    {
+     "id": "qtpl",
+     "name": "Quotation Templates",
+     "model": "sale.order.template",
+     "deps": [],
+     "hardDeps": [],
+     "count": 1
+    },
+    {
+     "id": "qtpll",
+     "name": "Template Lines",
+     "model": "sale.order.template.line",
+     "deps": [
+      "qtpl",
+      "variants",
+      "units"
+     ],
+     "hardDeps": [],
+     "count": 1
+    },
+    {
+     "id": "orders",
+     "name": "Orders",
+     "model": "sale.order",
+     "deps": [
+      "contacts",
+      "pricelists",
+      "terms",
+      "fiscal",
+      "incoterms",
+      "teams",
+      "campaigns",
+      "qtpl",
+      "anaacc",
+      "leads",
+      "invoices"
+     ],
+     "hardDeps": [],
+     "count": 1
+    },
+    {
+     "id": "ordl",
+     "name": "Order Lines",
+     "model": "sale.order.line",
+     "deps": [
+      "orders",
+      "variants",
+      "units",
+      "taxes"
+     ],
+     "hardDeps": [],
+     "count": 1
+    },
+    {
+     "id": "hdr",
+     "name": "Headers / Footers",
+     "model": "sale.pdf.form.field",
+     "deps": [],
+     "hardDeps": [],
+     "count": 1
+    }
+   ]
+  },
+  {
+   "phase": 4,
+   "name": "Point of Sale",
+   "worksheets": [
+    {
+     "id": "pospm",
+     "name": "POS Payment Methods",
+     "model": "pos.payment.method",
+     "deps": [
+      "journals"
+     ],
+     "hardDeps": [],
+     "count": 1
+    },
+    {
+     "id": "poscfg",
+     "name": "POS Configs",
+     "model": "pos.config",
+     "deps": [
+      "journals",
+      "pospm",
+      "stock"
+     ],
+     "hardDeps": [],
+     "count": 1
+    },
+    {
+     "id": "possess",
+     "name": "Sessions",
+     "model": "pos.session",
+     "deps": [
+      "poscfg"
+     ],
+     "hardDeps": [],
+     "count": 1
+    },
+    {
+     "id": "posord",
+     "name": "POS Orders",
+     "model": "pos.order",
+     "deps": [
+      "possess",
+      "contacts",
+      "stock"
+     ],
+     "hardDeps": [],
+     "count": 1
+    },
+    {
+     "id": "posline",
+     "name": "POS Order Lines",
+     "model": "pos.order.line",
+     "deps": [
+      "posord",
+      "variants",
+      "taxes"
+     ],
+     "hardDeps": [],
+     "count": 1
+    },
+    {
+     "id": "pospay",
+     "name": "POS Payments",
+     "model": "pos.payment",
+     "deps": [
+      "posord",
+      "pospm"
+     ],
+     "hardDeps": [],
+     "count": 1
+    },
+    {
+     "id": "poscat",
+     "name": "POS Categories",
+     "model": "pos.category",
+     "deps": [],
+     "hardDeps": [],
+     "count": 1
+    },
+    {
+     "id": "posbill",
+     "name": "Bills",
+     "model": "pos.bill",
+     "deps": [],
+     "hardDeps": [],
+     "count": 1
+    },
+    {
+     "id": "posnote",
+     "name": "Notes",
+     "model": "pos.note",
+     "deps": [],
+     "hardDeps": [],
+     "count": 1
+    },
+    {
+     "id": "pospre",
+     "name": "Presets",
+     "model": "pos.preset",
+     "deps": [],
+     "hardDeps": [],
+     "count": 1
+    },
+    {
+     "id": "posprn",
+     "name": "Printers",
+     "model": "pos.printer",
+     "deps": [],
+     "hardDeps": [],
+     "count": 1
+    },
+    {
+     "id": "poslot",
+     "name": "Pack Operation Lots",
+     "model": "pos.pack.operation.lot",
+     "deps": [
+      "posline",
+      "stock"
+     ],
+     "hardDeps": [],
+     "count": 1
+    }
+   ]
+  },
+  {
+   "phase": 5,
+   "name": "Inventory & Manufacturing",
+   "worksheets": [
+    {
+     "id": "purchase",
+     "name": "Purchase",
+     "model": "3 worksheets",
+     "deps": [
+      "contacts",
+      "variants",
+      "units",
+      "taxes",
+      "terms",
+      "invoices"
+     ],
+     "hardDeps": [],
+     "count": 3
+    },
+    {
+     "id": "stock",
+     "name": "Inventory",
+     "model": "21 worksheets",
+     "deps": [
+      "variants",
+      "units",
+      "contacts"
+     ],
+     "hardDeps": [],
+     "count": 21
+    },
+    {
+     "id": "mrp",
+     "name": "Manufacturing",
+     "model": "14 worksheets",
+     "deps": [
+      "variants",
+      "units",
+      "stock"
+     ],
+     "hardDeps": [],
+     "count": 14
+    },
+    {
+     "id": "maint",
+     "name": "Maintenance",
+     "model": "5 worksheets",
+     "deps": [
+      "contacts"
+     ],
+     "hardDeps": [],
+     "count": 5
+    },
+    {
+     "id": "repair",
+     "name": "Repair",
+     "model": "2 worksheets",
+     "deps": [
+      "variants",
+      "contacts",
+      "stock"
+     ],
+     "hardDeps": [],
+     "count": 2
+    }
+   ]
+  },
+  {
+   "phase": 6,
+   "name": "Services",
+   "worksheets": [
+    {
+     "id": "project",
+     "name": "Project",
+     "model": "11 worksheets",
+     "deps": [
+      "contacts",
+      "anaacc"
+     ],
+     "hardDeps": [],
+     "count": 11
+    },
+    {
+     "id": "timesheet",
+     "name": "Timesheet",
+     "model": "1 worksheet",
+     "deps": [
+      "anaacc",
+      "project"
+     ],
+     "hardDeps": [],
+     "count": 1
+    }
+   ]
+  },
+  {
+   "phase": 7,
+   "name": "Human Resources",
+   "worksheets": [
+    {
+     "id": "hr",
+     "name": "Employees",
+     "model": "10 worksheets",
+     "deps": [
+      "contacts"
+     ],
+     "hardDeps": [],
+     "count": 10
+    },
+    {
+     "id": "recruit",
+     "name": "Recruitment",
+     "model": "8 worksheets",
+     "deps": [
+      "contacts",
+      "hr"
+     ],
+     "hardDeps": [],
+     "count": 8
+    },
+    {
+     "id": "timeoff",
+     "name": "Time Off",
+     "model": "6 worksheets",
+     "deps": [
+      "hr"
+     ],
+     "hardDeps": [],
+     "count": 6
+    },
+    {
+     "id": "fleet",
+     "name": "Fleet",
+     "model": "11 worksheets",
+     "deps": [
+      "contacts",
+      "hr"
+     ],
+     "hardDeps": [],
+     "count": 11
+    }
+   ]
+  },
+  {
+   "phase": 8,
+   "name": "Finance",
+   "worksheets": [
+    {
+     "id": "expense",
+     "name": "Expenses",
+     "model": "2 worksheets",
+     "deps": [
+      "hr",
+      "variants",
+      "taxes",
+      "invoices",
+      "anaacc"
+     ],
+     "hardDeps": [],
+     "count": 2
+    },
+    {
+     "id": "bankst",
+     "name": "Bank Statements",
+     "model": "1 worksheet",
+     "deps": [
+      "journals"
+     ],
+     "hardDeps": [],
+     "count": 1
+    },
+    {
+     "id": "recon",
+     "name": "Reconciliation",
+     "model": "1 worksheet",
+     "deps": [
+      "invoices",
+      "journals"
+     ],
+     "hardDeps": [],
+     "count": 1
+    }
+   ]
+  },
+  {
+   "phase": 9,
+   "name": "Marketing",
+   "worksheets": [
+    {
+     "id": "mailing",
+     "name": "Email Marketing",
+     "model": "7 worksheets",
+     "deps": [
+      "contacts",
+      "campaigns",
+      "sources",
+      "mediums"
+     ],
+     "hardDeps": [],
+     "count": 7
+    },
+    {
+     "id": "events",
+     "name": "Events",
+     "model": "16 worksheets",
+     "deps": [
+      "contacts",
+      "variants",
+      "invoices"
+     ],
+     "hardDeps": [],
+     "count": 16
+    },
+    {
+     "id": "survey",
+     "name": "Survey",
+     "model": "5 worksheets",
+     "deps": [
+      "contacts"
+     ],
+     "hardDeps": [],
+     "count": 5
+    }
+   ]
+  },
+  {
+   "phase": 10,
+   "name": "Website",
+   "worksheets": [
+    {
+     "id": "website",
+     "name": "Website",
+     "model": "12 worksheets",
+     "deps": [],
+     "hardDeps": [],
+     "count": 12
+    },
+    {
+     "id": "ecom",
+     "name": "eCommerce",
+     "model": "8 worksheets",
+     "deps": [
+      "orders",
+      "variants",
+      "pricelists",
+      "stock"
+     ],
+     "hardDeps": [],
+     "count": 8
+    },
+    {
+     "id": "slides",
+     "name": "eLearning",
+     "model": "11 worksheets",
+     "deps": [
+      "contacts",
+      "website"
+     ],
+     "hardDeps": [],
+     "count": 11
+    },
+    {
+     "id": "livechat",
+     "name": "Live Chat",
+     "model": "9 worksheets",
+     "deps": [
+      "contacts",
+      "website"
+     ],
+     "hardDeps": [],
+     "count": 9
+    },
+    {
+     "id": "forum",
+     "name": "Forum",
+     "model": "5 worksheets",
+     "deps": [
+      "contacts",
+      "website"
+     ],
+     "hardDeps": [],
+     "count": 5
+    },
+    {
+     "id": "blog",
+     "name": "Blog",
+     "model": "4 worksheets",
+     "deps": [
+      "website"
+     ],
+     "hardDeps": [],
+     "count": 4
+    }
+   ]
+  },
+  {
+   "phase": 11,
+   "name": "Productivity",
+   "worksheets": [
+    {
+     "id": "discuss",
+     "name": "Discuss",
+     "model": "3 worksheets",
+     "deps": [],
+     "hardDeps": [],
+     "count": 3
+    }
+   ]
+  }
+ ]
+}
