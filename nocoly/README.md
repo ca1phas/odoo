@@ -34,7 +34,7 @@ Decided on 15 Sep 2026, and overriding the published plan where they differ:
 
 | # | Worksheet | State |
 |---|---|---|
-| 01 | Contacts | built · UI-tested 13/13 · ready for review |
+| 01 | Contacts | built · UI-tested 13/13 · ready for review — [review page](https://claude.ai/artifact/JHfvYa7uKiucMfkPnyH2Xu) (`artifacts/worksheet-01-contacts.html`) |
 | 02 | Units & Packagings | in progress |
 | 03–07 | Products · Product Variants · Journals · Invoices · Invoice Lines | not started |
 

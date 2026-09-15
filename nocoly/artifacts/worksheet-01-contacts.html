@@ -1,0 +1,459 @@
+<title>ERP Master Contacts</title>
+<meta name="description" content="Review pack for worksheet 01 of the Odoo-to-Nocoly build: requirements, build ids and UI test results.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<style>
+  :root {
+    --ground: #F3F5F7;
+    --surface: #FFFFFF;
+    --sunken: #EAEEF2;
+    --ink: #17202A;
+    --muted: #586472;
+    --rule: #D8DEE5;
+    --rule-strong: #B7C0CA;
+    --accent: #285E8E;
+    --accent-soft: #E2EBF4;
+    --code: #24527C;
+    --pass: #1D7A4C;
+    --pass-soft: #DFF0E6;
+    --note: #8A5208;
+    --note-soft: #F6EAD6;
+    --decide: #B0301F;
+    --decide-soft: #F8E2DE;
+    --display: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+    --body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0F141A;
+      --surface: #161D25;
+      --sunken: #1C242E;
+      --ink: #E4E9EE;
+      --muted: #9AA6B3;
+      --rule: #29323C;
+      --rule-strong: #3A4553;
+      --accent: #88B6E2;
+      --accent-soft: #1D2B3A;
+      --code: #A9CBEC;
+      --pass: #62C592;
+      --pass-soft: #16301F;
+      --note: #E3A955;
+      --note-soft: #33260F;
+      --decide: #F08476;
+      --decide-soft: #3A1B17;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #0F141A;
+    --surface: #161D25;
+    --sunken: #1C242E;
+    --ink: #E4E9EE;
+    --muted: #9AA6B3;
+    --rule: #29323C;
+    --rule-strong: #3A4553;
+    --accent: #88B6E2;
+    --accent-soft: #1D2B3A;
+    --code: #A9CBEC;
+    --pass: #62C592;
+    --pass-soft: #16301F;
+    --note: #E3A955;
+    --note-soft: #33260F;
+    --decide: #F08476;
+    --decide-soft: #3A1B17;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font: 400 15px/1.6 var(--body);
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--accent); text-underline-offset: 3px; }
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+  strong { font-weight: 600; }
+  code {
+    font-family: var(--mono);
+    font-size: 0.84em;
+    color: var(--code);
+    background: var(--accent-soft);
+    padding: 0.08em 0.38em;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+
+  .page {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 44px 28px 96px;
+    display: grid;
+    gap: 56px;
+  }
+
+  /* Identity block */
+  .identity { display: grid; gap: 22px; }
+  .eyebrow {
+    font: 500 12px/1.4 var(--mono);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+  }
+  .eyebrow span + span::before { content: "/"; margin-right: 18px; color: var(--rule-strong); }
+  h1 {
+    font: 600 clamp(40px, 6vw, 58px)/1 var(--display);
+    letter-spacing: -0.01em;
+    margin: 0;
+    text-wrap: balance;
+  }
+  h1 .model { font: 500 0.42em/1 var(--mono); color: var(--muted); letter-spacing: 0; margin-left: 14px; vertical-align: 0.5em; }
+  .lede { margin: 0; max-width: 65ch; font-size: 17px; color: var(--ink); }
+
+  .meta {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    border-top: 1px solid var(--rule-strong);
+    border-bottom: 1px solid var(--rule);
+    margin: 0;
+  }
+  .meta div { padding: 14px 18px 14px 0; display: grid; gap: 4px; align-content: start; }
+  .meta dt { font: 500 11px/1.3 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  .meta dd { margin: 0; font-size: 14px; }
+
+  .scoreline { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font: 500 12.5px/1 var(--mono);
+    padding: 6px 10px;
+    border-radius: 999px;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+  .chip::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+  .chip.pass { color: var(--pass); background: var(--pass-soft); }
+  .chip.note { color: var(--note); background: var(--note-soft); }
+  .chip.decide { color: var(--decide); background: var(--decide-soft); }
+  .chip.small { font-size: 11.5px; padding: 4px 8px; }
+
+  .decision {
+    border: 1px solid var(--decide);
+    background: var(--surface);
+    border-radius: 8px;
+    padding: 18px 22px;
+    display: grid;
+    gap: 8px;
+    max-width: 78ch;
+  }
+  .decision h2 { font: 600 20px/1.25 var(--display); margin: 0; text-wrap: balance; }
+  .decision p { margin: 0; }
+
+  nav.toc { display: flex; flex-wrap: wrap; gap: 8px 28px; font: 500 13px/1.4 var(--body); }
+  nav.toc a { text-decoration: none; color: var(--muted); }
+  nav.toc a:hover { color: var(--accent); }
+  nav.toc a span { font-family: var(--mono); color: var(--accent); margin-right: 6px; }
+
+  /* Sections */
+  section { display: grid; gap: 26px; }
+  .section-head { display: flex; align-items: baseline; gap: 14px; border-bottom: 1px solid var(--rule-strong); padding-bottom: 10px; }
+  .section-head .n { font: 500 14px/1 var(--mono); color: var(--accent); }
+  h2.section { font: 600 30px/1.1 var(--display); margin: 0; letter-spacing: -0.005em; }
+  .block { display: grid; gap: 12px; }
+  h3 { font: 600 19px/1.25 var(--display); margin: 0; text-wrap: balance; }
+  .block > p, .prose { margin: 0; max-width: 72ch; color: var(--ink); }
+  .aside { color: var(--muted); font-size: 14px; }
+
+  .table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    background: var(--surface);
+  }
+  table { border-collapse: collapse; width: 100%; min-width: 760px; font-size: 14px; }
+  table.narrow { min-width: 560px; }
+  th {
+    text-align: left;
+    font: 600 11.5px/1.3 var(--body);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    background: var(--sunken);
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--rule);
+    white-space: nowrap;
+  }
+  td { padding: 11px 14px; border-top: 1px solid var(--rule); vertical-align: top; }
+  tbody tr:first-child td { border-top: 0; }
+  td.num, th.num { font-family: var(--mono); font-variant-numeric: tabular-nums; color: var(--muted); white-space: nowrap; width: 1%; }
+  td.label { font-weight: 600; white-space: nowrap; }
+  td.id { font-family: var(--mono); font-size: 12.5px; word-break: break-all; color: var(--code); }
+  td.muted { color: var(--muted); }
+  .result { display: grid; gap: 6px; justify-items: start; }
+
+  ul.plain, ol.plain { margin: 0; padding-left: 1.2em; display: grid; gap: 8px; max-width: 78ch; }
+
+  ol.differences { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; border-top: 1px solid var(--rule); max-width: 86ch; }
+  ol.differences li { display: grid; grid-template-columns: 32px 1fr; gap: 4px 14px; padding: 14px 0; border-bottom: 1px solid var(--rule); }
+  ol.differences .n { font: 500 14px/1.6 var(--mono); color: var(--muted); grid-row: span 2; }
+  ol.differences .head { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+  ol.differences .head strong { font: 600 17px/1.3 var(--display); }
+  ol.differences p { margin: 0; }
+
+  .records { display: flex; flex-wrap: wrap; gap: 8px; }
+  .records span { font: 500 13px/1 var(--mono); padding: 7px 10px; border: 1px dashed var(--rule-strong); border-radius: 4px; background: var(--surface); }
+
+  footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--rule); padding-top: 18px; }
+
+  @media (max-width: 640px) {
+    .page { padding: 28px 18px 72px; gap: 44px; }
+    h1 .model { display: block; margin: 12px 0 0; vertical-align: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto; } }
+  html { scroll-behavior: smooth; }
+</style>
+
+<main class="page">
+
+  <header class="identity">
+    <div class="eyebrow"><span>ERP Master</span><span>Phase 1</span><span>Worksheet 01 of 7</span></div>
+    <h1>Contacts <span class="model">res.partner</span></h1>
+    <p class="lede">One worksheet holds companies, the people who work at them, and their extra addresses — invoice, delivery, other — as Odoo keeps all three in <code>res.partner</code>, linked by <strong>Company</strong>.</p>
+    <dl class="meta">
+      <div><dt>Reference</dt><dd>casimir.odoo.com — Odoo saas~19.4+e</dd></div>
+      <div><dt>Behaviour read from</dt><dd>Odoo 19.0 source, <code>res_partner.py</code></dd></div>
+      <div><dt>Nocoly</dt><dd>App ERP Master · menu group Contacts</dd></div>
+      <div><dt>Built and tested</dt><dd>15 Sep 2026, hap CLI + Chrome</dd></div>
+    </dl>
+    <div class="scoreline">
+      <span class="chip pass">13 of 13 tests pass</span>
+      <span class="chip note">4 differences from Odoo</span>
+      <span class="chip decide">1 decision needed</span>
+    </div>
+  </header>
+
+  <aside class="decision" aria-labelledby="decision-title">
+    <span class="chip decide small" style="justify-self:start">Decision for the owner</span>
+    <h2 id="decision-title">Should contacts show “Company, Person” like Odoo?</h2>
+    <p>Odoo names a company’s contact “Company, Person” and a nameless address “Company, Delivery” — in lists, cards and every partner picker. Nocoly shows the Name alone, so a nameless address is blank in the list and “Unnamed” on its card. It will matter when Invoices picks a customer. A <em>Display Name</em> formula as the title field would match Odoo.</p>
+  </aside>
+
+  <nav class="toc" aria-label="Sections">
+    <a href="#requirements"><span>1</span>Requirements</a>
+    <a href="#build"><span>2</span>Build</a>
+    <a href="#tests"><span>3</span>Tests and differences</a>
+  </nav>
+
+  <section id="requirements" aria-labelledby="req-title">
+    <div class="section-head"><span class="n">1</span><h2 class="section" id="req-title">Requirements</h2></div>
+
+    <div class="block">
+      <h3>Fields</h3>
+      <p class="aside">Labels are Odoo’s. Hidden means not on the form but used by views, rules or buttons.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th class="num">#</th><th>Field</th><th>Odoo field</th><th>Nocoly type</th><th>Required</th><th>Default</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td class="num">1</td><td class="label">Name</td><td><code>name</code></td><td>Text · title field</td><td>when Address Type = Contact</td><td class="muted">—</td><td>Placeholder “Name (company or person)”. Odoo constraint <code>_check_name</code>: “Contacts require a name”; a nameless invoice or delivery address is allowed</td></tr>
+            <tr><td class="num">2</td><td class="label">Company</td><td><code>parent_id</code></td><td>Relation → Contacts, single</td><td>no</td><td class="muted">—</td><td>Placeholder “Company Employer”. Picker lists contacts that have no company and are not archived — Odoo 19.4 domain <code>[('parent_id', '=', False)]</code></td></tr>
+            <tr><td class="num">3</td><td class="label">Address Type</td><td><code>type</code></td><td>Dropdown: Contact · Invoice · Delivery · Other</td><td>yes</td><td>Contact</td><td>Odoo shows it only when adding a contact from a company’s Contacts tab; here, only once Company is set</td></tr>
+            <tr><td class="num">4</td><td class="label">Email</td><td><code>email</code></td><td>Email</td><td>no</td><td class="muted">—</td><td></td></tr>
+            <tr><td class="num">5</td><td class="label">Phone</td><td><code>phone</code></td><td>Phone</td><td>no</td><td class="muted">—</td><td>Country code defaults to Malaysia (+60)</td></tr>
+            <tr><td class="num">6</td><td class="label">Job Position</td><td><code>function</code></td><td>Text</td><td>no</td><td class="muted">—</td><td>Placeholder “e.g. Sales Director”</td></tr>
+            <tr><td class="num">7</td><td class="label">Website</td><td><code>website</code></td><td>Text</td><td>no</td><td class="muted">—</td><td>Placeholder “e.g. https://www.odoo.com”</td></tr>
+            <tr><td class="num">8</td><td class="label">Tax ID</td><td><code>vat</code></td><td>Text</td><td>no</td><td class="muted">—</td><td>A base field (<code>res_partner.py:237</code>); it has nothing to do with the Taxes bundle</td></tr>
+            <tr><td class="num">9</td><td class="label">Company ID</td><td>additional identifier</td><td>Text</td><td>no</td><td class="muted">—</td><td>19.4 adds it with the + beside Tax ID (<code>company_registry</code> in 19.0)</td></tr>
+            <tr><td class="num">10</td><td class="label">DUNS</td><td>additional identifier</td><td>Text</td><td>no</td><td class="muted">—</td><td>The other + option beside Tax ID</td></tr>
+            <tr><td class="num">11–16</td><td class="label">Street · Street 2 · City · State · ZIP · Country</td><td><code>street</code> <code>street2</code> <code>city</code> <code>state_id</code> <code>zip</code> <code>country_id</code></td><td>Text</td><td>no</td><td class="muted">—</td><td>State and Country are dropdowns in Odoo; Text until the Geography bundle</td></tr>
+            <tr><td class="num">17</td><td class="label">Image</td><td><code>image_1920</code></td><td>Attachment</td><td>no</td><td class="muted">—</td><td>The avatar; the Kanban card cover</td></tr>
+            <tr><td class="num">18</td><td class="label">Contacts</td><td><code>child_ids</code></td><td>Relation → Contacts, multiple; the reverse of Company</td><td class="muted">—</td><td class="muted">—</td><td>Tab Contacts. Columns Name, Address Type, Email, Phone, Job Position</td></tr>
+            <tr><td class="num">19</td><td class="label">Salesperson</td><td><code>user_id</code></td><td>Member</td><td>no</td><td class="muted">—</td><td>Tab Sales &amp; Purchase</td></tr>
+            <tr><td class="num">20</td><td class="label">Reference</td><td><code>ref</code></td><td>Text</td><td>no</td><td class="muted">—</td><td>Tab Sales &amp; Purchase</td></tr>
+            <tr><td class="num">21</td><td class="label">Notes</td><td><code>comment</code></td><td>Rich text</td><td>no</td><td class="muted">—</td><td>Tab Notes. Placeholder “Internal notes...”</td></tr>
+            <tr><td class="num">22</td><td class="label">Active</td><td><code>active</code></td><td>Checkbox</td><td class="muted">—</td><td>checked</td><td>Hidden. Set by Archive and Unarchive</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="block">
+      <h3>Form layout</h3>
+      <div class="table-wrap">
+        <table class="narrow">
+          <thead><tr><th>Odoo 19.4</th><th>Nocoly</th></tr></thead>
+          <tbody>
+            <tr><td>Header: Image · Name · Company · Email · Phone</td><td>Name · Company | Address Type · Email | Phone</td></tr>
+            <tr><td>Left column: Address · Tax ID (+ Company ID, DUNS) · SST · TTx</td><td>Job Position | Website · Tax ID | Company ID · DUNS</td></tr>
+            <tr><td>Right column: Job Position · Website · Tags</td><td>Address divider · Street | Street 2 · City | State · ZIP | Country · Image</td></tr>
+            <tr><td>Tabs: Contacts · Sales &amp; Purchase · Invoicing · Notes</td><td>Tabs: Contacts · Sales &amp; Purchase · Notes</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="aside">A HAP form is a 12-column grid, so Odoo’s two columns become paired rows. HAP has no avatar slot; Image sits under the address.</p>
+    </div>
+
+    <div class="block">
+      <h3>Rules</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Rule</th><th>Type</th><th>When</th><th>Effect</th><th>Odoo source</th></tr></thead>
+          <tbody>
+            <tr><td class="label">Address Type only under a company</td><td>interaction</td><td>Company is empty</td><td>hide Address Type</td><td><code>type</code> appears only in the Contacts-tab form</td></tr>
+            <tr><td class="label">Name is required for contacts</td><td>interaction</td><td>Address Type = Contact</td><td>Name required</td><td><code>name required="type == 'contact'"</code></td></tr>
+            <tr><td class="label">Contacts require a name</td><td>validation, form and API writes</td><td>Address Type = Contact and Name is empty</td><td>“Contacts require a name”</td><td>SQL constraint <code>_check_name</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="block">
+      <h3>Buttons</h3>
+      <div class="table-wrap">
+        <table class="narrow">
+          <thead><tr><th>Button</th><th>Shown when</th><th>Does</th><th>Confirmation</th></tr></thead>
+          <tbody>
+            <tr><td class="label">Archive</td><td>Active is checked</td><td>Active → unchecked</td><td>“Are you sure that you want to archive this record?” — Odoo <code>form_controller.js:569</code></td></tr>
+            <tr><td class="label">Unarchive</td><td>Active is unchecked</td><td>Active → checked</td><td class="muted">none</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="block">
+      <h3>Views</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>View</th><th>Type</th><th>Shows</th><th>Odoo 19.4</th></tr></thead>
+          <tbody>
+            <tr><td class="label">Contacts</td><td>table</td><td>Active records. Columns Name · Company · Email · Phone · Country, sorted by Name A→Z. Quick filters Salesperson · Company · Country</td><td>List view: Name, Email, Phone, Activities, Country; a person’s name reads “Company, Person”, so Company is its own column here. Group-bys Salesperson, Company, Country</td></tr>
+            <tr><td class="label">Kanban</td><td>gallery</td><td>Active records. Image cover; Name, Email, Phone, City, Country</td><td>Kanban view</td></tr>
+            <tr><td class="label">Archived</td><td>table</td><td>Archived records, same columns</td><td>The Archived filter</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="block">
+      <h3>Automations</h3>
+      <p class="aside">Odoo’s <code>_fields_sync</code>, company to contacts.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Automation</th><th>Runs when</th><th>Does</th><th>Odoo source</th></tr></thead>
+          <tbody>
+            <tr><td class="label">Copy company details to its contact</td><td>A record’s Company or Address Type is set or changed, and it has a Company</td><td>Copies the company’s address, only for Address Type = Contact and only if the company has one. Copies each of Tax ID, Company ID and DUNS the company has. Copies the company’s salesperson to a contact that has none</td><td><code>onchange_parent_id</code> <code>_fields_sync</code> <code>_get_commercial_values</code> <code>_compute_user_id</code></td></tr>
+            <tr><td class="label">Push company address and Tax ID to its contacts</td><td>A record that has contacts changes its address, Tax ID, Company ID or DUNS</td><td>Copies Tax ID, Company ID and DUNS to all its contacts, and the address to its Contact-type contacts</td><td><code>_children_sync</code> <code>_commercial_sync_to_descendants</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="block">
+      <h3>Not built now, and why</h3>
+      <div class="table-wrap">
+        <table class="narrow">
+          <thead><tr><th>Odoo 19.4 field or feature</th><th>Why not now</th></tr></thead>
+          <tbody>
+            <tr><td>SST and TTx registration numbers; Malaysian e-invoicing identity — Identification Type and Number, Industrial Classification, Malaysian TIN</td><td>Malaysian e-invoicing localisation: SST and TTx come from <code>l10n_my_ubl_pint</code>, the TIN from <code>l10n_my_edi</code>, both built on Invoicing. They arrive with the Taxes bundle and e-invoicing. <strong>Tax ID itself stays:</strong> <code>vat</code> is a base field</td></tr>
+            <tr><td>Tags <code>category_id</code></td><td>Contact Tags bundle, excluded for now</td></tr>
+            <tr><td>State and Country as dropdowns</td><td>Geography bundle, excluded; Text meanwhile</td></tr>
+            <tr><td>Pricelist, Payment Terms, Payment Method, Incoterm, Fiscal Position</td><td>Pricelists, Payment Terms, Payments, Incoterms and Fiscal Positions bundles</td></tr>
+            <tr><td>Industry <code>industry_id</code></td><td>Its own table, not in Phase 1</td></tr>
+            <tr><td>GLN <code>global_location_number</code></td><td>Module <code>account</code> on the tenant; arrives with Invoicing</td></tr>
+            <tr><td>Invoicing tab — bank accounts, e-invoice sending and format, credit limit</td><td>Invoicing</td></tr>
+            <tr><td>Smart buttons, Activities, Last Reminder</td><td>Owned by other apps; HAP has native activity and discussion</td></tr>
+            <tr><td>Language <code>lang</code></td><td>Odoo hides it while one language is installed</td></tr>
+            <tr><td>Properties</td><td>Odoo’s ad-hoc custom fields; in HAP an admin adds a field instead</td></tr>
+            <tr><td>Is a Company <code>is_company</code></td><td>Computed and read-only in 19.4, not on the form; nothing here depends on it</td></tr>
+            <tr><td>Upstream sync — a contact’s edit rewriting its company</td><td>Left out to avoid automation loops; edit the company instead</td></tr>
+            <tr><td>“Potential duplicates” warning on the same Tax ID</td><td>Odoo only warns; revisit with Invoicing</td></tr>
+            <tr><td>Email required for a contact with a user login</td><td>No logins on contacts in HAP</td></tr>
+            <tr><td>Roles</td><td>Set once for the app at the end of Phase 1</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section id="build" aria-labelledby="build-title">
+    <div class="section-head"><span class="n">2</span><h2 class="section" id="build-title">Build</h2></div>
+    <p class="prose">Built by <code>nocoly/build/contacts.py</code> in six steps — fields, layout, rules, views, buttons, automations — each safe to re-run. Every id is in <code>nocoly/build/ids.json</code>.</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Element</th><th>Built</th><th>Id</th></tr></thead>
+        <tbody>
+          <tr><td class="label">App</td><td>ERP Master</td><td class="id">6cb4d051-a33c-4bf9-b56f-5f47f0e85dc9</td></tr>
+          <tr><td class="label">Menu group</td><td>Contacts</td><td class="id">6aa8a3a93e5e4ad5b852a6d3</td></tr>
+          <tr><td class="label">Worksheet</td><td>Contacts, alias <code>res_partner</code></td><td class="id">6aa8a3b34a22ad87b728c4fe</td></tr>
+          <tr><td class="label">Controls</td><td>28 — the 22 fields, 3 tabs, 3 dividers; aliases are Odoo field names</td><td class="muted">—</td></tr>
+          <tr><td class="label">Rules</td><td>The 3 above, enabled; 3 more disabled, listed below</td><td class="muted">—</td></tr>
+          <tr><td class="label">Views</td><td>Contacts · Kanban · Archived</td><td class="id">6aa8a3b34a22ad87b728c502 · 6aa8a4d11204328eb1af06f9 · 6aa8a4d14a73a3142152ca08</td></tr>
+          <tr><td class="label">Buttons</td><td>Archive · Unarchive, each running a one-step workflow that sets Active</td><td class="id">6aa8a5654720c515252bda3d · 6aa8a5674a73a3142152ca18</td></tr>
+          <tr><td class="label">Automation</td><td>Copy company details to its contact</td><td class="id">6aa8a7ff8475f61d4cc65bb9</td></tr>
+          <tr><td class="label">Automation</td><td>Push company address and Tax ID to its contacts</td><td class="id">6aa8a8048475f61d4cc65ebe</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="block">
+      <h3>History</h3>
+      <p>Built first from the Odoo 19.0 source, then moved to 19.4 the same day, keeping every id: the Person / Company switch removed, DUNS added, the rules and views that depended on the switch retired, Company shown on every contact. A last pass copied Company ID and DUNS on linking, kept archived companies out of the Company picker, and stopped the push automation running for contacts that have nobody under them.</p>
+    </div>
+
+    <div class="block">
+      <h3>Left for whoever deletes things in the UI</h3>
+      <ul class="plain">
+        <li><strong>3 disabled rules</strong> from the 19.0 build — Company is hidden on companies, Job Position only for persons, Company ID only on stand-alone companies. The CLI cannot delete a rule; delete them in the form designer.</li>
+        <li><strong>2 disabled workflows</strong>, <code>6aa8a542d91d10186df35aa2</code> and <code>6aa8a543e589b8933dd4c83d</code>, left by a duplicate Archive / Unarchive pair whose buttons were deleted with the owner’s approval.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="tests" aria-labelledby="tests-title">
+    <div class="section-head"><span class="n">3</span><h2 class="section" id="tests-title">Tests and differences</h2></div>
+    <p class="prose">Run in the Nocoly UI in Chrome on 15 Sep 2026. After each step the stored values were read back with the hap CLI. Test records are named <code>TEST …</code>.</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th class="num">#</th><th>Check</th><th>Steps</th><th>Expected</th><th>Result</th></tr></thead>
+        <tbody>
+          <tr><td class="num">1</td><td class="label">Empty form</td><td>+ Record → Submit</td><td>Name marked required; “Contacts require a name”</td><td><div class="result"><span class="chip pass small">Pass</span>“Please fill in Name” on the field and a “Contacts require a name” dialog</div></td></tr>
+          <tr><td class="num">2</td><td class="label">Company record</td><td>Fill Name, Email, Phone, Website, Tax ID, Company ID, DUNS and address → Submit</td><td>Saved; in Contacts and Kanban, not Archived</td><td><div class="result"><span class="chip pass small">Pass</span>Every value read back; Address Type defaulted to Contact, Active to checked; 03-2287 6543 stored as +60322876543</div></td></tr>
+          <tr><td class="num">3</td><td class="label">Address Type hidden</td><td>Open the new company</td><td>No Address Type field</td><td><div class="result"><span class="chip pass small">Pass</span></div></td></tr>
+          <tr><td class="num">4</td><td class="label">Company picker</td><td>New record → open Company</td><td>Contacts without a company; no archived ones</td><td><div class="result"><span class="chip pass small">Pass</span>Only TEST QA Trading Sdn Bhd, never the people under it; “No records available” while it was archived</div></td></tr>
+          <tr><td class="num">5</td><td class="label">Contact under a company</td><td>From the company’s Contacts tab, add TEST Person One with no address</td><td>Address Type shows, default Contact; within seconds the person has the company’s address, Tax ID, Company ID and DUNS</td><td><div class="result"><span class="chip pass small">Pass</span>All eight values copied</div></td></tr>
+          <tr><td class="num">6</td><td class="label">Nameless address</td><td>Add a Delivery address with no name</td><td>Saves; no address copied</td><td><div class="result"><span class="chip pass small">Pass</span>Got Tax ID, Company ID and DUNS, no address</div></td></tr>
+          <tr><td class="num">7</td><td class="label">Salesperson</td><td>Set the company’s Salesperson, add another contact without one</td><td>The contact gets the company’s salesperson</td><td><div class="result"><span class="chip pass small">Pass</span>TEST Person Two got it</div></td></tr>
+          <tr><td class="num">8</td><td class="label">Push address</td><td>Change the company’s City</td><td>Contact-type contacts get it; the Delivery address does not</td><td><div class="result"><span class="chip pass small">Pass</span>Cyberjaya → Putrajaya on both people; Delivery stayed blank</div></td></tr>
+          <tr><td class="num">9</td><td class="label">Push identifiers</td><td>Change the company’s Tax ID</td><td>Every contact under it gets it</td><td><div class="result"><span class="chip pass small">Pass</span>All three got C2584563299, in the same save as test 8</div></td></tr>
+          <tr><td class="num">10</td><td class="label">Views</td><td>Contacts, Kanban and Archived tabs</td><td>Columns Name, Company, Email, Phone, Country; sorted by Name; Kanban shows image, email, phone, city, country</td><td><div class="result"><span class="chip pass small">Pass</span>See differences 1 and 4</div></td></tr>
+          <tr><td class="num">11</td><td class="label">Archive</td><td>Archive a contact</td><td>Confirmation text; leaves Contacts, appears in Archived</td><td><div class="result"><span class="chip pass small">Pass</span>Exact text; its contacts kept showing it as their Company, as in Odoo</div></td></tr>
+          <tr><td class="num">12</td><td class="label">Unarchive</td><td>Unarchive it from Archived</td><td>Back in Contacts</td><td><div class="result"><span class="chip pass small">Pass</span>No confirmation; “Operation completed”</div></td></tr>
+          <tr><td class="num">13</td><td class="label">Odoo side by side</td><td>casimir.odoo.com Contacts vs Nocoly</td><td>Same fields as the Fields table, apart from Not built now</td><td><div class="result"><span class="chip pass small">Pass</span>See differences below</div></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="block">
+      <h3>Differences from Odoo seen in testing</h3>
+      <ol class="differences">
+        <li><span class="n">1</span><div class="head"><strong>Display name</strong><span class="chip decide small">Decision</span></div><p>Odoo shows “Company, Person” and “Company, Delivery”; Nocoly shows the Name alone. See the decision at the top.</p></li>
+        <li><span class="n">2</span><div class="head"><strong>Archive and Unarchive</strong><span class="chip note small">Note</span></div><p>The button that does not apply is greyed out rather than hidden.</p></li>
+        <li><span class="n">3</span><div class="head"><strong>“Modifying form data” bar</strong><span class="chip note small">HAP behaviour</span></div><p>After adding a contact from the Contacts tab, or picking a Salesperson, an open record keeps a Modifying form data — Cancel / Save bar although the change is already stored. Clicking Save clears it.</p></li>
+        <li><span class="n">4</span><div class="head"><strong>Kanban card</strong><span class="chip note small">Note</span></div><p>The image sits on top of the card; Odoo puts the avatar on the left.</p></li>
+      </ol>
+    </div>
+
+    <div class="block">
+      <h3>Test records left for review</h3>
+      <div class="records"><span>TEST QA Trading Sdn Bhd</span><span>TEST Person One</span><span>TEST Person Two</span><span>nameless Delivery address</span></div>
+      <p class="aside">Inspect them freely; remove them after sign-off.</p>
+    </div>
+  </section>
+
+  <footer>Source: <code>nocoly/worksheets/01-contacts.md</code> in ca1phas/odoo, branch 19.0.</footer>
+</main>
