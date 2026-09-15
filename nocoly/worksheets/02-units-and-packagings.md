@@ -7,7 +7,7 @@
 | Odoo model | `uom.uom` |
 | Reference | **casimir.odoo.com — Odoo saas~19.4+e**: fields, form, list, search, constraints and all 30 records, extracted read-only to `nocoly/reference/odoo-19.4/uom.uom.md`. Behaviour the tenant cannot show — computes, Python constraints, the ORM's recursion check — is read from the Odoo 19.0 source in this repo: `addons/uom/models/uom_uom.py`, `odoo/orm/models.py` |
 | Phase | 1 — core worksheet 2 of 7 |
-| Status | Built with the hap CLI and seeded on 15 Sep 2026 · UI test to do |
+| Status | Built with the hap CLI and seeded on 15 Sep 2026 · **UI-tested: 18 of 19 pass, 1 partly** (the Reference Unit picker shows names only) · ready for review |
 
 Every unit of measure and packaging, in one worksheet. A unit is a multiple (**Contains**) of its **Reference
 Unit**, and so on up to a unit that has none. **Absolute Quantity** multiplies that chain out — km = 1000 × m's
@@ -151,27 +151,39 @@ there is nothing to delete for this worksheet.
 
 ## 3 · Test list
 
-Run in the Nocoly UI. Test records are named `TEST …`. CLI read-backs run from the repo root:
-`~/.hap-venv/bin/python nocoly/build/units.py unit "<Unit Name>"`.
+Run in the Nocoly UI in Chrome on 15 Sep 2026; stored values read back with
+`~/.hap-venv/bin/python nocoly/build/units.py unit "<Unit Name>"` from the repo root. Test records are named `TEST …`.
 
 | # | Check | Steps | Expected | Result |
 |---|---|---|---|---|
-| 1 | Menu | Open ERP Master | Menu group **Products** after Contacts, holding Units & Packagings; views Units & Packagings and Archived, no Kanban | |
-| 2 | Active view | Units & Packagings | 14 units in this order: Minutes, g, Hours, KWH, m², ml, mm, Units, Pack of 6, Days, kg, L, m, t. Columns Unit Name, Contains, Reference Unit (e.g. Minutes · 0.0166667 · Hours) | |
-| 3 | Archived view | Archived | 16 units: in³, fl oz (US), ft², in, yd, gal (US), cm, Dozens, ft, ft³, km, lb, m³, mi, oz, qt (US) | |
-| 4 | Empty form | + Record, look, then Submit | Unit Name, then Contains and Reference Unit side by side; nothing else. Contains is 1; Reference Unit shows "Reference Unit"; Contains' description shows Odoo's help. Submit: Unit Name required | |
-| 5 | Contains 0 | Unit Name "TEST Zero", Contains 0 | "The conversion ratio for a unit of measure cannot be 0!" under Contains; Submit refused | |
-| 6 | Missing reference | Unit Name "TEST Box of 10", Contains 10, no Reference Unit → Submit | "Reference unit of measure is missing."; not saved | |
-| 7 | Reference Unit picker | Open Reference Unit | Only the 14 active units (no cm, no Dozens); each shows its Contains and Reference Unit, e.g. Days: 8 · Hours | |
-| 8 | Save with a reference | Reference Unit = Units → Submit | Saved, no "Recursion Detected."; last row of Units & Packagings (Sequence 1000, after t). CLI: absolute quantity=10, sequence=1000, path=Units/TEST Box of 10 | |
-| 9 | Chain | New "TEST Crate": Contains 5, Reference Unit TEST Box of 10 | CLI: absolute quantity=50, path=Units/TEST Box of 10/TEST Crate | |
-| 10 | Change up the chain | Edit TEST Box of 10: Contains 12 | Within ~10 s, CLI: TEST Box of 10 = 12 and TEST Crate = 60 | |
-| 11 | Change the reference | Edit TEST Box of 10: Reference Unit = Pack of 6 | CLI: TEST Box of 10 = 72, TEST Crate = 360; TEST Crate's path Units/Pack of 6/TEST Box of 10/TEST Crate | |
-| 12 | Recursion — itself | Edit TEST Box of 10: Reference Unit = TEST Box of 10 | "Recursion Detected." under Reference Unit; not saved | |
-| 13 | Recursion — below | Edit TEST Box of 10: Reference Unit = TEST Crate | "Recursion Detected."; not saved | |
-| 14 | Sequence | New "TEST Half": Contains 0.5, Reference Unit Units | Second row of Units & Packagings, after Minutes. CLI: sequence=50, absolute quantity=0.5 | |
-| 15 | Archive | Open TEST Crate → Archive | Confirmation as above with Archive / Cancel; TEST Crate leaves Units & Packagings, appears in Archived; the record offers Unarchive, not Archive | |
-| 16 | Archived out of the picker | New record → Reference Unit | TEST Crate not listed | |
-| 17 | Unarchive | Archived → TEST Crate → Unarchive | No confirmation; back in Units & Packagings | |
-| 18 | Standard data | `~/.hap-venv/bin/python nocoly/build/units.py verify` | Every standard unit OK; "0 differing from the extract; 0 with stale lookups"; the TEST units listed as not in the extract | |
-| 19 | Odoo side by side | casimir.odoo.com Units & Packagings vs Nocoly | Same fields as §1 apart from the "Not built now" list; the same 30 units, Active flags, Contains and Reference Units | |
+| 1 | Menu | Open ERP Master | Menu group **Products** after Contacts, holding Units & Packagings; views Units & Packagings and Archived, no Kanban | **Pass** |
+| 2 | Active view | Units & Packagings | 14 units in this order: Minutes, g, Hours, KWH, m², ml, mm, Units, Pack of 6, Days, kg, L, m, t. Columns Unit Name, Contains, Reference Unit (e.g. Minutes · 0.0166667 · Hours) | **Pass** — exact order and values; Contains shows thousands separators (1,000) |
+| 3 | Archived view | Archived | 16 units: in³, fl oz (US), ft², in, yd, gal (US), cm, Dozens, ft, ft³, km, lb, m³, mi, oz, qt (US) | **Pass** |
+| 4 | Empty form | + Record, look, then Submit | Unit Name, then Contains and Reference Unit side by side; nothing else. Contains is 1; Reference Unit shows "Reference Unit"; Contains' description shows Odoo's help. Submit: Unit Name required | **Pass** |
+| 5 | Contains 0 | Unit Name "TEST Zero", Contains 0 | "The conversion ratio for a unit of measure cannot be 0!" under Contains; Submit refused | **Pass** — shown as you type; Submit refused, listing that message and "Reference unit of measure is missing." (no Reference Unit, Contains ≠ 1) |
+| 6 | Missing reference | Unit Name "TEST Box of 10", Contains 10, no Reference Unit → Submit | "Reference unit of measure is missing."; not saved | **Pass** |
+| 7 | Reference Unit picker | Open Reference Unit | Only the 14 active units (no cm, no Dozens); each shows its Contains and Reference Unit, e.g. Days: 8 · Hours | **Partly** — exactly the 14 active units, but the dropdown shows unit names only (difference 1). Typing in its search also matches the Reference Unit column: "Units" finds Pack of 6 |
+| 8 | Save with a reference | Reference Unit = Units → Submit | Saved, no "Recursion Detected."; last row of Units & Packagings (Sequence 1000, after t). CLI: absolute quantity=10, sequence=1000, path=Units/TEST Box of 10 | **Pass** — all three values as expected |
+| 9 | Chain | New "TEST Crate": Contains 5, Reference Unit TEST Box of 10 | CLI: absolute quantity=50, path=Units/TEST Box of 10/TEST Crate | **Pass** — also sequence=500 |
+| 10 | Change up the chain | Edit TEST Box of 10: Contains 12 | Within ~10 s, CLI: TEST Box of 10 = 12 and TEST Crate = 60 | **Pass** |
+| 11 | Change the reference | Edit TEST Box of 10: Reference Unit = Pack of 6 | CLI: TEST Box of 10 = 72, TEST Crate = 360; TEST Crate's path Units/Pack of 6/TEST Box of 10/TEST Crate | **Pass** |
+| 12 | Recursion — itself | Edit TEST Box of 10: Reference Unit = TEST Box of 10 | "Recursion Detected." under Reference Unit; not saved | **Pass** — HAP leaves a record out of its own picker, so the UI cannot even offer it; the rule's refusal of the same write on the API was proven at build time |
+| 13 | Recursion — below | Edit TEST Box of 10: Reference Unit = TEST Crate | "Recursion Detected."; not saved | **Pass** — shown as you pick; Save refused; the change was cancelled |
+| 14 | Sequence | New "TEST Half": Contains 0.5, Reference Unit Units | Second row of Units & Packagings, after Minutes. CLI: sequence=50, absolute quantity=0.5 | **Pass** — after a refresh (difference 2); TEST Crate sorts between Units and Pack of 6 |
+| 15 | Archive | Open TEST Crate → Archive | Confirmation as above with Archive / Cancel; TEST Crate leaves Units & Packagings, appears in Archived; the record offers Unarchive, not Archive | **Pass** — exact text; in Archived the record's Archive button is greyed and Unarchive active (difference 3) |
+| 16 | Archived out of the picker | New record → Reference Unit | TEST Crate not listed | **Pass** — searching "TEST" offers TEST Half and TEST Box of 10 only |
+| 17 | Unarchive | Archived → TEST Crate → Unarchive | No confirmation; back in Units & Packagings | **Pass** |
+| 18 | Standard data | `~/.hap-venv/bin/python nocoly/build/units.py verify` | Every standard unit OK; "0 differing from the extract; 0 with stale lookups"; the TEST units listed as not in the extract | **Pass** — 30 OK, 0 differing, 0 stale; TEST Box of 10, TEST Crate, TEST Half listed |
+| 19 | Odoo side by side | casimir.odoo.com Units & Packagings vs Nocoly | Same fields as §1 apart from the "Not built now" list; the same 30 units, Active flags, Contains and Reference Units | **Pass** — through the extract and test 18: the tenant does not show a Units & Packagings menu (its units setting is off), so there is no screen to compare |
+
+### Differences from Odoo seen in testing
+
+1. **Reference Unit picker.** Odoo's dropdown hints each unit's ratio ("Days  8.0 Hours"); HAP's dropdown lists names
+   only. The ratio shows once a unit is picked, in the Contains and Reference Unit fields.
+2. **New records sit at the top of the open view** until it is refreshed, whatever their Sequence — HAP behaviour.
+3. **Archive / Unarchive.** The button that does not apply is greyed out rather than hidden, as on Contacts.
+
+### Test records left in the worksheet
+
+TEST Box of 10 (Contains 12, Reference Unit Pack of 6) · TEST Crate (Contains 5, Reference Unit TEST Box of 10) ·
+TEST Half (Contains 0.5, Reference Unit Units). Left for the reviewer to inspect; remove them after sign-off.

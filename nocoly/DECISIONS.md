@@ -15,6 +15,7 @@ the owner's direction. Newest last.
 | 15 Sep 2026 | Names and labels in **English, as in Odoo** | A reviewer can compare Odoo and Nocoly side by side | owner |
 | 15 Sep 2026 | Every worksheet gets a **hand-off** — `worksheets/NN-name.md` plus a published review page — checked by a colleague | Review happens independently of the build | owner |
 | 15 Sep 2026 | **One implementation agent at a time** builds a worksheet (requirements + hap CLI build); Claude plans, reviews its work, runs the UI test, writes the hand-off and commits | Throughput with one point of review | owner |
+| 15 Sep 2026 | **Worksheet 05 Journals is built by the colleague, in parallel.** Implementation agents skip it — after Products they do 04 Product Variants, then 06 Invoices and 07 Invoice Lines once Journals stands — and never touch the Journals worksheet | Two builders working at once; Invoices relates to Journals | owner |
 | 15 Sep 2026 | **Deleting anything needs the owner's approval.** Mistakes are renamed "ZZ obsolete – " and listed; test records are named `TEST …` and removed after sign-off | Several HAP deletions cannot be undone | owner |
 
 ## Open — to settle before the worksheet that needs it
