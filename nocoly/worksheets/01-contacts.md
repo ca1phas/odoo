@@ -20,7 +20,7 @@ Labels are Odoo's. "Hidden" means not on the form but used by views, rules or bu
 
 | # | Field | Odoo field | Nocoly type | Required | Default | Notes |
 |---|---|---|---|---|---|---|
-| 1 | Name | `name` | Text · **title field** | when Address Type = Contact | — | Placeholder "Name (company or person)". Odoo constraint `_check_name`: "Contacts require a name"; a nameless invoice or delivery address is allowed |
+| 1 | Name | `name` | Text | when Address Type = Contact | — | Placeholder "Name (company or person)". Odoo constraint `_check_name`: "Contacts require a name"; a nameless invoice or delivery address is allowed. Not the title field: Display Name is |
 | 2 | Company | `parent_id` | Relation → Contacts (single) | no | — | Placeholder "Company Employer". The picker lists contacts that have no company themselves and are not archived — Odoo 19.4 domain `[('parent_id', '=', False)]` |
 | 3 | Address Type | `type` | Dropdown: Contact · Invoice · Delivery · Other | yes | Contact | Odoo shows it only when adding a contact from a company's **Contacts** tab; here, only once Company is set |
 | 4 | Email | `email` | Email | no | — | |
@@ -37,6 +37,24 @@ Labels are Odoo's. "Hidden" means not on the form but used by views, rules or bu
 | 20 | Reference | `ref` | Text | no | — | Tab **Sales & Purchase** |
 | 21 | Notes | `comment` | Rich text | no | — | Tab **Notes**. Placeholder "Internal notes..." |
 | 22 | Active | `active` | Checkbox | — | checked | Hidden. Set by Archive / Unarchive |
+| 23 | Display Name | `complete_name` | Function formula, text · **title field** | — | — | Hidden. Odoo `_get_complete_name`: the Name — or, for a nameless Invoice, Delivery or Other address under a company, its Address Type — prefixed with the Company's Name and ", " when there is a Company: "TEST QA Trading Sdn Bhd, TEST Person One", "TEST QA Trading Sdn Bhd, Delivery". A contact without a Company is its Name. Trimmed, as Odoo strips it |
+| — | Parent name | `parent_name` *(helper)* | Lookup through Company of its Name, stored | — | — | Hidden. Feeds Display Name. Odoo's related field `parent_id.name` |
+
+**How Display Name works.** A number formula has no IF, so Display Name is a HAP *function formula* with a text
+result:
+
+```
+IF(ISBLANK(Company), TRIM(Name),
+   TRIM(CONCAT(Parent name, ", ",
+               IF(AND(ISBLANK(Name), OR(Address Type == "Invoice", Address Type == "Delivery", Address Type == "Other")),
+                  Address Type, Name))))
+```
+
+Contacts nest one level only (the Company picker lists contacts that have no company), so the Company's Name is
+always the top-level company's. Parent name is a stored lookup: renaming a company updates its contacts' Parent name
+and Display Name within seconds, without a workflow — tested by renaming TEST QA Trading Sdn Bhd and back. Display
+Name is hidden on the form, but HAP still hands the title field to record titles, tables, cards and pickers (the
+lists blank other hidden fields).
 
 ### Form layout
 
@@ -48,7 +66,7 @@ Labels are Odoo's. "Hidden" means not on the form but used by views, rules or bu
 | Tabs: Contacts · Sales & Purchase · Invoicing · Notes | Tabs: Contacts · Sales & Purchase · Notes |
 
 A HAP form is a 12-column grid, so Odoo's two columns become paired rows. HAP has no avatar slot; Image sits
-under the address.
+under the address. Display Name is not on the form, as in Odoo, whose form shows Name; it is the record's title.
 
 ### Rules
 
@@ -69,9 +87,11 @@ under the address.
 
 | View | Type | Shows | Odoo 19.4 |
 |---|---|---|---|
-| Contacts | table | Active records. Columns Name · Company · Email · Phone · Country, sorted by Name A→Z. Quick filters Salesperson · Company · Country | List view. Its default columns are Name, Email, Phone, Activities, Country, and a person's name reads "Company, Person" — here Company is its own column. Its group-bys are Salesperson, Company, Country |
-| Kanban | gallery | Active records. Image cover; Name, Email, Phone, City, Country | Kanban view |
-| Archived | table | Archived records, same columns | The *Archived* filter |
+| Contacts | table | Active records. Columns Display Name · Email · Phone · Country, sorted by Display Name A→Z. Quick filters Salesperson · Company · Country | List view. Its default columns are the display name ("Company, Person"), Email, Phone, Activities, Country, ordered by `complete_name`. Its group-bys are Salesperson, Company, Country |
+| Kanban | gallery | Active records. Image cover; title Display Name; Email, Phone, City, Country; sorted by Display Name | Kanban view |
+| Archived | table | Archived records, same columns and sort | The *Archived* filter |
+
+The company form's **Contacts** tab keeps its own columns: Name, Address Type, Email, Phone, Job Position.
 
 ### Automations (Odoo `_fields_sync`)
 
@@ -102,15 +122,17 @@ under the address.
 
 ## 2 · Build
 
-Built by `nocoly/build/contacts.py` — steps `fields → layout → rules → views → buttons → automations`, each safe
-to re-run; every id is in `nocoly/build/ids.json`.
+Built by `nocoly/build/contacts.py` — steps `fields → display → layout → rules → views → buttons → automations`,
+each safe to re-run; every id is in `nocoly/build/ids.json`. `contacts.py names` prints every contact's Name,
+Company, Address Type and Display Name.
 
 | Element | Built | Id |
 |---|---|---|
 | App | ERP Master | `6cb4d051-a33c-4bf9-b56f-5f47f0e85dc9` |
 | Menu group | Contacts | `6aa8a3a93e5e4ad5b852a6d3` |
 | Worksheet | Contacts, alias `res_partner` | `6aa8a3b34a22ad87b728c4fe` |
-| Controls | 28: the 22 fields above (aliases are Odoo field names), 3 tabs, 3 dividers | — |
+| Controls | 30: the 23 fields above (aliases are Odoo field names), the Parent name lookup, 3 tabs, 3 dividers | — |
+| Title field | Display Name (function formula) · Parent name (its lookup) | `6aa8e4544a73a3142152d665` · `6aa8e4504a22ad87b728ce91` |
 | Rules | the 3 above | — |
 | Views | Contacts · Kanban · Archived | `6aa8a3b34a22ad87b728c502` · `6aa8a4d11204328eb1af06f9` · `6aa8a4d14a73a3142152ca08` |
 | Buttons | Archive · Unarchive, each running a one-step workflow that sets Active | `6aa8a5654720c515252bda3d` · `6aa8a5674a73a3142152ca18` |
@@ -122,6 +144,15 @@ keeping every id: Company Type (Person / Company) removed, DUNS added, the rules
 Company Type retired, Company shown on every contact. A last pass copied Company ID and DUNS on linking, kept
 archived companies out of the Company picker, and stopped the push automation running for contacts that have
 nobody under them.
+
+**Display name, 15 Sep 2026** (owner's decision after the UI test). `contacts.py display` added Parent name and
+Display Name, both hidden, and made Display Name the title field in place of Name; `contacts.py views` moved the
+Contacts and Archived columns to Display Name · Email · Phone · Country and all three views' sort and the Kanban
+card title to Display Name. The four TEST records computed "TEST QA Trading Sdn Bhd", "TEST QA Trading Sdn Bhd,
+TEST Person One", "TEST QA Trading Sdn Bhd, TEST Person Two" and "TEST QA Trading Sdn Bhd, Delivery" at once.
+Renaming the company changed its three contacts' Display Name within six seconds, and it was renamed back; no
+workflow ran. The three rules, both buttons, the two automations and the Archive / Unarchive workflows read back
+unchanged, and so did the other 28 controls apart from Name no longer being the title.
 
 ### Cleanup, 15 Sep 2026
 
@@ -140,6 +171,14 @@ nobody under them.
 - The Phone control validates numbers: an unallocated one such as 03-1234 5678 is refused, and so will be
   placeholders like "NA" when seeding from Odoo.
 - Records created through the API must set Active, or they appear in neither Contacts nor Archived.
+- A **function formula** (type 53) is where HAP has IF and text functions. Its `dataSource` is
+  `{"type": "mdfunction", "expression": "…", "status": 1}` with `enumDefault2` 2 for a text result; functions keep
+  their plain names (`IF`, `CONCAT`, `TRIM`, `ISBLANK` — no `c` prefix, unlike a number formula), a dropdown
+  compares as its label (`$type$ == "Delivery"`), and `ISBLANK` works on a Relation. It recomputes when a stored
+  lookup it reads changes.
+- A function formula can be the **title field while hidden**: the list calls behind tables, cards and pickers
+  still return the title's value, while they blank hidden fields in general (a hidden checkbox came back "0");
+  `record get` returns all of them.
 
 ## 3 · Test list
 

@@ -113,6 +113,16 @@ def add_fields(ws, ctrls):
     hap.run('worksheet', 'update-fields', ws, '--controls', json.dumps(hap.controls(ws), ensure_ascii=False))
 
 
+def append_controls(ws, ctrls):
+    """Append controls with no client-side id, so the server mints real ones, and nothing else is re-sent.
+
+    This is how hap-cli's own app builder adds a one-way Relation: AddWorksheetControls without a
+    controlId. A Relation to another worksheet stays one-way (advancedSetting.bidirectional '0'), and the
+    target worksheet is not touched."""
+    ctrls = [{k: v for k, v in c.items() if k != 'controlId'} for c in ctrls]
+    hap.run('worksheet', 'add-fields', ws, '--controls', json.dumps(ctrls, ensure_ascii=False))
+
+
 def show(ws):
     """Print the live control list in form order."""
     ctrls = hap.controls(ws)
@@ -190,6 +200,33 @@ def sort_spec(ctrls):
                           'dateRange': 0, 'dateRangeType': 0, 'value': '', 'values': [], 'minValue': '',
                           'maxValue': '', 'isAsc': True, 'dynamicSource': [], 'advancedSetting': {},
                           'isGroup': False, 'groupFilters': [], 'emptyRule': 0} for c in ctrls]}
+
+
+def sort_by(pairs):
+    """sortCid/sortType/moreSort for [(control, ascending), ...]: sort_spec with a direction per control.
+    sortType follows the first control: 2 ascending, 1 descending."""
+    spec = sort_spec([c for c, _ in pairs])
+    for s, (_, asc) in zip(spec['moreSort'], pairs):
+        s['isAsc'] = asc
+    spec['sortType'] = 2 if pairs[0][1] else 1
+    return spec
+
+
+def sort_views(ws, app, names):
+    """Put the views in this order (the first opens by default); views not named keep their place after.
+
+    `hap worksheet view sort` sends no appId, and SortWorksheetViews then answers false and changes nothing;
+    the same call with the appId works, so it goes through the CLI's session."""
+    from hap_cli.core.session import Session
+    live = hap.listing('worksheet', 'view', 'list', ws, '-a', app)
+    by_name = {v['name']: v['viewId'] for v in live}
+    order = [by_name[n] for n in names] + [v['viewId'] for v in live if v['name'] not in names]
+    if order != [v['viewId'] for v in live]:
+        ok = Session.load(None).api_call('Worksheet', 'SortWorksheetViews',
+                                         {'appId': app, 'worksheetId': ws, 'viewIds': order})
+        if ok is not True:
+            sys.exit(f'SortWorksheetViews answered {ok!r}')
+    return [v['name'] for v in hap.listing('worksheet', 'view', 'list', ws, '-a', app)]
 
 
 def switch_filter(c, op):

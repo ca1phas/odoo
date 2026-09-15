@@ -9,6 +9,7 @@
  "worksheets": {
   "Contacts": "6aa8a3b34a22ad87b728c4fe",
   "Units & Packagings": "6aa8d14d4a73a3142152d3f6",
+  "Products": "6aa8ea0c4a22ad87b728cf0b",
   "Journals": "6aa8f5191204328eb1af162a"
  },
  "workflows": {
@@ -17,17 +18,24 @@
   "Contacts: copy company details to its contact": "6aa8a7ff8475f61d4cc65bb9",
   "Contacts: push company address and Tax ID to its contacts": "6aa8a8048475f61d4cc65ebe",
   "Units & Packagings: Archive": "6aa8d881e589b8933dd73bfb",
-  "Units & Packagings: Unarchive": "6aa8d889d91d10186df6ec14"
+  "Units & Packagings: Unarchive": "6aa8d889d91d10186df6ec14",
+  "Products: Archive": "6aa8eb452fe3e8d6b31a6da2",
+  "Products: Unarchive": "6aa8eb482fe3e8d6b31a6dc6"
  },
  "buttons": {
   "Archive": "6aa8a5654720c515252bda3d",
   "Unarchive": "6aa8a5674a73a3142152ca18",
   "Units & Packagings: Archive": "6aa8d8814720c515252be2f8",
-  "Units & Packagings: Unarchive": "6aa8d8894a73a3142152d499"
+  "Units & Packagings: Unarchive": "6aa8d8894a73a3142152d499",
+  "Products: Archive": "6aa8eb444720c515252be61c",
+  "Products: Unarchive": "6aa8eb484720c515252be61e"
  },
  "views": {
   "Units & Packagings: Units & Packagings": "6aa8d14d4a73a3142152d3fa",
   "Units & Packagings: Archived": "6aa8d8554720c515252be2d3",
+  "Products: Products": "6aa8eadd1204328eb1af105b",
+  "Products: List": "6aa8ea0c4a22ad87b728cf0f",
+  "Products: Archived": "6aa8eadf1204328eb1af105d",
   "Journals: Journals": "6aa8f5191204328eb1af162e",
   "Journals: Archived": "6aa8f7074720c515252bf2c8"
  }

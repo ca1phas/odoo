@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 """Build the Contacts worksheet (Odoo res.partner, as on casimir.odoo.com saas~19.4) in ERP Master.
 
-    ~/.hap-venv/bin/python nocoly/build/contacts.py fields       # 1. controls, in one save
+    ~/.hap-venv/bin/python nocoly/build/contacts.py fields       # 1. controls, in one save (then display, layout)
+    ~/.hap-venv/bin/python nocoly/build/contacts.py display      # 1b. Display Name (complete_name) as the title field
     ~/.hap-venv/bin/python nocoly/build/contacts.py layout       # 2. positions, tabs, company filter, reverse columns
     ~/.hap-venv/bin/python nocoly/build/contacts.py rules        # 3. rules (upsert by name, obsolete ones disabled)
     ~/.hap-venv/bin/python nocoly/build/contacts.py views        # 4. Contacts / Kanban / Archived views
     ~/.hap-venv/bin/python nocoly/build/contacts.py buttons      # 5. Archive / Unarchive buttons and their workflows
     ~/.hap-venv/bin/python nocoly/build/contacts.py automations  # 6. company -> contact sync workflows (create or update)
     ~/.hap-venv/bin/python nocoly/build/contacts.py to194        # one-off, already applied: moved the Odoo 19.0 build to 19.4
+    ~/.hap-venv/bin/python nocoly/build/contacts.py names        # print every contact's Name and Display Name
     ~/.hap-venv/bin/python nocoly/build/contacts.py show         # print the live control list
 
 Requirements: nocoly/worksheets/01-contacts.md.
@@ -44,6 +46,7 @@ PLACE = {
     'Misc': (16, 0, 12, 'Sales & Purchase'), 'Reference': (17, 0, 6, 'Sales & Purchase'),
     'Notes': (19, 0, 12, 'Notes'),
     'Active': (20, 0, 6, None),
+    'Parent name': (21, 0, 6, None), 'Display Name': (21, 1, 6, None),
 }
 TABS = {'Contacts': 11, 'Sales & Purchase': 13, 'Notes': 18}
 HINTS = {'Name': 'Name (company or person)', 'Company': 'Company Employer', 'Email': 'Email', 'Phone': 'Phone',
@@ -113,6 +116,7 @@ def step_fields():
          ctl('RICH_TEXT', 'Notes', alias='comment'),
          active]
     hap.run('worksheet', 'update-fields', WS, '--controls', json.dumps(c, ensure_ascii=False))
+    step_display()
     step_layout()
 
 
@@ -150,6 +154,95 @@ def step_layout():
     arrange(ctrls)
     hap.run('worksheet', 'update-fields', WS, '--controls', json.dumps(ctrls, ensure_ascii=False))
     show()
+
+
+DISPLAYED_TYPES = ['Invoice', 'Delivery', 'Other']   # res.partner _complete_name_displayed_types
+DESC = {
+    'Parent name': "The Company's Name, a stored lookup read by Display Name. Odoo parent_name.",
+    'Display Name': 'The title field. The Name (or, for a nameless Invoice, Delivery or Other address under a '
+                    "company, its Address Type), with the Company's Name and \", \" in front when there is a "
+                    'Company. Odoo complete_name (_get_complete_name).',
+}
+HIDDEN_HELPERS = list(DESC)                          # hidden on the form, as Odoo's form shows Name
+
+
+def complete_name_expression(f):
+    """Odoo _get_complete_name (res_partner.py:378) as a HAP function formula — a number formula has no IF.
+
+    Function formulas take plain function names (IF, not cIF), compare option labels as text, and read the
+    Company's Name through the stored lookup Parent name. Odoo strips the result; TRIM does the same."""
+    ref = lambda n: f"${f[n]['controlId']}$"
+    name, company, parent, kind = ref('Name'), ref('Company'), ref('Parent name'), ref('Address Type')
+    typed = ','.join(f'{kind}=="{t}"' for t in DISPLAYED_TYPES)
+    return (f'IF(ISBLANK({company}),TRIM({name}),'
+            f'TRIM(CONCAT({parent},", ",IF(AND(ISBLANK({name}),OR({typed})),{kind},{name}))))')
+
+
+def function_source(expression):
+    """dataSource of a function formula (type 53)."""
+    return json.dumps({'type': 'mdfunction', 'expression': expression, 'status': 1}, ensure_ascii=False)
+
+
+def step_display():
+    """Display Name (Odoo complete_name) as the title field: a stored lookup of the Company's Name (Odoo
+    parent_name) and a text function formula, both hidden. Name keeps its rules. Safe to re-run."""
+    def fields():
+        return hap.by_name(c for c in hap.controls(WS) if c['type'] != 52)
+
+    def append(control):
+        # add-fields keeps the client-side id, and a formula saved under it computes nothing; a full save of
+        # the control set re-mints it
+        hap.run('worksheet', 'add-fields', WS, '--controls', json.dumps([control], ensure_ascii=False))
+        hap.run('worksheet', 'update-fields', WS, '--controls', json.dumps(hap.controls(WS), ensure_ascii=False))
+
+    hap.backup('contacts_controls_pre_display', hap.controls(WS))
+    f = fields()
+    if 'Parent name' not in f:
+        append(ctl('SHEET_FIELD', 'Parent name', alias='parent_name', data_source=f['Company']['controlId'],
+                   source_control_id=f['Name']['controlId'], extra={'strDefault': '00'}))   # '00' = stored
+        f = fields()
+    if 'Display Name' not in f:
+        append(ctl('FORMULA_FUNC', 'Display Name', alias='complete_name',
+                   advanced_setting={'analysislink': '1', 'sorttype': 'en'},
+                   extra={'enumDefault2': 2, 'dataSource': function_source(complete_name_expression(f))}))  # 2 = text
+    ctrls = hap.controls(WS)
+    f = hap.by_name(c for c in ctrls if c['type'] != 52)
+    want = {c['controlId']: 1 if c['controlName'] == 'Display Name' else 0 for c in ctrls}
+    stale = [c['controlName'] for c in ctrls if (c.get('attribute') or 0) != want[c['controlId']]]
+    display = f['Display Name']
+    expression = complete_name_expression(f)
+    if json.loads(display.get('dataSource') or '{}').get('expression') != expression:
+        print(f"  Display Name: read back {display.get('dataSource')!r}; rewriting")
+        display['dataSource'] = function_source(expression)
+        stale.append('Display Name expression')
+    hidden = field_permission_str(hidden=True)
+    for name in HIDDEN_HELPERS:
+        if (f[name].get('desc'), f[name].get('fieldPermission')) != (DESC[name], hidden):
+            f[name].update(desc=DESC[name], fieldPermission=hidden)
+            stale.append(f'{name} description / hidden')
+    for c in ctrls:
+        c['attribute'] = want[c['controlId']]           # one title field: Display Name, no longer Name
+    if stale:
+        hap.run('worksheet', 'update-fields', WS, '--controls', json.dumps(ctrls, ensure_ascii=False))
+        print(f'  updated: {stale}')
+    show()
+
+
+def step_names():
+    """Every contact's Name, Company, Address Type and Display Name, read one by one (lists hide hidden fields)."""
+    app = hap.ids()['app']
+    rows = hap.run('worksheet', 'record', 'list', WS, '-a', app, '-n', '200', '--use-field-id-as-key')
+    rows = rows.get('data', rows) if isinstance(rows, dict) else rows
+    rows = rows.get('rows', rows) if isinstance(rows, dict) else rows
+    for r in rows:
+        d = hap.run('worksheet', 'record', 'get', WS, r['rowid'], '-a', app)['data']
+        company = d.get('parent_id') or []
+        company = json.loads(company) if isinstance(company, str) and company.startswith('[') else company
+        kind = d.get('type') or []
+        kind = json.loads(kind) if isinstance(kind, str) and kind.startswith('[') else kind
+        print(f"  {d.get('complete_name')!r:<48} name={d.get('name')!r} company={[x.get('name') for x in company]} "
+              f"type={[x.get('value', x) if isinstance(x, dict) else x for x in kind]} "
+              f"parent_name={d.get('parent_name')!r} active={d.get('active')} rowid={r['rowid']}")
 
 
 SHOW, HIDE, REQUIRE, ERROR = 1, 2, 5, 6          # rule item types
@@ -212,19 +305,20 @@ def step_views():
     active = lambda op: {'type': 'group', 'logic': 'AND', 'children': [
         {'type': 'condition', 'field': f['Active']['controlId'], 'operator': op, 'value': ['1']}]}
     # Odoo _order is complete_name ASC. --view-spec ignores sort keys, so sort is set with --view-json below.
-    sort = {'sortCid': f['Name']['controlId'], 'sortType': 2,
-            'moreSort': [{'controlId': f['Name']['controlId'], 'dataType': 2, 'spliceType': 0, 'filterType': 0,
-                          'dateRange': 0, 'dateRangeType': 0, 'value': '', 'values': [], 'minValue': '',
-                          'maxValue': '', 'isAsc': True, 'dynamicSource': [], 'advancedSetting': {},
+    display = f['Display Name']
+    sort = {'sortCid': display['controlId'], 'sortType': 2,
+            'moreSort': [{'controlId': display['controlId'], 'dataType': display['type'], 'spliceType': 0,
+                          'filterType': 0, 'dateRange': 0, 'dateRangeType': 0, 'value': '', 'values': [],
+                          'minValue': '', 'maxValue': '', 'isAsc': True, 'dynamicSource': [], 'advancedSetting': {},
                           'isGroup': False, 'groupFilters': [], 'emptyRule': 0}]}
-    # Odoo 19.4 list shows display_name, email, phone, country by default; Company stands in for the
-    # "Company, Person" display name.
-    columns = i('Name', 'Company', 'Email', 'Phone', 'Country')
+    # Odoo 19.4 list shows display_name ("Company, Person"), email, phone, country by default. Display Name is
+    # hidden on the form, but HAP returns the title field to tables, cards and pickers all the same.
+    columns = i('Display Name', 'Email', 'Phone', 'Country')
     views = {
         'Contacts': dict(viewType='table', filter=active('eq'), tableFields=columns,
                          quickFilters=i('Salesperson', 'Company', 'Country')),
         'Kanban': dict(viewType='gallery', filter=active('eq'),
-                       card={'titleField': f['Name']['controlId'],
+                       card={'titleField': display['controlId'],
                              'displayFields': i('Email', 'Phone', 'City', 'Country'),
                              'coverField': f['Image']['controlId'], 'coverDirection': 'left',
                              'coverDisplayMode': 'square'}),
@@ -555,6 +649,6 @@ def show():
 
 
 if __name__ == '__main__':
-    {'fields': step_fields, 'layout': step_layout, 'rules': step_rules, 'views': step_views,
-     'buttons': step_buttons, 'automations': step_automations, 'to194': step_to194,
-     'show': show}[sys.argv[1] if len(sys.argv) > 1 else 'show']()
+    {'fields': step_fields, 'display': step_display, 'layout': step_layout, 'rules': step_rules,
+     'views': step_views, 'buttons': step_buttons, 'automations': step_automations, 'to194': step_to194,
+     'names': step_names, 'show': show}[sys.argv[1] if len(sys.argv) > 1 else 'show']()

@@ -64,6 +64,13 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   `--icon-url https://www.nocoly.com/file/mdpub/customIcon/<icon>.svg`.
 - A new two-way Relation's reverse control comes back at row 9999, width 0, with no alias. Place it in a second save.
   A **single Relation to its own worksheet always comes back two-way**, with a reverse control named "Child".
+- A **one-way Relation** to another worksheet: add it with `add-fields`, without a controlId, and
+  `advancedSetting.bidirectional` "0". The target worksheet gets no reverse field.
+- A **static Relation default** is `defsource: [{"staticValue": "[\"<rowid>\"]"}]`; the server stores the whole record
+  in place of the id. The API applies no defaults — only the form does.
+- A **hidden title field** still reaches record titles, tables, cards and pickers; the list calls behind them blank
+  other hidden fields.
+- A single select's `advancedSetting.direction`: 2 horizontal · 1 vertical · 0 matrix.
 - `worksheet add-fields` keeps a control's client-side 32-hex id, and a formula or text combination added that way
   computes nothing until an `update-fields` save re-mints the id. Inside one `update-fields` save, references to
   not-yet-minted ids (formula expressions, a lookup's source) are rewritten to the minted ids.
@@ -74,8 +81,12 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
 
 ### Formulas and lookups
 
-- **Functions need a `c` prefix** in the stored expression — `cMIN`, `cINT`, `cROUNDUP`, `cABS`. Written as `MIN(…)`
-  the formula saves and computes empty. Plain arithmetic needs no prefix; a number formula has no IF.
+- **Functions need a `c` prefix** in a *number* formula's stored expression — `cMIN`, `cINT`, `cROUNDUP`, `cABS`.
+  Written as `MIN(…)` the formula saves and computes empty. Plain arithmetic needs no prefix; a number formula has no IF.
+- **IF lives in function formulas** (control type 53). The expression is stored as JSON —
+  `{"type": "mdfunction", "expression": …, "status": 1}` — with `enumDefault2` 2 for a text result. Function names
+  take **no** `c` prefix there; a dropdown compares by its label (`type == "Delivery"`); the formula recomputes when
+  a stored lookup it reads changes (Contacts' Display Name).
 - A text combination can use the record id, `$rowid$`.
 - Stored lookups chain: saving a record updates the lookups pointing at it and the formulas built on them, level
   after level — so a self-referencing chain (Absolute Quantity down a unit chain) works without workflows.
@@ -86,6 +97,10 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
 
 - `view create/update --view-spec` ignores sort. Set `sortCid`, `sortType` (2 = ascending) and `moreSort` with
   `view update --view-json … --edit-attrs sortCid,sortType,moreSort`.
+- `hap worksheet view sort` never works: it omits the app id, the server answers false and nothing moves. Use
+  `common.sort_views`, which makes the same call with the app id.
+- `sortType` 1 is descending, 2 ascending. `record list --view-id` applies the view's filter and sort but returns only
+  that view's columns.
 - `--view-spec` `tableFields` sets only `displayControls`, and the table then shows every field. A table's columns are
   `showControls` plus `advancedSetting.customShowControls`:
   `view update --view-json '{"showControls":[…],"advancedSetting":{"customdisplay":"1","customShowControls":"[…]"}}'
@@ -99,6 +114,9 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   of its condition fields is in the write**. A rule that tests only a lookup or formula never fires on the API; add
   the field being edited as a condition. A refused write returns `resultCode 32` naming `<ruleId>:<rowid>`.
 - A rule condition can compare with the record id (`dynamicSource: [{cid: "rowid"}]`).
+- A show/hide rule can target a **whole tab** (the tab's section control).
+- **Relation picker filters run in the browser only**: the picker query through the API ignores them, so prove a
+  picker filter in the UI. A picker filter can compare a candidate with a Relation field on the form being edited.
 - The CLI cannot delete a rule. Disable it (`save-rule --rule-id … --disabled`) and delete it in the UI: worksheet
   ⋯ › Set Worksheet › Business Rules › hover the rule › trash icon.
 
@@ -130,7 +148,8 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
 ### Records
 
 - `hap worksheet record delete` needs the rowId UUID; given `_id` it reports success and deletes nothing.
-- `hap worksheet record list` returns hidden fields as empty strings; `record get` returns their values.
+- `hap worksheet record list` can return hidden fields as empty strings (seen on Units, not always on Contacts or
+  Products); `record get` always returns their values.
 - Value formats differ by field type and a wrong one is accepted silently — see `hap guide record` before writing.
 
 ### In the UI
