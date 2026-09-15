@@ -45,7 +45,7 @@ record was seeded from the Odoo tenant.
 | 02 | Units & Packagings | `uom.uom` | Built, seeded (30 units), UI-tested 18/19 + 1 partly — ready for review | [md](worksheets/02-units-and-packagings.md) · [page](https://claude.ai/artifact/LDoy447FXWYd5gkdDUNDJo) |
 | 03 | Products | `product.template` | Being built | — |
 | 04 | Product Variants | `product.product` | Not started | — |
-| 05 | Journals | `account.journal` | Plan/handoff ready — Teh Li Wei; being built in parallel; implementation agents skip this worksheet | [md](worksheets/05-journals.md) · — |
+| 05 | Journals | `account.journal` | CLI-built — Teh Li Wei; Web form validation pending manual CAPTCHA; implementation agents skip this worksheet | [md](worksheets/05-journals.md) · `build/journals.py` |
 | 06 | Invoices | `account.move` | Not started | — |
 | 07 | Invoice Lines | `account.move.line` | Not started | — |
 

@@ -3,11 +3,13 @@
  "app": "6cb4d051-a33c-4bf9-b56f-5f47f0e85dc9",
  "sections": {
   "Contacts": "6aa8a3a93e5e4ad5b852a6d3",
-  "Products": "6aa8d12ddb26b712423d345d"
+  "Products": "6aa8d12ddb26b712423d345d",
+  "Invoicing": "6aa8f3ecbf00c316381dbbe8"
  },
  "worksheets": {
   "Contacts": "6aa8a3b34a22ad87b728c4fe",
-  "Units & Packagings": "6aa8d14d4a73a3142152d3f6"
+  "Units & Packagings": "6aa8d14d4a73a3142152d3f6",
+  "Journals": "6aa8f5191204328eb1af162a"
  },
  "workflows": {
   "Archive": "6aa8a565e589b8933dd4cc6d",
@@ -25,6 +27,8 @@
  },
  "views": {
   "Units & Packagings: Units & Packagings": "6aa8d14d4a73a3142152d3fa",
-  "Units & Packagings: Archived": "6aa8d8554720c515252be2d3"
+  "Units & Packagings: Archived": "6aa8d8554720c515252be2d3",
+  "Journals: Journals": "6aa8f5191204328eb1af162e",
+  "Journals: Archived": "6aa8f7074720c515252bf2c8"
  }
 }

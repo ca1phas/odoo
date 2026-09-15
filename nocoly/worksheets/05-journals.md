@@ -6,12 +6,13 @@
 | Worksheet | Journals |
 | Odoo model | `account.journal` |
 | Phase | 1 — core worksheet 5 of 7 |
-| Status | **Planned handoff — not built in this branch** |
+| Status | **CLI-built — Web form validation pending manual CAPTCHA** |
 | Owner | **Teh Li Wei** (reviewing colleague) |
-| Reference | Live `casimir.odoo.com` Odoo saas~19.4 tenant; extract and UI validation are required before the HAP build |
+| Reference | User-approved `account.journal` core plan; live `casimir.odoo.com` source and HAP form validation are pending |
 
-This document is the Journals handoff for the ERP Master app. It records the Phase 1 scope,
-ownership boundary and build gate; it does not create or modify a HAP object.
+This document is the Journals handoff and current build record for the ERP Master app. The approved core slice
+was built through hap-cli on 15 September 2026; the browser form check remains pending because Nocoly presented
+a Tencent drag CAPTCHA that the reviewer cannot solve or bypass.
 
 ## 1 · Scope and ownership
 
@@ -28,8 +29,9 @@ ERP Master
     └── Journals
 ```
 
-This branch contains planning and collaboration documentation only. It deliberately does not add a Journals
-builder, seed records, HAP IDs or a menu group.
+This branch now contains the guarded `build/journals.py` builder and the final Journals menu, worksheet and view
+IDs. It does not contain seed records. The builder pins the `fbmy-nocoly` profile, refuses to replace a non-empty
+worksheet, and does not touch Contacts, Units & Packagings or Products.
 
 ## 2 · Dependencies and boundaries
 
@@ -99,30 +101,41 @@ it read-only or hidden according to the UI-aligned build decision.
 
 ## 5 · Build gate and validation checklist
 
-The actual HAP build may start only after all of these are true:
+The build was executed after the Products handoff and correct Nocoly profile became available. Current gate state:
 
-1. Products' current CLI write is handed off, while the Journals ownership boundary remains explicit.
-2. The correct Nocoly CLI profile, Organization and ERP Master app are confirmed.
-3. A CLI preflight confirms that Journals does not already exist and reports worksheet/field/view/rule/workflow
+1. [x] Products' current CLI write is handed off, while the Journals ownership boundary remains explicit.
+2. [x] The correct Nocoly CLI profile, Organization and ERP Master app are confirmed.
+3. [x] A CLI preflight confirmed that Journals did not already exist and reported worksheet/field/view/rule/workflow
    counts and record counts.
-4. The live Odoo Journals form, list, search and actions are read and recorded before translating the plan.
-5. Only the new Journals worksheet and its Invoicing menu placement are created through CLI or MCP; Web is not
+4. [ ] The live Odoo Journals form, list, search and actions still require browser validation; the browser-control
+   approval service was unavailable during the source check.
+5. [x] Only the new Journals worksheet and its Invoicing menu placement were created through CLI; Web was not
    used to save HAP changes.
-6. CLI/MCP post-check confirms field types, defaults, required/read-only/hidden settings, view columns and
+6. [x] CLI post-check confirmed field types, defaults, required/hidden settings, view columns and
    record count.
-7. Web validation checks New, Edit, List, Archived, search, English labels, defaults and the absence of
-   `worksheet has been deleted` or permission errors.
-8. Every CLI/MCP/UI difference and workaround is added to the limitation register before the worksheet is called
+7. [ ] Web validation of New, Edit, defaults and Archived is pending manual CAPTCHA. The page already shows
+   `ERP Master > Invoicing > Journals`, both view links and `Total 0 row(s)`.
+8. [x] Every CLI/MCP/UI difference and workaround found so far was added to the limitation register before the worksheet is called
    complete.
 
-### Preflight blocker already observed
+### Authentication blocker resolved
 
-The previous read-only HAP preflight using the `fbmy-mingdao` profile returned `401 AuthenticationError`. A
-`fbmy-nocoly` profile was not available in that CLI context. This branch records the blocker only: do not run a
-Journals create or update until the user re-authenticates the correct Nocoly profile and the Organization/app are
-confirmed.
+The previous `fbmy-mingdao` preflight returned `401 AuthenticationError`. A later account inventory found and
+validated `fbmy-nocoly`; the Nocoly organization and ERP Master app were confirmed before the build. The old 401
+is therefore resolved as a wrong-profile/authentication-context issue, not an open Journals blocker.
 
-`MCP status: not evaluated` — MCP is not used or claimed to be tested for this handoff.
+`MCP status: not evaluated` — MCP was not used or claimed to be tested for this build.
+
+### CLI build result — 15 September 2026
+
+- Menu group: `Invoicing` (`6aa8f3ecbf00c316381dbbe8`).
+- Worksheet: `Journals` (`6aa8f5191204328eb1af162a`), alias `account_journal`.
+- Fields: 7; records: 0; business rules: 0; custom actions: 0.
+- Views: `Journals` (`6aa8f5191204328eb1af162e`) and `Archived` (`6aa8f7074720c515252bf2c8`).
+- List columns: Journal Name, Type, Sequence Prefix; sort: Sequence then Journal Name, ascending.
+- Deferred relation-dependent fields were not created and there are no Phase 1 Relation controls.
+- `Sequence Prefix` carries the English hint `Enter up to 5 characters`, but the installed CLI schema exposes no
+  confirmed text maximum-length parameter. Hard enforcement remains a recorded CLI capability gap.
 
 ### Evidence to retain after the build
 
@@ -134,9 +147,9 @@ confirmed.
 
 ## 6 · Non-interference checklist
 
-- [ ] Do not checkout, merge or modify the colleague's active Products branch.
-- [ ] Do not modify Contacts, Units & Packagings, Products or their IDs.
-- [ ] Do not create or modify HAP objects in this planning commit.
-- [ ] Do not add a fake Text field for any deferred relation.
-- [ ] Do not add sample Journals records before the live Odoo extract and build approval.
-- [ ] Keep all user-visible labels and options in English.
+- [x] Did not checkout, merge or modify the colleague's active Products branch.
+- [x] Did not modify Contacts, Units & Packagings, Products or their IDs.
+- [x] Modified only the approved Journals and Invoicing HAP objects.
+- [x] Did not add a fake Text field for any deferred relation.
+- [x] Did not add sample Journals records.
+- [x] Kept all user-visible labels and options in English.
