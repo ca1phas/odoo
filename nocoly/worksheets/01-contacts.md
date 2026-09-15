@@ -2,141 +2,161 @@
 
 | | |
 |---|---|
-| Nocoly app | ERP Master |
-| Section | Contacts |
+| Nocoly app | ERP Master · menu group **Contacts** |
 | Worksheet | Contacts |
-| Odoo model | `res.partner` (Odoo 19 Community) |
-| Odoo source | `odoo/addons/base/models/res_partner.py`, `odoo/addons/base/views/res_partner_views.xml`, `addons/contacts/views/contact_views.xml` |
+| Odoo model | `res.partner` |
+| Reference | **casimir.odoo.com — Odoo saas~19.4+e** (form, list, kanban and search views read from the live tenant). Behaviour the tenant cannot show — constraints, sync rules — is read from the Odoo 19.0 source in this repo: `odoo/addons/base/models/res_partner.py` |
 | Phase | 1 — core worksheet 1 of 7 |
-| Status | Built with the hap CLI on 15 Sep 2026 · UI cross-check against Odoo pending |
+| Status | Built with the hap CLI and matched to 19.4 on 15 Sep 2026 · UI test in progress |
 
 One worksheet holds companies, the people who work at them, and their extra addresses (invoice, delivery,
-other) — exactly as Odoo keeps all three in `res.partner`, linked by **Company**.
+other) — as Odoo keeps all three in `res.partner`, linked by **Company**.
 
 ## 1 · Requirements
 
 ### Fields
 
-Labels are Odoo's English labels. "Hidden" means not shown on the form but used by views, rules or buttons.
+Labels are Odoo's. "Hidden" means not on the form but used by views, rules or buttons.
 
 | # | Field | Odoo field | Nocoly type | Required | Default | Notes |
 |---|---|---|---|---|---|---|
-| 1 | Company Type | `company_type` | Single select: Person · Company | yes | Company | Odoo's Contacts app opens **New** on Company (`default_is_company: True`) |
-| 2 | Name | `name` | Text · **title field** | when Address Type = Contact | — | Odoo constraint `_check_name`: "Contacts require a name". Addresses may be nameless |
-| 3 | Email | `email` | Email | no | — | |
-| 4 | Phone | `phone` | Phone | no | — | Default country Malaysia (+60) |
-| 5 | Image | `image_1920` | Attachment (images) | no | — | Avatar; used as the card cover |
-| 6 | Company | `parent_id` | Relation → Contacts (single) | no | — | Only companies can be picked (`domain is_company = True`) |
-| 7 | Address Type | `type` | Dropdown: Contact · Invoice · Delivery · Other | yes | Contact | Shown only under a company |
-| 8 | Street | `street` | Text | no | — | |
-| 9 | Street 2 | `street2` | Text | no | — | |
-| 10 | City | `city` | Text | no | — | |
-| 11 | State | `state_id` | Text | no | — | Many2one in Odoo; Text until the Geography bundle |
-| 12 | ZIP | `zip` | Text | no | — | |
-| 13 | Country | `country_id` | Text | no | — | Many2one in Odoo; Text until the Geography bundle |
-| 14 | Job Position | `function` | Text | no | — | Persons only |
-| 15 | Tax ID | `vat` | Text | no | — | |
-| 16 | Website | `website` | Text | no | — | |
-| 17 | Contacts | `child_ids` | Relation → Contacts (multiple), reverse of Company | no | — | Tab **Contacts** |
-| 18 | Salesperson | `user_id` | Member | no | — | Tab **Sales & Purchase** › Sales |
-| 19 | Company ID | `company_registry` | Text | no | — | Tab **Sales & Purchase** › Misc; companies without a parent only |
-| 20 | Reference | `ref` | Text | no | — | Tab **Sales & Purchase** › Misc |
-| 21 | Notes | `comment` | Rich text | no | — | Tab **Notes** |
-| 22 | Active | `active` | Checkbox | no | checked | Hidden. Archive / Unarchive set it |
+| 1 | Name | `name` | Text · **title field** | when Address Type = Contact | — | Placeholder "Name (company or person)". Odoo constraint `_check_name`: "Contacts require a name"; a nameless invoice or delivery address is allowed |
+| 2 | Company | `parent_id` | Relation → Contacts (single) | no | — | Placeholder "Company Employer". The picker lists contacts that have no company themselves and are not archived — Odoo 19.4 domain `[('parent_id', '=', False)]` |
+| 3 | Address Type | `type` | Dropdown: Contact · Invoice · Delivery · Other | yes | Contact | Odoo shows it only when adding a contact from a company's **Contacts** tab; here, only once Company is set |
+| 4 | Email | `email` | Email | no | — | |
+| 5 | Phone | `phone` | Phone | no | — | Country code defaults to Malaysia (+60) |
+| 6 | Job Position | `function` | Text | no | — | Placeholder "e.g. Sales Director" |
+| 7 | Website | `website` | Text | no | — | Placeholder "e.g. https://www.odoo.com" |
+| 8 | Tax ID | `vat` | Text | no | — | A base field (`res_partner.py:237`) — it has nothing to do with the Taxes bundle |
+| 9 | Company ID | additional identifier *Company ID* | Text | no | — | 19.4 adds it with the **+** beside Tax ID (`company_registry` in 19.0) |
+| 10 | DUNS | additional identifier *DUNS* | Text | no | — | The other **+** option beside Tax ID |
+| 11–16 | Street · Street 2 · City · State · ZIP · Country | `street` `street2` `city` `state_id` `zip` `country_id` | Text | no | — | State and Country are dropdowns in Odoo; Text until the Geography bundle |
+| 17 | Image | `image_1920` | Attachment | no | — | The avatar; the Kanban card cover |
+| 18 | Contacts | `child_ids` | Relation → Contacts (multiple), the reverse of Company | — | — | Tab **Contacts**. Columns: Name, Address Type, Email, Phone, Job Position |
+| 19 | Salesperson | `user_id` | Member | no | — | Tab **Sales & Purchase** |
+| 20 | Reference | `ref` | Text | no | — | Tab **Sales & Purchase** |
+| 21 | Notes | `comment` | Rich text | no | — | Tab **Notes**. Placeholder "Internal notes..." |
+| 22 | Active | `active` | Checkbox | — | checked | Hidden. Set by Archive / Unarchive |
 
-### Form layout (Odoo `view_partner_form`)
+### Form layout
 
-- **Header:** Company Type · Name · Email · Phone · Image
-- **Left column:** Company · Address Type · Street · Street 2 · City · State · ZIP · Country
-- **Right column:** Job Position · Tax ID · Website
-- **Tabs:** Contacts · Sales & Purchase · Notes
+| Odoo 19.4 | Nocoly |
+|---|---|
+| Header: Image · Name · Company · Email · Phone | Name · Company \| Address Type · Email \| Phone |
+| Left column: Address · Tax ID (+ Company ID, DUNS) · SST · TTx | Job Position \| Website · Tax ID \| Company ID · DUNS |
+| Right column: Job Position · Website · Tags | *Address* divider · Street \| Street 2 · City \| State · ZIP \| Country · Image |
+| Tabs: Contacts · Sales & Purchase · Invoicing · Notes | Tabs: Contacts · Sales & Purchase · Notes |
 
-### Interaction rules (Odoo `invisible=` / `required=` attributes)
+A HAP form is a 12-column grid, so Odoo's two columns become paired rows. HAP has no avatar slot; Image sits
+under the address.
 
-| Rule | When | Effect | Odoo source |
-|---|---|---|---|
-| Company hidden on companies | Company Type = Company and Company is empty | hide Company | `parent_id invisible="(is_company and not parent_id) …"` |
-| Job Position only for persons | Company Type = Company | hide Job Position | `function invisible="is_company"` |
-| Address Type only under a company | Company is empty | hide Address Type | address form `type invisible="not parent_id"` |
-| Company ID only on stand-alone companies | Company Type = Person, or Company is set | hide Company ID | `company_registry invisible="parent_id or not is_company"` |
-| Name required for contacts | Address Type = Contact | Name required | `name required="type == 'contact'"` |
+### Rules
 
-### Validation rules
+| Rule | Type | When | Effect | Odoo source |
+|---|---|---|---|---|
+| Address Type only under a company | interaction | Company is empty | hide Address Type | `type` appears only in the Contacts-tab form |
+| Name is required for contacts | interaction | Address Type = Contact | Name required | `name required="type == 'contact'"` |
+| Contacts require a name | validation — form **and** API writes | Address Type = Contact and Name is empty | "Contacts require a name" | SQL constraint `_check_name` |
 
-| Rule | When | Message | Odoo source |
-|---|---|---|---|
-| Contacts require a name | Address Type = Contact and Name is empty | Contacts require a name | SQL constraint `_check_name` |
-
-### Buttons (Odoo ⚙ Actions menu)
+### Buttons (Odoo ⚙ Actions)
 
 | Button | Shown when | Does | Confirmation |
 |---|---|---|---|
-| Archive | Active is checked | Active → unchecked | "Are you sure that you want to archive this record?" |
+| Archive | Active is checked | Active → unchecked | "Are you sure that you want to archive this record?" (`addons/web/static/src/views/form/form_controller.js:569`) |
 | Unarchive | Active is unchecked | Active → checked | none |
 
-### Views (Odoo Contacts menu: list first, then kanban)
+### Views
 
-| View | Type | Shows | Odoo source |
+| View | Type | Shows | Odoo 19.4 |
 |---|---|---|---|
-| Contacts | Table | Active records. Columns: Name, Email, Phone, Country, Company, Salesperson | `view_partner_tree` |
-| Kanban | Gallery | Active records. Card: Image, Name, Email, Phone, City, Country | `res_partner_kanban_view` |
-| Archived | Table | Archived records | search filter `inactive` |
-
-Quick filters: Company Type (Odoo filters *Persons* / *Companies*), Salesperson, Company, Country.
+| Contacts | table | Active records. Columns Name · Company · Email · Phone · Country, sorted by Name A→Z. Quick filters Salesperson · Company · Country | List view. Its default columns are Name, Email, Phone, Activities, Country, and a person's name reads "Company, Person" — here Company is its own column. Its group-bys are Salesperson, Company, Country |
+| Kanban | gallery | Active records. Image cover; Name, Email, Phone, City, Country | Kanban view |
+| Archived | table | Archived records, same columns | The *Archived* filter |
 
 ### Automations (Odoo `_fields_sync`)
 
-| Automation | Trigger | Does | Odoo source |
+| Automation | Runs when | Does | Odoo source |
 |---|---|---|---|
-| Copy company address | Company set or changed, Address Type = Contact | Copy Street…Country from the company (only if the company has an address) | `onchange_parent_id`, `_fields_sync` 1b |
-| Copy commercial fields | Company set or changed | Copy Tax ID from the company, and Salesperson if empty on a person | `_commercial_sync_from_company`, `_compute_user_id` |
-| Push address to contacts | A company's address changes | Update every Contact-type contact under it | `_children_sync` 2b |
-| Push Tax ID to contacts | A company's Tax ID or Company ID changes | Update every contact under it | `_commercial_sync_to_descendants` |
+| Contacts: copy company details to its contact | a record's Company or Address Type is set or changed, and it has a Company | Copies the company's address — only for Address Type = Contact, and only if the company has an address. Copies each of Tax ID, Company ID and DUNS that the company has. Copies the company's salesperson to a contact that has none | `onchange_parent_id`, `_fields_sync` 1a–1b, `_get_commercial_values`, `_compute_user_id` |
+| Contacts: push company address and Tax ID to its contacts | a record **that has contacts** changes its address, Tax ID, Company ID or DUNS | Copies Tax ID, Company ID and DUNS to all its contacts, and the address to its Contact-type contacts | `_children_sync`, `_commercial_sync_to_descendants` |
 
 ### Not built now, and why
 
-| Odoo field / feature | Why not now |
+| Odoo 19.4 field / feature | Why not now |
 |---|---|
+| SST and TTx registration numbers; Malaysian e-invoicing identity (Identification Type and Number, Industrial Classification, Malaysian TIN) | Malaysian localisation: `l10n_my` / `l10n_my_edi`, which need Invoicing. They come with the Taxes bundle and e-invoicing — **Tax ID itself stays here** |
 | Tags (`category_id`) | Contact Tags bundle — excluded for now |
-| Country, State as dropdowns | Geography bundle — excluded; Text meanwhile |
+| State and Country as dropdowns | Geography bundle — excluded; Text meanwhile |
+| Pricelist, Payment Terms, Payment Method, Incoterm, Fiscal Position (tab Sales & Purchase) | Pricelists, Payment Terms, Payments, Incoterms and Fiscal Positions bundles |
 | Industry (`industry_id`) | Its own table (`res.partner.industry`), not in Phase 1 |
-| Language (`lang`), Timezone (`tz`) | Odoo hides Language while one language is installed; neither drives anything yet |
-| Company Name + **Create** company (`company_name`, `create_company`) | Only filled by CRM leads and website sign-up — arrives with CRM |
-| Bank accounts, receivable/payable accounts, payment terms, fiscal position, pricelist | Added by Invoicing / Sales bundles, appended when those land |
-| Smart buttons (Meetings, Sales, Invoiced …) | Belong to the apps that own them |
-| Multi-company (`company_id`) | Single company |
-| Upstream sync (a contact's address or Tax ID edit rewriting its company) | Odoo does this; left out to avoid automation loops — edit the company instead |
-| Duplicate warning on same Tax ID / Company ID | Odoo only warns; revisit with Invoicing |
-| Roles | Set once per app at the end of Phase 1 |
+| GLN (`global_location_number`, delivery addresses) | `account_add_gln` — arrives with Invoicing |
+| Invoicing tab — bank accounts, e-invoice sending and format, credit limit | Invoicing |
+| Smart buttons (Opportunities, Sales, Invoiced, Meetings, Tasks), Activities, Last Reminder | Owned by other apps; HAP has native activity and discussion |
+| Language (`lang`) | Odoo hides it while one language is installed |
+| Properties | Odoo's ad-hoc custom fields; in HAP an admin adds a field instead |
+| Is a Company (`is_company`) | Computed and read-only in 19.4, and not on the form; nothing here depends on it |
+| Upstream sync — a contact's address or Tax ID edit rewriting its company | Odoo does it; left out to avoid automation loops — edit the company instead |
+| "Potential duplicates" warning on the same Tax ID | Odoo only warns; revisit with Invoicing |
+| Email required for a contact with a user login | No logins on contacts in HAP |
+| Roles | Set once for the app at the end of Phase 1 |
 
 ## 2 · Build
 
-Built by `nocoly/build/contacts.py` (steps `fields → layout → rules → views → buttons → automations`);
-every id is in `nocoly/build/ids.json`.
+Built by `nocoly/build/contacts.py` — steps `fields → layout → rules → views → buttons → automations`, each safe
+to re-run; every id is in `nocoly/build/ids.json`.
 
 | Element | Built | Id |
 |---|---|---|
 | App | ERP Master | `6cb4d051-a33c-4bf9-b56f-5f47f0e85dc9` |
 | Menu group | Contacts | `6aa8a3a93e5e4ad5b852a6d3` |
 | Worksheet | Contacts, alias `res_partner` | `6aa8a3b34a22ad87b728c4fe` |
-| Controls | 28: the 22 fields above (aliases = Odoo field names), 3 tabs, 3 dividers | — |
-| Interaction rules | 5, as in the table above | — |
-| Validation rule | Contacts require a name — checked in the form **and** on API writes | — |
-| Views | Contacts (table) · Kanban (gallery) · Archived (table), all sorted by Name A→Z | `6aa8a3b34a22ad87b728c502` · `6aa8a4d11204328eb1af06f9` · `6aa8a4d14a73a3142152ca08` |
+| Controls | 28: the 22 fields above (aliases are Odoo field names), 3 tabs, 3 dividers | — |
+| Rules | the 3 above, enabled; 3 more disabled — see below | — |
+| Views | Contacts · Kanban · Archived | `6aa8a3b34a22ad87b728c502` · `6aa8a4d11204328eb1af06f9` · `6aa8a4d14a73a3142152ca08` |
 | Buttons | Archive · Unarchive, each running a one-step workflow that sets Active | `6aa8a5654720c515252bda3d` · `6aa8a5674a73a3142152ca18` |
 | Automation | Contacts: copy company details to its contact | `6aa8a7ff8475f61d4cc65bb9` |
 | Automation | Contacts: push company address and Tax ID to its contacts | `6aa8a8048475f61d4cc65ebe` |
 
-Menu groups follow Odoo's app boundaries: **Contacts** now, then **Products** (Units & Packagings,
-Products, Product Variants — shared by Invoicing, Sales, Inventory and Purchase) and **Invoicing**
-(Journals, Invoices, Invoice Lines). A client copy drops an app by deleting its group.
+**History.** Built first from the Odoo 19.0 source, then moved to 19.4 the same day by `contacts.py to194`,
+keeping every id: Company Type (Person / Company) removed, DUNS added, the rules and views that depended on
+Company Type retired, Company shown on every contact. A last pass copied Company ID and DUNS on linking, kept
+archived companies out of the Company picker, and stopped the push automation running for contacts that have
+nobody under them.
 
-### Found while building
+### For whoever deletes things in the UI
 
-- `hap worksheet create-custom-action --action-spec` ignores `--btn-id` and always adds a new button. A
-  re-run created a second Archive/Unarchive pair; the broken pair was deleted with the owner's approval.
-  HAP disabled — but kept — their two empty workflows (`6aa8a542d91d10186df35aa2`,
-  `6aa8a543e589b8933dd4c83d`); they can be deleted from the workflow list.
-- `hap app create --sections` also made an empty "Unnamed Group"; deleted with the owner's approval.
-- To do in the UI check: the owner's screenshot showed the Contacts view listing every field instead of its six
-  columns, and the Company Type quick filter without its Person / Company choices.
+- **3 disabled rules** left from the 19.0 build — *Company is hidden on companies*, *Job Position only for
+  persons*, *Company ID only on stand-alone companies*. The CLI cannot delete a rule; delete them in the form
+  designer.
+- **2 disabled workflows**, `6aa8a542d91d10186df35aa2` and `6aa8a543e589b8933dd4c83d`, left by a duplicate
+  Archive / Unarchive pair (the extra buttons were deleted with the owner's approval).
+
+### Found while building — applies to every worksheet
+
+- `hap worksheet create-custom-action --action-spec` ignores `--btn-id`: every run adds another button.
+- `--view-spec` sets a table's `displayControls` only, and the table then shows every field. Columns are
+  `showControls` plus `advancedSetting.customShowControls`; sort needs `--view-json` too.
+- `workflow node get` returns a branch's conditions as `conditions`; `workflow node save` wants `operateCondition`.
+- The Phone control validates numbers: an unallocated one such as 03-1234 5678 is refused, and so will be
+  placeholders like "NA" when seeding from Odoo.
+- Records created through the API must set Active, or they appear in neither Contacts nor Archived.
+
+## 3 · Test list
+
+Run in the Nocoly UI. Test records are named `TEST …`.
+
+| # | Check | Steps | Expected | Result |
+|---|---|---|---|---|
+| 1 | Empty form | + Record → Submit | Name is marked required; "Contacts require a name" | |
+| 2 | Company record | Fill Name, Email, Phone, Website, Tax ID, Company ID, DUNS, address → Submit | Saved; appears in Contacts and Kanban, not Archived | |
+| 3 | Address Type hidden | Open the new company | No Address Type field (it has no Company) | |
+| 4 | Company picker | New record → open Company | Lists contacts without a company; not archived ones | |
+| 5 | Contact under a company | From the company's Contacts tab, add "TEST Person" with no address | Address Type shows, default Contact. Within seconds the person has the company's address, Tax ID, Company ID and DUNS | |
+| 6 | Nameless address | Add a Delivery address with no name | Saves (Name not required) and gets no address copied | |
+| 7 | Salesperson | Set the company's Salesperson, then add another contact without one | The contact gets the company's salesperson | |
+| 8 | Push address | Change the company's City | Contact-type contacts get the new City; the Delivery address does not | |
+| 9 | Push identifiers | Change the company's Tax ID | Every contact under it gets the new Tax ID | |
+| 10 | Views | Contacts, Kanban and Archived tabs | Columns Name, Company, Email, Phone, Country; sorted by Name; Kanban shows image, email, phone, city, country | |
+| 11 | Archive | Archive a contact | Confirmation text as above; it leaves Contacts and appears in Archived | |
+| 12 | Unarchive | Unarchive it from Archived | Back in Contacts | |
+| 13 | Odoo side by side | casimir.odoo.com Contacts vs Nocoly | Same fields as in §1, apart from the "Not built now" list | |

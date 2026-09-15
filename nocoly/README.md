@@ -28,10 +28,13 @@ Decided on 15 Sep 2026, and overriding the published plan where they differ:
   time: analyse the Odoo model → build it with the hap CLI → test it in the Nocoly UI against Odoo →
   write the hand-off in `worksheets/` for a colleague to check.
 - **Menu groups follow Odoo's apps:** Contacts · Products · Invoicing for Phase 1.
+- **The reference is the live tenant, casimir.odoo.com (Odoo saas~19.4),** not this 19.0 checkout: fields,
+  layout and views are matched to what that tenant shows. The 19.0 source is still where behaviour is read
+  from — constraints and sync logic that a tenant cannot show.
 
 | # | Worksheet | State |
 |---|---|---|
-| 01 | Contacts | built · UI cross-check pending |
+| 01 | Contacts | built and matched to 19.4 · UI test in progress |
 | 02–07 | Units & Packagings · Products · Product Variants · Journals · Invoices · Invoice Lines | not started |
 
 Run the build scripts with the CLI's own interpreter: `~/.hap-venv/bin/python nocoly/build/contacts.py show`.

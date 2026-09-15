@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
-"""Build the Contacts worksheet (Odoo res.partner) in ERP Master.
+"""Build the Contacts worksheet (Odoo res.partner, as on casimir.odoo.com saas~19.4) in ERP Master.
 
-    ~/.hap-venv/bin/python nocoly/build/contacts.py fields   # 1. controls, in one save
-    ~/.hap-venv/bin/python nocoly/build/contacts.py layout   # 2. tabs, company filter, reverse columns
-    ~/.hap-venv/bin/python nocoly/build/contacts.py rules    # 3. interaction + validation rules (upsert by name)
-    ~/.hap-venv/bin/python nocoly/build/contacts.py views    # 4. Contacts / Kanban / Archived views (upsert by name)
-    ~/.hap-venv/bin/python nocoly/build/contacts.py buttons  # 5. Archive / Unarchive buttons and their workflows
-    ~/.hap-venv/bin/python nocoly/build/contacts.py automations  # 6. company -> contact sync workflows
-    ~/.hap-venv/bin/python nocoly/build/contacts.py show     # print the live control list
+    ~/.hap-venv/bin/python nocoly/build/contacts.py fields       # 1. controls, in one save
+    ~/.hap-venv/bin/python nocoly/build/contacts.py layout       # 2. positions, tabs, company filter, reverse columns
+    ~/.hap-venv/bin/python nocoly/build/contacts.py rules        # 3. rules (upsert by name, obsolete ones disabled)
+    ~/.hap-venv/bin/python nocoly/build/contacts.py views        # 4. Contacts / Kanban / Archived views
+    ~/.hap-venv/bin/python nocoly/build/contacts.py buttons      # 5. Archive / Unarchive buttons and their workflows
+    ~/.hap-venv/bin/python nocoly/build/contacts.py automations  # 6. company -> contact sync workflows (create or update)
+    ~/.hap-venv/bin/python nocoly/build/contacts.py to194        # one-off, already applied: moved the Odoo 19.0 build to 19.4
+    ~/.hap-venv/bin/python nocoly/build/contacts.py show         # print the live control list
 
 Requirements: nocoly/worksheets/01-contacts.md.
 
@@ -23,6 +24,35 @@ import hap
 
 WS = hap.ids()['worksheets']['Contacts']
 MALAYSIA = json.dumps({'name': 'Malaysia', 'iso2': 'my', 'dialCode': '60'})
+ADDRESS = ['Street', 'Street 2', 'City', 'State', 'ZIP', 'Country']
+
+# Odoo saas~19.4 view_partner_form on HAP's 12-column grid: name -> (row, col, size, tab)
+PLACE = {
+    'Name': (0, 0, 12, None),
+    'Company': (1, 0, 6, None), 'Address Type': (1, 1, 6, None),
+    'Email': (2, 0, 6, None), 'Phone': (2, 1, 6, None),
+    'Job Position': (3, 0, 6, None), 'Website': (3, 1, 6, None),
+    'Tax ID': (4, 0, 6, None), 'Company ID': (4, 1, 6, None),
+    'DUNS': (5, 0, 6, None),
+    'Address': (6, 0, 12, None),
+    'Street': (7, 0, 6, None), 'Street 2': (7, 1, 6, None),
+    'City': (8, 0, 6, None), 'State': (8, 1, 6, None),
+    'ZIP': (9, 0, 6, None), 'Country': (9, 1, 6, None),
+    'Image': (10, 0, 12, None),
+    'Contacts': (12, 0, 12, 'Contacts'),
+    'Sales': (14, 0, 12, 'Sales & Purchase'), 'Salesperson': (15, 0, 6, 'Sales & Purchase'),
+    'Misc': (16, 0, 12, 'Sales & Purchase'), 'Reference': (17, 0, 6, 'Sales & Purchase'),
+    'Notes': (19, 0, 12, 'Notes'),
+    'Active': (20, 0, 6, None),
+}
+TABS = {'Contacts': 11, 'Sales & Purchase': 13, 'Notes': 18}
+HINTS = {'Name': 'Name (company or person)', 'Company': 'Company Employer', 'Email': 'Email', 'Phone': 'Phone',
+         'Job Position': 'e.g. Sales Director', 'Website': 'e.g. https://www.odoo.com', 'Tax ID': 'Tax ID',
+         'Company ID': 'Company ID', 'DUNS': 'DUNS', 'Street': 'Street...', 'Street 2': 'Street 2...',
+         'City': 'City', 'State': 'State', 'ZIP': 'ZIP', 'Country': 'Country', 'Image': 'Upload an image',
+         'Salesperson': 'Salesperson', 'Reference': 'Reference', 'Notes': 'Internal notes...'}
+OBSOLETE_RULES = ['Company is hidden on companies', 'Job Position only for persons',
+                  'Company ID only on stand-alone companies']       # 19.0 rules; 19.4 has no Person/Company switch
 
 
 def options(labels, default):
@@ -37,8 +67,9 @@ def default_option(opts):
     return json.dumps([{'cid': '', 'rcid': '', 'staticValue': key}])
 
 
-def ctl(kind, name, row, col=0, size=12, alias='', hint=None, **kw):
-    c = wt.build_control(kind, name, row=row, col=col, size=size, hint=hint, **kw)
+def ctl(kind, name, alias='', **kw):
+    row, col, size, _ = PLACE.get(name, (TABS.get(name, 0), 0, 12, None))
+    c = wt.build_control(kind, name, row=row, col=col, size=size, hint=HINTS.get(name), **kw)
     c['alias'] = alias
     return c
 
@@ -49,93 +80,74 @@ def step_fields():
         sys.exit(f'Contacts already has {len(existing)} controls — refusing to replace them.')
     hap.backup('contacts_controls_pre_fields', existing)
     keep = hap.by_name(existing)                      # reuse the default Name and Attachment ids
-
-    company_type = options(['Person', 'Company'], default='Company')
     address_type = options(['Contact', 'Invoice', 'Delivery', 'Other'], default='Contact')
 
-    c = []
-    # header
-    c.append(ctl('FLAT_MENU', 'Company Type', 0, alias='company_type', required=True,
-                 options=company_type, advanced_setting={'defsource': default_option(company_type)}))
-    name = ctl('TEXT', 'Name', 1, alias='name', hint='e.g. Brandon Freeman', is_title=True)
+    name = ctl('TEXT', 'Name', alias='name', is_title=True)
     name['controlId'] = keep['Name']['controlId']
-    c.append(name)
-    c.append(ctl('EMAIL', 'Email', 2, 0, 6, alias='email', hint='Email'))
-    c.append(ctl('MOBILE_PHONE', 'Phone', 2, 1, 6, alias='phone', hint='Phone',
-                 advanced_setting={'defaultarea': MALAYSIA}))
-    # company, address type and the right-hand column
     company = bidirectional_relation_control(
         'Company', target_worksheet_id=WS, host_worksheet_id=WS,
         forward_id=str(uuid.uuid4()), reverse_id=str(uuid.uuid4()), reverse_name='Contacts',
         multi=False, display='dropdown', reverse_display='table')
-    company.update(row=3, col=0, size=6, alias='parent_id', hint='Company Name...')
-    company['sourceControl'].update(alias='child_ids')
-    c.append(company)
-    c.append(ctl('TEXT', 'Job Position', 3, 1, 6, alias='function', hint='e.g. Sales Director'))
-    c.append(ctl('DROP_DOWN', 'Address Type', 4, 0, 6, alias='type', hint='Select', required=True,
-                 options=address_type, advanced_setting={'defsource': default_option(address_type)}))
-    c.append(ctl('TEXT', 'Tax ID', 4, 1, 6, alias='vat', hint='e.g. BE0477472701'))
-    c.append(ctl('TEXT', 'Website', 5, 0, 6, alias='website', hint='e.g. https://www.odoo.com'))
-    # address
-    c.append(ctl('SPLIT_LINE', 'Address', 6))
-    c.append(ctl('TEXT', 'Street', 7, 0, 6, alias='street', hint='Street...'))
-    c.append(ctl('TEXT', 'Street 2', 7, 1, 6, alias='street2', hint='Street 2...'))
-    c.append(ctl('TEXT', 'City', 8, 0, 6, alias='city', hint='City'))
-    c.append(ctl('TEXT', 'State', 8, 1, 6, alias='state', hint='State'))
-    c.append(ctl('TEXT', 'ZIP', 9, 0, 6, alias='zip', hint='ZIP'))
-    c.append(ctl('TEXT', 'Country', 9, 1, 6, alias='country', hint='Country'))
-    image = ctl('ATTACHMENT', 'Image', 10, alias='image_1920', hint='Upload an image')
+    company.update(alias='parent_id', hint=HINTS['Company'])
+    image = ctl('ATTACHMENT', 'Image', alias='image_1920')
     image['controlId'] = keep['Attachment']['controlId']
-    c.append(image)
-    # tabs (their children are assigned in the layout step, once ids are real)
-    c.append(ctl('SECTION', 'Contacts', 11))
-    c.append(ctl('SECTION', 'Sales & Purchase', 13))
-    c.append(ctl('SPLIT_LINE', 'Sales', 14))
-    c.append(ctl('USER_PICKER', 'Salesperson', 15, 0, 6, alias='user_id', hint='Salesperson'))
-    c.append(ctl('SPLIT_LINE', 'Misc', 16))
-    c.append(ctl('TEXT', 'Company ID', 17, 0, 6, alias='company_registry', hint='Company ID'))
-    c.append(ctl('TEXT', 'Reference', 17, 1, 6, alias='ref', hint='Reference'))
-    c.append(ctl('SECTION', 'Notes', 18))
-    c.append(ctl('RICH_TEXT', 'Notes', 19, alias='comment', hint='Internal notes...'))
-    # hidden
-    active = ctl('SWITCH', 'Active', 20, 0, 6, alias='active',
+    active = ctl('SWITCH', 'Active', alias='active',
                  advanced_setting={'defsource': json.dumps([{'cid': '', 'rcid': '', 'staticValue': '1'}])})
     active['fieldPermission'] = field_permission_str(hidden=True)
-    c.append(active)
 
+    c = [name, company,
+         ctl('DROP_DOWN', 'Address Type', alias='type', required=True, options=address_type,
+             advanced_setting={'defsource': default_option(address_type)}),
+         ctl('EMAIL', 'Email', alias='email'),
+         ctl('MOBILE_PHONE', 'Phone', alias='phone', advanced_setting={'defaultarea': MALAYSIA}),
+         ctl('TEXT', 'Job Position', alias='function'), ctl('TEXT', 'Website', alias='website'),
+         ctl('TEXT', 'Tax ID', alias='vat'),
+         ctl('TEXT', 'Company ID', alias='company_registry'),       # 19.4: additional identifier "Company ID"
+         ctl('TEXT', 'DUNS', alias='duns'),                         # 19.4: additional identifier "DUNS"
+         ctl('SPLIT_LINE', 'Address'),
+         *[ctl('TEXT', n, alias=a) for n, a in zip(ADDRESS, ['street', 'street2', 'city', 'state', 'zip', 'country'])],
+         image,
+         ctl('SECTION', 'Contacts'), ctl('SECTION', 'Sales & Purchase'), ctl('SECTION', 'Notes'),
+         ctl('SPLIT_LINE', 'Sales'), ctl('USER_PICKER', 'Salesperson', alias='user_id'),
+         ctl('SPLIT_LINE', 'Misc'), ctl('TEXT', 'Reference', alias='ref'),
+         ctl('RICH_TEXT', 'Notes', alias='comment'),
+         active]
     hap.run('worksheet', 'update-fields', WS, '--controls', json.dumps(c, ensure_ascii=False))
-    show()
+    step_layout()
+
+
+def arrange(ctrls):
+    """Positions, tabs, hints, the Company picker filter and the reverse Contacts columns, in place."""
+    tabs = {c['controlName']: c['controlId'] for c in ctrls if c['type'] == 52}
+    field = {c['controlName']: c for c in ctrls if c['type'] != 52}
+    for c in ctrls:
+        if c['type'] == 52:
+            c.update(row=TABS[c['controlName']], col=0, size=12, sectionId='')
+            continue
+        row, col, size, tab = PLACE[c['controlName']]
+        c.update(row=row, col=col, size=size, sectionId=tabs[tab] if tab else '')
+        if c['controlName'] in HINTS and c['type'] not in (22, 29):
+            c['hint'] = HINTS[c['controlName']]
+    company = field['Company']
+    company['hint'] = HINTS['Company']
+    # Odoo 19.4 parent_id domain [('parent_id', '=', False)]: any contact that has no company itself;
+    # Odoo's active_test also leaves archived contacts out of the picker
+    company['advancedSetting']['filters'] = json.dumps([
+        {'controlId': company['controlId'], 'dataType': 29, 'spliceType': 1, 'filterType': 7,
+         'values': [], 'value': '', 'isDynamicsource': False, 'dynamicSource': []},
+        {'controlId': field['Active']['controlId'], 'dataType': 36, 'spliceType': 1, 'filterType': 2,
+         'values': ['1'], 'value': '1', 'isDynamicsource': False, 'dynamicSource': []}])
+    reverse = field['Contacts']
+    reverse['alias'] = 'child_ids'            # a new reverse control comes back at row 9999, width 0, no alias
+    cols = [field[n]['controlId'] for n in ('Name', 'Address Type', 'Email', 'Phone', 'Job Position')]
+    reverse['showControls'] = cols
+    reverse['advancedSetting']['controlssorts'] = json.dumps(cols)
 
 
 def step_layout():
     ctrls = hap.controls(WS)
     hap.backup('contacts_controls_pre_layout', ctrls)
-    tabs = {c['controlName']: c['controlId'] for c in ctrls if c['type'] == 52}
-    field = {c['controlName']: c for c in ctrls if c['type'] != 52}
-    in_tab = {'Contacts': tabs['Contacts'],
-              'Sales': tabs['Sales & Purchase'], 'Salesperson': tabs['Sales & Purchase'],
-              'Misc': tabs['Sales & Purchase'], 'Company ID': tabs['Sales & Purchase'],
-              'Reference': tabs['Sales & Purchase'],
-              'Notes': tabs['Notes']}
-    for c in ctrls:
-        if c['type'] != 52 and c['controlName'] in in_tab:
-            c['sectionId'] = in_tab[c['controlName']]
-
-    ct = field['Company Type']
-    company_key = next(o['key'] for o in ct['options'] if o['value'] == 'Company')
-    only_companies = [{'controlId': ct['controlId'], 'dataType': 9, 'spliceType': 1, 'filterType': 2,
-                       'values': [company_key], 'value': '', 'isDynamicsource': False,
-                       'dynamicSource': []}]
-    for c in ctrls:
-        if c['type'] == 29 and c['controlName'] == 'Company':
-            c['advancedSetting']['filters'] = json.dumps(only_companies)
-        if c['type'] == 29 and c['controlName'] == 'Contacts':
-            # the server parks a new reverse control at row 9999, width 0, without its alias
-            c.update(row=12, col=0, size=12, alias='child_ids')
-            cols = [field[n]['controlId'] for n in ('Name', 'Address Type', 'Email', 'Phone', 'Job Position')]
-            c['showControls'] = cols
-            c['advancedSetting']['controlssorts'] = json.dumps(cols)
-
+    arrange(ctrls)
     hap.run('worksheet', 'update-fields', WS, '--controls', json.dumps(ctrls, ensure_ascii=False))
     show()
 
@@ -163,23 +175,13 @@ def item(kind, *ctrls, message=''):
 
 def step_rules():
     f = hap.by_name(c for c in hap.controls(WS) if c['type'] != 52)
-    key = lambda field, label: next(o['key'] for o in f[field]['options'] if o['value'] == label)
-    company, person = key('Company Type', 'Company'), key('Company Type', 'Person')
-    contact = key('Address Type', 'Contact')
-    ct, parent = f['Company Type'], f['Company']
-
+    contact = next(o['key'] for o in f['Address Type']['options'] if o['value'] == 'Contact')
     rules = [  # (name, type 0=interaction 1=validation, filters, items)
-        ('Company is hidden on companies', 0,
-         any_of([cond(ct, EQ, company), cond(parent, EMPTY)]), [item(HIDE, parent)]),
-        ('Job Position only for persons', 0,
-         any_of([cond(ct, EQ, company)]), [item(HIDE, f['Job Position'])]),
-        ('Address Type only under a company', 0,
-         any_of([cond(parent, EMPTY)]), [item(HIDE, f['Address Type'])]),
-        ('Company ID only on stand-alone companies', 0,
-         any_of([cond(ct, EQ, person)], [cond(parent, NOT_EMPTY)]), [item(HIDE, f['Company ID'])]),
+        ('Address Type only under a company', 0,        # Odoo edits `type` only in a sub-contact's form
+         any_of([cond(f['Company'], EMPTY)]), [item(HIDE, f['Address Type'])]),
         ('Name is required for contacts', 0,
          any_of([cond(f['Address Type'], EQ, contact)]), [item(REQUIRE, f['Name'])]),
-        ('Contacts require a name', 1,
+        ('Contacts require a name', 1,                   # Odoo constraint _check_name
          any_of([cond(f['Address Type'], EQ, contact), cond(f['Name'], EMPTY)]),
          [item(ERROR, f['Name'], message='Contacts require a name')]),
     ]
@@ -193,6 +195,11 @@ def step_rules():
         if name in live:
             args += ['--rule-id', live[name]['ruleId']]
         hap.run(*args)
+    for name in OBSOLETE_RULES:
+        r = live.get(name)
+        if r and not r['disabled']:     # the CLI has no rule delete; disable, and delete in the form designer
+            hap.run('worksheet', 'save-rule', WS, '--rule-id', r['ruleId'], '--name', name, '--type', str(r['type']),
+                    '--filters', json.dumps(r['filters']), '--rule-items', json.dumps(r['ruleItems']), '--disabled')
     for r in hap.listing('worksheet', 'rules', WS):
         acts = [(i['type'], [c['controlId'][-4:] for c in i['controls']], i.get('message', '')) for i in r['ruleItems']]
         print(f"type={r['type']} check={r.get('checkType')} disabled={r['disabled']}  {r['name']:<42} {acts}")
@@ -210,19 +217,18 @@ def step_views():
                           'dateRange': 0, 'dateRangeType': 0, 'value': '', 'values': [], 'minValue': '',
                           'maxValue': '', 'isAsc': True, 'dynamicSource': [], 'advancedSetting': {},
                           'isGroup': False, 'groupFilters': [], 'emptyRule': 0}]}
-    by_name = {}
-    views = {  # Odoo Contacts menu: list first, then kanban; archived behind the "Archived" filter
-        'Contacts': dict(viewType='table', filter=active('eq'),
-                         tableFields=i('Name', 'Email', 'Phone', 'Country', 'Company', 'Salesperson'),
-                         quickFilters=i('Company Type', 'Salesperson', 'Company', 'Country'), **by_name),
+    # Odoo 19.4 list shows display_name, email, phone, country by default; Company stands in for the
+    # "Company, Person" display name.
+    columns = i('Name', 'Company', 'Email', 'Phone', 'Country')
+    views = {
+        'Contacts': dict(viewType='table', filter=active('eq'), tableFields=columns,
+                         quickFilters=i('Salesperson', 'Company', 'Country')),
         'Kanban': dict(viewType='gallery', filter=active('eq'),
                        card={'titleField': f['Name']['controlId'],
                              'displayFields': i('Email', 'Phone', 'City', 'Country'),
                              'coverField': f['Image']['controlId'], 'coverDirection': 'left',
-                             'coverDisplayMode': 'square'}, **by_name),
-        'Archived': dict(viewType='table', filter=active('ne'),
-                         tableFields=i('Name', 'Email', 'Phone', 'Country', 'Company', 'Salesperson'),
-                         **by_name),
+                             'coverDisplayMode': 'square'}),
+        'Archived': dict(viewType='table', filter=active('ne'), tableFields=columns),
     }
     live = hap.listing('worksheet', 'view', 'list', WS, '-a', app)
     hap.backup('contacts_views_pre_views', live)
@@ -238,11 +244,20 @@ def step_views():
     for v in hap.listing('worksheet', 'view', 'list', WS, '-a', app):
         hap.run('worksheet', 'view', 'update', WS, v['viewId'], '-a', app,
                 '--view-json', json.dumps(sort), '--edit-attrs', 'sortCid,sortType,moreSort')
+        if v['viewType'] == 0:
+            # a table's columns are showControls (+ customShowControls); --view-spec's tableFields only
+            # sets displayControls, and the table then shows every field
+            hap.run('worksheet', 'view', 'update', WS, v['viewId'], '-a', app, '--view-json', json.dumps({
+                'showControls': columns,
+                'advancedSetting': {'customdisplay': '1', 'customShowControls': json.dumps(columns)}}),
+                '--edit-attrs', 'showControls,advancedSetting', '--edit-ad-keys', 'customdisplay,customShowControls')
     names = {c['controlId']: c['controlName'] for c in f.values()}
     for v in hap.listing('worksheet', 'view', 'list', WS, '-a', app):
         print(f"{v['name']:<9} type={v['viewType']} sort={names.get(v.get('sortCid'), v.get('sortCid'))}/{v.get('sortType')} "
-              f"filters={len(v.get('filters') or [])} fast={[names.get(x['controlId']) for x in v.get('fastFilters') or []]} "
-              f"columns={[names.get(x, x) for x in v.get('displayControls') or []]} cover={names.get(v.get('coverCid'), '')}")
+              f"customDisplay={v.get('customDisplay')} filters={len(v.get('filters') or [])} "
+              f"fast={[names.get(x['controlId']) for x in v.get('fastFilters') or []]} "
+              f"columns={[names.get(x, x) for x in v.get('showControls') or []]} "
+              f"card={[names.get(x, x) for x in v.get('displayControls') or []]} cover={names.get(v.get('coverCid'), '')}")
 
 
 def button_workflow(process_id, fields, node_name):
@@ -282,8 +297,7 @@ def step_buttons():
             # create-custom-action --action-spec ignores --btn-id and always adds a new button (hap-cli 0.8.31)
             print(f"  {spec['name']}: exists ({live[spec['name']]['btnId']}); not re-created")
             continue
-        args = ['worksheet', 'create-custom-action', WS, '-a', app, '--action-spec', json.dumps(spec)]
-        out = hap.run(*args)
+        out = hap.run('worksheet', 'create-custom-action', WS, '-a', app, '--action-spec', json.dumps(spec))
         data = out.get('data', out) if isinstance(out, dict) else {}
         pid = data.get('processId') or ids.get('workflows', {}).get(spec['name'])
         if not pid:
@@ -298,112 +312,229 @@ def step_buttons():
               f"isBatch={b.get('isBatch')} filters={len(b.get('filters') or [])} confirm={b.get('confirmMsg', '')!r}")
 
 
-ADDRESS = ['Street', 'Street 2', 'City', 'State', 'ZIP', 'Country']
+COPY_DETAILS = 'Contacts: copy company details to its contact'
+PUSH_DETAILS = 'Contacts: push company address and Tax ID to its contacts'
+IDENTIFIERS = ['Tax ID', 'Company ID', 'DUNS']
 
 
 def step_automations():
-    """Odoo res.partner._fields_sync, company -> contacts. Upstream sync (contact -> company) is left out."""
+    """Odoo res.partner._fields_sync, company -> contacts. Upstream sync (contact -> company) is left out.
+
+    Creates the two workflows, or brings existing ones up to date: steps missing by name are appended
+    after the last step, and the trigger's fields and condition are rewritten when they differ.
+    """
+    from hap_cli.core.workflow_node_dsl import translate_condition_group
+
     ids = hap.ids()
     f = hap.by_name(c for c in hap.controls(WS) if c['type'] != 52)
     fid = lambda n: f[n]['controlId']
     option = lambda field, label: next({'key': o['key'], 'value': o['value'], 'isDeleted': False}
                                        for o in f[field]['options'] if o['value'] == label)
-    trigger = {'nodeAlias': 'trigger'}
 
     def when(node, name, op, label=None):
-        item = {'left': {'node': {'nodeAlias': node}, 'fieldId': fid(name), '_filedTypeId': f[name]['type']},
-                'op': op}
+        left = {'node': node, 'fieldId': fid(name), '_filedTypeId': f[name]['type']}
+        if f[name]['type'] == 29:
+            left['_enumDefault'] = f[name].get('enumDefault')
+        item = {'left': left, 'op': op}
         if label:
             item['right'] = {'kind': 'literal', 'value': option(name, label)}
         return item
 
-    def copy(names, source):
-        return [{'fieldId': fid(n), 'valueRef': {'kind': 'field', 'node': {'nodeAlias': source},
-                                                 'fieldId': fid(n), 'nodeAppId': WS}} for n in names]
-
     def update(alias, name, target, names, source):
         return {'nodeAlias': alias, 'nodeType': 'update_record', 'name': name,
-                'config': {'target': {'node': target}, 'fields': copy(names, source)}}
+                'config': {'target': {'node': target}, 'fields': [
+                    {'fieldId': fid(n), 'valueRef': {'kind': 'field', 'node': source, 'fieldId': fid(n),
+                                                     'nodeAppId': WS}} for n in names]}}
 
     def branch(alias, name, condition, then):
         return {'nodeAlias': alias, 'nodeType': 'branch', 'name': name, 'config': {'paths': [
             {'alias': alias + '_yes', 'name': 'Yes', 'condition': condition, 'nodes': [then]},
             {'alias': alias + '_no', 'name': 'No'}]}}
 
+    def copy_steps(r):
+        """Odoo copies each commercial field only when the company has it (_get_commercial_values)."""
+        trigger, company = r['trigger'], r['company']
+        only_if_set = lambda alias, field: branch(
+            alias, f'The company has a {field}?', {'logic': 'and', 'items': [when(company, field, 'not_empty')]},
+            update('copy_' + alias, f'Copy the {field}', trigger, [field], company))
+        return [
+            {'nodeAlias': 'company', 'nodeType': 'get_relation', 'name': 'Get the company',
+             'config': {'target': {'node': trigger}, 'fields': [{'fieldId': fid('Company')}], 'worksheet': WS}},
+            branch('address', 'Contact-type, and the company has an address?',
+                   {'groups': [{'items': [when(trigger, 'Address Type', 'eq', 'Contact'),
+                                          when(company, n, 'not_empty')]} for n in ADDRESS]},
+                   update('copy_address', 'Copy the company address', trigger, ADDRESS, company)),
+            only_if_set('vat', 'Tax ID'),
+            branch('salesperson', 'A contact without a salesperson?',
+                   {'logic': 'and', 'items': [when(trigger, 'Salesperson', 'empty'),
+                                              when(company, 'Salesperson', 'not_empty')]},
+                   update('copy_salesperson', 'Copy the salesperson', trigger, ['Salesperson'], company)),
+            only_if_set('registry', 'Company ID'),
+            only_if_set('duns', 'DUNS'),
+        ]
+
+    def push_steps(r):
+        trigger = r['trigger']
+        return [
+            {'nodeAlias': 'all_contacts', 'nodeType': 'get_relation_records', 'name': 'Get its contacts',
+             'config': {'target': {'node': trigger}, 'fields': [{'fieldId': fid('Contacts')}], 'worksheet': WS}},
+            update('push_ids', 'Copy Tax ID, Company ID and DUNS to them', {'nodeAlias': 'all_contacts'},
+                   IDENTIFIERS, trigger),
+            {'nodeAlias': 'contact_type', 'nodeType': 'get_relation_records', 'name': 'Get its Contact-type contacts',
+             'config': {'target': {'node': trigger}, 'fields': [{'fieldId': fid('Contacts')}], 'worksheet': WS}},
+            update('push_address', 'Copy the address to them', {'nodeAlias': 'contact_type'}, ADDRESS, trigger),
+        ]
+
     workflows = [
-        dict(name='Contacts: copy company details to its contact',
+        dict(name=COPY_DETAILS,
              desc='Odoo onchange_parent_id / _fields_sync: when a contact is linked to a company, copy the '
-                  'company address (Contact-type only, and only if the company has one), its Tax ID, and its '
-                  'salesperson for a person who has none.',
+                  'company address (Contact-type only, and only if the company has one), each of its Tax ID, '
+                  'Company ID and DUNS that is set, and its salesperson for a contact who has none.',
+             trigger_name="When a contact's Company or Address Type is set",
              event='create_or_update', fields=[fid('Company'), fid('Address Type')],
-             filter={'logic': 'and', 'items': [when('trigger', 'Company', 'not_empty')]},
-             nodes=[
-                 {'nodeAlias': 'company', 'nodeType': 'get_relation', 'name': 'Get the company',
-                  'config': {'target': {'node': trigger}, 'fields': [{'fieldId': fid('Company')}], 'worksheet': WS}},
-                 branch('address', 'Contact-type, and the company has an address?',
-                        {'groups': [{'items': [when('trigger', 'Address Type', 'eq', 'Contact'),
-                                               when('company', n, 'not_empty')]} for n in ADDRESS]},
-                        update('copy_address', 'Copy the company address', trigger, ADDRESS, 'company')),
-                 branch('vat', 'The company has a Tax ID?',
-                        {'logic': 'and', 'items': [when('company', 'Tax ID', 'not_empty')]},
-                        update('copy_vat', 'Copy the Tax ID', trigger, ['Tax ID'], 'company')),
-                 branch('salesperson', 'A person without a salesperson?',
-                        {'logic': 'and', 'items': [when('trigger', 'Company Type', 'eq', 'Person'),
-                                                   when('trigger', 'Salesperson', 'empty'),
-                                                   when('company', 'Salesperson', 'not_empty')]},
-                        update('copy_salesperson', 'Copy the salesperson', trigger, ['Salesperson'], 'company')),
-             ]),
-        dict(name='Contacts: push company address and Tax ID to its contacts',
-             desc="Odoo _children_sync: a company's address goes to its Contact-type contacts; its Tax ID and "
-                  'Company ID go to all of its contacts.',
-             event='update', fields=[fid(n) for n in ADDRESS + ['Tax ID', 'Company ID']], filter=None,
-             nodes=[
-                 {'nodeAlias': 'all_contacts', 'nodeType': 'get_relation_records', 'name': 'Get its contacts',
-                  'config': {'target': {'node': trigger}, 'fields': [{'fieldId': fid('Contacts')}], 'worksheet': WS}},
-                 update('push_vat', 'Copy Tax ID and Company ID to them', {'nodeAlias': 'all_contacts'},
-                        ['Tax ID', 'Company ID'], 'trigger'),
-                 {'nodeAlias': 'contact_type', 'nodeType': 'get_relation_records',
-                  'name': 'Get its Contact-type contacts',
-                  'config': {'target': {'node': trigger}, 'fields': [{'fieldId': fid('Contacts')}], 'worksheet': WS}},
-                 update('push_address', 'Copy the address to them', {'nodeAlias': 'contact_type'}, ADDRESS, 'trigger'),
-             ],
-             only_contact_type='Get its Contact-type contacts'),
+             filter=lambda t: {'logic': 'and', 'items': [when(t, 'Company', 'not_empty')]},
+             steps=copy_steps, anchors={'company': 'Get the company'}),
+        dict(name=PUSH_DETAILS,
+             desc="Odoo _children_sync: a company's address goes to its Contact-type contacts; its Tax ID, "
+                  'Company ID and DUNS go to all of its contacts.',
+             trigger_name="When a company's address or identifiers change",
+             event='update', fields=[fid(n) for n in ADDRESS + IDENTIFIERS],
+             # only records that have contacts under them, so ordinary contact edits start no run
+             filter=lambda t: {'logic': 'and', 'items': [when(t, 'Contacts', 'not_empty')]},
+             steps=push_steps, anchors={}, only_contact_type='Get its Contact-type contacts'),
     ]
 
     for wf in workflows:
         pid = ids.setdefault('workflows', {}).get(wf['name'])
-        if pid:
-            print(f"{wf['name']}: exists ({pid}); not rebuilt")
-            continue
-        out = hap.run('workflow', 'create', '-c', ids['org'], '-n', wf['name'], '-a', ids['app'],
-                      '--type', 'worksheet', '-d', wf['desc'])
-        data = out.get('data', out) if isinstance(out, dict) else out
-        pid = data if isinstance(data, str) else (data.get('id') or data.get('processId'))
-        ids['workflows'][wf['name']] = pid
-        json.dump(ids, open(hap.IDS_PATH, 'w'), ensure_ascii=False, indent=1)
-        args = ['workflow', 'node', 'batch-add', pid, '--nodes', json.dumps(wf['nodes'], ensure_ascii=False),
-                '--trigger-worksheet', WS, '--trigger-event', wf['event'],
-                '--trigger-fields', ','.join(wf['fields']), '--trigger-alias', 'trigger']
-        if wf['filter']:
-            args += ['--trigger-filter', json.dumps(wf['filter'], ensure_ascii=False)]
-        hap.run(*args)
-        if wf.get('only_contact_type'):
-            # --nodes sends a search filter as operateCondition; the UI stores it as `filters` on the node itself
+        if not pid:
+            out = hap.run('workflow', 'create', '-c', ids['org'], '-n', wf['name'], '-a', ids['app'],
+                          '--type', 'worksheet', '-d', wf['desc'])
+            data = out.get('data', out) if isinstance(out, dict) else out
+            pid = data if isinstance(data, str) else (data.get('id') or data.get('processId'))
+            ids['workflows'][wf['name']] = pid
+            json.dump(ids, open(hap.IDS_PATH, 'w'), ensure_ascii=False, indent=1)
+            refs = {'trigger': {'nodeAlias': 'trigger'}, **{a: {'nodeAlias': a} for a in wf['anchors']}}
+            hap.run('workflow', 'node', 'batch-add', pid,
+                    '--nodes', json.dumps(wf['steps'](refs), ensure_ascii=False),
+                    '--trigger-worksheet', WS, '--trigger-event', wf['event'],
+                    '--trigger-fields', ','.join(wf['fields']), '--trigger-alias', 'trigger',
+                    '--trigger-filter', json.dumps(wf['filter'](refs['trigger']), ensure_ascii=False))
             proc = hap.run('workflow', 'node', 'list', pid)
-            node = next(n for n in proc['flowNodeMap'].values() if n['name'] == wf['only_contact_type'])
-            o = option('Address Type', 'Contact')
-            config = {'actionId': '401', 'appId': WS, 'selectNodeId': proc['startEventId'],
-                      'fields': [{'fieldId': fid('Contacts')}],
-                      'filters': [{'spliceType': 2, 'conditions': [[{
-                          'nodeId': node['id'], 'nodeType': 13, 'actionId': '401', 'filedId': fid('Address Type'),
-                          'filedValue': 'Address Type', 'filedTypeId': 11, 'enumDefault': 0, 'conditionId': '9',
-                          'sourceType': 0, 'conditionValues': [{'value': {**o, 'score': None, 'index': None}}]}]]}]}
-            hap.run('workflow', 'node', 'save', pid, node['id'], '--type', '13', '-c', json.dumps(config),
-                    '-n', node['name'])
-        print(hap.run('workflow', 'publish', pid))
-    for name, pid in ids['workflows'].items():
-        if name.startswith('Contacts:'):
-            print(subprocess.run(['hap', 'workflow', 'structure', pid], capture_output=True, text=True).stdout)
+            if wf.get('only_contact_type'):
+                # --nodes sends a search filter as operateCondition; the UI stores it as `filters` on the node
+                node = next(n for n in proc['flowNodeMap'].values() if n['name'] == wf['only_contact_type'])
+                o = option('Address Type', 'Contact')
+                config = {'actionId': '401', 'appId': WS, 'selectNodeId': proc['startEventId'],
+                          'fields': [{'fieldId': fid('Contacts')}],
+                          'filters': [{'spliceType': 2, 'conditions': [[{
+                              'nodeId': node['id'], 'nodeType': 13, 'actionId': '401', 'filedId': fid('Address Type'),
+                              'filedValue': 'Address Type', 'filedTypeId': 11, 'enumDefault': 0, 'conditionId': '9',
+                              'sourceType': 0, 'conditionValues': [{'value': {**o, 'score': None, 'index': None}}]}]]}]}
+                hap.run('workflow', 'node', 'save', pid, node['id'], '--type', '13', '-c', json.dumps(config),
+                        '-n', node['name'])
+        else:
+            proc = hap.run('workflow', 'node', 'list', pid)
+            nodes = proc['flowNodeMap']
+            start = proc['startEventId']
+            by_name = {n['name']: n['id'] for n in nodes.values()}
+            refs = {'trigger': {'nodeId': start}, **{a: {'nodeId': by_name[n]} for a, n in wf['anchors'].items()}}
+            missing = [s for s in wf['steps'](refs) if s['name'] not in by_name]
+            if missing:
+                last = start
+                while nodes[last].get('nextId') not in (None, '', '99'):
+                    last = nodes[last]['nextId']
+                hap.run('workflow', 'node', 'batch-add', pid, '--nodes', json.dumps(missing, ensure_ascii=False),
+                        '--trigger-node-id', last, '--trigger-alias', 'last_step')
+                print(f"{wf['name']}: appended {[s['name'] for s in missing]}")
+            trig = hap.run('workflow', 'node', 'get', pid, start)
+            trig = trig.get('data', trig)
+            want = translate_condition_group(wf['filter'](refs['trigger']), {})
+            shape = lambda groups: [[(c.get('filedId'), str(c.get('conditionId'))) for c in g] for g in groups or []]
+            if (set(trig.get('assignFieldIds') or []) != set(wf['fields'])
+                    or shape(trig.get('operateCondition')) != shape(want)):
+                hap.run('workflow', 'node', 'save', pid, start, '--type', '0', '-n', wf['trigger_name'],
+                        '-c', json.dumps({'appId': WS, 'appType': 1, 'triggerId': trig.get('triggerId'),
+                                          'assignFieldIds': wf['fields'], 'operateCondition': want,
+                                          'returns': []}, ensure_ascii=False))
+                print(f"{wf['name']}: trigger fields/condition rewritten")
+            proc = hap.run('workflow', 'node', 'list', pid)
+        # batch-add names the trigger in Chinese and drops branch path names
+        hap.run('workflow', 'node', 'rename', pid, proc['startEventId'], '-n', wf['trigger_name'])
+        for n in proc['flowNodeMap'].values():
+            if n.get('typeId') == 2 and n.get('name') not in ('Yes', 'No'):
+                hap.run('workflow', 'node', 'rename', pid, n['id'], '-n',
+                        'Yes' if n.get('nextId') not in ('', None, '99') else 'No')
+        print(wf['name'], publish(pid))
+    for name in (COPY_DETAILS, PUSH_DETAILS):
+        print(subprocess.run(['hap', 'workflow', 'structure', ids['workflows'][name]],
+                             capture_output=True, text=True).stdout)
+
+
+def publish(pid):
+    res = hap.run('workflow', 'publish', pid)
+    return {k: res.get(k) for k in ('isPublish', 'processWarnings', 'errorNodeIds')}
+
+
+def step_to194():
+    """One-off: move the build of 15 Sep 2026 (Odoo 19.0 source) to Odoo saas~19.4, keeping every id."""
+    ctrls = hap.controls(WS)
+    hap.backup('contacts_controls_pre_to194', ctrls)
+    ctrls = [c for c in ctrls if c['controlName'] != 'Company Type']          # 19.4 has no Person/Company switch
+    if not any(c['controlName'] == 'DUNS' for c in ctrls):
+        ctrls.append(ctl('TEXT', 'DUNS', alias='duns'))
+    arrange(ctrls)
+    hap.run('worksheet', 'update-fields', WS, '--controls', json.dumps(ctrls, ensure_ascii=False))
+    show()
+    step_rules()
+    step_views()
+
+    ids = hap.ids()
+    f = hap.by_name(c for c in hap.controls(WS) if c['type'] != 52)
+    live = {c['controlId'] for c in f.values()}
+
+    # copy-details: drop the "Company Type = Person" condition from the salesperson branch
+    pid = ids['workflows'][COPY_DETAILS]
+    proc = hap.run('workflow', 'node', 'list', pid)
+    for n in proc['flowNodeMap'].values():
+        if n.get('typeId') == 1 and n['name'] == 'A person without a salesperson?':
+            hap.run('workflow', 'node', 'rename', pid, n['id'], '-n', 'A contact without a salesperson?')
+        if n.get('typeId') == 2:
+            node = hap.run('workflow', 'node', 'get', pid, n['id'])
+            node = node.get('data', node)
+            groups = node.get('conditions') or node.get('operateCondition') or []   # get says conditions, save says operateCondition
+            kept = [[c for c in g if c.get('filedId') in live or c.get('filedId') == ''] for g in groups]
+            if kept != groups:
+                hap.run('workflow', 'node', 'save', pid, n['id'], '--type', '2', '-n', n['name'],
+                        '-c', json.dumps({'operateCondition': kept}))
+    print(COPY_DETAILS, publish(pid))
+
+    # push-details: DUNS joins the trigger fields and the identifiers copied to every contact
+    pid = ids['workflows'][PUSH_DETAILS]
+    proc = hap.run('workflow', 'node', 'list', pid)
+    trig = hap.run('workflow', 'node', 'get', pid, proc['startEventId'])
+    trig = trig.get('data', trig)
+    assign = trig.get('assignFieldIds') or []
+    if f['DUNS']['controlId'] not in assign:
+        hap.run('workflow', 'node', 'save', pid, proc['startEventId'], '--type', '0',
+                '-n', "When a company's address or identifiers change", '-c', json.dumps({
+                    'appId': WS, 'appType': 1, 'triggerId': trig.get('triggerId', '4'),
+                    'assignFieldIds': assign + [f['DUNS']['controlId']], 'operateCondition': [], 'returns': []}))
+    push = next(n for n in proc['flowNodeMap'].values() if n['name'].startswith('Copy Tax ID'))
+    node = hap.run('workflow', 'node', 'get', pid, push['id'])
+    node = node.get('data', node)
+    fields = node.get('fields') or []
+    if not any(x.get('fieldId') == f['DUNS']['controlId'] for x in fields):
+        model = next(x for x in fields if x.get('fieldId') == f['Company ID']['controlId'])
+        fields.append({**model, 'fieldId': f['DUNS']['controlId'], 'fieldValueId': f['DUNS']['controlId'],
+                       'fieldName': 'DUNS'})
+        hap.run('workflow', 'node', 'save', pid, push['id'], '--type', '6',
+                '-n', 'Copy Tax ID, Company ID and DUNS to them', '-c', json.dumps({
+                    'actionId': node.get('actionId', '2'), 'appId': WS, 'selectNodeId': node.get('selectNodeId'),
+                    'fields': fields}, ensure_ascii=False))
+    print(PUSH_DETAILS, publish(pid))
+    for name in (COPY_DETAILS, PUSH_DETAILS):
+        print(subprocess.run(['hap', 'workflow', 'structure', ids['workflows'][name]],
+                             capture_output=True, text=True).stdout)
 
 
 def show():
@@ -417,6 +548,7 @@ def show():
         if c.get('sectionId'): extra.append(f"tab={tabs.get(c['sectionId'], c['sectionId'])}")
         if c.get('dataSource'): extra.append(f"-> {c['dataSource']} pair={c.get('sourceControlId')}")
         if c.get('options'): extra.append('opts=' + '/'.join(o['value'] for o in c['options']))
+        if c.get('hint'): extra.append(f"hint={c['hint']!r}")
         print(f"r{c.get('row', 0):<2} c{c.get('col', 0)} s{c.get('size', '?'):<2} {c['type']:>2} "
               f"{c['controlName']:<18} {c['controlId']}  {c.get('alias') or '':<17} {' '.join(extra)}")
     print(f'{len(ctrls)} controls')
@@ -424,5 +556,5 @@ def show():
 
 if __name__ == '__main__':
     {'fields': step_fields, 'layout': step_layout, 'rules': step_rules, 'views': step_views,
-     'buttons': step_buttons, 'automations': step_automations,
+     'buttons': step_buttons, 'automations': step_automations, 'to194': step_to194,
      'show': show}[sys.argv[1] if len(sys.argv) > 1 else 'show']()
