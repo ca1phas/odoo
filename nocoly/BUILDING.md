@@ -157,5 +157,12 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
 - An open record can keep a *Modifying form data — Cancel / Save* bar after a relation or member change that is
   already stored; Save clears it.
 - A dropdown opens reliably by typing into it; clicking the arrow sometimes does nothing.
+- A Relation shown as a dropdown lists record titles only, never its `showControls`; its search still matches
+  those fields ("Hours" finds Minutes and Days on a unit picker).
+- A Rich text field never shows its hint, even when clicked into. Put guidance in the description instead.
+- A checkbox quick filter has two states once used: a click filters for ticked, the next for unticked, and the box
+  then looks empty while still filtering. Reloading the view clears it.
+- A change typed into an open record is stored only with Save on the *Modifying form data* bar; an open view
+  re-sorts only after Refresh; a record that leaves the open view (Archive) closes itself.
 - An unsubmitted Create Record form is kept as a local draft and offered back ("Restored to the last interrupted
   content"); clear it before a clean test.
