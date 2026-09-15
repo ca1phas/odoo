@@ -78,6 +78,14 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   not-yet-minted ids (formula expressions, a lookup's source) are rewritten to the minted ids.
 - `hap worksheet update-fields` replaces the whole control set. Use it only on a worksheet with no records, or send
   back the full list you just read; add fields to a live worksheet with `add-fields`.
+- A new worksheet comes with three stock controls — Name (the title), Description and Attachment. A first
+  `update-fields` save that leaves one out deletes it: reuse their ids for your own fields.
+- A tab and a field can share a name (the Sales tab and the Sales checkbox): look fields up by name among non-tab
+  controls (`common.fields`).
+- A field's **No duplicates** (`unique`) holds on API writes too: the write is refused with `resultCode 11` naming the
+  field. Empty values are never compared.
+- Worksheet switches 10 (show create button), 26 and 36 (duplicate) and 37 (re-create) remove UI paths only:
+  `record create` through the API and workflows still create records.
 - The Phone control validates numbers (libphonenumber): an unallocated number such as 03-1234 5678, or a placeholder
   like "NA", is refused.
 
@@ -94,6 +102,9 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   after level — so a self-referencing chain (Absolute Quantity down a unit chain) works without workflows.
 - But the recompute HAP runs **after a formula or lookup definition changes** treats each record on its own and can
   leave rows stale. Re-saving a record's unchanged relation brings its lookups up to date (`units.py refresh`).
+- A **lookup of a Relation stores the related record's title as text** (`sourceControlType` 2): it shows and sorts,
+  but a picker filter cannot compare a record id with it. Compare the candidate's title field with the lookup
+  instead (Product Variants' Extra Packagings).
 
 ### Views
 
@@ -103,6 +114,8 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   `common.sort_views`, which makes the same call with the app id.
 - `sortType` 1 is descending, 2 ascending. `record list --view-id` applies the view's filter and sort but returns only
   that view's columns.
+- An ascending sort puts **empty values first**. `moreSort[].emptyRule` is stored (1, 2 and 3 tried) and changes
+  nothing, so Odoo's NULLS LAST cannot be matched.
 - `--view-spec` `tableFields` sets only `displayControls`, and the table then shows every field. A table's columns are
   `showControls` plus `advancedSetting.customShowControls`:
   `view update --view-json '{"showControls":[…],"advancedSetting":{"customdisplay":"1","customShowControls":"[…]"}}'
@@ -130,6 +143,9 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   Deleting the button deletes that workflow too.
 - A button's condition greys it out when unmet; it does not hide it.
 - `hap workflow trigger <processId> -s <rowid>` runs a button's workflow on one record — a CLI check of a button.
+- In a button's workflow a **get related record** step cannot start from the trigger record: the server leaves the
+  trigger out of that step's sources, drops the relation field, and publishing fails (warningType 103, 200). Search
+  the related worksheet instead: Record ID equals the trigger's Relation field (conditionId 9).
 
 ### Workflows
 
@@ -141,9 +157,24 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   `operateCondition` instead, which the UI does not use.
 - `workflow node get` returns a branch path's conditions as `conditions`; `workflow node save --type 2` expects
   `operateCondition`.
+- A get-records filter on a Relation uses conditionId **33**, with `conditionValues: [{nodeId, controlId}]` —
+  `rowid` for that node's record, or a Relation field of it.
 - To add steps to an existing workflow, `batch-add` with `--trigger-node-id <last node in the chain>` and
-  `{"nodeId": …}` references (aliases exist only within one call). Change a trigger's fields or condition with
+  `{"nodeId": …}` references (aliases exist only within one call; `--trigger-alias` then names that last node, not
+  the trigger). Change a trigger's fields or condition with
   `workflow node save --type 0 -c '{appId, appType: 1, triggerId, assignFieldIds, operateCondition, returns: []}'`.
+- A data step's **worksheet is fixed when the step is added**: `node save` with another `appId` answers success, keeps
+  the old one and drops the fields that do not fit. `hap workflow rollback <processId> -y` restores the last published
+  version, so a mis-built draft needs no step deleted.
+- A create or update step's **field list can be changed in place**: read it with `node get`, change or append the
+  entry, send the whole list back with `node save --type 6` (`actionId`, `appId`, `appType`, `selectNodeId`,
+  `fields`), then republish (`variants.py` `sync_step`). A text value taken from a node reads back as the template
+  `$node-field$`, the other types as `nodeId` + `fieldValueId`. `hap workflow update <processId> -n … -d …` renames a
+  workflow; `workflow get` returns its description as `explain`.
+- A search step's result branch marks its paths `resultTypeId` 3 (found) and 4 (not found) in `workflow node list`;
+  `node get` leaves it out, and `workflow structure` leaves out get-records (type 13) steps.
+- **A record written by a workflow starts that worksheet's event workflows** (a variant's Unarchive button writing its
+  product started the product's archive workflow). Design cascades so the second run finds nothing to change.
 - Give a worksheet-event trigger a condition when most records cannot need the run — every run counts against the
   organisation's workflow quota.
 
@@ -152,6 +183,7 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
 - `hap worksheet record delete` needs the rowId UUID; given `_id` it reports success and deletes nothing.
 - `hap worksheet record list` can return hidden fields as empty strings (seen on Units, not always on Contacts or
   Products); `record get` always returns their values.
+- `record get` returns a record's creation time as `_createdAt`; `record list` returns `ctime` empty.
 - Value formats differ by field type and a wrong one is accepted silently — see `hap guide record` before writing.
 
 ### In the UI

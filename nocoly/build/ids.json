@@ -8,7 +8,8 @@
  "worksheets": {
   "Contacts": "6aa8a3b34a22ad87b728c4fe",
   "Units & Packagings": "6aa8d14d4a73a3142152d3f6",
-  "Products": "6aa8ea0c4a22ad87b728cf0b"
+  "Products": "6aa8ea0c4a22ad87b728cf0b",
+  "Product Variants": "6aa90c161204328eb1af1b82"
  },
  "workflows": {
   "Archive": "6aa8a565e589b8933dd4cc6d",
@@ -18,7 +19,12 @@
   "Units & Packagings: Archive": "6aa8d881e589b8933dd73bfb",
   "Units & Packagings: Unarchive": "6aa8d889d91d10186df6ec14",
   "Products: Archive": "6aa8eb452fe3e8d6b31a6da2",
-  "Products: Unarchive": "6aa8eb482fe3e8d6b31a6dc6"
+  "Products: Unarchive": "6aa8eb482fe3e8d6b31a6dc6",
+  "Product Variants: Archive": "6aa90fc08475f61d4ccd0f8b",
+  "Product Variants: Unarchive": "6aa90fc38475f61d4ccd0faf",
+  "Product Variants: create a new product's variant": "6aa9117ce589b8933dd933da",
+  "Product Variants: copy a product's Internal Reference, Cost, Weight and Volume to its active variant": "6aa91186e589b8933dd9367a",
+  "Product Variants: archive and unarchive a product's variant with it": "6aa9118ce589b8933dd93748"
  },
  "buttons": {
   "Archive": "6aa8a5654720c515252bda3d",
@@ -26,13 +32,17 @@
   "Units & Packagings: Archive": "6aa8d8814720c515252be2f8",
   "Units & Packagings: Unarchive": "6aa8d8894a73a3142152d499",
   "Products: Archive": "6aa8eb444720c515252be61c",
-  "Products: Unarchive": "6aa8eb484720c515252be61e"
+  "Products: Unarchive": "6aa8eb484720c515252be61e",
+  "Product Variants: Archive": "6aa90fc04a22ad87b728ea89",
+  "Product Variants: Unarchive": "6aa90fc34720c515252bf9b8"
  },
  "views": {
   "Units & Packagings: Units & Packagings": "6aa8d14d4a73a3142152d3fa",
   "Units & Packagings: Archived": "6aa8d8554720c515252be2d3",
   "Products: Products": "6aa8eadd1204328eb1af105b",
   "Products: List": "6aa8ea0c4a22ad87b728cf0f",
-  "Products: Archived": "6aa8eadf1204328eb1af105d"
+  "Products: Archived": "6aa8eadf1204328eb1af105d",
+  "Product Variants: Product Variants": "6aa90c161204328eb1af1b86",
+  "Product Variants: Archived": "6aa90f171204328eb1af1bbf"
  }
 }

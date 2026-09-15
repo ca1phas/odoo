@@ -44,7 +44,7 @@ record was seeded from the Odoo tenant.
 | 01 | Contacts | `res.partner` | Built, UI-tested 13/13; "Company, Person" display name built and its 6 tests rerun — ready for review | [md](worksheets/01-contacts.md) · [page](https://claude.ai/artifact/JHfvYa7uKiucMfkPnyH2Xu) |
 | 02 | Units & Packagings | `uom.uom` | Built, seeded (30 units), UI-tested 18/19 + 1 partly — ready for review | [md](worksheets/02-units-and-packagings.md) · [page](https://claude.ai/artifact/LDoy447FXWYd5gkdDUNDJo) |
 | 03 | Products | `product.template` | Built, seeded (14 products), UI-tested 15/17 + 2 partly — ready for review | [md](worksheets/03-products.md) · [page](https://claude.ai/artifact/4fKn4CsuYPTT6zSAMVZFSv) |
-| 04 | Product Variants | `product.product` | Not started | — |
+| 04 | Product Variants | `product.product` | Built, seeded (one variant per product), UI-tested 16/16 — ready for review | [md](worksheets/04-product-variants.md) · [page](https://claude.ai/artifact/1xo4yDavxjPNwHsUMHFYGV) |
 | 05 | Journals | `account.journal` | Being built by Teh Li Wei (branch `codex/journals-phase1-handoff`); our re-check against casimir follows when he is done | — |
 | 06 | Invoices | `account.move` | Being built by Teh Li Wei after Journals; our re-check follows | — |
 | 07 | Invoice Lines | `account.move.line` | Not started | — |

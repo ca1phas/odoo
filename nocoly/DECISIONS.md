@@ -25,8 +25,7 @@ the owner's direction. Newest last.
 
 | Needed by | Question | Recommendation from the plan |
 |---|---|---|
-| 04 Product Variants, 07 Invoice Lines | Do lines point at Product Variants or Products? | **Variants.** Every order line, stock move and invoice line in Odoo points at the variant; pointing at the template is the one choice that costs a rebuild rather than an append |
-| 04 Product Variants | Show products and variants as "[Internal Reference] Name (attributes)" in pickers, as Odoo does? | Likely yes — the same reasoning as Contacts' display name; settle it in the 04 brief |
+| 07 Invoice Lines | Do lines point at Product Variants or Products? | **Variants.** Every order line, stock move and invoice line in Odoo points at the variant; pointing at the template is the one choice that costs a rebuild rather than an append. 04 is built so lines can point at variants |
 | 06 Invoices | One Invoices worksheet split by Move Type, or separate Bills? | **One worksheet with a Move Type dropdown** — Customer Invoice · Vendor Bill · Credit Note · Vendor Refund — as Odoo's single `account.move`; separate worksheets mean two numbering schemes and two posting workflows |
 
 ## Worksheet 01 · Contacts
@@ -61,3 +60,16 @@ the owner's direction. Newest last.
 | 15 Sep 2026 | Views open on a **gallery**, then List and Archived; favourites first, then by name | Odoo's Products action opens in Kanban; its order is `is_favorite desc, name` | planner |
 | 15 Sep 2026 | Seed the 14 products; the monitor's, chair's and desk's variants wait for Product Variants (04) and its bundle | Without the Product Variants bundle each product has exactly one variant | planner |
 | 15 Sep 2026 | Packagings leave out the product's own Unit; both unit pickers show Contains and Reference Unit; a negative Cost is refused in the form only; Weight and Volume default to 0 | Odoo's field domain, Odoo's unit dropdown, Odoo's onchange (not a constraint), and the tenant's data | implementation agent, accepted by planner |
+
+## Worksheet 04 · Product Variants
+
+| Date | Decision | Why | By |
+|---|---|---|---|
+| 15 Sep 2026 | **One variant per product** until the Product Variants bundle, created with its product; **Products is the master** of Internal Reference, Cost, Weight, Volume and Favorite, copied to the variant by workflows and read-only there | Without attributes every Odoo product has exactly one variant, whose fields are the product's (single-variant inverses, `is_favorite` related) | planner |
+| 15 Sep 2026 | Variants show as **"[Internal Reference] Name"** — the title field, read-only, not hidden; products keep showing their Name | Odoo `_compute_display_name`; invoice lines will pick variants; hidden fields drop out of tables. Settles the open question for variants; " (attribute values)" waits for the bundle | planner |
+| 15 Sep 2026 | The product → variant copy reaches **active variants only**; unarchiving a product revives only its **oldest** variant and copies the fields onto it | The tenant's invoice lines point at archived original variants (FURN-0001, FURN-0002) that 07 may add as archived extras: they must keep their own reference and cost. Odoo `_create_variant_ids` revives one variant | planner, with the implementation agent |
+| 15 Sep 2026 | The variant's Archive / Unarchive also archive / unarchive the product when it has no other active variant | Odoo `action_archive` / `action_unarchive` on `product.product` | implementation agent, accepted by planner |
+| 15 Sep 2026 | No Create, Duplicate or Re-create on Product Variants; Product is read-only | Odoo's variant action has `create: False`, the views `duplicate="false"`, and the form shows the product read-only | implementation agent, accepted by planner |
+| 15 Sep 2026 | Views sort Favorite, then Internal Reference, then Name; variants without a reference come first | Odoo's list `default_order`; HAP cannot put empty values last | planner |
+| 15 Sep 2026 | Sales Price and the product's other fields are lookups, and Variant Image is the variant's own | HAP lookups are read-only; Odoo's editing through `_inherits` and its image fallback are left out | implementation agent, accepted by planner |
+| 15 Sep 2026 | Extra Packagings leave out the product's Unit by comparing unit names; the Sales and Inventory tab rules are Products' | A lookup of a relation stores the title, so no record id is available to compare; the variant form inherits the product form's tabs | implementation agent, accepted by planner |

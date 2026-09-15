@@ -1,0 +1,191 @@
+<title>ERP Master Product Variants</title>
+<meta name="description" content="Review pack for worksheet 04 of the Odoo-to-Nocoly build: requirements, build ids and UI test results.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<link rel="stylesheet" href="review.css">
+
+<main class="page">
+
+  <header class="identity">
+    <div class="eyebrow"><span>ERP Master</span><span>Phase 1</span><span>Worksheet 04 of 7</span></div>
+    <h1>Product Variants <span class="model">product.product</span></h1>
+    <p class="lede">A variant is one sellable version of a product, and it is what order and invoice lines point at. Until the Product Variants bundle every product has exactly <strong>one variant</strong>, created with it, and <strong>Products is the master</strong> of what both carry.</p>
+    <dl class="meta">
+      <div><dt>Reference</dt><dd>casimir.odoo.com — Odoo saas~19.4+e</dd></div>
+      <div><dt>Behaviour read from</dt><dd>Odoo 19.0 source, <code>product_product.py</code>, <code>product_template.py</code></dd></div>
+      <div><dt>Nocoly</dt><dd>App ERP Master · menu group Products</dd></div>
+      <div><dt>Built and tested</dt><dd>15 Sep 2026 — one variant per product</dd></div>
+    </dl>
+    <div class="scoreline">
+      <span class="chip pass">16 of 16 tests pass</span>
+      <span class="chip note">5 differences from Odoo</span>
+    </div>
+  </header>
+
+  <aside class="callout" aria-labelledby="note-title">
+    <span class="chip note small" style="justify-self:start">Worth knowing before you review</span>
+    <h2 id="note-title">Edit on the product — the variant follows</h2>
+    <p>A variant has no <em>+ Record</em> button: it is created with its product. Internal Reference, Cost, Weight, Volume and Favorite are copied from the product by workflows and are read-only on the variant; Name, Product Type, Unit, Sales, Purchase and Sales Price are lookups. Barcode, Extra Packagings and Variant Image are the variant's own. Workflows take up to 20 seconds — refresh before judging. <code>variants.py variant "[CONS-0002] Whiteboard Marker Set"</code> prints any variant's stored values.</p>
+  </aside>
+
+  <nav class="toc" aria-label="Sections">
+    <a href="#requirements"><span>1</span>Requirements</a>
+    <a href="#build"><span>2</span>Build</a>
+    <a href="#tests"><span>3</span>Tests and differences</a>
+  </nav>
+
+  <section id="requirements" aria-labelledby="req-title">
+    <div class="section-head"><span class="n">1</span><h2 class="section" id="req-title">Requirements</h2></div>
+
+    <div class="block">
+      <h3>Fields</h3>
+      <p class="aside">Labels are Odoo 19.4's. A lookup is a stored lookup through Product: read-only, updated by HAP when the product changes.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th class="num">#</th><th>Field</th><th>Odoo field</th><th>Nocoly type</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td class="num">1</td><td class="label">Product</td><td><code>product_tmpl_id</code></td><td>Relation → Products, one-way, required</td><td>Read-only, as on Odoo's variant form; set when the variant is created</td></tr>
+            <tr><td class="num">2</td><td class="label">Favorite</td><td><code>is_favorite</code></td><td>Checkbox, read-only</td><td>The product's Favorite (Odoo: related to the product), copied by the workflows</td></tr>
+            <tr><td class="num">3–4</td><td class="label">Sales · Purchase</td><td><code>sale_ok</code> <code>purchase_ok</code></td><td>Lookups</td><td>Quick filters</td></tr>
+            <tr><td class="num">5</td><td class="label">Variant Image</td><td><code>image_variant_1920</code></td><td>Attachment</td><td>The variant's own</td></tr>
+            <tr><td class="num">6</td><td class="label">Display Name</td><td><code>display_name</code></td><td>Function formula · title field</td><td>“[Internal Reference] Name”, or the Name alone; read-only on saved variants, as on Contacts</td></tr>
+            <tr><td class="num">7</td><td class="label">Product Type</td><td><code>type</code></td><td>Lookup</td><td>Tab General Information; quick filter</td></tr>
+            <tr><td class="num">8</td><td class="label">Sales Price</td><td><code>lst_price</code></td><td>Lookup, RM 2 decimals</td><td>The product's price; attribute price extras come with the bundle</td></tr>
+            <tr><td class="num">9</td><td class="label">Unit</td><td><code>uom_id</code></td><td>Lookup</td><td>Stored as the unit's name</td></tr>
+            <tr><td class="num">10</td><td class="label">Cost</td><td><code>standard_price</code></td><td>Currency RM, read-only</td><td>Copied from the product</td></tr>
+            <tr><td class="num">11</td><td class="label">Internal Reference</td><td><code>default_code</code></td><td>Text, read-only</td><td>Copied from the product</td></tr>
+            <tr><td class="num">12</td><td class="label">Barcode</td><td><code>barcode</code></td><td>Text, No duplicates</td><td>The variant's own; empty allowed any number of times</td></tr>
+            <tr><td class="num">13</td><td class="label">Extra Packagings</td><td><code>extra_uom_ids</code></td><td>Relation → Units &amp; Packagings, multiple, one-way</td><td>Tab Sales. Active units other than the product's Unit</td></tr>
+            <tr><td class="num">14–15</td><td class="label">Weight · Volume</td><td><code>weight</code> <code>volume</code></td><td>Number, kg / m³, read-only</td><td>Tab Inventory; copied from the product</td></tr>
+            <tr><td class="num">16</td><td class="label">Active</td><td><code>active</code></td><td>Checkbox, hidden</td><td>Archive / Unarchive and automation C</td></tr>
+            <tr><td class="num">—</td><td class="label">Name</td><td><code>name</code></td><td>Lookup, hidden</td><td>Feeds Display Name and the sort</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="aside">Form: Product · Favorite | Sales | Purchase · Variant Image · Display Name, then tabs General Information (Product Type | Sales Price · Unit | Cost · Internal Reference | Barcode), Sales (Extra Packagings — hidden unless the product is sold) and Inventory (Weight | Volume — hidden for services).</p>
+    </div>
+
+    <div class="block">
+      <h3>Automations and buttons</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Name</th><th>Runs when</th><th>Does</th><th>Odoo source</th></tr></thead>
+          <tbody>
+            <tr><td class="label">A · create a new product's variant</td><td>A product is created</td><td>Creates its variant with Internal Reference, Cost, Weight, Volume, Favorite and Active from the product</td><td><code>_create_variant_ids</code></td></tr>
+            <tr><td class="label">B · copy to the active variant</td><td>A product's Internal Reference, Cost, Weight, Volume or Favorite changes</td><td>Copies them to its active variants; archived variants keep their own values</td><td>single-variant inverses, <code>_set_product_variant_field</code></td></tr>
+            <tr><td class="label">C · archive and unarchive with the product</td><td>A product's Active changes</td><td>Archiving archives all its variants; unarchiving revives its oldest variant and copies the fields onto it</td><td><code>product.template.write</code></td></tr>
+            <tr><td class="label">Archive button</td><td>Active</td><td>After “Are you sure that you want to archive this record?”; archives the product too when it has no other active variant</td><td><code>action_archive</code></td></tr>
+            <tr><td class="label">Unarchive button</td><td>Archived</td><td>No confirmation; unarchives the product too</td><td><code>action_unarchive</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="aside">The workflows trigger on Products and write only Product Variants; each action runs one workflow once. Create, Duplicate and Re-create are switched off, as Odoo's variant action has <code>create: False</code>.</p>
+    </div>
+
+    <div class="block">
+      <h3>Views and rules</h3>
+      <div class="table-wrap">
+        <table class="narrow">
+          <thead><tr><th>Element</th><th>What it does</th></tr></thead>
+          <tbody>
+            <tr><td class="label">Product Variants view</td><td>Active variants: Display Name · Sales Price · Cost · Barcode · Unit; sorted Favorite first, then Internal Reference, then Name (Odoo's list order); quick filters Product Type · Sales · Purchase · Favorite</td></tr>
+            <tr><td class="label">Archived view</td><td>Archived variants, same columns and sort</td></tr>
+            <tr><td class="label">Sales tab rule</td><td>Hidden when the product's Sales is unchecked</td></tr>
+            <tr><td class="label">Inventory tab rule</td><td>Hidden when the product is a Service</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="block">
+      <h3>Not built now, and why</h3>
+      <div class="table-wrap">
+        <table class="narrow">
+          <thead><tr><th>Odoo 19.4 field or feature</th><th>Why not now</th></tr></thead>
+          <tbody>
+            <tr><td>Attributes, attribute values, price extras, the “(attribute values)” name suffix, several active variants per product</td><td>Product Variants bundle</td></tr>
+            <tr><td>Variant Tags · Unit Barcode · Pricelist rules</td><td>Product Tags bundle · its own table <code>product.uom</code> · Pricelists bundle</td></tr>
+            <tr><td>Documents · Quantity On Hand · price per unit · image fetch</td><td>HAP attachments · Inventory not installed · eCommerce · barcode lookup</td></tr>
+            <tr><td>Editing the product's fields on the variant form (Odoo <code>_inherits</code>), Sales Price included</td><td>HAP lookups are read-only: edit them on the product</td></tr>
+            <tr><td>Creating or duplicating a variant directly</td><td>A variant comes with its product</td></tr>
+            <tr><td>Deleting the last variant deletes the product</td><td>No delete cascade; deletions need the owner's approval</td></tr>
+            <tr><td>“The Reference … already exists.” warning</td><td>Odoo only warns, as on Products</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="block">
+      <h3>Records</h3>
+      <p class="prose">One active variant per seeded product; 11 match the tenant's variants exactly. The monitor, chair and desk get one variant without Internal Reference and Cost 0, like their product. The tenant's 6 attribute variants and 3 archived originals wait for the bundle — but its invoice lines point at <strong>[FURN-0001]</strong> and <strong>[FURN-0002]</strong> (archived originals) and <strong>Ergonomic Office Chair (Blue)</strong>. 07 Invoice Lines can add the two originals as archived extra variants without changing this worksheet; the Blue chair's lines can point at the chair's own variant.</p>
+    </div>
+  </section>
+
+  <section id="build" aria-labelledby="build-title">
+    <div class="section-head"><span class="n">2</span><h2 class="section" id="build-title">Build</h2></div>
+    <p class="prose">Built by <code>nocoly/build/variants.py</code> — steps create, fields, relations, lookups, display, layout, rules, views, buttons, automations, switches, seed — each safe to re-run. Every id is in <code>nocoly/build/ids.json</code> under “Product Variants: …”.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Element</th><th>Built</th><th>Id</th></tr></thead>
+        <tbody>
+          <tr><td class="label">Worksheet</td><td>Product Variants, alias <code>product_product</code>, between Products and Units &amp; Packagings</td><td class="id">6aa90c161204328eb1af1b82</td></tr>
+          <tr><td class="label">Relations</td><td>Product · Extra Packagings, one-way</td><td class="id">6aa90c7d4a22ad87b728e9f0 · 6aa90c7d4a22ad87b728e9f2</td></tr>
+          <tr><td class="label">Title field</td><td>Display Name · Name lookup</td><td class="id">6aa90cd04720c515252bf923 · 6aa90c9f4a22ad87b728e9f8</td></tr>
+          <tr><td class="label">Rules</td><td>Sales tab · Inventory tab</td><td class="id">6aa90f134a22ad87b728ea5e · 6aa90f134a22ad87b728ea60</td></tr>
+          <tr><td class="label">Views</td><td>Product Variants · Archived</td><td class="id">6aa90c161204328eb1af1b86 · 6aa90f171204328eb1af1bbf</td></tr>
+          <tr><td class="label">Buttons</td><td>Archive · Unarchive, cascading to the product</td><td class="id">6aa90fc04a22ad87b728ea89 · 6aa90fc34720c515252bf9b8</td></tr>
+          <tr><td class="label">Automations</td><td>A · B · C</td><td class="id">6aa9117ce589b8933dd933da · 6aa91186e589b8933dd9367a · 6aa9118ce589b8933dd93748</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose">CLI self-checks by the implementation agent: each automation and both buttons ran once per action with no loops; an archived extra variant kept its own reference and cost through a cost change and an archive cycle; a duplicate Barcode was refused on the API too. <code>variants.py verify</code>, <code>products.py verify</code> and <code>units.py verify</code> report nothing differing.</p>
+  </section>
+
+  <section id="tests" aria-labelledby="tests-title">
+    <div class="section-head"><span class="n">3</span><h2 class="section" id="tests-title">Tests and differences</h2></div>
+    <p class="prose">Run in the Nocoly UI in Chrome on 15 Sep 2026, reading stored values back with <code>variants.py variant</code>. For tests 5, 9, 10 and 13 the product was changed through the CLI (a record update or its button workflow) and the variant checked in the UI — the automations react the same way. Test records are named <code>TEST …</code>.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th class="num">#</th><th>Check</th><th>Expected</th><th>Result</th></tr></thead>
+        <tbody>
+          <tr><td class="num">1</td><td class="label">Menu and no Create</td><td>Products · Product Variants · Units &amp; Packagings; no + Record, Duplicate or Re-create</td><td><div class="result"><span class="chip pass small">Pass</span></div></td></tr>
+          <tr><td class="num">2</td><td class="label">Table, title and sort</td><td>17 variants, unreferenced first, then by reference; Archived holds the TEST extra</td><td><div class="result"><span class="chip pass small">Pass</span>RM with 2 decimals; Hours and Days where expected</div></td></tr>
+          <tr><td class="num">3</td><td class="label">Quick filters</td><td>Service 5 · Purchase ticked 12, unticked 5 · Sales 17 · Favorite 0</td><td><div class="result"><span class="chip pass small">Pass</span></div></td></tr>
+          <tr><td class="num">4</td><td class="label">Form and read-only fields</td><td>[SRV-0002]: copies and lookups read-only, Barcode editable, no Inventory tab</td><td><div class="result"><span class="chip pass small">Pass</span>Clicking Favorite, Purchase or Product Type changes nothing</div></td></tr>
+          <tr><td class="num">5</td><td class="label">Inventory and Sales tabs</td><td>Weight and Volume read-only; Sales tab follows the product's Sales</td><td><div class="result"><span class="chip pass small">Pass</span></div></td></tr>
+          <tr><td class="num">6</td><td class="label">Barcode no duplicates</td><td>A second variant with the same Barcode is refused</td><td><div class="result"><span class="chip pass small">Pass</span>“Duplicates are not allowed”; Save refused</div></td></tr>
+          <tr><td class="num">7</td><td class="label">Extra Packagings picker</td><td>Active units except the product's Unit; several at once</td><td><div class="result"><span class="chip pass small">Pass</span>Names only — difference 1</div></td></tr>
+          <tr><td class="num">8</td><td class="label">Automation A</td><td>A new product gets “[TEST-0003] TEST Variant From UI” with its values</td><td><div class="result"><span class="chip pass small">Pass</span>Within 20 seconds</div></td></tr>
+          <tr><td class="num">9</td><td class="label">Automation B</td><td>Reference and Cost follow; Sales Price follows through the lookup</td><td><div class="result"><span class="chip pass small">Pass</span>No reference: title is the Name</div></td></tr>
+          <tr><td class="num">10</td><td class="label">Automation C</td><td>Archiving a product archives its variant; unarchiving brings it back current</td><td><div class="result"><span class="chip pass small">Pass</span>Back at RM 21.50</div></td></tr>
+          <tr><td class="num">11</td><td class="label">Variant Archive</td><td>Confirmation; the product is archived too; the extra stays archived</td><td><div class="result"><span class="chip pass small">Pass</span></div></td></tr>
+          <tr><td class="num">12</td><td class="label">Variant Unarchive</td><td>No confirmation; variant and product back</td><td><div class="result"><span class="chip pass small">Pass</span></div></td></tr>
+          <tr><td class="num">13</td><td class="label">Favorite follows the product</td><td>Favourite products' variants come first; archived extra untouched</td><td><div class="result"><span class="chip pass small">Pass</span>Quick filter showed exactly the two</div></td></tr>
+          <tr><td class="num">14</td><td class="label">Search</td><td>“IT-0001” and “Laptop” find [IT-0001] Business Laptop 14″ i7</td><td><div class="result"><span class="chip pass small">Pass</span></div></td></tr>
+          <tr><td class="num">15</td><td class="label">Seeded data</td><td>Three verify commands report nothing differing</td><td><div class="result"><span class="chip pass small">Pass</span>11 of 11 single-variant products match the extract</div></td></tr>
+          <tr><td class="num">16</td><td class="label">Odoo side by side</td><td>Laptop matches; the chair's attribute variants wait for the bundle</td><td><div class="result"><span class="chip pass small">Pass</span>Read through the tenant's API; the Odoo tab would not render</div></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="block">
+      <h3>Differences from Odoo seen in testing</h3>
+      <ol class="differences">
+        <li><span class="n">1</span><div class="head"><strong>Unit pickers list names only</strong><span class="chip note small">Note</span></div><p>Extra Packagings shows unit names without Contains and Reference Unit, as on Products and Units &amp; Packagings.</p></li>
+        <li><span class="n">2</span><div class="head"><strong>Unreferenced variants sort first</strong><span class="chip note small">HAP behaviour</span></div><p>Odoo lists them after the referenced ones; HAP puts empty values first in an ascending sort and cannot change it.</p></li>
+        <li><span class="n">3</span><div class="head"><strong>The product's fields are read-only on the variant</strong><span class="chip note small">Note</span></div><p>Odoo edits Name, Sales Price and image through the variant form; here they are lookups or copies — edit the product.</p></li>
+        <li><span class="n">4</span><div class="head"><strong>Workflows take a few seconds</strong><span class="chip note small">HAP behaviour</span></div><p>A product change reaches its variant within about 20 seconds and shows after a refresh; variants created by the workflow have no owner.</p></li>
+        <li><span class="n">5</span><div class="head"><strong>Archive and Unarchive</strong><span class="chip note small">Note</span></div><p>In a record opened as a full page only the applicable button shows; in the pop-up the other is greyed out. Edits are kept with Save on the <em>Modifying form data</em> bar.</p></li>
+      </ol>
+    </div>
+
+    <div class="block">
+      <h3>Test records left for review</h3>
+      <div class="records"><span>TEST Product [TEST-0001] — Extra Packagings Pack of 6, Days</span><span>TEST Auto Variant Product [TEST-0002], and the archived extra [TEST-0002-OLD]</span><span>TEST Favorite Product [TEST-0005]</span><span>TEST Variant From UI [TEST-0004]</span></div>
+      <p class="aside">Each as a product and its variant. No barcodes, nothing favourite. Remove them after sign-off.</p>
+    </div>
+  </section>
+
+  <footer>Source: <code>nocoly/worksheets/04-product-variants.md</code> in ca1phas/odoo, branch 19.0. Reviewing guide: <code>nocoly/REVIEWING.md</code>.</footer>
+</main>
