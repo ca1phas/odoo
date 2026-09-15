@@ -23,6 +23,7 @@ the owner's direction. Newest last.
 | Needed by | Question | Recommendation from the plan |
 |---|---|---|
 | 04 Product Variants, 07 Invoice Lines | Do lines point at Product Variants or Products? | **Variants.** Every order line, stock move and invoice line in Odoo points at the variant; pointing at the template is the one choice that costs a rebuild rather than an append |
+| 04 Product Variants | Show products and variants as "[Internal Reference] Name (attributes)" in pickers, as Odoo does? | Likely yes — the same reasoning as Contacts' display name; settle it in the 04 brief |
 | 06 Invoices | One Invoices worksheet split by Move Type, or separate Bills? | **One worksheet with a Move Type dropdown** — Customer Invoice · Vendor Bill · Credit Note · Vendor Refund — as Odoo's single `account.move`; separate worksheets mean two numbering schemes and two posting workflows |
 
 ## Worksheet 01 · Contacts
@@ -33,6 +34,7 @@ the owner's direction. Newest last.
 | 15 Sep 2026 | Upstream sync (a contact's edit rewriting its company) is left out | Avoids automation loops; edit the company instead | planner |
 | 15 Sep 2026 | **Show "Company, Person" as the display name, like Odoo** | Customer pickers on Invoices must identify the company | owner |
 | 15 Sep 2026 | Delete the three rules the 19.0 build left disabled | They referred to a deleted field and did nothing | owner |
+| 15 Sep 2026 | Display Name is a hidden function formula over a stored lookup of the Company's name, and the title field; the views drop their Company column and sort by it | HAP's only text IF is in function formulas; a hidden title still reaches titles, tables, cards and pickers | implementation agent, accepted by planner |
 
 ## Worksheet 02 · Units & Packagings
 
@@ -54,3 +56,4 @@ the owner's direction. Newest last.
 | 15 Sep 2026 | Product Type offers **Goods and Service**; Combo waits for the Product Combos bundle | A Combo product is meaningless without Combo Choices | planner |
 | 15 Sep 2026 | Views open on a **gallery**, then List and Archived; favourites first, then by name | Odoo's Products action opens in Kanban; its order is `is_favorite desc, name` | planner |
 | 15 Sep 2026 | Seed the 14 products; the monitor's, chair's and desk's variants wait for Product Variants (04) and its bundle | Without the Product Variants bundle each product has exactly one variant | planner |
+| 15 Sep 2026 | Packagings leave out the product's own Unit; both unit pickers show Contains and Reference Unit; a negative Cost is refused in the form only; Weight and Volume default to 0 | Odoo's field domain, Odoo's unit dropdown, Odoo's onchange (not a constraint), and the tenant's data | implementation agent, accepted by planner |

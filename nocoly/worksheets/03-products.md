@@ -1,0 +1,201 @@
+# 03 · Products
+
+| | |
+|---|---|
+| Nocoly app | ERP Master · menu group **Products** |
+| Worksheet | Products |
+| Odoo model | `product.template` |
+| Reference | **casimir.odoo.com — Odoo saas~19.4+e**: fields by module, form, list, kanban, search, defaults, order and all 14 records, extracted read-only to `nocoly/reference/odoo-19.4/product.template.md`. Behaviour the tenant cannot show — onchange checks, domains, defaults in code — is read from the Odoo 19.0 source in this repo: `addons/product/models/product_template.py` |
+| Phase | 1 — core worksheet 3 of 7 |
+| Status | Built with the hap CLI and seeded on 15 Sep 2026 · UI test to do |
+
+The catalogue: every good and service a company sells or buys, with its price, cost and unit. Only the `product`
+module's own fields are here, plus Sales Description; Sales, Purchase, Inventory, Invoicing and the optional bundles
+append their fields when they land. Each product has exactly one variant until the Product Variants bundle.
+
+## 1 · Requirements
+
+### Fields
+
+Labels are Odoo 19.4's. "Hidden" means not on the form but used by views, rules or buttons. Descriptions carry
+Odoo's field help where it has one.
+
+| # | Field | Odoo field | Nocoly type | Required | Default | Notes |
+|---|---|---|---|---|---|---|
+| 1 | Name | `name` | Text · **title field** | yes | — | Placeholder "e.g. Cheese Burger" |
+| 2 | Favorite | `is_favorite` | Checkbox | no | unchecked | Odoo's star beside the name. Every view lists favourites first |
+| 3 | Sales | `sale_ok` | Checkbox | no | checked | Under the name, as in Odoo. Unchecked hides the Sales tab |
+| 4 | Purchase | `purchase_ok` | Checkbox | no | checked | Under the name. Odoo hides it for Combo products, which are not built |
+| 5 | Image | `image_1920` | Attachment | no | — | The gallery card cover |
+| 6 | Product Type | `type` | Single select, options side by side (Odoo's horizontal radio): Goods · Service | yes | Goods | Tab **General Information**. Service hides the Inventory tab. Combo waits for the Product Combos bundle |
+| 7 | Sales Price | `list_price` | Currency MYR, shown as RM, 2 decimals | no | 1.00 | Tab General Information. Odoo precision "Product Price" = 2 |
+| 8 | Unit | `uom_id` | Relation → Units & Packagings (single, **one-way**) | yes | Units | Tab General Information. The picker lists active units only (Odoo's `active_test`) and shows each one's Contains and Reference Unit, as Odoo's dropdown shows "Days --8 Hours--". No reverse field on Units & Packagings |
+| 9 | Cost | `standard_price` | Currency MYR, shown as RM, 2 decimals | no | 0.00 | Tab General Information. Cannot be negative (rules) |
+| 10 | Internal Reference | `default_code` | Text | no | — | Tab General Information. Odoo's form labels it "Reference"; list, search and field label say Internal Reference |
+| 11 | Internal Notes | `description` | Rich text | no | — | Tab General Information. Placeholder "This note is only for internal purposes.". Odoo shows the field under the group title "Internal Notes"; the field itself is labelled Description |
+| 12 | Packagings | `uom_ids` | Relation → Units & Packagings (multiple, **one-way**), shown as a dropdown | no | — | Tab **Sales**. The picker lists active units other than the product's Unit (Odoo domain `[('id', '!=', uom_id)]`); while Unit is empty it lists every active unit |
+| 13 | Sales Description | `description_sale` | Text, multi-line | no | — | Tab Sales. Placeholder "This note is added to sales orders and invoices." |
+| 14 | Weight | `weight` | Number, 2 decimals, suffix kg | no | 0 | Tab **Inventory**. Odoo precision "Stock Weight" = 2; its unit label (`weight_uom_name`) is kg |
+| 15 | Volume | `volume` | Number, 2 decimals, suffix m³ | no | 0 | Tab Inventory. Odoo precision "Volume" = 2; unit label m³ |
+| 16 | Active | `active` | Checkbox | — | checked | Hidden. Set by Archive / Unarchive |
+
+### Form layout
+
+| Odoo 19.4 | Nocoly |
+|---|---|
+| Button box: Variants · Documents · Sold | — (see Not built now) |
+| Header: ☆ Name; Sales ☑ Purchase ☑ under it; image on the right | Name, full width · Favorite \| Sales \| Purchase · Image |
+| Tab General Information — left: Product Type (radio), and fields of Sales, Inventory and e-invoicing; right: Sales Price per Unit · Sales Taxes · Cost per Unit · Purchase Taxes · Category · Reference · Barcode · Tags · tariff code; then Internal Notes | Product Type \| Sales Price · Unit \| Cost · Internal Reference · Internal Notes |
+| Tab Attributes & Variants | — |
+| Tab Sales, hidden unless Sales — *Upsell & Cross-Sell*: Packagings, Optional Products; *Short Description*: Sales Description; *Expenses, Services & Materials*: Re-Invoice Costs | Packagings · Sales Description; the whole tab hidden when Sales is unchecked |
+| Tab Prices | — |
+| Tab Purchase (`invisible="1 or …"`: never shown on the tenant) | — |
+| Tab Inventory, hidden for services — *Logistics*: Weight kg, Volume m³, Delivery Time | Weight \| Volume; the whole tab hidden when Product Type is Service |
+
+A HAP form is a 12-column grid, so Odoo's two columns become paired rows, and the Unit that Odoo repeats after
+"Sales Price … per" and "Cost … per" is one field beside Cost. HAP has no avatar slot or favourite star: Image is
+a full-width field and Favorite a checkbox. Group titles inside the tabs are left out: the Sales and Inventory tabs
+hold two fields each.
+
+### Rules
+
+| Rule | Type | When | Effect | Odoo source |
+|---|---|---|---|---|
+| Sales tab only for products that can be sold | interaction | Sales is unchecked | hide the **Sales** tab | `<page name="sales" invisible="not sale_ok">` |
+| Inventory tab only for goods | interaction | Product Type = Service | hide the **Inventory** tab | `<page name="inventory" invisible="type in ['service', 'combo']">` |
+| Cost cannot be negative | validation — **form only** | Cost < 0 | "The cost of a product can't be negative." on Cost, as you type | `@api.onchange('standard_price')` `_onchange_standard_price` (`product_template.py:417`). An onchange: Odoo checks it in the form and not on API writes, and so does this rule |
+
+Name, Product Type and Unit are required on the fields themselves. The two picker restrictions are in Fields.
+
+### Buttons (Odoo ⚙ Actions)
+
+| Button | Shown when | Does | Confirmation |
+|---|---|---|---|
+| Archive | Active is checked | Active → unchecked | "Are you sure that you want to archive this record?" · Archive / Cancel |
+| Unarchive | Active is unchecked | Active → checked | none |
+
+As on Contacts and Units & Packagings, the button that does not apply is greyed out rather than hidden.
+
+### Views
+
+| View | Type | Shows | Odoo 19.4 |
+|---|---|---|---|
+| Products | gallery — opens first | Active products. Image cover; title Name; Internal Reference, Sales Price, Unit. Favourites first, then Name A→Z | Kanban, the first view of the Products action (`kanban,list,form`): image, name, favourite star, variant count, Sales Price, Cost, Internal Reference, properties, On Hand with its unit |
+| List | table | Active products. Columns Name · Internal Reference · Sales Price · Cost · Unit; quick filters Product Type · Sales · Purchase · Favorite; same sort | List view: favourite star · Product Name · Internal Reference · Sales Price · Cost · On Hand · Free To Use · Forecasted · Unit. Search filters Goods · Services · Combo, Favorites, Sales · Purchase |
+| Archived | table | Archived products, List's columns and sort | The *Archived* filter |
+
+Odoo's model order is `is_favorite desc, name`. Search is on the title and text fields, HAP's search box.
+
+### Automations
+
+None.
+
+### Not built now, and why
+
+| Odoo 19.4 field / feature | Why not now |
+|---|---|
+| Product Category (`categ_id`) | Product Categories bundle — excluded for now |
+| Tags (`product_tag_ids`) | Product Tags bundle — excluded |
+| Sales Taxes, Purchase Taxes (`taxes_id`, `supplier_taxes_id`, `tax_string`) | Taxes bundle; module `account` |
+| Income and Expense Accounts (`property_account_income_id`, `property_account_expense_id`), Account Tags | Chart of Accounts bundle; module `account` |
+| Product Type **Combo**, Combo Choices (`combo_ids`) and the checks "A combo product must contain at least 1 combo choice." and "A sellable combo product can only contain sellable products." | Product Combos bundle; module `product` |
+| Attributes & Variants tab (`attribute_line_ids`), the Variants smart button | Product Variants bundle; module `product` |
+| Barcode (`barcode`) | Stored on the variant: worksheet 04 Product Variants |
+| Prices tab (`fixed_pricelist_rule_ids`, `pricelist_rule_ids`) | Pricelists bundle; module `product` |
+| Vendors (`seller_ids`), Purchase Description (`description_purchase`), the Purchase tab | Purchase — not installed on the tenant, whose form never shows that tab |
+| Invoicing Policy (`invoice_policy`), Create on Order (`service_tracking`), Service Invoicing Policy (`service_policy`), Track Service, Project and Task Templates, Re-Invoice Costs, Optional Products, Sales Order Line Warning, Delivery Time (`sale_delay`), the Sold smart button | Sales (`sale`, `sale_project`) and Project — appended as bridge fields when those apps land |
+| Track Inventory (`is_storable`), On Hand, Forecasted, Incoming, Outgoing, Free To Use | Inventory (`stock`) is not installed; the tenant shows them inert |
+| Documents (`product_document_ids`) smart button | HAP's record attachments and discussion |
+| Properties (`product_properties`) | Odoo's ad-hoc fields, defined per category; in HAP an admin adds a field |
+| Price per unit (`base_unit_count`, `base_unit_id`, `base_unit_price`) | eCommerce (`website_sale` in 19.0); not on the tenant's form |
+| Malaysian Customs Tariff Code / Service Type Code, Malaysian classification code | Malaysian e-invoicing localisation (`l10n_my`, `l10n_my_edi`), with Invoicing — as SST and TTx on Contacts |
+| Company (`company_id`) | One company per app copy; multi-company is not in Phase 1 |
+| Sequence, Color Index, Currency, Cost Currency, Unit Name | Technical fields, not on the form: nothing orders by Sequence, the currency is fixed to MYR on the two Currency fields, and the Unit relation shows its name |
+| Display name "[Internal Reference] Name" in pickers (`_compute_display_name`) | Pickers show the Name. Order and invoice lines will pick a Product Variant, whose display name is decided with worksheet 04 |
+| "The Internal Reference '…' already exists." (`_onchange_default_code`) | A warning, not a refusal: HAP has no warning-only rule, and a field's No-duplicates setting would refuse the save |
+| "What to expect ?" when the Unit changes, and the conversion of existing lines (`_onchange_uom_id`, `write` → `_update_uom`) | Only matters once the product is on order or invoice lines — worksheet 07 |
+| Archiving a product archives its variants (`write`) | Product Variants (04) |
+| A duplicated product is named "… (copy)" (`copy_data`) | HAP's duplicate keeps the name |
+| "Labels cannot be printed for products of service type" | No label printing |
+| Roles | Set once for the app at the end of Phase 1 |
+
+### Records
+
+The 14 products of the extract, all active and none favourite: Name, Internal Reference, Product Type, Sales,
+Purchase, Sales Price, Cost, Unit (Units, Hours or Days, from Units & Packagings) and Sales Description; Weight and
+Volume 0, as on the tenant. The Ergonomic Office Chair's internal note — a stray pasted code snippet — is not
+copied. The monitor, chair and desk have 3, 4 and 3 variants on the tenant (hence no Internal Reference and a Cost
+of 0 there); their variants wait for Product Variants.
+
+## 2 · Build
+
+Built by `nocoly/build/products.py` — steps `create → fields → relations → layout → rules → views → buttons → seed`,
+each safe to re-run (`fields` refuses to run on a worksheet that already has its fields); helpers shared with other
+worksheets are in `nocoly/build/common.py`; every id is in `nocoly/build/ids.json` under "Products: …" (the
+worksheet under "Products"). `products.py verify` compares the live products with the 19.4 extract;
+`products.py order` prints each view's records in the view's order; `products.py product <name>` prints a
+product's stored values, hidden ones included.
+
+| Element | Built | Id |
+|---|---|---|
+| App | ERP Master | `6cb4d051-a33c-4bf9-b56f-5f47f0e85dc9` |
+| Menu group | Products — Products first, then Units & Packagings | `6aa8d12ddb26b712423d345d` |
+| Worksheet | Products, alias `product_template` | `6aa8ea0c4a22ad87b728cf0b` |
+| Controls | 19: the 16 fields above (aliases are Odoo field names) and 3 tabs | — |
+| Relations | Unit · Packagings, one-way to Units & Packagings | `6aa8ea304720c515252be609` · `6aa8ea304720c515252be60b` |
+| Rules | the 3 above | `6aa8ea9cf363582dd37a5ab0` · `6aa8ea9cf363582dd37a5ab2` · `6aa8ea9e4a73a3142152d722` |
+| Views | Products · List · Archived | `6aa8eadd1204328eb1af105b` · `6aa8ea0c4a22ad87b728cf0f` · `6aa8eadf1204328eb1af105d` |
+| Buttons | Archive · Unarchive | `6aa8eb444720c515252be61c` · `6aa8eb484720c515252be61e` |
+| Button workflows | one step each, setting Active | `6aa8eb452fe3e8d6b31a6da2` · `6aa8eb482fe3e8d6b31a6dc6` |
+| Records | the 14 products; `verify` matches all 14 | — |
+
+**History.** Built and seeded on 15 Sep 2026 in one pass; nothing was left behind and there is nothing to delete.
+Self-checks through the CLI: Units & Packagings' controls, rules, buttons and views read back unchanged after every
+save; Whiteboard Marker Set was marked Favorite (it moved to the top of Products and List) and back, and archived
+and unarchived once with `workflow trigger` (it moved to Archived and back). The Unit default, the two pickers, the
+tab rules, the negative-Cost check and the currency display are browser behaviour: HAP stores them as configured,
+and only the UI test can show them working.
+
+### Found while building — applies to every worksheet
+
+- `hap worksheet view sort` sends no appId: SortWorksheetViews answers `false` and changes nothing. The same call
+  with the appId works (`common.sort_views`).
+- A **one-way Relation** is added with `add-fields`, without a controlId and with `advancedSetting.bidirectional`
+  "0" (hap-cli's own builder does this): the target worksheet gets no reverse control; the relation's
+  `sourceControlId` is only a reserved id. After the full layout save on Products, `worksheet fields` listed
+  Units & Packagings' controls in another order (by id), every attribute unchanged: compare controls by id, not by
+  position.
+- A **static Relation default** is `defsource [{"cid": "", "rcid": "", "staticValue": "[\"<rowid>\"]"}]`; the
+  server stores the record's whole row in place of the rowid. The API applies no defaults, so only a new record in
+  the form shows it.
+- An interaction rule can hide a **whole tab**: its item names the tab (SECTION) control.
+- A Relation's picker filters are applied by the browser — GetFilterRows for a picker ignores them — so they can
+  only be checked in the UI. A filter can compare the record id with a Relation on the form
+  (`controlId: "rowid"`, `dynamicSource: [{cid: <relation>}]`); an empty dynamic value drops that condition.
+- `worksheet record list --view-id` applies the view's filter and sort, and returns only that view's columns.
+- A Currency field's symbol is `advancedSetting.currency` = `{"currencycode": "MYR", "symbol": "RM"}`.
+
+## 3 · Test list
+
+Run in the Nocoly UI. Test records are named `TEST …`. CLI read-backs run from the repo root:
+`~/.hap-venv/bin/python nocoly/build/products.py product "<Name>"`.
+
+| # | Check | Steps | Expected | Result |
+|---|---|---|---|---|
+| 1 | Menu | Open ERP Master | Menu group **Products** holds Products, then Units & Packagings. Products opens on the **Products** gallery; its views are Products · List · Archived | |
+| 2 | Empty form and defaults | Products → + Record, look | Name (placeholder "e.g. Cheese Burger"); Favorite unchecked, Sales and Purchase checked; Image. Tab General Information: Product Type **Goods**, Sales Price **RM 1.00**, Unit **Units**, Cost **RM 0.00**, Internal Reference, Internal Notes (placeholder "This note is only for internal purposes."). Tabs Sales and Inventory shown; Weight 0.00 kg, Volume 0.00 m³. No Active field | |
+| 3 | Required fields | Clear Unit, leave Name empty → Submit | Name and Unit marked required; not saved | |
+| 4 | Unit picker | Open Unit | Only active units — the 14 standard ones, e.g. Days showing 8 · Hours — plus any active TEST unit; no Dozens, cm or km | |
+| 5 | Packagings picker | Unit = Units; tab Sales → Packagings | Active units except Units; more than one can be picked. Change Unit to Hours: Units is offered, Hours is not | |
+| 6 | Sales tab hides | Uncheck Sales; check it again | The Sales tab disappears, then comes back | |
+| 7 | Inventory tab hides | Product Type = Service; back to Goods | The Inventory tab disappears, then comes back | |
+| 8 | Negative cost | Cost −1 | "The cost of a product can't be negative." under Cost; Submit refused | |
+| 9 | Save a product | Name "TEST Product", Internal Reference TEST-0001, Sales Price 1890, Cost 5.5, Packagings Pack of 6, Sales Description "TEST line", Weight 1.5 → Submit | Saved. Sales Price and Cost show the RM symbol and 2 decimals (5.50). CLI: code TEST-0001, type Goods, sale_ok and purchase_ok True, list_price 1890.00, standard_price 5.50, uom Units, active True, weight 1.50 | |
+| 10 | One-way relations | Open a unit in Units & Packagings | No Products or Packagings field, and no new column in its views | |
+| 11 | Views | Products, List, Archived | Products: cards with image, Name, Internal Reference, Sales Price, Unit. List: columns Name, Internal Reference, Sales Price, Cost, Unit. Both: the 14 products and TEST Product, sorted by Name (27" 4K Monitor first). Archived: empty | |
+| 12 | Favourites first | Mark Whiteboard Marker Set Favorite; then unmark it | It moves to the top of Products and List, then back to its place by name, just before Wireless Keyboard & Mouse Set | |
+| 13 | Quick filters | List: Product Type = Service; then Purchase unchecked; then Favorite checked | Service: Annual Support Retainer, Implementation Consulting, both Nocoly HAP Licences, Onsite Training (per day). Purchase unchecked: the same five. Favorite checked: none | |
+| 14 | Archive | Open TEST Product → Archive | Confirmation as above with Archive / Cancel; TEST Product leaves Products and List and appears in Archived; on the record, Archive is greyed out and Unarchive available | |
+| 15 | Unarchive | Archived → TEST Product → Unarchive | No confirmation; back in Products and List | |
+| 16 | Seeded data | `~/.hap-venv/bin/python nocoly/build/products.py verify` | Every product OK; "14 in the extract; 0 missing or differing"; TEST Product listed as not in the extract | |
+| 17 | Odoo side by side | casimir.odoo.com Products vs Nocoly | Same fields as §1 apart from the "Not built now" list; the same 14 products with their references, types, Sales and Purchase flags, prices, costs, units and sales descriptions | |
