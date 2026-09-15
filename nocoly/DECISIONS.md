@@ -54,3 +54,11 @@ the owner's direction. Newest last.
 | 15 Sep 2026 | Product Type offers **Goods and Service**; Combo waits for the Product Combos bundle | A Combo product is meaningless without Combo Choices | planner |
 | 15 Sep 2026 | Views open on a **gallery**, then List and Archived; favourites first, then by name | Odoo's Products action opens in Kanban; its order is `is_favorite desc, name` | planner |
 | 15 Sep 2026 | Seed the 14 products; the monitor's, chair's and desk's variants wait for Product Variants (04) and its bundle | Without the Product Variants bundle each product has exactly one variant | planner |
+
+## Worksheet 05 · Journals
+
+| Date | Decision | Why | By |
+|---|---|---|---|
+| 15 Sep 2026 | Journals is assigned to **Teh Li Wei** as the reviewing colleague and is handed off for parallel work while Products is being built; implementation agents must not touch the Journals worksheet | Two builders can work in parallel without crossing the Products, Units & Packagings or Journals boundaries; later Invoices will relate to Journals | owner |
+| 15 Sep 2026 | The Journals handoff records the Phase 1 core fields only; Chart of Accounts, Currency, Payments, e-invoicing and other Journal relations are deferred | Creating fake Text fields would produce the wrong model and make later bundles harder to attach correctly | owner / Teh Li Wei |
+| 15 Sep 2026 | This commit is planning and collaboration handoff only; it does not build HAP objects and must not change `build/ids.json` | The correct CLI profile is not currently authenticated, and live Odoo UI extraction plus a later CLI preflight are required before creation | Teh Li Wei |
