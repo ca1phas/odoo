@@ -34,8 +34,9 @@ Decided on 15 Sep 2026, and overriding the published plan where they differ:
 
 | # | Worksheet | State |
 |---|---|---|
-| 01 | Contacts | built and matched to 19.4 · UI test in progress |
-| 02–07 | Units & Packagings · Products · Product Variants · Journals · Invoices · Invoice Lines | not started |
+| 01 | Contacts | built · UI-tested 13/13 · ready for review |
+| 02 | Units & Packagings | in progress |
+| 03–07 | Products · Product Variants · Journals · Invoices · Invoice Lines | not started |
 
 Run the build scripts with the CLI's own interpreter: `~/.hap-venv/bin/python nocoly/build/contacts.py show`.
 

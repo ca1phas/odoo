@@ -7,7 +7,7 @@
 | Odoo model | `res.partner` |
 | Reference | **casimir.odoo.com — Odoo saas~19.4+e** (form, list, kanban and search views read from the live tenant). Behaviour the tenant cannot show — constraints, sync rules — is read from the Odoo 19.0 source in this repo: `odoo/addons/base/models/res_partner.py` |
 | Phase | 1 — core worksheet 1 of 7 |
-| Status | Built with the hap CLI and matched to 19.4 on 15 Sep 2026 · UI test in progress |
+| Status | Built with the hap CLI and matched to 19.4 on 15 Sep 2026 · **UI-tested: 13 of 13 pass**, 4 differences from Odoo noted · ready for review |
 
 One worksheet holds companies, the people who work at them, and their extra addresses (invoice, delivery,
 other) — as Odoo keeps all three in `res.partner`, linked by **Company**.
@@ -84,12 +84,12 @@ under the address.
 
 | Odoo 19.4 field / feature | Why not now |
 |---|---|
-| SST and TTx registration numbers; Malaysian e-invoicing identity (Identification Type and Number, Industrial Classification, Malaysian TIN) | Malaysian localisation: `l10n_my` / `l10n_my_edi`, which need Invoicing. They come with the Taxes bundle and e-invoicing — **Tax ID itself stays here** |
+| SST and TTx registration numbers; Malaysian e-invoicing identity (Identification Type and Number, Industrial Classification, Malaysian TIN) | Malaysian e-invoicing localisation — on the tenant, SST and TTx come from `l10n_my_ubl_pint` and the TIN from `l10n_my_edi`, both built on Invoicing. They arrive with the Taxes bundle and e-invoicing. **Tax ID itself stays here:** `vat` is a base field |
 | Tags (`category_id`) | Contact Tags bundle — excluded for now |
 | State and Country as dropdowns | Geography bundle — excluded; Text meanwhile |
 | Pricelist, Payment Terms, Payment Method, Incoterm, Fiscal Position (tab Sales & Purchase) | Pricelists, Payment Terms, Payments, Incoterms and Fiscal Positions bundles |
 | Industry (`industry_id`) | Its own table (`res.partner.industry`), not in Phase 1 |
-| GLN (`global_location_number`, delivery addresses) | `account_add_gln` — arrives with Invoicing |
+| GLN (`global_location_number`, delivery addresses) | Module `account` on the tenant — arrives with Invoicing |
 | Invoicing tab — bank accounts, e-invoice sending and format, credit limit | Invoicing |
 | Smart buttons (Opportunities, Sales, Invoiced, Meetings, Tasks), Activities, Last Reminder | Owned by other apps; HAP has native activity and discussion |
 | Language (`lang`) | Odoo hides it while one language is installed |
@@ -143,20 +143,38 @@ nobody under them.
 
 ## 3 · Test list
 
-Run in the Nocoly UI. Test records are named `TEST …`.
+Run in the Nocoly UI in Chrome on 15 Sep 2026; stored values were read back with the hap CLI after each step.
+Test records are named `TEST …`.
 
 | # | Check | Steps | Expected | Result |
 |---|---|---|---|---|
-| 1 | Empty form | + Record → Submit | Name is marked required; "Contacts require a name" | |
-| 2 | Company record | Fill Name, Email, Phone, Website, Tax ID, Company ID, DUNS, address → Submit | Saved; appears in Contacts and Kanban, not Archived | |
-| 3 | Address Type hidden | Open the new company | No Address Type field (it has no Company) | |
-| 4 | Company picker | New record → open Company | Lists contacts without a company; not archived ones | |
-| 5 | Contact under a company | From the company's Contacts tab, add "TEST Person" with no address | Address Type shows, default Contact. Within seconds the person has the company's address, Tax ID, Company ID and DUNS | |
-| 6 | Nameless address | Add a Delivery address with no name | Saves (Name not required) and gets no address copied | |
-| 7 | Salesperson | Set the company's Salesperson, then add another contact without one | The contact gets the company's salesperson | |
-| 8 | Push address | Change the company's City | Contact-type contacts get the new City; the Delivery address does not | |
-| 9 | Push identifiers | Change the company's Tax ID | Every contact under it gets the new Tax ID | |
-| 10 | Views | Contacts, Kanban and Archived tabs | Columns Name, Company, Email, Phone, Country; sorted by Name; Kanban shows image, email, phone, city, country | |
-| 11 | Archive | Archive a contact | Confirmation text as above; it leaves Contacts and appears in Archived | |
-| 12 | Unarchive | Unarchive it from Archived | Back in Contacts | |
-| 13 | Odoo side by side | casimir.odoo.com Contacts vs Nocoly | Same fields as in §1, apart from the "Not built now" list | |
+| 1 | Empty form | + Record → Submit | Name is marked required; "Contacts require a name" | **Pass** — "Please fill in Name" on the field and a "Contacts require a name" dialog |
+| 2 | Company record | Fill Name, Email, Phone, Website, Tax ID, Company ID, DUNS, address → Submit | Saved; appears in Contacts and Kanban, not Archived | **Pass** — every value read back; Address Type defaulted to Contact, Active to checked. Phone 03-2287 6543 stored as +60322876543 |
+| 3 | Address Type hidden | Open the new company | No Address Type field (it has no Company) | **Pass** |
+| 4 | Company picker | New record → open Company | Lists contacts without a company; not archived ones | **Pass** — lists only TEST QA Trading Sdn Bhd, never the people under it; "No records available" while that company was archived |
+| 5 | Contact under a company | From the company's Contacts tab, add "TEST Person One" with no address | Address Type shows, default Contact. Within seconds the person has the company's address, Tax ID, Company ID and DUNS | **Pass** — all eight values copied |
+| 6 | Nameless address | Add a Delivery address with no name | Saves (Name not required) and gets no address copied | **Pass** — saved; got Tax ID, Company ID and DUNS, no address |
+| 7 | Salesperson | Set the company's Salesperson, then add another contact without one | The contact gets the company's salesperson | **Pass** — TEST Person Two got the salesperson |
+| 8 | Push address | Change the company's City | Contact-type contacts get the new City; the Delivery address does not | **Pass** — Cyberjaya → Putrajaya on both people; the Delivery address stayed blank |
+| 9 | Push identifiers | Change the company's Tax ID | Every contact under it gets the new Tax ID | **Pass** — all three got C2584563299 (changed in the same save as test 8) |
+| 10 | Views | Contacts, Kanban and Archived tabs | Columns Name, Company, Email, Phone, Country; sorted by Name; Kanban shows image, email, phone, city, country | **Pass** — see differences 1 and 4 |
+| 11 | Archive | Archive a contact | Confirmation text as above; it leaves Contacts and appears in Archived | **Pass** — exact text; the company moved to Archived; its contacts kept showing it as their Company, as in Odoo |
+| 12 | Unarchive | Unarchive it from Archived | Back in Contacts | **Pass** — no confirmation, "Operation completed", back in Contacts |
+| 13 | Odoo side by side | casimir.odoo.com Contacts vs Nocoly | Same fields as in §1, apart from the "Not built now" list | **Pass** — see differences below |
+
+### Differences from Odoo seen in testing
+
+1. **Display name.** Odoo names a company's contact "Company, Person" and a nameless address "Company, Delivery" —
+   in lists, cards and every partner picker. Nocoly shows the Name alone, so a nameless address is blank in the list
+   and "Unnamed" on its card. This will matter when Invoices picks a customer; a *Display Name* formula as the
+   title field would fix it. **Decision for the owner.**
+2. **Archive / Unarchive.** The button that does not apply is greyed out rather than hidden.
+3. **"Modifying form data" bar.** After adding a contact from the Contacts tab, or picking a Salesperson, an open
+   record keeps a *Modifying form data — Cancel / Save* bar although the change is already stored. Clicking Save
+   clears it. HAP behaviour, not the build.
+4. **Kanban card.** The image sits on top of the card; Odoo puts the avatar on the left.
+
+### Test records left in the worksheet
+
+TEST QA Trading Sdn Bhd · TEST Person One · TEST Person Two · a nameless Delivery address under the company. Left
+for the reviewer to inspect; remove them after sign-off.
