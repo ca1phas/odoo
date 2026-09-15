@@ -1,5 +1,5 @@
 import json
-D=json.load(open('/tmp/claude-0/-home-user-odoo/9afe9781-77eb-5337-9b42-0f955ae77d73/scratchpad/manifests.json'))
+D=json.load(open('nocoly/data/manifests.json'))
 def closure(m,seen=None):
     if seen is None: seen=set()
     for d in D.get(m,{}).get('depends',[]):

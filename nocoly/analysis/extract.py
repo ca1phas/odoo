@@ -1,6 +1,6 @@
 import ast, json, os, sys
 
-ROOTS = ['/home/user/odoo/addons', '/home/user/odoo/odoo/addons']
+ROOTS = ['addons', 'odoo/addons']
 data = {}
 for root in ROOTS:
     for name in sorted(os.listdir(root)):
@@ -22,7 +22,7 @@ for root in ROOTS:
             'name': m.get('name', name),
             'license': m.get('license',''),
         }
-json.dump(data, open('/tmp/claude-0/-home-user-odoo/9afe9781-77eb-5337-9b42-0f955ae77d73/scratchpad/manifests.json','w'), indent=1)
+json.dump(data, open('nocoly/data/manifests.json','w'), indent=1)
 print('modules:', len(data))
 print('applications:', sum(1 for v in data.values() if v['application']))
 print('auto_install (truthy):', sum(1 for v in data.values() if v['auto_install']))

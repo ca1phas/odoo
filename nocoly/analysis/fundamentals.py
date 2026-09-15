@@ -23,7 +23,7 @@ for f in glob.glob('addons/*/**/*.py',recursive=True)+glob.glob('odoo/addons/bas
         if ih:
             for t in re.findall(r"['\"]([a-z0-9_.]+)['\"]",ih.group(1)):
                 inh[t].add(mod)
-json.dump({k:sorted(v) for k,v in ref.items()},open('/tmp/claude-0/-home-user-odoo/9afe9781-77eb-5337-9b42-0f955ae77d73/scratchpad/refs.json','w'))
+json.dump({k:sorted(v) for k,v in ref.items()},open('nocoly/data/refs.json','w'))
 CORE={'base','uom','product','account','mail','analytic','sales_team','utm','resource','portal','payment','bus','web','base_setup','decimal_precision'}
 rows=[]
 for m,mods in ref.items():

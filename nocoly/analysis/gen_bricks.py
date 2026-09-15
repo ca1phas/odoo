@@ -1,5 +1,5 @@
 import html
-SP='/tmp/claude-0/-home-user-odoo/9afe9781-77eb-5337-9b42-0f955ae77d73/scratchpad'
+SP='nocoly/data'
 e=lambda s: html.escape(s, quote=True)
 
 FOUND=[["Customers","Products","Product Variants","Categories","Units & Packagings","Sales Teams"],

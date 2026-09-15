@@ -1,0 +1,104 @@
+<svg viewBox="0 0 1120 730" role="img" class="brickssvg" aria-label="A build diagram: a foundation slab of 29 shared Nocoly worksheets already built, carrying six app towers — Sales already built, then CRM, Purchase, Inventory, Project and Manufacturing to be added one phase at a time, each attaching to Sales by a small number of appended controls.">
+<rect class="fslab" x="40" y="552" width="1040" height="159" rx="2"/>
+<text class="flabel" x="50" y="544">FOUNDATION — 29 shared worksheets, already built · reused by every app above</text>
+<g><rect class="brick found" x="50.0" y="559" width="165.0" height="25" rx="1.5"/><text class="btext found" x="132.5" y="574.9" text-anchor="middle">Customers</text></g>
+<g><rect class="brick found" x="221.0" y="559" width="165.0" height="25" rx="1.5"/><text class="btext found" x="303.5" y="574.9" text-anchor="middle">Products</text></g>
+<g><rect class="brick found" x="392.0" y="559" width="165.0" height="25" rx="1.5"/><text class="btext found" x="474.5" y="574.9" text-anchor="middle">Product Variants</text></g>
+<g><rect class="brick found" x="563.0" y="559" width="165.0" height="25" rx="1.5"/><text class="btext found" x="645.5" y="574.9" text-anchor="middle">Categories</text></g>
+<g><rect class="brick found" x="734.0" y="559" width="165.0" height="25" rx="1.5"/><text class="btext found" x="816.5" y="574.9" text-anchor="middle">Units &amp; Packagings</text></g>
+<g><rect class="brick found" x="905.0" y="559" width="165.0" height="25" rx="1.5"/><text class="btext found" x="987.5" y="574.9" text-anchor="middle">Sales Teams</text></g>
+<g><rect class="brick found" x="50.0" y="588" width="165.0" height="25" rx="1.5"/><text class="btext found" x="132.5" y="603.9" text-anchor="middle">Pricelists</text></g>
+<g><rect class="brick found" x="221.0" y="588" width="165.0" height="25" rx="1.5"/><text class="btext found" x="303.5" y="603.9" text-anchor="middle">Price Rules</text></g>
+<g><rect class="brick found" x="392.0" y="588" width="165.0" height="25" rx="1.5"/><text class="btext found" x="474.5" y="603.9" text-anchor="middle">Attributes</text></g>
+<g><rect class="brick found" x="563.0" y="588" width="165.0" height="25" rx="1.5"/><text class="btext found" x="645.5" y="603.9" text-anchor="middle">Attribute Values</text></g>
+<g><rect class="brick found" x="734.0" y="588" width="165.0" height="25" rx="1.5"/><text class="btext found" x="816.5" y="603.9" text-anchor="middle">Attr. Lines</text></g>
+<g><rect class="brick found" x="905.0" y="588" width="165.0" height="25" rx="1.5"/><text class="btext found" x="987.5" y="603.9" text-anchor="middle">Attr. Values (tpl)</text></g>
+<g><rect class="brick found" x="50.0" y="617" width="165.0" height="25" rx="1.5"/><text class="btext found" x="132.5" y="632.9" text-anchor="middle">Combo Choices</text></g>
+<g><rect class="brick found" x="221.0" y="617" width="165.0" height="25" rx="1.5"/><text class="btext found" x="303.5" y="632.9" text-anchor="middle">Combo Items</text></g>
+<g><rect class="brick found" x="392.0" y="617" width="165.0" height="25" rx="1.5"/><text class="btext found" x="474.5" y="632.9" text-anchor="middle">Taxes</text></g>
+<g><rect class="brick found" x="563.0" y="617" width="165.0" height="25" rx="1.5"/><text class="btext found" x="645.5" y="632.9" text-anchor="middle">Fiscal Positions</text></g>
+<g><rect class="brick found" x="734.0" y="617" width="165.0" height="25" rx="1.5"/><text class="btext found" x="816.5" y="632.9" text-anchor="middle">Payment Terms</text></g>
+<g><rect class="brick found" x="905.0" y="617" width="165.0" height="25" rx="1.5"/><text class="btext found" x="987.5" y="632.9" text-anchor="middle">Payment Methods</text></g>
+<g><rect class="brick found" x="50.0" y="646" width="165.0" height="25" rx="1.5"/><text class="btext found" x="132.5" y="661.9" text-anchor="middle">Incoterms</text></g>
+<g><rect class="brick found" x="221.0" y="646" width="165.0" height="25" rx="1.5"/><text class="btext found" x="303.5" y="661.9" text-anchor="middle">Invoices</text></g>
+<g><rect class="brick found" x="392.0" y="646" width="165.0" height="25" rx="1.5"/><text class="btext found" x="474.5" y="661.9" text-anchor="middle">Invoice Lines</text></g>
+<g><rect class="brick found" x="563.0" y="646" width="165.0" height="25" rx="1.5"/><text class="btext found" x="645.5" y="661.9" text-anchor="middle">Activity Types</text></g>
+<g><rect class="brick found" x="734.0" y="646" width="165.0" height="25" rx="1.5"/><text class="btext found" x="816.5" y="661.9" text-anchor="middle">Activity Plans</text></g>
+<g><rect class="brick found" x="905.0" y="646" width="165.0" height="25" rx="1.5"/><text class="btext found" x="987.5" y="661.9" text-anchor="middle">Plan Steps</text></g>
+<g><rect class="brick found" x="50.0" y="675" width="199.2" height="25" rx="1.5"/><text class="btext found" x="149.6" y="690.9" text-anchor="middle">Campaigns</text></g>
+<g><rect class="brick found" x="255.2" y="675" width="199.2" height="25" rx="1.5"/><text class="btext found" x="354.8" y="690.9" text-anchor="middle">Sources</text></g>
+<g><rect class="brick found" x="460.4" y="675" width="199.2" height="25" rx="1.5"/><text class="btext found" x="560.0" y="690.9" text-anchor="middle">Mediums</text></g>
+<g><rect class="brick found" x="665.6" y="675" width="199.2" height="25" rx="1.5"/><text class="btext found" x="765.2" y="690.9" text-anchor="middle">Projects</text></g>
+<g><rect class="brick found" x="870.8" y="675" width="199.2" height="25" rx="1.5"/><text class="btext found" x="970.4" y="690.9" text-anchor="middle">Sales Teams (cfg)</text></g>
+<rect class="nameband built" x="41.0" y="500" width="158" height="28" rx="2"/>
+<text class="nameapp built" x="51.0" y="519">Sales</text>
+<text class="badge built" x="190.0" y="518" text-anchor="end">BUILT</text>
+<text class="tagnone" x="120.0" y="485.5" text-anchor="middle">everything attaches here</text>
+<g><rect class="brick built" x="41.0" y="437" width="158" height="25" rx="1.5"/><text class="btext built" x="120.0" y="452.9" text-anchor="middle">Orders</text></g>
+<g><rect class="brick built" x="41.0" y="408" width="158" height="25" rx="1.5"/><text class="btext built" x="120.0" y="423.9" text-anchor="middle">Order Lines</text></g>
+<g><rect class="brick built" x="41.0" y="379" width="158" height="25" rx="1.5"/><text class="btext built" x="120.0" y="394.9" text-anchor="middle">Templates</text></g>
+<g><rect class="brick built" x="41.0" y="350" width="158" height="25" rx="1.5"/><text class="btext built" x="120.0" y="365.9" text-anchor="middle">Template Lines</text></g>
+<g><rect class="brick built" x="41.0" y="321" width="158" height="25" rx="1.5"/><text class="btext built" x="120.0" y="336.9" text-anchor="middle">Headers/Footers</text></g>
+<g><rect class="brick built" x="41.0" y="292" width="158" height="25" rx="1.5"/><text class="btext built" x="120.0" y="307.9" text-anchor="middle">Settings</text></g>
+<g><rect class="brick built" x="41.0" y="263" width="158" height="25" rx="1.5"/><text class="btext built" x="120.0" y="278.9" text-anchor="middle">Services &amp; Material</text></g>
+<text class="count" x="120.0" y="255" text-anchor="middle">7 worksheets</text>
+<rect class="nameband todo" x="217.0" y="500" width="158" height="28" rx="2"/>
+<text class="nameapp todo" x="227.0" y="519">CRM</text>
+<text class="badge todo" x="366.0" y="518" text-anchor="end">PHASE 1</text>
+<rect class="tagbrick" x="217.0" y="470" width="158" height="24" rx="1.5"/>
+<text class="tagtext" x="296.0" y="485.5" text-anchor="middle">+1 control on Orders</text>
+<g><rect class="brick todo" x="217.0" y="437" width="158" height="25" rx="1.5"/><text class="btext todo" x="296.0" y="452.9" text-anchor="middle">Leads</text></g>
+<g><rect class="brick todo" x="217.0" y="408" width="158" height="25" rx="1.5"/><text class="btext todo" x="296.0" y="423.9" text-anchor="middle">Stages</text></g>
+<g><rect class="brick todo" x="217.0" y="379" width="158" height="25" rx="1.5"/><text class="btext todo" x="296.0" y="394.9" text-anchor="middle">Lost Reasons</text></g>
+<g><rect class="brick todo" x="217.0" y="350" width="158" height="25" rx="1.5"/><text class="btext todo" x="296.0" y="365.9" text-anchor="middle">Recurring Plans</text></g>
+<text class="count" x="296.0" y="342" text-anchor="middle">4 worksheets</text>
+<rect class="nameband todo" x="393.0" y="500" width="158" height="28" rx="2"/>
+<text class="nameapp todo" x="403.0" y="519">Purchase</text>
+<text class="badge todo" x="542.0" y="518" text-anchor="end">PHASE 2</text>
+<rect class="tagbrick" x="393.0" y="470" width="158" height="24" rx="1.5"/>
+<text class="tagtext" x="472.0" y="485.5" text-anchor="middle">+3 Orders · +1 Invoices</text>
+<g><rect class="brick todo" x="393.0" y="437" width="158" height="25" rx="1.5"/><text class="btext todo" x="472.0" y="452.9" text-anchor="middle">Purchase Orders</text></g>
+<g><rect class="brick todo" x="393.0" y="408" width="158" height="25" rx="1.5"/><text class="btext todo" x="472.0" y="423.9" text-anchor="middle">PO Lines</text></g>
+<g><rect class="brick todo" x="393.0" y="379" width="158" height="25" rx="1.5"/><text class="btext todo" x="472.0" y="394.9" text-anchor="middle">Bill Matching</text></g>
+<text class="count" x="472.0" y="371" text-anchor="middle">3 worksheets</text>
+<rect class="nameband todo" x="569.0" y="500" width="158" height="28" rx="2"/>
+<text class="nameapp todo" x="579.0" y="519">Inventory</text>
+<text class="badge todo" x="718.0" y="518" text-anchor="end">PHASE 3</text>
+<rect class="tagbrick" x="569.0" y="470" width="158" height="24" rx="1.5"/>
+<text class="tagtext" x="648.0" y="485.5" text-anchor="middle">+27 Orders &amp; Lines</text>
+<g><rect class="brick todo" x="569.0" y="437" width="158" height="25" rx="1.5"/><text class="btext todo" x="648.0" y="452.9" text-anchor="middle">Transfers</text></g>
+<g><rect class="brick todo" x="569.0" y="408" width="158" height="25" rx="1.5"/><text class="btext todo" x="648.0" y="423.9" text-anchor="middle">Stock Moves</text></g>
+<g><rect class="brick todo" x="569.0" y="379" width="158" height="25" rx="1.5"/><text class="btext todo" x="648.0" y="394.9" text-anchor="middle">Move Lines</text></g>
+<g><rect class="brick todo" x="569.0" y="350" width="158" height="25" rx="1.5"/><text class="btext todo" x="648.0" y="365.9" text-anchor="middle">Locations</text></g>
+<g><rect class="brick todo" x="569.0" y="321" width="158" height="25" rx="1.5"/><text class="btext todo" x="648.0" y="336.9" text-anchor="middle">Warehouses</text></g>
+<g><rect class="brick todo" x="569.0" y="292" width="158" height="25" rx="1.5"/><text class="btext todo" x="648.0" y="307.9" text-anchor="middle">Operation Types</text></g>
+<g><rect class="brick todo" x="569.0" y="263" width="158" height="25" rx="1.5"/><text class="btext todo" x="648.0" y="278.9" text-anchor="middle">Lots / Serials</text></g>
+<g><rect class="brick todo" x="569.0" y="234" width="158" height="25" rx="1.5"/><text class="btext todo" x="648.0" y="249.9" text-anchor="middle">Routes</text></g>
+<g><rect class="brick todo" x="569.0" y="205" width="158" height="25" rx="1.5"/><text class="btext todo" x="648.0" y="220.9" text-anchor="middle">Rules</text></g>
+<g><rect class="brick todo" x="569.0" y="176" width="158" height="25" rx="1.5"/><text class="btext todo" x="648.0" y="191.9" text-anchor="middle">On Hand</text></g>
+<text class="count" x="648.0" y="168" text-anchor="middle">10 worksheets</text>
+<rect class="nameband todo" x="745.0" y="500" width="158" height="28" rx="2"/>
+<text class="nameapp todo" x="755.0" y="519">Project</text>
+<text class="badge todo" x="894.0" y="518" text-anchor="end">PHASE 4</text>
+<rect class="tagbrick" x="745.0" y="470" width="158" height="24" rx="1.5"/>
+<text class="tagtext" x="824.0" y="485.5" text-anchor="middle">+17 Orders &amp; Lines</text>
+<g><rect class="brick todo" x="745.0" y="437" width="158" height="25" rx="1.5"/><text class="btext todo" x="824.0" y="452.9" text-anchor="middle">Tasks</text></g>
+<g><rect class="brick todo" x="745.0" y="408" width="158" height="25" rx="1.5"/><text class="btext todo" x="824.0" y="423.9" text-anchor="middle">Task Stages</text></g>
+<g><rect class="brick todo" x="745.0" y="379" width="158" height="25" rx="1.5"/><text class="btext todo" x="824.0" y="394.9" text-anchor="middle">Milestones</text></g>
+<g><rect class="brick todo" x="745.0" y="350" width="158" height="25" rx="1.5"/><text class="btext todo" x="824.0" y="365.9" text-anchor="middle">Project Stages</text></g>
+<g><rect class="brick todo" x="745.0" y="321" width="158" height="25" rx="1.5"/><text class="btext todo" x="824.0" y="336.9" text-anchor="middle">Tags</text></g>
+<g><rect class="brick todo" x="745.0" y="292" width="158" height="25" rx="1.5"/><text class="btext todo" x="824.0" y="307.9" text-anchor="middle">Collaborators</text></g>
+<text class="count" x="824.0" y="284" text-anchor="middle">6 worksheets</text>
+<rect class="nameband todo" x="921.0" y="500" width="158" height="28" rx="2"/>
+<text class="nameapp todo" x="931.0" y="519">Manufacturing</text>
+<text class="badge todo" x="1070.0" y="518" text-anchor="end">PHASE 4</text>
+<rect class="tagbrick" x="921.0" y="470" width="158" height="24" rx="1.5"/>
+<text class="tagtext" x="1000.0" y="485.5" text-anchor="middle">+2 on Orders</text>
+<g><rect class="brick todo" x="921.0" y="437" width="158" height="25" rx="1.5"/><text class="btext todo" x="1000.0" y="452.9" text-anchor="middle">Mfg Orders</text></g>
+<g><rect class="brick todo" x="921.0" y="408" width="158" height="25" rx="1.5"/><text class="btext todo" x="1000.0" y="423.9" text-anchor="middle">Bills of Materials</text></g>
+<g><rect class="brick todo" x="921.0" y="379" width="158" height="25" rx="1.5"/><text class="btext todo" x="1000.0" y="394.9" text-anchor="middle">BoM Lines</text></g>
+<g><rect class="brick todo" x="921.0" y="350" width="158" height="25" rx="1.5"/><text class="btext todo" x="1000.0" y="365.9" text-anchor="middle">Work Centers</text></g>
+<g><rect class="brick todo" x="921.0" y="321" width="158" height="25" rx="1.5"/><text class="btext todo" x="1000.0" y="336.9" text-anchor="middle">Operations</text></g>
+<g><rect class="brick todo" x="921.0" y="292" width="158" height="25" rx="1.5"/><text class="btext todo" x="1000.0" y="307.9" text-anchor="middle">Unbuild Orders</text></g>
+<text class="count" x="1000.0" y="284" text-anchor="middle">6 worksheets</text>
+</svg>

@@ -10,7 +10,10 @@ live Nocoly tenant, read-only, on 14 Sep 2026.
 ```
 artifacts/   the three published plans, as standalone HTML
 plan/        phases.json — the same plan, machine-readable
-tools/       reproducible analysis + a HAP v3 client
+tools/       the checks worth re-running + a HAP v3 client
+analysis/    the one-off scripts behind the figures in the pages
+data/        their output
+sources/     page sources the two ground-up pages are built from
 ```
 
 ## Start here
@@ -66,7 +69,8 @@ python3 nocoly/tools/hap_v3.py relations 6a9e38ccf363582dd3794504
 So a worksheet in a new app can point straight at Products in another app and share one row
 set. **Still unverified end to end**: whether the form designer's relation picker offers
 worksheets from another app, and whether roles traverse the boundary. Test that on a throwaway
-app before Phase 1 — every phase after the first assumes it.
+app before Phase 1 — every phase after the first assumes it. If the picker refuses but the API
+accepts, build relations through the API.
 
 ## Core is seven worksheets, not sixty
 
@@ -110,6 +114,42 @@ control. Don't build those.
    checklist: one file per pair naming the controls it appends and the invariants it must not
    break.
 4. Every phase ends seeded and read back. Several HAP writes return success and store nothing.
+
+## Reproducing the analysis
+
+Run from the repository root. Python 3, no dependencies.
+
+```bash
+python3 nocoly/analysis/extract.py          # parse all 662 __manifest__.py → data/manifests.json
+python3 nocoly/analysis/connections.py      # per-app requires / connects-to → data/connections.json
+python3 nocoly/analysis/fundamentals.py     # which modules reference each model → data/refs.json
+python3 nocoly/analysis/verify_bundles.py   # evidence that each optional bundle really is optional
+python3 nocoly/analysis/timeline3.py        # the hours model → data/hours.json
+python3 nocoly/analysis/gen_svg.py          # expansion map's connectivity ring → data/net.svg
+python3 nocoly/analysis/gen_bricks.py       # expansion map's build diagram → data/bricks.svg
+```
+
+The other scripts in `analysis/` print a table and write nothing. Re-run on 15 Sep 2026,
+`connections.json`, `hours.json` and `refs.json` came back with the same content, and both SVGs
+match the ones embedded in `expansion-map.html` byte for byte. Three data files have no
+generator left — `edges.json`, `matrix.json` and `apps_slim.json` came from scratch scripts
+that were not kept.
+
+## Rebuilding a page
+
+The two ground-up pages are concatenated from `sources/`; the result is byte-identical to
+`artifacts/`:
+
+```bash
+cd nocoly
+cat sources/head3.html sources/gbody1.html sources/gbody2.html > artifacts/ground-up-build.html
+printf '<script>\n' >> artifacts/ground-up-build.html
+cat sources/walldata.js sources/wall.js >> artifacts/ground-up-build.html
+printf '</script>\n' >> artifacts/ground-up-build.html
+```
+
+Same for `ground-up-build.zh.html` with the `-zh` sources. `expansion-map.html` has no sources;
+edit it in place.
 
 ## Related
 

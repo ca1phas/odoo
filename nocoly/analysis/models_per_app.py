@@ -1,5 +1,5 @@
 import re,glob,os,json
-D = json.load(open('/tmp/claude-0/-home-user-odoo/9afe9781-77eb-5337-9b42-0f955ae77d73/scratchpad/manifests.json'))
+D = json.load(open('nocoly/data/manifests.json'))
 def models_of(mod):
     out=set()
     for f in glob.glob(f'addons/{mod}/models/**/*.py',recursive=True)+glob.glob(f'addons/{mod}/wizard/**/*.py',recursive=True):

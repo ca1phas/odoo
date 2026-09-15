@@ -1,4 +1,4 @@
-SP='/tmp/claude-0/-home-user-odoo/9afe9781-77eb-5337-9b42-0f955ae77d73/scratchpad'
+SP='nocoly/data'
 import json
 L,M,LN,T = 0.5,2.0,3.0,8.0        # worksheet + its controls + form
 WF   = 1.5                         # each button workflow

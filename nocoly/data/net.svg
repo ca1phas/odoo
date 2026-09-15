@@ -1,0 +1,134 @@
+<svg viewBox="0 0 900 900" role="img" class="netsvg" aria-label="Connectivity map of 27 Odoo apps: 74 pairs joined by bridge modules, with Sales, Invoicing, Inventory and Manufacturing forming the densest cluster.">
+<defs>
+<path id="cp0" d="M475.6,54.8A396.0,396.0 0 0 1 687.5,133.1" fill="none"/>
+<path id="cp1" d="M726.4,166.4A396.0,396.0 0 0 1 810.5,286.2" fill="none"/>
+<path id="cp2" d="M754.2,703.6A396.0,396.0 0 0 0 828.6,334.0" fill="none"/>
+<path id="cp3" d="M595.0,818.5A396.0,396.0 0 0 0 719.0,740.6" fill="none"/>
+<path id="cp4" d="M246.5,789.7A396.0,396.0 0 0 0 546.3,834.1" fill="none"/>
+<path id="cp5" d="M56.7,495.9A396.0,396.0 0 0 0 204.4,760.6" fill="none"/>
+<path id="cp6" d="M54.0,444.9A396.0,396.0 0 0 1 311.0,79.2" fill="none"/>
+<path id="cp7" d="M347.3,67.5A396.0,396.0 0 0 1 437.4,54.2" fill="none"/>
+</defs>
+<g class="catarcs">
+<path class="catarc" d="M475.0,62.8A388.0,388.0 0 0 1 682.7,139.5" fill="none"/>
+<text class="catlabel"><textPath href="#cp0" startOffset="50%" text-anchor="middle">Sales</textPath></text>
+<path class="catarc" d="M720.8,172.1A388.0,388.0 0 0 1 803.2,289.5" fill="none"/>
+<text class="catlabel"><textPath href="#cp1" startOffset="50%" text-anchor="middle">Finance</textPath></text>
+<path class="catarc" d="M821.0,336.3A388.0,388.0 0 0 1 748.0,698.5" fill="none"/>
+<text class="catlabel"><textPath href="#cp2" startOffset="50%" text-anchor="middle">Inventory &amp; Manufacturing</textPath></text>
+<path class="catarc" d="M713.5,734.8A388.0,388.0 0 0 1 592.1,811.1" fill="none"/>
+<text class="catlabel"><textPath href="#cp3" startOffset="50%" text-anchor="middle">Services</textPath></text>
+<path class="catarc" d="M544.4,826.3A388.0,388.0 0 0 1 250.6,782.8" fill="none"/>
+<text class="catlabel"><textPath href="#cp4" startOffset="50%" text-anchor="middle">Human Resources</textPath></text>
+<path class="catarc" d="M209.4,754.4A388.0,388.0 0 0 1 64.6,495.0" fill="none"/>
+<text class="catlabel"><textPath href="#cp5" startOffset="50%" text-anchor="middle">Marketing</textPath></text>
+<path class="catarc" d="M62.0,445.0A388.0,388.0 0 0 1 313.8,86.7" fill="none"/>
+<text class="catlabel"><textPath href="#cp6" startOffset="50%" text-anchor="middle">Website</textPath></text>
+<path class="catarc" d="M361.7,72.2A388.0,388.0 0 0 1 425.0,62.8" fill="none"/>
+<text class="catlabel"><textPath href="#cp7" startOffset="50%" text-anchor="middle">Productivity</textPath></text>
+</g>
+<g class="edges" fill="none">
+<path class="edge" data-a="CRM" data-b="Email Marketing" d="M489.0,186.9Q400.9,419.7 232.4,602.9" stroke-width="1.04" opacity="0.238"><title>CRM ↔ Email Marketing · 1 bridge module</title></path>
+<path class="edge" data-a="CRM" data-b="Events" d="M489.0,186.9Q410.8,431.1 268.4,644.4" stroke-width="1.04" opacity="0.238"><title>CRM ↔ Events · 1 bridge module</title></path>
+<path class="edge" data-a="CRM" data-b="SMS Marketing" d="M489.0,186.9Q393.5,406.5 205.6,555.0" stroke-width="1.04" opacity="0.238"><title>CRM ↔ SMS Marketing · 1 bridge module</title></path>
+<path class="edge" data-a="CRM" data-b="Survey" d="M489.0,186.9Q389.0,392.1 189.2,502.5" stroke-width="1.04" opacity="0.238"><title>CRM ↔ Survey · 1 bridge module</title></path>
+<path class="edge" data-a="Email Marketing" data-b="eCommerce" d="M232.4,602.9Q320.3,470.3 196.1,370.8" stroke-width="1.04" opacity="0.238"><title>Email Marketing ↔ eCommerce · 1 bridge module</title></path>
+<path class="edge" data-a="Email Marketing" data-b="eLearning" d="M232.4,602.9Q326.3,456.4 217.7,320.4" stroke-width="1.04" opacity="0.238"><title>Email Marketing ↔ eLearning · 1 bridge module</title></path>
+<path class="edge" data-a="Employees" data-b="Events" d="M493.2,712.5Q411.9,575.6 268.4,644.4" stroke-width="1.04" opacity="0.238"><title>Employees ↔ Events · 1 bridge module</title></path>
+<path class="edge" data-a="Employees" data-b="Fleet" d="M493.2,712.5Q429.6,587.8 332.5,688.7" stroke-width="1.04" opacity="0.238"><title>Employees ↔ Fleet · 1 bridge module</title></path>
+<path class="edge" data-a="Employees" data-b="Inventory" d="M493.2,712.5Q535.0,521.6 716.0,447.9" stroke-width="1.04" opacity="0.238"><title>Employees ↔ Inventory · 1 bridge module</title></path>
+<path class="edge" data-a="Employees" data-b="Live Chat" d="M493.2,712.5Q417.7,463.9 289.4,237.9" stroke-width="1.04" opacity="0.238"><title>Employees ↔ Live Chat · 1 bridge module</title></path>
+<path class="edge" data-a="Employees" data-b="Maintenance" d="M493.2,712.5Q521.7,564.2 667.6,602.9" stroke-width="1.04" opacity="0.238"><title>Employees ↔ Maintenance · 1 bridge module</title></path>
+<path class="edge" data-a="Employees" data-b="Point of Sale" d="M493.2,712.5Q500.8,460.2 591.5,224.7" stroke-width="1.04" opacity="0.238"><title>Employees ↔ Point of Sale · 1 bridge module</title></path>
+<path class="edge" data-a="Employees" data-b="Survey" d="M493.2,712.5Q390.2,536.6 189.2,502.5" stroke-width="1.04" opacity="0.238"><title>Employees ↔ Survey · 1 bridge module</title></path>
+<path class="edge" data-a="Employees" data-b="eLearning" d="M493.2,712.5Q398.0,486.5 217.7,320.4" stroke-width="1.04" opacity="0.238"><title>Employees ↔ eLearning · 1 bridge module</title></path>
+<path class="edge" data-a="Events" data-b="Inventory" d="M268.4,644.4Q473.2,502.9 716.0,447.9" stroke-width="1.04" opacity="0.238"><title>Events ↔ Inventory · 1 bridge module</title></path>
+<path class="edge" data-a="Events" data-b="Point of Sale" d="M268.4,644.4Q439.0,441.5 591.5,224.7" stroke-width="1.04" opacity="0.238"><title>Events ↔ Point of Sale · 1 bridge module</title></path>
+<path class="edge" data-a="Fleet" data-b="Invoicing" d="M332.5,688.7Q472.9,467.6 650.7,275.4" stroke-width="1.04" opacity="0.238"><title>Fleet ↔ Invoicing · 1 bridge module</title></path>
+<path class="edge" data-a="Forum" data-b="eLearning" d="M249.3,275.4Q330.9,366.3 217.7,320.4" stroke-width="1.04" opacity="0.238"><title>Forum ↔ eLearning · 1 bridge module</title></path>
+<path class="edge" data-a="Inventory" data-b="Maintenance" d="M716.0,447.9Q583.0,491.5 667.6,602.9" stroke-width="1.04" opacity="0.238"><title>Inventory ↔ Maintenance · 1 bridge module</title></path>
+<path class="edge" data-a="Invoicing" data-b="SMS Marketing" d="M650.7,275.4Q438.0,430.9 205.6,555.0" stroke-width="1.04" opacity="0.238"><title>Invoicing ↔ SMS Marketing · 1 bridge module</title></path>
+<path class="edge" data-a="Invoicing" data-b="Timesheet" d="M650.7,275.4Q537.5,467.6 567.5,688.7" stroke-width="1.04" opacity="0.238"><title>Invoicing ↔ Timesheet · 1 bridge module</title></path>
+<path class="edge" data-a="Live Chat" data-b="Website" d="M289.4,237.9Q333.0,384.7 185.2,424.7" stroke-width="1.04" opacity="0.238"><title>Live Chat ↔ Website · 1 bridge module</title></path>
+<path class="edge" data-a="Manufacturing" data-b="Point of Sale" d="M710.8,502.5Q560.6,402.5 591.5,224.7" stroke-width="1.04" opacity="0.238"><title>Manufacturing ↔ Point of Sale · 1 bridge module</title></path>
+<path class="edge" data-a="Manufacturing" data-b="Website" d="M710.8,502.5Q448.9,457.5 185.2,424.7" stroke-width="1.04" opacity="0.238"><title>Manufacturing ↔ Website · 1 bridge module</title></path>
+<path class="edge" data-a="Manufacturing" data-b="eCommerce" d="M710.8,502.5Q451.9,442.7 196.1,370.8" stroke-width="1.04" opacity="0.238"><title>Manufacturing ↔ eCommerce · 1 bridge module</title></path>
+<path class="edge" data-a="Point of Sale" data-b="Repair" d="M591.5,224.7Q556.1,416.9 694.4,555.0" stroke-width="1.04" opacity="0.238"><title>Point of Sale ↔ Repair · 1 bridge module</title></path>
+<path class="edge" data-a="Project" data-b="Time Off" d="M614.0,659.5Q477.0,578.5 384.1,707.7" stroke-width="1.04" opacity="0.238"><title>Project ↔ Time Off · 1 bridge module</title></path>
+<path class="edge" data-a="Purchase" data-b="Repair" d="M709.9,393.3Q588.7,463.3 694.4,555.0" stroke-width="1.04" opacity="0.238"><title>Purchase ↔ Repair · 1 bridge module</title></path>
+<path class="edge" data-a="Recruitment" data-b="Website" d="M438.4,715.7Q374.0,516.1 185.2,424.7" stroke-width="1.04" opacity="0.238"><title>Recruitment ↔ Website · 1 bridge module</title></path>
+<path class="edge" data-a="SMS Marketing" data-b="Sales" d="M205.6,555.0Q408.1,410.2 542.2,200.5" stroke-width="1.04" opacity="0.238"><title>SMS Marketing ↔ Sales · 1 bridge module</title></path>
+<path class="edge" data-a="Sales" data-b="Timesheet" d="M542.2,200.5Q507.7,447.0 567.5,688.7" stroke-width="1.04" opacity="0.238"><title>Sales ↔ Timesheet · 1 bridge module</title></path>
+<path class="edge" data-a="Survey" data-b="Website" d="M189.2,502.5Q305.5,457.5 185.2,424.7" stroke-width="1.04" opacity="0.238"><title>Survey ↔ Website · 1 bridge module</title></path>
+<path class="edge" data-a="Survey" data-b="eLearning" d="M189.2,502.5Q314.4,428.8 217.7,320.4" stroke-width="1.04" opacity="0.238"><title>Survey ↔ eLearning · 1 bridge module</title></path>
+<path class="edge" data-a="Time Off" data-b="Timesheet" d="M384.1,707.7Q464.2,586.5 567.5,688.7" stroke-width="1.04" opacity="0.238"><title>Time Off ↔ Timesheet · 1 bridge module</title></path>
+<path class="edge" data-a="Timesheet" data-b="Website" d="M567.5,688.7Q409.5,508.7 185.2,424.7" stroke-width="1.04" opacity="0.238"><title>Timesheet ↔ Website · 1 bridge module</title></path>
+<path class="edge" data-a="CRM" data-b="Invoicing" d="M489.0,186.9Q515.9,329.6 650.7,275.4" stroke-width="1.38" opacity="0.276"><title>CRM ↔ Invoicing · 2 bridge modules</title></path>
+<path class="edge" data-a="CRM" data-b="Live Chat" d="M489.0,186.9Q416.6,319.3 289.4,237.9" stroke-width="1.38" opacity="0.276"><title>CRM ↔ Live Chat · 2 bridge modules</title></path>
+<path class="edge" data-a="CRM" data-b="Sales" d="M489.0,186.9Q486.1,309.0 542.2,200.5" stroke-width="1.38" opacity="0.276"><title>CRM ↔ Sales · 2 bridge modules</title></path>
+<path class="edge" data-a="Email Marketing" data-b="Invoicing" d="M232.4,602.9Q445.3,444.0 650.7,275.4" stroke-width="1.38" opacity="0.276"><title>Email Marketing ↔ Invoicing · 2 bridge modules</title></path>
+<path class="edge" data-a="Email Marketing" data-b="Sales" d="M232.4,602.9Q415.5,423.4 542.2,200.5" stroke-width="1.38" opacity="0.276"><title>Email Marketing ↔ Sales · 2 bridge modules</title></path>
+<path class="edge" data-a="Employees" data-b="Invoicing" d="M493.2,712.5Q517.1,474.2 650.7,275.4" stroke-width="1.38" opacity="0.276"><title>Employees ↔ Invoicing · 2 bridge modules</title></path>
+<path class="edge" data-a="Events" data-b="SMS Marketing" d="M268.4,644.4Q332.8,532.3 205.6,555.0" stroke-width="1.38" opacity="0.276"><title>Events ↔ SMS Marketing · 2 bridge modules</title></path>
+<path class="edge" data-a="Events" data-b="Website" d="M268.4,644.4Q327.2,496.5 185.2,424.7" stroke-width="1.38" opacity="0.276"><title>Events ↔ Website · 2 bridge modules</title></path>
+<path class="edge" data-a="Events" data-b="eCommerce" d="M268.4,644.4Q330.2,481.7 196.1,370.8" stroke-width="1.38" opacity="0.276"><title>Events ↔ eCommerce · 2 bridge modules</title></path>
+<path class="edge" data-a="Expenses" data-b="Project" d="M682.3,320.4Q559.0,471.9 614.0,659.5" stroke-width="1.38" opacity="0.276"><title>Expenses ↔ Project · 2 bridge modules</title></path>
+<path class="edge" data-a="Expenses" data-b="Sales" d="M682.3,320.4Q539.2,345.7 542.2,200.5" stroke-width="1.38" opacity="0.276"><title>Expenses ↔ Sales · 2 bridge modules</title></path>
+<path class="edge" data-a="Inventory" data-b="Website" d="M716.0,447.9Q450.3,442.4 185.2,424.7" stroke-width="1.38" opacity="0.276"><title>Inventory ↔ Website · 2 bridge modules</title></path>
+<path class="edge" data-a="Inventory" data-b="eCommerce" d="M716.0,447.9Q453.3,427.6 196.1,370.8" stroke-width="1.38" opacity="0.276"><title>Inventory ↔ eCommerce · 2 bridge modules</title></path>
+<path class="edge" data-a="Manufacturing" data-b="Project" d="M710.8,502.5Q566.8,522.0 614.0,659.5" stroke-width="1.38" opacity="0.276"><title>Manufacturing ↔ Project · 2 bridge modules</title></path>
+<path class="edge" data-a="Manufacturing" data-b="Repair" d="M710.8,502.5Q588.9,493.3 694.4,555.0" stroke-width="1.38" opacity="0.276"><title>Manufacturing ↔ Repair · 2 bridge modules</title></path>
+<path class="edge" data-a="Point of Sale" data-b="Sales" d="M591.5,224.7Q514.3,319.4 542.2,200.5" stroke-width="1.38" opacity="0.276"><title>Point of Sale ↔ Sales · 2 bridge modules</title></path>
+<path class="edge" data-a="Project" data-b="Website" d="M614.0,659.5Q422.3,500.6 185.2,424.7" stroke-width="1.38" opacity="0.276"><title>Project ↔ Website · 2 bridge modules</title></path>
+<path class="edge" data-a="SMS Marketing" data-b="Website" d="M205.6,555.0Q310.0,471.9 185.2,424.7" stroke-width="1.38" opacity="0.276"><title>SMS Marketing ↔ Website · 2 bridge modules</title></path>
+<path class="edge" data-a="CRM" data-b="Website" d="M489.0,186.9Q387.9,370.7 185.2,424.7" stroke-width="1.72" opacity="0.314"><title>CRM ↔ Website · 3 bridge modules</title></path>
+<path class="edge" data-a="Employees" data-b="Project" d="M493.2,712.5Q507.0,579.8 614.0,659.5" stroke-width="1.72" opacity="0.314"><title>Employees ↔ Project · 3 bridge modules</title></path>
+<path class="edge" data-a="Employees" data-b="Sales" d="M493.2,712.5Q487.2,453.6 542.2,200.5" stroke-width="1.72" opacity="0.314"><title>Employees ↔ Sales · 3 bridge modules</title></path>
+<path class="edge" data-a="Employees" data-b="Website" d="M493.2,712.5Q389.1,515.2 185.2,424.7" stroke-width="1.72" opacity="0.314"><title>Employees ↔ Website · 3 bridge modules</title></path>
+<path class="edge" data-a="Events" data-b="Invoicing" d="M268.4,644.4Q455.3,455.4 650.7,275.4" stroke-width="1.72" opacity="0.314"><title>Events ↔ Invoicing · 3 bridge modules</title></path>
+<path class="edge" data-a="Inventory" data-b="Invoicing" d="M716.0,447.9Q578.3,401.4 650.7,275.4" stroke-width="1.72" opacity="0.314"><title>Inventory ↔ Invoicing · 3 bridge modules</title></path>
+<path class="edge" data-a="Inventory" data-b="Purchase" d="M716.0,447.9Q594.6,433.8 709.9,393.3" stroke-width="1.72" opacity="0.314"><title>Inventory ↔ Purchase · 3 bridge modules</title></path>
+<path class="edge" data-a="Sales" data-b="Website" d="M542.2,200.5Q402.5,374.4 185.2,424.7" stroke-width="1.72" opacity="0.314"><title>Sales ↔ Website · 3 bridge modules</title></path>
+<path class="edge" data-a="Email Marketing" data-b="Events" d="M232.4,602.9Q340.2,545.5 268.4,644.4" stroke-width="2.06" opacity="0.352"><title>Email Marketing ↔ Events · 4 bridge modules</title></path>
+<path class="edge" data-a="Email Marketing" data-b="Website" d="M232.4,602.9Q317.3,485.1 185.2,424.7" stroke-width="2.06" opacity="0.352"><title>Email Marketing ↔ Website · 4 bridge modules</title></path>
+<path class="edge" data-a="Events" data-b="Sales" d="M268.4,644.4Q425.4,434.8 542.2,200.5" stroke-width="2.06" opacity="0.352"><title>Events ↔ Sales · 4 bridge modules</title></path>
+<path class="edge" data-a="Inventory" data-b="Project" d="M716.0,447.9Q568.2,507.0 614.0,659.5" stroke-width="2.06" opacity="0.352"><title>Inventory ↔ Project · 4 bridge modules</title></path>
+<path class="edge" data-a="Invoicing" data-b="Project" d="M650.7,275.4Q550.3,459.6 614.0,659.5" stroke-width="2.06" opacity="0.352"><title>Invoicing ↔ Project · 4 bridge modules</title></path>
+<path class="edge" data-a="Invoicing" data-b="Website" d="M650.7,275.4Q432.4,395.0 185.2,424.7" stroke-width="2.06" opacity="0.352"><title>Invoicing ↔ Website · 4 bridge modules</title></path>
+<path class="edge" data-a="Manufacturing" data-b="Purchase" d="M710.8,502.5Q593.2,448.8 709.9,393.3" stroke-width="2.06" opacity="0.352"><title>Manufacturing ↔ Purchase · 4 bridge modules</title></path>
+<path class="edge" data-a="Project" data-b="Purchase" d="M614.0,659.5Q566.6,492.0 709.9,393.3" stroke-width="2.06" opacity="0.352"><title>Project ↔ Purchase · 4 bridge modules</title></path>
+<path class="edge" data-a="Purchase" data-b="Sales" d="M709.9,393.3Q546.8,365.8 542.2,200.5" stroke-width="2.06" opacity="0.352"><title>Purchase ↔ Sales · 4 bridge modules</title></path>
+<path class="edge" data-a="Manufacturing" data-b="Sales" d="M710.8,502.5Q547.1,395.8 542.2,200.5" stroke-width="2.4" opacity="0.39"><title>Manufacturing ↔ Sales · 5 bridge modules</title></path>
+<path class="edge" data-a="Project" data-b="Sales" d="M614.0,659.5Q520.4,439.0 542.2,200.5" stroke-width="2.4" opacity="0.39"><title>Project ↔ Sales · 5 bridge modules</title></path>
+<path class="edge" data-a="Inventory" data-b="Sales" d="M716.0,447.9Q548.5,380.8 542.2,200.5" stroke-width="2.74" opacity="0.428"><title>Inventory ↔ Sales · 6 bridge modules</title></path>
+<path class="edge" data-a="Invoicing" data-b="Manufacturing" d="M650.7,275.4Q576.9,416.4 710.8,502.5" stroke-width="4.1" opacity="0.58"><title>Invoicing ↔ Manufacturing · 10 bridge modules</title></path>
+</g>
+<g class="nodes">
+<g class="napp" data-app="CRM" tabindex="0"><circle class="node" cx="489.0" cy="186.9" r="5.35"/><text class="nlabel" transform="translate(450.0,450.0) rotate(-81.57) translate(284.0,0) rotate(0)" text-anchor="start" dy=".32em">CRM</text><title>CRM · 11 bridge modules</title></g>
+<g class="napp" data-app="Sales" tabindex="0"><circle class="node" cx="542.2" cy="200.5" r="7.23"/><text class="nlabel" transform="translate(450.0,450.0) rotate(-69.72) translate(284.0,0) rotate(0)" text-anchor="start" dy=".32em">Sales</text><title>Sales · 28 bridge modules</title></g>
+<g class="napp" data-app="Point of Sale" tabindex="0"><circle class="node" cx="591.5" cy="224.7" r="4.32"/><text class="nlabel" transform="translate(450.0,450.0) rotate(-57.87) translate(284.0,0) rotate(0)" text-anchor="start" dy=".32em">Point of Sale</text><title>Point of Sale · 5 bridge modules</title></g>
+<g class="napp" data-app="Invoicing" tabindex="0"><circle class="node" cx="650.7" cy="275.4" r="7.23"/><text class="nlabel" transform="translate(450.0,450.0) rotate(-41.02) translate(284.0,0) rotate(0)" text-anchor="start" dy=".32em">Invoicing</text><title>Invoicing · 28 bridge modules</title></g>
+<g class="napp" data-app="Expenses" tabindex="0"><circle class="node" cx="682.3" cy="320.4" r="3.85"/><text class="nlabel" transform="translate(450.0,450.0) rotate(-29.17) translate(284.0,0) rotate(0)" text-anchor="start" dy=".32em">Expenses</text><title>Expenses · 3 bridge modules</title></g>
+<g class="napp" data-app="Purchase" tabindex="0"><circle class="node" cx="709.9" cy="393.3" r="5.63"/><text class="nlabel" transform="translate(450.0,450.0) rotate(-12.31) translate(284.0,0) rotate(0)" text-anchor="start" dy=".32em">Purchase</text><title>Purchase · 13 bridge modules</title></g>
+<g class="napp" data-app="Inventory" tabindex="0"><circle class="node" cx="716.0" cy="447.9" r="6.0"/><text class="nlabel" transform="translate(450.0,450.0) rotate(-0.46) translate(284.0,0) rotate(0)" text-anchor="start" dy=".32em">Inventory</text><title>Inventory · 16 bridge modules</title></g>
+<g class="napp" data-app="Manufacturing" tabindex="0"><circle class="node" cx="710.8" cy="502.5" r="5.49"/><text class="nlabel" transform="translate(450.0,450.0) rotate(11.39) translate(284.0,0) rotate(0)" text-anchor="start" dy=".32em">Manufacturing</text><title>Manufacturing · 12 bridge modules</title></g>
+<g class="napp" data-app="Repair" tabindex="0"><circle class="node" cx="694.4" cy="555.0" r="4.1"/><text class="nlabel" transform="translate(450.0,450.0) rotate(23.24) translate(284.0,0) rotate(0)" text-anchor="start" dy=".32em">Repair</text><title>Repair · 4 bridge modules</title></g>
+<g class="napp" data-app="Maintenance" tabindex="0"><circle class="node" cx="667.6" cy="602.9" r="3.54"/><text class="nlabel" transform="translate(450.0,450.0) rotate(35.09) translate(284.0,0) rotate(0)" text-anchor="start" dy=".32em">Maintenance</text><title>Maintenance · 2 bridge modules</title></g>
+<g class="napp" data-app="Project" tabindex="0"><circle class="node" cx="614.0" cy="659.5" r="6.23"/><text class="nlabel" transform="translate(450.0,450.0) rotate(51.94) translate(284.0,0) rotate(0)" text-anchor="start" dy=".32em">Project</text><title>Project · 18 bridge modules</title></g>
+<g class="napp" data-app="Timesheet" tabindex="0"><circle class="node" cx="567.5" cy="688.7" r="3.85"/><text class="nlabel" transform="translate(450.0,450.0) rotate(63.80) translate(284.0,0) rotate(0)" text-anchor="start" dy=".32em">Timesheet</text><title>Timesheet · 3 bridge modules</title></g>
+<g class="napp" data-app="Employees" tabindex="0"><circle class="node" cx="493.2" cy="712.5" r="5.75"/><text class="nlabel" transform="translate(450.0,450.0) rotate(80.65) translate(284.0,0) rotate(0)" text-anchor="start" dy=".32em">Employees</text><title>Employees · 14 bridge modules</title></g>
+<g class="napp" data-app="Recruitment" tabindex="0"><circle class="node" cx="438.4" cy="715.7" r="3.15"/><text class="nlabel" transform="translate(450.0,450.0) rotate(272.50) translate(-284.0,0) rotate(180)" text-anchor="end" dy=".32em">Recruitment</text><title>Recruitment · 1 bridge module</title></g>
+<g class="napp" data-app="Time Off" tabindex="0"><circle class="node" cx="384.1" cy="707.7" r="3.15"/><text class="nlabel" transform="translate(450.0,450.0) rotate(284.35) translate(-284.0,0) rotate(180)" text-anchor="end" dy=".32em">Time Off</text><title>Time Off · 1 bridge module</title></g>
+<g class="napp" data-app="Fleet" tabindex="0"><circle class="node" cx="332.5" cy="688.7" r="3.54"/><text class="nlabel" transform="translate(450.0,450.0) rotate(296.20) translate(-284.0,0) rotate(180)" text-anchor="end" dy=".32em">Fleet</text><title>Fleet · 2 bridge modules</title></g>
+<g class="napp" data-app="Events" tabindex="0"><circle class="node" cx="268.4" cy="644.4" r="5.49"/><text class="nlabel" transform="translate(450.0,450.0) rotate(313.06) translate(-284.0,0) rotate(180)" text-anchor="end" dy=".32em">Events</text><title>Events · 12 bridge modules</title></g>
+<g class="napp" data-app="Email Marketing" tabindex="0"><circle class="node" cx="232.4" cy="602.9" r="5.05"/><text class="nlabel" transform="translate(450.0,450.0) rotate(324.91) translate(-284.0,0) rotate(180)" text-anchor="end" dy=".32em">Email Marketing</text><title>Email Marketing · 9 bridge modules</title></g>
+<g class="napp" data-app="SMS Marketing" tabindex="0"><circle class="node" cx="205.6" cy="555.0" r="4.32"/><text class="nlabel" transform="translate(450.0,450.0) rotate(336.76) translate(-284.0,0) rotate(180)" text-anchor="end" dy=".32em">SMS Marketing</text><title>SMS Marketing · 5 bridge modules</title></g>
+<g class="napp" data-app="Survey" tabindex="0"><circle class="node" cx="189.2" cy="502.5" r="3.85"/><text class="nlabel" transform="translate(450.0,450.0) rotate(348.61) translate(-284.0,0) rotate(180)" text-anchor="end" dy=".32em">Survey</text><title>Survey · 3 bridge modules</title></g>
+<g class="napp" data-app="Website" tabindex="0"><circle class="node" cx="185.2" cy="424.7" r="6.55"/><text class="nlabel" transform="translate(450.0,450.0) rotate(365.46) translate(-284.0,0) rotate(180)" text-anchor="end" dy=".32em">Website</text><title>Website · 21 bridge modules</title></g>
+<g class="napp" data-app="eCommerce" tabindex="0"><circle class="node" cx="196.1" cy="370.8" r="4.53"/><text class="nlabel" transform="translate(450.0,450.0) rotate(377.31) translate(-284.0,0) rotate(180)" text-anchor="end" dy=".32em">eCommerce</text><title>eCommerce · 6 bridge modules</title></g>
+<g class="napp" data-app="eLearning" tabindex="0"><circle class="node" cx="217.7" cy="320.4" r="4.1"/><text class="nlabel" transform="translate(450.0,450.0) rotate(389.17) translate(-284.0,0) rotate(180)" text-anchor="end" dy=".32em">eLearning</text><title>eLearning · 4 bridge modules</title></g>
+<g class="napp" data-app="Forum" tabindex="0"><circle class="node" cx="249.3" cy="275.4" r="3.15"/><text class="nlabel" transform="translate(450.0,450.0) rotate(401.02) translate(-284.0,0) rotate(180)" text-anchor="end" dy=".32em">Forum</text><title>Forum · 1 bridge module</title></g>
+<g class="napp" data-app="Live Chat" tabindex="0"><circle class="node" cx="289.4" cy="237.9" r="4.1"/><text class="nlabel" transform="translate(450.0,450.0) rotate(412.87) translate(-284.0,0) rotate(180)" text-anchor="end" dy=".32em">Live Chat</text><title>Live Chat · 4 bridge modules</title></g>
+<g class="napp iso" data-app="Blog" tabindex="0"><circle class="node iso" cx="336.4" cy="209.5" r="2.2"/><text class="nlabel" transform="translate(450.0,450.0) rotate(424.72) translate(-284.0,0) rotate(180)" text-anchor="end" dy=".32em">Blog</text><title>Blog · 0 bridge modules</title></g>
+<g class="napp iso" data-app="Discuss" tabindex="0"><circle class="node iso" cx="411.0" cy="186.9" r="2.2"/><text class="nlabel" transform="translate(450.0,450.0) rotate(441.57) translate(-284.0,0) rotate(180)" text-anchor="end" dy=".32em">Discuss</text><title>Discuss · 0 bridge modules</title></g>
+</g></svg>

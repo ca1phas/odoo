@@ -1,5 +1,5 @@
 import json, collections, itertools
-SP='/tmp/claude-0/-home-user-odoo/9afe9781-77eb-5337-9b42-0f955ae77d73/scratchpad'
+SP='nocoly/data'
 D=json.load(open(SP+'/manifests.json'))
 
 APPS=[("Website","website","Website"),("eCommerce","website_sale","Website"),("Blog","website_blog","Website"),

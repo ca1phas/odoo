@@ -1,7 +1,7 @@
 {
  "account": {
-  "path": "/home/user/odoo/addons/account",
-  "core": true,
+  "path": "addons/account",
+  "core": false,
   "depends": [
    "base_setup",
    "onboarding",
@@ -18,8 +18,8 @@
   "license": "LGPL-3"
  },
  "account_add_gln": {
-  "path": "/home/user/odoo/addons/account_add_gln",
-  "core": true,
+  "path": "addons/account_add_gln",
+  "core": false,
   "depends": [
    "account"
   ],
@@ -31,8 +31,8 @@
   "license": "LGPL-3"
  },
  "account_check_printing": {
-  "path": "/home/user/odoo/addons/account_check_printing",
-  "core": true,
+  "path": "addons/account_check_printing",
+  "core": false,
   "depends": [
    "account"
   ],
@@ -44,8 +44,8 @@
   "license": "LGPL-3"
  },
  "account_debit_note": {
-  "path": "/home/user/odoo/addons/account_debit_note",
-  "core": true,
+  "path": "addons/account_debit_note",
+  "core": false,
   "depends": [
    "account"
   ],
@@ -57,8 +57,8 @@
   "license": "LGPL-3"
  },
  "account_edi": {
-  "path": "/home/user/odoo/addons/account_edi",
-  "core": true,
+  "path": "addons/account_edi",
+  "core": false,
   "depends": [
    "account"
   ],
@@ -70,8 +70,8 @@
   "license": "LGPL-3"
  },
  "account_edi_proxy_client": {
-  "path": "/home/user/odoo/addons/account_edi_proxy_client",
-  "core": true,
+  "path": "addons/account_edi_proxy_client",
+  "core": false,
   "depends": [
    "account",
    "certificate"
@@ -84,8 +84,8 @@
   "license": "LGPL-3"
  },
  "account_edi_ubl_cii": {
-  "path": "/home/user/odoo/addons/account_edi_ubl_cii",
-  "core": true,
+  "path": "addons/account_edi_ubl_cii",
+  "core": false,
   "depends": [
    "account"
   ],
@@ -97,8 +97,8 @@
   "license": "LGPL-3"
  },
  "account_fleet": {
-  "path": "/home/user/odoo/addons/account_fleet",
-  "core": true,
+  "path": "addons/account_fleet",
+  "core": false,
   "depends": [
    "fleet",
    "account"
@@ -111,8 +111,8 @@
   "license": "LGPL-3"
  },
  "account_payment": {
-  "path": "/home/user/odoo/addons/account_payment",
-  "core": true,
+  "path": "addons/account_payment",
+  "core": false,
   "depends": [
    "account",
    "payment"
@@ -127,8 +127,8 @@
   "license": "LGPL-3"
  },
  "account_payment_interco": {
-  "path": "/home/user/odoo/addons/account_payment_interco",
-  "core": true,
+  "path": "addons/account_payment_interco",
+  "core": false,
   "depends": [
    "account_payment"
   ],
@@ -140,8 +140,8 @@
   "license": "LGPL-3"
  },
  "account_peppol": {
-  "path": "/home/user/odoo/addons/account_peppol",
-  "core": true,
+  "path": "addons/account_peppol",
+  "core": false,
   "depends": [
    "account_edi_proxy_client",
    "account_edi_ubl_cii"
@@ -156,8 +156,8 @@
   "license": "LGPL-3"
  },
  "account_peppol_advanced_fields": {
-  "path": "/home/user/odoo/addons/account_peppol_advanced_fields",
-  "core": true,
+  "path": "addons/account_peppol_advanced_fields",
+  "core": false,
   "depends": [
    "account",
    "account_edi_ubl_cii"
@@ -170,8 +170,8 @@
   "license": "LGPL-3"
  },
  "account_peppol_response": {
-  "path": "/home/user/odoo/addons/account_peppol_response",
-  "core": true,
+  "path": "addons/account_peppol_response",
+  "core": false,
   "depends": [
    "account_peppol"
   ],
@@ -183,8 +183,8 @@
   "license": "LGPL-3"
  },
  "account_qr_code_emv": {
-  "path": "/home/user/odoo/addons/account_qr_code_emv",
-  "core": true,
+  "path": "addons/account_qr_code_emv",
+  "core": false,
   "depends": [
    "account"
   ],
@@ -196,8 +196,8 @@
   "license": "LGPL-3"
  },
  "account_qr_code_sepa": {
-  "path": "/home/user/odoo/addons/account_qr_code_sepa",
-  "core": true,
+  "path": "addons/account_qr_code_sepa",
+  "core": false,
   "depends": [
    "account",
    "base_iban"
@@ -210,8 +210,8 @@
   "license": "LGPL-3"
  },
  "account_tax_python": {
-  "path": "/home/user/odoo/addons/account_tax_python",
-  "core": true,
+  "path": "addons/account_tax_python",
+  "core": false,
   "depends": [
    "account"
   ],
@@ -223,8 +223,8 @@
   "license": "LGPL-3"
  },
  "account_test": {
-  "path": "/home/user/odoo/addons/account_test",
-  "core": true,
+  "path": "addons/account_test",
+  "core": false,
   "depends": [
    "account"
   ],
@@ -236,8 +236,8 @@
   "license": "LGPL-3"
  },
  "account_update_tax_tags": {
-  "path": "/home/user/odoo/addons/account_update_tax_tags",
-  "core": true,
+  "path": "addons/account_update_tax_tags",
+  "core": false,
   "depends": [
    "account"
   ],
@@ -249,8 +249,8 @@
   "license": "LGPL-3"
  },
  "analytic": {
-  "path": "/home/user/odoo/addons/analytic",
-  "core": true,
+  "path": "addons/analytic",
+  "core": false,
   "depends": [
    "base",
    "mail",
@@ -264,8 +264,8 @@
   "license": "LGPL-3"
  },
  "api_doc": {
-  "path": "/home/user/odoo/addons/api_doc",
-  "core": true,
+  "path": "addons/api_doc",
+  "core": false,
   "depends": [
    "web"
   ],
@@ -277,8 +277,8 @@
   "license": "LGPL-3"
  },
  "attachment_indexation": {
-  "path": "/home/user/odoo/addons/attachment_indexation",
-  "core": true,
+  "path": "addons/attachment_indexation",
+  "core": false,
   "depends": [
    "web"
   ],
@@ -290,8 +290,8 @@
   "license": "LGPL-3"
  },
  "auth_ldap": {
-  "path": "/home/user/odoo/addons/auth_ldap",
-  "core": true,
+  "path": "addons/auth_ldap",
+  "core": false,
   "depends": [
    "base",
    "base_setup"
@@ -304,8 +304,8 @@
   "license": "LGPL-3"
  },
  "auth_oauth": {
-  "path": "/home/user/odoo/addons/auth_oauth",
-  "core": true,
+  "path": "addons/auth_oauth",
+  "core": false,
   "depends": [
    "base",
    "web",
@@ -320,8 +320,8 @@
   "license": "LGPL-3"
  },
  "auth_passkey": {
-  "path": "/home/user/odoo/addons/auth_passkey",
-  "core": true,
+  "path": "addons/auth_passkey",
+  "core": false,
   "depends": [
    "base_setup",
    "web"
@@ -334,8 +334,8 @@
   "license": "LGPL-3"
  },
  "auth_passkey_portal": {
-  "path": "/home/user/odoo/addons/auth_passkey_portal",
-  "core": true,
+  "path": "addons/auth_passkey_portal",
+  "core": false,
   "depends": [
    "auth_passkey",
    "portal"
@@ -348,8 +348,8 @@
   "license": "LGPL-3"
  },
  "auth_password_policy": {
-  "path": "/home/user/odoo/addons/auth_password_policy",
-  "core": true,
+  "path": "addons/auth_password_policy",
+  "core": false,
   "depends": [
    "base_setup",
    "web"
@@ -362,8 +362,8 @@
   "license": "LGPL-3"
  },
  "auth_password_policy_portal": {
-  "path": "/home/user/odoo/addons/auth_password_policy_portal",
-  "core": true,
+  "path": "addons/auth_password_policy_portal",
+  "core": false,
   "depends": [
    "auth_password_policy",
    "portal"
@@ -376,8 +376,8 @@
   "license": "LGPL-3"
  },
  "auth_password_policy_signup": {
-  "path": "/home/user/odoo/addons/auth_password_policy_signup",
-  "core": true,
+  "path": "addons/auth_password_policy_signup",
+  "core": false,
   "depends": [
    "auth_password_policy",
    "auth_signup"
@@ -390,8 +390,8 @@
   "license": "LGPL-3"
  },
  "auth_signup": {
-  "path": "/home/user/odoo/addons/auth_signup",
-  "core": true,
+  "path": "addons/auth_signup",
+  "core": false,
   "depends": [
    "base_setup",
    "mail",
@@ -405,8 +405,8 @@
   "license": "LGPL-3"
  },
  "auth_timeout": {
-  "path": "/home/user/odoo/addons/auth_timeout",
-  "core": true,
+  "path": "addons/auth_timeout",
+  "core": false,
   "depends": [
    "auth_totp",
    "auth_totp_mail",
@@ -421,8 +421,8 @@
   "license": "LGPL-3"
  },
  "auth_totp": {
-  "path": "/home/user/odoo/addons/auth_totp",
-  "core": true,
+  "path": "addons/auth_totp",
+  "core": false,
   "depends": [
    "web"
   ],
@@ -434,8 +434,8 @@
   "license": "LGPL-3"
  },
  "auth_totp_mail": {
-  "path": "/home/user/odoo/addons/auth_totp_mail",
-  "core": true,
+  "path": "addons/auth_totp_mail",
+  "core": false,
   "depends": [
    "auth_totp",
    "mail"
@@ -448,8 +448,8 @@
   "license": "LGPL-3"
  },
  "auth_totp_portal": {
-  "path": "/home/user/odoo/addons/auth_totp_portal",
-  "core": true,
+  "path": "addons/auth_totp_portal",
+  "core": false,
   "depends": [
    "portal",
    "auth_totp"
@@ -462,8 +462,8 @@
   "license": "LGPL-3"
  },
  "barcodes": {
-  "path": "/home/user/odoo/addons/barcodes",
-  "core": true,
+  "path": "addons/barcodes",
+  "core": false,
   "depends": [
    "web"
   ],
@@ -475,8 +475,8 @@
   "license": "LGPL-3"
  },
  "barcodes_gs1_nomenclature": {
-  "path": "/home/user/odoo/addons/barcodes_gs1_nomenclature",
-  "core": true,
+  "path": "addons/barcodes_gs1_nomenclature",
+  "core": false,
   "depends": [
    "barcodes",
    "uom"
@@ -489,8 +489,8 @@
   "license": "LGPL-3"
  },
  "base_address_extended": {
-  "path": "/home/user/odoo/addons/base_address_extended",
-  "core": true,
+  "path": "addons/base_address_extended",
+  "core": false,
   "depends": [
    "base",
    "contacts"
@@ -503,8 +503,8 @@
   "license": "LGPL-3"
  },
  "base_automation": {
-  "path": "/home/user/odoo/addons/base_automation",
-  "core": true,
+  "path": "addons/base_automation",
+  "core": false,
   "depends": [
    "base",
    "digest",
@@ -520,8 +520,8 @@
   "license": "LGPL-3"
  },
  "base_geolocalize": {
-  "path": "/home/user/odoo/addons/base_geolocalize",
-  "core": true,
+  "path": "addons/base_geolocalize",
+  "core": false,
   "depends": [
    "base_setup"
   ],
@@ -533,8 +533,8 @@
   "license": "LGPL-3"
  },
  "base_iban": {
-  "path": "/home/user/odoo/addons/base_iban",
-  "core": true,
+  "path": "addons/base_iban",
+  "core": false,
   "depends": [
    "account",
    "web"
@@ -547,8 +547,8 @@
   "license": "LGPL-3"
  },
  "base_import": {
-  "path": "/home/user/odoo/addons/base_import",
-  "core": true,
+  "path": "addons/base_import",
+  "core": false,
   "depends": [
    "web"
   ],
@@ -560,8 +560,8 @@
   "license": "LGPL-3"
  },
  "base_import_module": {
-  "path": "/home/user/odoo/addons/base_import_module",
-  "core": true,
+  "path": "addons/base_import_module",
+  "core": false,
   "depends": [
    "web"
   ],
@@ -573,8 +573,8 @@
   "license": "LGPL-3"
  },
  "base_install_request": {
-  "path": "/home/user/odoo/addons/base_install_request",
-  "core": true,
+  "path": "addons/base_install_request",
+  "core": false,
   "depends": [
    "mail"
   ],
@@ -586,8 +586,8 @@
   "license": "LGPL-3"
  },
  "base_setup": {
-  "path": "/home/user/odoo/addons/base_setup",
-  "core": true,
+  "path": "addons/base_setup",
+  "core": false,
   "depends": [
    "base",
    "web"
@@ -600,8 +600,8 @@
   "license": "LGPL-3"
  },
  "base_sparse_field": {
-  "path": "/home/user/odoo/addons/base_sparse_field",
-  "core": true,
+  "path": "addons/base_sparse_field",
+  "core": false,
   "depends": [
    "base"
   ],
@@ -613,8 +613,8 @@
   "license": "LGPL-3"
  },
  "base_vat": {
-  "path": "/home/user/odoo/addons/base_vat",
-  "core": true,
+  "path": "addons/base_vat",
+  "core": false,
   "depends": [
    "account"
   ],
@@ -626,8 +626,8 @@
   "license": "LGPL-3"
  },
  "board": {
-  "path": "/home/user/odoo/addons/board",
-  "core": true,
+  "path": "addons/board",
+  "core": false,
   "depends": [
    "spreadsheet_dashboard"
   ],
@@ -639,8 +639,8 @@
   "license": "LGPL-3"
  },
  "bus": {
-  "path": "/home/user/odoo/addons/bus",
-  "core": true,
+  "path": "addons/bus",
+  "core": false,
   "depends": [
    "base",
    "web"
@@ -653,8 +653,8 @@
   "license": "LGPL-3"
  },
  "calendar": {
-  "path": "/home/user/odoo/addons/calendar",
-  "core": true,
+  "path": "addons/calendar",
+  "core": false,
   "depends": [
    "base",
    "mail"
@@ -667,8 +667,8 @@
   "license": "LGPL-3"
  },
  "calendar_sms": {
-  "path": "/home/user/odoo/addons/calendar_sms",
-  "core": true,
+  "path": "addons/calendar_sms",
+  "core": false,
   "depends": [
    "calendar",
    "sms"
@@ -681,8 +681,8 @@
   "license": "LGPL-3"
  },
  "certificate": {
-  "path": "/home/user/odoo/addons/certificate",
-  "core": true,
+  "path": "addons/certificate",
+  "core": false,
   "depends": [
    "base_setup"
   ],
@@ -694,8 +694,8 @@
   "license": "LGPL-3"
  },
  "cloud_storage": {
-  "path": "/home/user/odoo/addons/cloud_storage",
-  "core": true,
+  "path": "addons/cloud_storage",
+  "core": false,
   "depends": [
    "base_setup",
    "mail"
@@ -708,8 +708,8 @@
   "license": "LGPL-3"
  },
  "cloud_storage_azure": {
-  "path": "/home/user/odoo/addons/cloud_storage_azure",
-  "core": true,
+  "path": "addons/cloud_storage_azure",
+  "core": false,
   "depends": [
    "cloud_storage"
   ],
@@ -721,8 +721,8 @@
   "license": "LGPL-3"
  },
  "cloud_storage_google": {
-  "path": "/home/user/odoo/addons/cloud_storage_google",
-  "core": true,
+  "path": "addons/cloud_storage_google",
+  "core": false,
   "depends": [
    "cloud_storage"
   ],
@@ -734,8 +734,8 @@
   "license": "LGPL-3"
  },
  "cloud_storage_migration": {
-  "path": "/home/user/odoo/addons/cloud_storage_migration",
-  "core": true,
+  "path": "addons/cloud_storage_migration",
+  "core": false,
   "depends": [
    "cloud_storage"
   ],
@@ -747,8 +747,8 @@
   "license": "LGPL-3"
  },
  "contacts": {
-  "path": "/home/user/odoo/addons/contacts",
-  "core": true,
+  "path": "addons/contacts",
+  "core": false,
   "depends": [
    "base",
    "mail"
@@ -761,8 +761,8 @@
   "license": "LGPL-3"
  },
  "crm": {
-  "path": "/home/user/odoo/addons/crm",
-  "core": true,
+  "path": "addons/crm",
+  "core": false,
   "depends": [
    "base_setup",
    "sales_team",
@@ -783,8 +783,8 @@
   "license": "LGPL-3"
  },
  "crm_iap_enrich": {
-  "path": "/home/user/odoo/addons/crm_iap_enrich",
-  "core": true,
+  "path": "addons/crm_iap_enrich",
+  "core": false,
   "depends": [
    "iap_crm",
    "iap_mail"
@@ -797,8 +797,8 @@
   "license": "LGPL-3"
  },
  "crm_iap_mine": {
-  "path": "/home/user/odoo/addons/crm_iap_mine",
-  "core": true,
+  "path": "addons/crm_iap_mine",
+  "core": false,
   "depends": [
    "iap_crm",
    "iap_mail"
@@ -811,8 +811,8 @@
   "license": "LGPL-3"
  },
  "crm_livechat": {
-  "path": "/home/user/odoo/addons/crm_livechat",
-  "core": true,
+  "path": "addons/crm_livechat",
+  "core": false,
   "depends": [
    "crm",
    "im_livechat"
@@ -825,8 +825,8 @@
   "license": "LGPL-3"
  },
  "crm_mail_plugin": {
-  "path": "/home/user/odoo/addons/crm_mail_plugin",
-  "core": true,
+  "path": "addons/crm_mail_plugin",
+  "core": false,
   "depends": [
    "crm",
    "mail_plugin"
@@ -839,8 +839,8 @@
   "license": "LGPL-3"
  },
  "crm_sms": {
-  "path": "/home/user/odoo/addons/crm_sms",
-  "core": true,
+  "path": "addons/crm_sms",
+  "core": false,
   "depends": [
    "crm",
    "sms"
@@ -853,8 +853,8 @@
   "license": "LGPL-3"
  },
  "data_recycle": {
-  "path": "/home/user/odoo/addons/data_recycle",
-  "core": true,
+  "path": "addons/data_recycle",
+  "core": false,
   "depends": [
    "mail"
   ],
@@ -866,8 +866,8 @@
   "license": "LGPL-3"
  },
  "delivery": {
-  "path": "/home/user/odoo/addons/delivery",
-  "core": true,
+  "path": "addons/delivery",
+  "core": false,
   "depends": [
    "sale",
    "payment_custom"
@@ -880,8 +880,8 @@
   "license": "LGPL-3"
  },
  "delivery_mondialrelay": {
-  "path": "/home/user/odoo/addons/delivery_mondialrelay",
-  "core": true,
+  "path": "addons/delivery_mondialrelay",
+  "core": false,
   "depends": [
    "stock_delivery"
   ],
@@ -893,8 +893,8 @@
   "license": "LGPL-3"
  },
  "delivery_stock_picking_batch": {
-  "path": "/home/user/odoo/addons/delivery_stock_picking_batch",
-  "core": true,
+  "path": "addons/delivery_stock_picking_batch",
+  "core": false,
   "depends": [
    "stock_delivery",
    "stock_picking_batch"
@@ -907,8 +907,8 @@
   "license": "LGPL-3"
  },
  "digest": {
-  "path": "/home/user/odoo/addons/digest",
-  "core": true,
+  "path": "addons/digest",
+  "core": false,
   "depends": [
    "mail",
    "portal",
@@ -922,8 +922,8 @@
   "license": "LGPL-3"
  },
  "event": {
-  "path": "/home/user/odoo/addons/event",
-  "core": true,
+  "path": "addons/event",
+  "core": false,
   "depends": [
    "barcodes",
    "base_setup",
@@ -940,8 +940,8 @@
   "license": "LGPL-3"
  },
  "event_booth": {
-  "path": "/home/user/odoo/addons/event_booth",
-  "core": true,
+  "path": "addons/event_booth",
+  "core": false,
   "depends": [
    "event"
   ],
@@ -953,8 +953,8 @@
   "license": "LGPL-3"
  },
  "event_booth_sale": {
-  "path": "/home/user/odoo/addons/event_booth_sale",
-  "core": true,
+  "path": "addons/event_booth_sale",
+  "core": false,
   "depends": [
    "event_booth",
    "event_sale"
@@ -967,8 +967,8 @@
   "license": "LGPL-3"
  },
  "event_crm": {
-  "path": "/home/user/odoo/addons/event_crm",
-  "core": true,
+  "path": "addons/event_crm",
+  "core": false,
   "depends": [
    "event",
    "crm"
@@ -981,8 +981,8 @@
   "license": "LGPL-3"
  },
  "event_crm_sale": {
-  "path": "/home/user/odoo/addons/event_crm_sale",
-  "core": true,
+  "path": "addons/event_crm_sale",
+  "core": false,
   "depends": [
    "event_crm",
    "event_sale"
@@ -995,8 +995,8 @@
   "license": "LGPL-3"
  },
  "event_product": {
-  "path": "/home/user/odoo/addons/event_product",
-  "core": true,
+  "path": "addons/event_product",
+  "core": false,
   "depends": [
    "event",
    "product",
@@ -1010,8 +1010,8 @@
   "license": "LGPL-3"
  },
  "event_sale": {
-  "path": "/home/user/odoo/addons/event_sale",
-  "core": true,
+  "path": "addons/event_sale",
+  "core": false,
   "depends": [
    "event_product",
    "sale_management"
@@ -1024,8 +1024,8 @@
   "license": "LGPL-3"
  },
  "event_sms": {
-  "path": "/home/user/odoo/addons/event_sms",
-  "core": true,
+  "path": "addons/event_sms",
+  "core": false,
   "depends": [
    "event",
    "sms"
@@ -1038,8 +1038,8 @@
   "license": "LGPL-3"
  },
  "fleet": {
-  "path": "/home/user/odoo/addons/fleet",
-  "core": true,
+  "path": "addons/fleet",
+  "core": false,
   "depends": [
    "base",
    "mail"
@@ -1052,8 +1052,8 @@
   "license": "LGPL-3"
  },
  "gamification": {
-  "path": "/home/user/odoo/addons/gamification",
-  "core": true,
+  "path": "addons/gamification",
+  "core": false,
   "depends": [
    "mail"
   ],
@@ -1065,8 +1065,8 @@
   "license": "LGPL-3"
  },
  "gamification_sale_crm": {
-  "path": "/home/user/odoo/addons/gamification_sale_crm",
-  "core": true,
+  "path": "addons/gamification_sale_crm",
+  "core": false,
   "depends": [
    "gamification",
    "sale_crm"
@@ -1079,8 +1079,8 @@
   "license": "LGPL-3"
  },
  "google_account": {
-  "path": "/home/user/odoo/addons/google_account",
-  "core": true,
+  "path": "addons/google_account",
+  "core": false,
   "depends": [
    "base_setup"
   ],
@@ -1092,8 +1092,8 @@
   "license": "LGPL-3"
  },
  "google_address_autocomplete": {
-  "path": "/home/user/odoo/addons/google_address_autocomplete",
-  "core": true,
+  "path": "addons/google_address_autocomplete",
+  "core": false,
   "depends": [
    "web"
   ],
@@ -1105,8 +1105,8 @@
   "license": "LGPL-3"
  },
  "google_calendar": {
-  "path": "/home/user/odoo/addons/google_calendar",
-  "core": true,
+  "path": "addons/google_calendar",
+  "core": false,
   "depends": [
    "google_account",
    "calendar"
@@ -1119,8 +1119,8 @@
   "license": "LGPL-3"
  },
  "google_gmail": {
-  "path": "/home/user/odoo/addons/google_gmail",
-  "core": true,
+  "path": "addons/google_gmail",
+  "core": false,
   "depends": [
    "mail"
   ],
@@ -1132,8 +1132,8 @@
   "license": "LGPL-3"
  },
  "google_recaptcha": {
-  "path": "/home/user/odoo/addons/google_recaptcha",
-  "core": true,
+  "path": "addons/google_recaptcha",
+  "core": false,
   "depends": [
    "base_setup"
   ],
@@ -1145,8 +1145,8 @@
   "license": "LGPL-3"
  },
  "hr": {
-  "path": "/home/user/odoo/addons/hr",
-  "core": true,
+  "path": "addons/hr",
+  "core": false,
   "depends": [
    "base_setup",
    "digest",
@@ -1162,8 +1162,8 @@
   "license": "LGPL-3"
  },
  "hr_attendance": {
-  "path": "/home/user/odoo/addons/hr_attendance",
-  "core": true,
+  "path": "addons/hr_attendance",
+  "core": false,
   "depends": [
    "hr",
    "barcodes",
@@ -1177,8 +1177,8 @@
   "license": "LGPL-3"
  },
  "hr_calendar": {
-  "path": "/home/user/odoo/addons/hr_calendar",
-  "core": true,
+  "path": "addons/hr_calendar",
+  "core": false,
   "depends": [
    "hr",
    "calendar"
@@ -1191,8 +1191,8 @@
   "license": "LGPL-3"
  },
  "hr_expense": {
-  "path": "/home/user/odoo/addons/hr_expense",
-  "core": true,
+  "path": "addons/hr_expense",
+  "core": false,
   "depends": [
    "account",
    "web_tour",
@@ -1206,8 +1206,8 @@
   "license": "LGPL-3"
  },
  "hr_fleet": {
-  "path": "/home/user/odoo/addons/hr_fleet",
-  "core": true,
+  "path": "addons/hr_fleet",
+  "core": false,
   "depends": [
    "hr",
    "fleet"
@@ -1220,8 +1220,8 @@
   "license": "LGPL-3"
  },
  "hr_gamification": {
-  "path": "/home/user/odoo/addons/hr_gamification",
-  "core": true,
+  "path": "addons/hr_gamification",
+  "core": false,
   "depends": [
    "gamification",
    "hr"
@@ -1234,8 +1234,8 @@
   "license": "LGPL-3"
  },
  "hr_holidays": {
-  "path": "/home/user/odoo/addons/hr_holidays",
-  "core": true,
+  "path": "addons/hr_holidays",
+  "core": false,
   "depends": [
    "hr",
    "calendar",
@@ -1249,8 +1249,8 @@
   "license": "LGPL-3"
  },
  "hr_holidays_attendance": {
-  "path": "/home/user/odoo/addons/hr_holidays_attendance",
-  "core": true,
+  "path": "addons/hr_holidays_attendance",
+  "core": false,
   "depends": [
    "hr_attendance",
    "hr_holidays"
@@ -1263,8 +1263,8 @@
   "license": "LGPL-3"
  },
  "hr_holidays_homeworking": {
-  "path": "/home/user/odoo/addons/hr_holidays_homeworking",
-  "core": true,
+  "path": "addons/hr_holidays_homeworking",
+  "core": false,
   "depends": [
    "hr_holidays",
    "hr_homeworking"
@@ -1277,8 +1277,8 @@
   "license": "LGPL-3"
  },
  "hr_homeworking": {
-  "path": "/home/user/odoo/addons/hr_homeworking",
-  "core": true,
+  "path": "addons/hr_homeworking",
+  "core": false,
   "depends": [
    "hr"
   ],
@@ -1290,8 +1290,8 @@
   "license": "LGPL-3"
  },
  "hr_homeworking_calendar": {
-  "path": "/home/user/odoo/addons/hr_homeworking_calendar",
-  "core": true,
+  "path": "addons/hr_homeworking_calendar",
+  "core": false,
   "depends": [
    "hr_homeworking",
    "calendar"
@@ -1304,8 +1304,8 @@
   "license": "LGPL-3"
  },
  "hr_hourly_cost": {
-  "path": "/home/user/odoo/addons/hr_hourly_cost",
-  "core": true,
+  "path": "addons/hr_hourly_cost",
+  "core": false,
   "depends": [
    "hr"
   ],
@@ -1317,8 +1317,8 @@
   "license": "LGPL-3"
  },
  "hr_livechat": {
-  "path": "/home/user/odoo/addons/hr_livechat",
-  "core": true,
+  "path": "addons/hr_livechat",
+  "core": false,
   "depends": [
    "hr",
    "im_livechat"
@@ -1331,8 +1331,8 @@
   "license": "LGPL-3"
  },
  "hr_maintenance": {
-  "path": "/home/user/odoo/addons/hr_maintenance",
-  "core": true,
+  "path": "addons/hr_maintenance",
+  "core": false,
   "depends": [
    "hr",
    "maintenance"
@@ -1345,8 +1345,8 @@
   "license": "LGPL-3"
  },
  "hr_org_chart": {
-  "path": "/home/user/odoo/addons/hr_org_chart",
-  "core": true,
+  "path": "addons/hr_org_chart",
+  "core": false,
   "depends": [
    "hr",
    "web_hierarchy"
@@ -1361,8 +1361,8 @@
   "license": "LGPL-3"
  },
  "hr_presence": {
-  "path": "/home/user/odoo/addons/hr_presence",
-  "core": true,
+  "path": "addons/hr_presence",
+  "core": false,
   "depends": [
    "hr",
    "hr_holidays",
@@ -1376,8 +1376,8 @@
   "license": "LGPL-3"
  },
  "hr_recruitment": {
-  "path": "/home/user/odoo/addons/hr_recruitment",
-  "core": true,
+  "path": "addons/hr_recruitment",
+  "core": false,
   "depends": [
    "hr",
    "calendar",
@@ -1394,8 +1394,8 @@
   "license": "LGPL-3"
  },
  "hr_recruitment_skills": {
-  "path": "/home/user/odoo/addons/hr_recruitment_skills",
-  "core": true,
+  "path": "addons/hr_recruitment_skills",
+  "core": false,
   "depends": [
    "hr_skills",
    "hr_recruitment"
@@ -1408,8 +1408,8 @@
   "license": "LGPL-3"
  },
  "hr_recruitment_sms": {
-  "path": "/home/user/odoo/addons/hr_recruitment_sms",
-  "core": true,
+  "path": "addons/hr_recruitment_sms",
+  "core": false,
   "depends": [
    "hr_recruitment",
    "sms"
@@ -1422,8 +1422,8 @@
   "license": "LGPL-3"
  },
  "hr_recruitment_survey": {
-  "path": "/home/user/odoo/addons/hr_recruitment_survey",
-  "core": true,
+  "path": "addons/hr_recruitment_survey",
+  "core": false,
   "depends": [
    "survey",
    "hr_recruitment"
@@ -1436,8 +1436,8 @@
   "license": "LGPL-3"
  },
  "hr_skills": {
-  "path": "/home/user/odoo/addons/hr_skills",
-  "core": true,
+  "path": "addons/hr_skills",
+  "core": false,
   "depends": [
    "hr"
   ],
@@ -1449,8 +1449,8 @@
   "license": "LGPL-3"
  },
  "hr_skills_event": {
-  "path": "/home/user/odoo/addons/hr_skills_event",
-  "core": true,
+  "path": "addons/hr_skills_event",
+  "core": false,
   "depends": [
    "hr_skills",
    "event"
@@ -1463,8 +1463,8 @@
   "license": "LGPL-3"
  },
  "hr_skills_slides": {
-  "path": "/home/user/odoo/addons/hr_skills_slides",
-  "core": true,
+  "path": "addons/hr_skills_slides",
+  "core": false,
   "depends": [
    "hr_skills",
    "website_slides"
@@ -1477,8 +1477,8 @@
   "license": "LGPL-3"
  },
  "hr_skills_survey": {
-  "path": "/home/user/odoo/addons/hr_skills_survey",
-  "core": true,
+  "path": "addons/hr_skills_survey",
+  "core": false,
   "depends": [
    "hr_skills",
    "survey"
@@ -1491,8 +1491,8 @@
   "license": "LGPL-3"
  },
  "hr_timesheet": {
-  "path": "/home/user/odoo/addons/hr_timesheet",
-  "core": true,
+  "path": "addons/hr_timesheet",
+  "core": false,
   "depends": [
    "hr",
    "hr_hourly_cost",
@@ -1508,8 +1508,8 @@
   "license": "LGPL-3"
  },
  "hr_timesheet_attendance": {
-  "path": "/home/user/odoo/addons/hr_timesheet_attendance",
-  "core": true,
+  "path": "addons/hr_timesheet_attendance",
+  "core": false,
   "depends": [
    "hr_timesheet",
    "hr_attendance"
@@ -1522,8 +1522,8 @@
   "license": "LGPL-3"
  },
  "hr_work_entry": {
-  "path": "/home/user/odoo/addons/hr_work_entry",
-  "core": true,
+  "path": "addons/hr_work_entry",
+  "core": false,
   "depends": [
    "hr"
   ],
@@ -1535,8 +1535,8 @@
   "license": "LGPL-3"
  },
  "hr_work_entry_holidays": {
-  "path": "/home/user/odoo/addons/hr_work_entry_holidays",
-  "core": true,
+  "path": "addons/hr_work_entry_holidays",
+  "core": false,
   "depends": [
    "hr_holidays",
    "hr_work_entry"
@@ -1549,8 +1549,8 @@
   "license": "LGPL-3"
  },
  "html_builder": {
-  "path": "/home/user/odoo/addons/html_builder",
-  "core": true,
+  "path": "addons/html_builder",
+  "core": false,
   "depends": [
    "base",
    "html_editor",
@@ -1564,8 +1564,8 @@
   "license": "LGPL-3"
  },
  "html_editor": {
-  "path": "/home/user/odoo/addons/html_editor",
-  "core": true,
+  "path": "addons/html_editor",
+  "core": false,
   "depends": [
    "base",
    "bus",
@@ -1579,8 +1579,8 @@
   "license": "LGPL-3"
  },
  "http_routing": {
-  "path": "/home/user/odoo/addons/http_routing",
-  "core": true,
+  "path": "addons/http_routing",
+  "core": false,
   "depends": [
    "web"
   ],
@@ -1592,8 +1592,8 @@
   "license": "LGPL-3"
  },
  "iap": {
-  "path": "/home/user/odoo/addons/iap",
-  "core": true,
+  "path": "addons/iap",
+  "core": false,
   "depends": [
    "web",
    "base_setup"
@@ -1606,8 +1606,8 @@
   "license": "LGPL-3"
  },
  "iap_crm": {
-  "path": "/home/user/odoo/addons/iap_crm",
-  "core": true,
+  "path": "addons/iap_crm",
+  "core": false,
   "depends": [
    "crm",
    "iap_mail"
@@ -1620,8 +1620,8 @@
   "license": "LGPL-3"
  },
  "iap_mail": {
-  "path": "/home/user/odoo/addons/iap_mail",
-  "core": true,
+  "path": "addons/iap_mail",
+  "core": false,
   "depends": [
    "iap",
    "mail"
@@ -1634,8 +1634,8 @@
   "license": "LGPL-3"
  },
  "im_livechat": {
-  "path": "/home/user/odoo/addons/im_livechat",
-  "core": true,
+  "path": "addons/im_livechat",
+  "core": false,
   "depends": [
    "mail",
    "rating",
@@ -1650,8 +1650,8 @@
   "license": "LGPL-3"
  },
  "iot_base": {
-  "path": "/home/user/odoo/addons/iot_base",
-  "core": true,
+  "path": "addons/iot_base",
+  "core": false,
   "depends": [
    "web"
   ],
@@ -1663,8 +1663,8 @@
   "license": "LGPL-3"
  },
  "iot_box_image": {
-  "path": "/home/user/odoo/addons/iot_box_image",
-  "core": true,
+  "path": "addons/iot_box_image",
+  "core": false,
   "depends": [],
   "category": "Hidden/Tools",
   "application": false,
@@ -1674,8 +1674,8 @@
   "license": "LGPL-3"
  },
  "iot_drivers": {
-  "path": "/home/user/odoo/addons/iot_drivers",
-  "core": true,
+  "path": "addons/iot_drivers",
+  "core": false,
   "depends": [],
   "category": "Hidden",
   "application": false,
@@ -1685,8 +1685,8 @@
   "license": "LGPL-3"
  },
  "l10n_account_edi_ubl_cii_tests": {
-  "path": "/home/user/odoo/addons/l10n_account_edi_ubl_cii_tests",
-  "core": true,
+  "path": "addons/l10n_account_edi_ubl_cii_tests",
+  "core": false,
   "depends": [
    "account_edi_ubl_cii",
    "l10n_fr_account",
@@ -1703,8 +1703,8 @@
   "license": "LGPL-3"
  },
  "l10n_account_withholding_tax": {
-  "path": "/home/user/odoo/addons/l10n_account_withholding_tax",
-  "core": true,
+  "path": "addons/l10n_account_withholding_tax",
+  "core": false,
   "depends": [
    "account"
   ],
@@ -1716,8 +1716,8 @@
   "license": "LGPL-3"
  },
  "l10n_account_withholding_tax_pos": {
-  "path": "/home/user/odoo/addons/l10n_account_withholding_tax_pos",
-  "core": true,
+  "path": "addons/l10n_account_withholding_tax_pos",
+  "core": false,
   "depends": [
    "l10n_account_withholding_tax",
    "point_of_sale"
@@ -1730,8 +1730,8 @@
   "license": "LGPL-3"
  },
  "l10n_ae": {
-  "path": "/home/user/odoo/addons/l10n_ae",
-  "core": true,
+  "path": "addons/l10n_ae",
+  "core": false,
   "depends": [
    "account",
    "l10n_gcc_invoice"
@@ -1746,8 +1746,8 @@
   "license": "LGPL-3"
  },
  "l10n_ae_pos": {
-  "path": "/home/user/odoo/addons/l10n_ae_pos",
-  "core": true,
+  "path": "addons/l10n_ae_pos",
+  "core": false,
   "depends": [
    "l10n_gcc_pos",
    "l10n_ae"
@@ -1760,8 +1760,8 @@
   "license": "LGPL-3"
  },
  "l10n_anz_ubl_pint": {
-  "path": "/home/user/odoo/addons/l10n_anz_ubl_pint",
-  "core": true,
+  "path": "addons/l10n_anz_ubl_pint",
+  "core": false,
   "depends": [
    "account_edi_ubl_cii"
   ],
@@ -1773,8 +1773,8 @@
   "license": "LGPL-3"
  },
  "l10n_ar": {
-  "path": "/home/user/odoo/addons/l10n_ar",
-  "core": true,
+  "path": "addons/l10n_ar",
+  "core": false,
   "depends": [
    "l10n_latam_invoice_document",
    "l10n_latam_base",
@@ -1790,8 +1790,8 @@
   "license": "LGPL-3"
  },
  "l10n_ar_pos": {
-  "path": "/home/user/odoo/addons/l10n_ar_pos",
-  "core": true,
+  "path": "addons/l10n_ar_pos",
+  "core": false,
   "depends": [
    "l10n_ar",
    "point_of_sale"
@@ -1804,8 +1804,8 @@
   "license": "LGPL-3"
  },
  "l10n_ar_stock": {
-  "path": "/home/user/odoo/addons/l10n_ar_stock",
-  "core": true,
+  "path": "addons/l10n_ar_stock",
+  "core": false,
   "depends": [
    "l10n_ar",
    "stock_account"
@@ -1818,8 +1818,8 @@
   "license": "LGPL-3"
  },
  "l10n_ar_website_sale": {
-  "path": "/home/user/odoo/addons/l10n_ar_website_sale",
-  "core": true,
+  "path": "addons/l10n_ar_website_sale",
+  "core": false,
   "depends": [
    "website_sale",
    "l10n_ar"
@@ -1832,8 +1832,8 @@
   "license": "LGPL-3"
  },
  "l10n_ar_withholding": {
-  "path": "/home/user/odoo/addons/l10n_ar_withholding",
-  "core": true,
+  "path": "addons/l10n_ar_withholding",
+  "core": false,
   "depends": [
    "l10n_ar",
    "l10n_latam_check"
@@ -1846,8 +1846,8 @@
   "license": "LGPL-3"
  },
  "l10n_at": {
-  "path": "/home/user/odoo/addons/l10n_at",
-  "core": true,
+  "path": "addons/l10n_at",
+  "core": false,
   "depends": [
    "account",
    "account_edi_ubl_cii",
@@ -1865,8 +1865,8 @@
   "license": "LGPL-3"
  },
  "l10n_au": {
-  "path": "/home/user/odoo/addons/l10n_au",
-  "core": true,
+  "path": "addons/l10n_au",
+  "core": false,
   "depends": [
    "account"
   ],
@@ -1880,8 +1880,8 @@
   "license": "LGPL-3"
  },
  "l10n_bd": {
-  "path": "/home/user/odoo/addons/l10n_bd",
-  "core": true,
+  "path": "addons/l10n_bd",
+  "core": false,
   "depends": [
    "account"
   ],
@@ -1895,8 +1895,8 @@
   "license": "LGPL-3"
  },
  "l10n_be": {
-  "path": "/home/user/odoo/addons/l10n_be",
-  "core": true,
+  "path": "addons/l10n_be",
+  "core": false,
   "depends": [
    "account",
    "account_edi_ubl_cii",
@@ -1913,8 +1913,8 @@
   "license": "LGPL-3"
  },
  "l10n_be_pos_restaurant": {
-  "path": "/home/user/odoo/addons/l10n_be_pos_restaurant",
-  "core": true,
+  "path": "addons/l10n_be_pos_restaurant",
+  "core": false,
   "depends": [
    "pos_restaurant",
    "l10n_be"
@@ -1927,8 +1927,8 @@
   "license": "LGPL-3"
  },
  "l10n_be_pos_sale": {
-  "path": "/home/user/odoo/addons/l10n_be_pos_sale",
-  "core": true,
+  "path": "addons/l10n_be_pos_sale",
+  "core": false,
   "depends": [
    "pos_sale",
    "l10n_be"
@@ -1941,8 +1941,8 @@
   "license": "LGPL-3"
  },
  "l10n_bf": {
-  "path": "/home/user/odoo/addons/l10n_bf",
-  "core": true,
+  "path": "addons/l10n_bf",
+  "core": false,
   "depends": [
    "l10n_syscohada",
    "account"
@@ -1957,8 +1957,8 @@
   "license": "LGPL-3"
  },
  "l10n_bg": {
-  "path": "/home/user/odoo/addons/l10n_bg",
-  "core": true,
+  "path": "addons/l10n_bg",
+  "core": false,
   "depends": [
    "account",
    "base_vat"
@@ -1973,8 +1973,8 @@
   "license": "LGPL-3"
  },
  "l10n_bg_ledger": {
-  "path": "/home/user/odoo/addons/l10n_bg_ledger",
-  "core": true,
+  "path": "addons/l10n_bg_ledger",
+  "core": false,
   "depends": [
    "l10n_bg"
   ],
@@ -1986,8 +1986,8 @@
   "license": "LGPL-3"
  },
  "l10n_bh": {
-  "path": "/home/user/odoo/addons/l10n_bh",
-  "core": true,
+  "path": "addons/l10n_bh",
+  "core": false,
   "depends": [
    "account",
    "l10n_gcc_invoice"
@@ -2002,8 +2002,8 @@
   "license": "LGPL-3"
  },
  "l10n_bj": {
-  "path": "/home/user/odoo/addons/l10n_bj",
-  "core": true,
+  "path": "addons/l10n_bj",
+  "core": false,
   "depends": [
    "l10n_syscohada",
    "account"
@@ -2018,8 +2018,8 @@
   "license": "LGPL-3"
  },
  "l10n_bo": {
-  "path": "/home/user/odoo/addons/l10n_bo",
-  "core": true,
+  "path": "addons/l10n_bo",
+  "core": false,
   "depends": [
    "account"
   ],
@@ -2033,8 +2033,8 @@
   "license": "LGPL-3"
  },
  "l10n_br": {
-  "path": "/home/user/odoo/addons/l10n_br",
-  "core": true,
+  "path": "addons/l10n_br",
+  "core": false,
   "depends": [
    "account",
    "account_qr_code_emv",
@@ -2052,8 +2052,8 @@
   "license": "LGPL-3"
  },
  "l10n_br_sales": {
-  "path": "/home/user/odoo/addons/l10n_br_sales",
-  "core": true,
+  "path": "addons/l10n_br_sales",
+  "core": false,
   "depends": [
    "l10n_br",
    "sale"
@@ -2066,8 +2066,8 @@
   "license": "LGPL-3"
  },
  "l10n_br_website_sale": {
-  "path": "/home/user/odoo/addons/l10n_br_website_sale",
-  "core": true,
+  "path": "addons/l10n_br_website_sale",
+  "core": false,
   "depends": [
    "l10n_br",
    "website_sale"
@@ -2080,8 +2080,8 @@
   "license": "LGPL-3"
  },
  "l10n_ca": {
-  "path": "/home/user/odoo/addons/l10n_ca",
-  "core": true,
+  "path": "addons/l10n_ca",
+  "core": false,
   "depends": [
    "account",
    "base_iban"
@@ -2096,8 +2096,8 @@
   "license": "LGPL-3"
  },
  "l10n_cd": {
-  "path": "/home/user/odoo/addons/l10n_cd",
-  "core": true,
+  "path": "addons/l10n_cd",
+  "core": false,
   "depends": [
    "l10n_syscohada",
    "account"
@@ -2112,8 +2112,8 @@
   "license": "LGPL-3"
  },
  "l10n_cf": {
-  "path": "/home/user/odoo/addons/l10n_cf",
-  "core": true,
+  "path": "addons/l10n_cf",
+  "core": false,
   "depends": [
    "l10n_syscohada",
    "account"
@@ -2128,8 +2128,8 @@
   "license": "LGPL-3"
  },
  "l10n_cg": {
-  "path": "/home/user/odoo/addons/l10n_cg",
-  "core": true,
+  "path": "addons/l10n_cg",
+  "core": false,
   "depends": [
    "l10n_syscohada",
    "account"
@@ -2144,8 +2144,8 @@
   "license": "LGPL-3"
  },
  "l10n_ch": {
-  "path": "/home/user/odoo/addons/l10n_ch",
-  "core": true,
+  "path": "addons/l10n_ch",
+  "core": false,
   "depends": [
    "account",
    "account_edi_ubl_cii",
@@ -2162,8 +2162,8 @@
   "license": "LGPL-3"
  },
  "l10n_ch_pos": {
-  "path": "/home/user/odoo/addons/l10n_ch_pos",
-  "core": true,
+  "path": "addons/l10n_ch_pos",
+  "core": false,
   "depends": [
    "l10n_ch",
    "point_of_sale"
@@ -2176,8 +2176,8 @@
   "license": "LGPL-3"
  },
  "l10n_ci": {
-  "path": "/home/user/odoo/addons/l10n_ci",
-  "core": true,
+  "path": "addons/l10n_ci",
+  "core": false,
   "depends": [
    "l10n_syscohada",
    "account"
@@ -2192,8 +2192,8 @@
   "license": "LGPL-3"
  },
  "l10n_cl": {
-  "path": "/home/user/odoo/addons/l10n_cl",
-  "core": true,
+  "path": "addons/l10n_cl",
+  "core": false,
   "depends": [
    "contacts",
    "base_vat",
@@ -2212,8 +2212,8 @@
   "license": "LGPL-3"
  },
  "l10n_cm": {
-  "path": "/home/user/odoo/addons/l10n_cm",
-  "core": true,
+  "path": "addons/l10n_cm",
+  "core": false,
   "depends": [
    "l10n_syscohada",
    "account"
@@ -2228,8 +2228,8 @@
   "license": "LGPL-3"
  },
  "l10n_cn": {
-  "path": "/home/user/odoo/addons/l10n_cn",
-  "core": true,
+  "path": "addons/l10n_cn",
+  "core": false,
   "depends": [
    "base",
    "account"
@@ -2244,8 +2244,8 @@
   "license": "LGPL-3"
  },
  "l10n_cn_city": {
-  "path": "/home/user/odoo/addons/l10n_cn_city",
-  "core": true,
+  "path": "addons/l10n_cn_city",
+  "core": false,
   "depends": [
    "l10n_cn",
    "base_address_extended"
@@ -2258,8 +2258,8 @@
   "license": "LGPL-3"
  },
  "l10n_co": {
-  "path": "/home/user/odoo/addons/l10n_co",
-  "core": true,
+  "path": "addons/l10n_co",
+  "core": false,
   "depends": [
    "account_debit_note",
    "l10n_latam_base",
@@ -2275,8 +2275,8 @@
   "license": "LGPL-3"
  },
  "l10n_co_pos": {
-  "path": "/home/user/odoo/addons/l10n_co_pos",
-  "core": true,
+  "path": "addons/l10n_co_pos",
+  "core": false,
   "depends": [
    "l10n_co",
    "point_of_sale"
@@ -2289,8 +2289,8 @@
   "license": "LGPL-3"
  },
  "l10n_cr": {
-  "path": "/home/user/odoo/addons/l10n_cr",
-  "core": true,
+  "path": "addons/l10n_cr",
+  "core": false,
   "depends": [
    "account"
   ],
@@ -2304,8 +2304,8 @@
   "license": "LGPL-3"
  },
  "l10n_cy": {
-  "path": "/home/user/odoo/addons/l10n_cy",
-  "core": true,
+  "path": "addons/l10n_cy",
+  "core": false,
   "depends": [
    "account",
    "account_edi_ubl_cii",
@@ -2321,8 +2321,8 @@
   "license": "LGPL-3"
  },
  "l10n_cz": {
-  "path": "/home/user/odoo/addons/l10n_cz",
-  "core": true,
+  "path": "addons/l10n_cz",
+  "core": false,
   "depends": [
    "account",
    "account_edi_ubl_cii",
@@ -2339,8 +2339,8 @@
   "license": "LGPL-3"
  },
  "l10n_de": {
-  "path": "/home/user/odoo/addons/l10n_de",
-  "core": true,
+  "path": "addons/l10n_de",
+  "core": false,
   "depends": [
    "base_iban",
    "base_vat",
@@ -2358,8 +2358,8 @@
   "license": "LGPL-3"
  },
  "l10n_din5008": {
-  "path": "/home/user/odoo/addons/l10n_din5008",
-  "core": true,
+  "path": "addons/l10n_din5008",
+  "core": false,
   "depends": [
    "account"
   ],
@@ -2371,8 +2371,8 @@
   "license": "LGPL-3"
  },
  "l10n_din5008_expense": {
-  "path": "/home/user/odoo/addons/l10n_din5008_expense",
-  "core": true,
+  "path": "addons/l10n_din5008_expense",
+  "core": false,
   "depends": [
    "l10n_din5008",
    "hr_expense"
@@ -2385,8 +2385,8 @@
   "license": "LGPL-3"
  },
  "l10n_din5008_purchase": {
-  "path": "/home/user/odoo/addons/l10n_din5008_purchase",
-  "core": true,
+  "path": "addons/l10n_din5008_purchase",
+  "core": false,
   "depends": [
    "l10n_din5008",
    "purchase"
@@ -2399,8 +2399,8 @@
   "license": "LGPL-3"
  },
  "l10n_din5008_repair": {
-  "path": "/home/user/odoo/addons/l10n_din5008_repair",
-  "core": true,
+  "path": "addons/l10n_din5008_repair",
+  "core": false,
   "depends": [
    "l10n_din5008",
    "repair"
@@ -2413,8 +2413,8 @@
   "license": "LGPL-3"
  },
  "l10n_din5008_sale": {
-  "path": "/home/user/odoo/addons/l10n_din5008_sale",
-  "core": true,
+  "path": "addons/l10n_din5008_sale",
+  "core": false,
   "depends": [
    "l10n_din5008",
    "sale"
@@ -2427,8 +2427,8 @@
   "license": "LGPL-3"
  },
  "l10n_din5008_stock": {
-  "path": "/home/user/odoo/addons/l10n_din5008_stock",
-  "core": true,
+  "path": "addons/l10n_din5008_stock",
+  "core": false,
   "depends": [
    "l10n_din5008",
    "stock"
@@ -2441,8 +2441,8 @@
   "license": "LGPL-3"
  },
  "l10n_dk": {
-  "path": "/home/user/odoo/addons/l10n_dk",
-  "core": true,
+  "path": "addons/l10n_dk",
+  "core": false,
   "depends": [
    "base_iban",
    "base_vat",
@@ -2459,8 +2459,8 @@
   "license": "LGPL-3"
  },
  "l10n_dk_fik": {
-  "path": "/home/user/odoo/addons/l10n_dk_fik",
-  "core": true,
+  "path": "addons/l10n_dk_fik",
+  "core": false,
   "depends": [
    "l10n_dk"
   ],
@@ -2472,8 +2472,8 @@
   "license": "LGPL-3"
  },
  "l10n_dk_nemhandel": {
-  "path": "/home/user/odoo/addons/l10n_dk_nemhandel",
-  "core": true,
+  "path": "addons/l10n_dk_nemhandel",
+  "core": false,
   "depends": [
    "account_edi_proxy_client",
    "account_edi_ubl_cii",
@@ -2490,8 +2490,8 @@
   "license": "LGPL-3"
  },
  "l10n_dk_nemhandel_response": {
-  "path": "/home/user/odoo/addons/l10n_dk_nemhandel_response",
-  "core": true,
+  "path": "addons/l10n_dk_nemhandel_response",
+  "core": false,
   "depends": [
    "l10n_dk_nemhandel"
   ],
@@ -2503,8 +2503,8 @@
   "license": "LGPL-3"
  },
  "l10n_dk_oioubl": {
-  "path": "/home/user/odoo/addons/l10n_dk_oioubl",
-  "core": true,
+  "path": "addons/l10n_dk_oioubl",
+  "core": false,
   "depends": [
    "account_edi_ubl_cii",
    "l10n_dk"
@@ -2517,8 +2517,8 @@
   "license": "LGPL-3"
  },
  "l10n_do": {
-  "path": "/home/user/odoo/addons/l10n_do",
-  "core": true,
+  "path": "addons/l10n_do",
+  "core": false,
   "depends": [
    "account",
    "base_iban"
@@ -2533,8 +2533,8 @@
   "license": "LGPL-3"
  },
  "l10n_dz": {
-  "path": "/home/user/odoo/addons/l10n_dz",
-  "core": true,
+  "path": "addons/l10n_dz",
+  "core": false,
   "depends": [
    "base_vat",
    "account"
@@ -2549,8 +2549,8 @@
   "license": "LGPL-3"
  },
  "l10n_ec": {
-  "path": "/home/user/odoo/addons/l10n_ec",
-  "core": true,
+  "path": "addons/l10n_ec",
+  "core": false,
   "depends": [
    "base",
    "base_iban",
@@ -2569,8 +2569,8 @@
   "license": "LGPL-3"
  },
  "l10n_ec_sale": {
-  "path": "/home/user/odoo/addons/l10n_ec_sale",
-  "core": true,
+  "path": "addons/l10n_ec_sale",
+  "core": false,
   "depends": [
    "l10n_ec",
    "sale"
@@ -2583,8 +2583,8 @@
   "license": "LGPL-3"
  },
  "l10n_ec_stock": {
-  "path": "/home/user/odoo/addons/l10n_ec_stock",
-  "core": true,
+  "path": "addons/l10n_ec_stock",
+  "core": false,
   "depends": [
    "l10n_ec",
    "stock"
@@ -2597,8 +2597,8 @@
   "license": "LGPL-3"
  },
  "l10n_ee": {
-  "path": "/home/user/odoo/addons/l10n_ee",
-  "core": true,
+  "path": "addons/l10n_ee",
+  "core": false,
   "depends": [
    "account",
    "account_edi_ubl_cii"
@@ -2613,8 +2613,8 @@
   "license": "LGPL-3"
  },
  "l10n_eg": {
-  "path": "/home/user/odoo/addons/l10n_eg",
-  "core": true,
+  "path": "addons/l10n_eg",
+  "core": false,
   "depends": [
    "account"
   ],
@@ -2628,8 +2628,8 @@
   "license": "LGPL-3"
  },
  "l10n_eg_edi_eta": {
-  "path": "/home/user/odoo/addons/l10n_eg_edi_eta",
-  "core": true,
+  "path": "addons/l10n_eg_edi_eta",
+  "core": false,
   "depends": [
    "account_edi",
    "l10n_eg"
@@ -2642,8 +2642,8 @@
   "license": "LGPL-3"
  },
  "l10n_es": {
-  "path": "/home/user/odoo/addons/l10n_es",
-  "core": true,
+  "path": "addons/l10n_es",
+  "core": false,
   "depends": [
    "account",
    "base_iban",
@@ -2660,8 +2660,8 @@
   "license": "LGPL-3"
  },
  "l10n_es_edi_facturae": {
-  "path": "/home/user/odoo/addons/l10n_es_edi_facturae",
-  "core": true,
+  "path": "addons/l10n_es_edi_facturae",
+  "core": false,
   "depends": [
    "certificate",
    "l10n_es"
@@ -2676,8 +2676,8 @@
   "license": "LGPL-3"
  },
  "l10n_es_edi_sii": {
-  "path": "/home/user/odoo/addons/l10n_es_edi_sii",
-  "core": true,
+  "path": "addons/l10n_es_edi_sii",
+  "core": false,
   "depends": [
    "certificate",
    "l10n_es",
@@ -2691,8 +2691,8 @@
   "license": "LGPL-3"
  },
  "l10n_es_edi_tbai": {
-  "path": "/home/user/odoo/addons/l10n_es_edi_tbai",
-  "core": true,
+  "path": "addons/l10n_es_edi_tbai",
+  "core": false,
   "depends": [
    "l10n_es",
    "certificate"
@@ -2705,8 +2705,8 @@
   "license": "LGPL-3"
  },
  "l10n_es_edi_tbai_pos": {
-  "path": "/home/user/odoo/addons/l10n_es_edi_tbai_pos",
-  "core": true,
+  "path": "addons/l10n_es_edi_tbai_pos",
+  "core": false,
   "depends": [
    "l10n_es_edi_tbai",
    "point_of_sale"
@@ -2719,8 +2719,8 @@
   "license": "LGPL-3"
  },
  "l10n_es_edi_verifactu": {
-  "path": "/home/user/odoo/addons/l10n_es_edi_verifactu",
-  "core": true,
+  "path": "addons/l10n_es_edi_verifactu",
+  "core": false,
   "depends": [
    "l10n_es",
    "certificate"
@@ -2733,8 +2733,8 @@
   "license": "LGPL-3"
  },
  "l10n_es_edi_verifactu_pos": {
-  "path": "/home/user/odoo/addons/l10n_es_edi_verifactu_pos",
-  "core": true,
+  "path": "addons/l10n_es_edi_verifactu_pos",
+  "core": false,
   "depends": [
    "l10n_es_edi_verifactu",
    "point_of_sale"
@@ -2747,8 +2747,8 @@
   "license": "LGPL-3"
  },
  "l10n_es_pos": {
-  "path": "/home/user/odoo/addons/l10n_es_pos",
-  "core": true,
+  "path": "addons/l10n_es_pos",
+  "core": false,
   "depends": [
    "point_of_sale",
    "l10n_es"
@@ -2761,8 +2761,8 @@
   "license": "LGPL-3"
  },
  "l10n_et": {
-  "path": "/home/user/odoo/addons/l10n_et",
-  "core": true,
+  "path": "addons/l10n_et",
+  "core": false,
   "depends": [
    "account"
   ],
@@ -2776,8 +2776,8 @@
   "license": "LGPL-3"
  },
  "l10n_eu_oss": {
-  "path": "/home/user/odoo/addons/l10n_eu_oss",
-  "core": true,
+  "path": "addons/l10n_eu_oss",
+  "core": false,
   "depends": [
    "account"
   ],
@@ -2789,8 +2789,8 @@
   "license": "LGPL-3"
  },
  "l10n_fi": {
-  "path": "/home/user/odoo/addons/l10n_fi",
-  "core": true,
+  "path": "addons/l10n_fi",
+  "core": false,
   "depends": [
    "base_iban",
    "base_vat",
@@ -2807,8 +2807,8 @@
   "license": "LGPL-3"
  },
  "l10n_fi_sale": {
-  "path": "/home/user/odoo/addons/l10n_fi_sale",
-  "core": true,
+  "path": "addons/l10n_fi_sale",
+  "core": false,
   "depends": [
    "l10n_fi",
    "sale"
@@ -2821,8 +2821,8 @@
   "license": "LGPL-3"
  },
  "l10n_fr": {
-  "path": "/home/user/odoo/addons/l10n_fr",
-  "core": true,
+  "path": "addons/l10n_fr",
+  "core": false,
   "depends": [
    "base"
   ],
@@ -2834,8 +2834,8 @@
   "license": "LGPL-3"
  },
  "l10n_fr_account": {
-  "path": "/home/user/odoo/addons/l10n_fr_account",
-  "core": true,
+  "path": "addons/l10n_fr_account",
+  "core": false,
   "depends": [
    "base_iban",
    "base_vat",
@@ -2853,8 +2853,8 @@
   "license": "LGPL-3"
  },
  "l10n_fr_facturx_chorus_pro": {
-  "path": "/home/user/odoo/addons/l10n_fr_facturx_chorus_pro",
-  "core": true,
+  "path": "addons/l10n_fr_facturx_chorus_pro",
+  "core": false,
   "depends": [
    "account",
    "account_edi_ubl_cii",
@@ -2868,8 +2868,8 @@
   "license": "LGPL-3"
  },
  "l10n_fr_hr_holidays": {
-  "path": "/home/user/odoo/addons/l10n_fr_hr_holidays",
-  "core": true,
+  "path": "addons/l10n_fr_hr_holidays",
+  "core": false,
   "depends": [
    "hr_holidays"
   ],
@@ -2883,8 +2883,8 @@
   "license": "LGPL-3"
  },
  "l10n_fr_hr_work_entry_holidays": {
-  "path": "/home/user/odoo/addons/l10n_fr_hr_work_entry_holidays",
-  "core": true,
+  "path": "addons/l10n_fr_hr_work_entry_holidays",
+  "core": false,
   "depends": [
    "l10n_fr_hr_holidays",
    "hr_work_entry_holidays"
@@ -2899,8 +2899,8 @@
   "license": "LGPL-3"
  },
  "l10n_fr_pdp": {
-  "path": "/home/user/odoo/addons/l10n_fr_pdp",
-  "core": true,
+  "path": "addons/l10n_fr_pdp",
+  "core": false,
   "depends": [
    "l10n_fr_account",
    "account_peppol_response",
@@ -2918,8 +2918,8 @@
   "license": "LGPL-3"
  },
  "l10n_fr_pdp_pos": {
-  "path": "/home/user/odoo/addons/l10n_fr_pdp_pos",
-  "core": true,
+  "path": "addons/l10n_fr_pdp_pos",
+  "core": false,
   "depends": [
    "l10n_fr_pdp",
    "point_of_sale"
@@ -2932,8 +2932,8 @@
   "license": "LGPL-3"
  },
  "l10n_fr_pos_cert": {
-  "path": "/home/user/odoo/addons/l10n_fr_pos_cert",
-  "core": true,
+  "path": "addons/l10n_fr_pos_cert",
+  "core": false,
   "depends": [
    "l10n_fr_account",
    "point_of_sale"
@@ -2946,8 +2946,8 @@
   "license": "LGPL-3"
  },
  "l10n_ga": {
-  "path": "/home/user/odoo/addons/l10n_ga",
-  "core": true,
+  "path": "addons/l10n_ga",
+  "core": false,
   "depends": [
    "l10n_syscohada",
    "account"
@@ -2962,8 +2962,8 @@
   "license": "LGPL-3"
  },
  "l10n_gcc_invoice": {
-  "path": "/home/user/odoo/addons/l10n_gcc_invoice",
-  "core": true,
+  "path": "addons/l10n_gcc_invoice",
+  "core": false,
   "depends": [
    "account"
   ],
@@ -2975,8 +2975,8 @@
   "license": "LGPL-3"
  },
  "l10n_gcc_invoice_stock_account": {
-  "path": "/home/user/odoo/addons/l10n_gcc_invoice_stock_account",
-  "core": true,
+  "path": "addons/l10n_gcc_invoice_stock_account",
+  "core": false,
   "depends": [
    "l10n_gcc_invoice",
    "stock_account"
@@ -2989,8 +2989,8 @@
   "license": "LGPL-3"
  },
  "l10n_gcc_pos": {
-  "path": "/home/user/odoo/addons/l10n_gcc_pos",
-  "core": true,
+  "path": "addons/l10n_gcc_pos",
+  "core": false,
   "depends": [
    "point_of_sale",
    "l10n_gcc_invoice"
@@ -3003,8 +3003,8 @@
   "license": "LGPL-3"
  },
  "l10n_ge": {
-  "path": "/home/user/odoo/addons/l10n_ge",
-  "core": true,
+  "path": "addons/l10n_ge",
+  "core": false,
   "depends": [
    "account"
   ],
@@ -3016,8 +3016,8 @@
   "license": "LGPL-3"
  },
  "l10n_gf": {
-  "path": "/home/user/odoo/addons/l10n_gf",
-  "core": true,
+  "path": "addons/l10n_gf",
+  "core": false,
   "depends": [
    "l10n_fr_account",
    "account"
@@ -3032,8 +3032,8 @@
   "license": "LGPL-3"
  },
  "l10n_gn": {
-  "path": "/home/user/odoo/addons/l10n_gn",
-  "core": true,
+  "path": "addons/l10n_gn",
+  "core": false,
   "depends": [
    "l10n_syscohada",
    "account"
@@ -3048,8 +3048,8 @@
   "license": "LGPL-3"
  },
  "l10n_gp": {
-  "path": "/home/user/odoo/addons/l10n_gp",
-  "core": true,
+  "path": "addons/l10n_gp",
+  "core": false,
   "depends": [
    "l10n_fr_account",
    "account"
@@ -3064,8 +3064,8 @@
   "license": "LGPL-3"
  },
  "l10n_gq": {
-  "path": "/home/user/odoo/addons/l10n_gq",
-  "core": true,
+  "path": "addons/l10n_gq",
+  "core": false,
   "depends": [
    "l10n_syscohada",
    "account"
@@ -3080,8 +3080,8 @@
   "license": "LGPL-3"
  },
  "l10n_gr": {
-  "path": "/home/user/odoo/addons/l10n_gr",
-  "core": true,
+  "path": "addons/l10n_gr",
+  "core": false,
   "depends": [
    "account",
    "base_iban",
@@ -3098,8 +3098,8 @@
   "license": "LGPL-3"
  },
  "l10n_gr_edi": {
-  "path": "/home/user/odoo/addons/l10n_gr_edi",
-  "core": true,
+  "path": "addons/l10n_gr_edi",
+  "core": false,
   "depends": [
    "l10n_gr"
   ],
@@ -3111,8 +3111,8 @@
   "license": "LGPL-3"
  },
  "l10n_gr_edi_e_invoo": {
-  "path": "/home/user/odoo/addons/l10n_gr_edi_e_invoo",
-  "core": true,
+  "path": "addons/l10n_gr_edi_e_invoo",
+  "core": false,
   "depends": [
    "account_edi_proxy_client",
    "l10n_gr_edi"
@@ -3127,8 +3127,8 @@
   "license": "LGPL-3"
  },
  "l10n_gt": {
-  "path": "/home/user/odoo/addons/l10n_gt",
-  "core": true,
+  "path": "addons/l10n_gt",
+  "core": false,
   "depends": [
    "base",
    "account"
@@ -3143,8 +3143,8 @@
   "license": "LGPL-3"
  },
  "l10n_gw": {
-  "path": "/home/user/odoo/addons/l10n_gw",
-  "core": true,
+  "path": "addons/l10n_gw",
+  "core": false,
   "depends": [
    "l10n_syscohada",
    "account"
@@ -3159,8 +3159,8 @@
   "license": "LGPL-3"
  },
  "l10n_hk": {
-  "path": "/home/user/odoo/addons/l10n_hk",
-  "core": true,
+  "path": "addons/l10n_hk",
+  "core": false,
   "depends": [
    "account_qr_code_emv",
    "account"
@@ -3175,8 +3175,8 @@
   "license": "LGPL-3"
  },
  "l10n_hn": {
-  "path": "/home/user/odoo/addons/l10n_hn",
-  "core": true,
+  "path": "addons/l10n_hn",
+  "core": false,
   "depends": [
    "base",
    "account"
@@ -3191,8 +3191,8 @@
   "license": "LGPL-3"
  },
  "l10n_hr": {
-  "path": "/home/user/odoo/addons/l10n_hr",
-  "core": true,
+  "path": "addons/l10n_hr",
+  "core": false,
   "depends": [
    "account",
    "base_vat"
@@ -3207,8 +3207,8 @@
   "license": "LGPL-3"
  },
  "l10n_hr_edi": {
-  "path": "/home/user/odoo/addons/l10n_hr_edi",
-  "core": true,
+  "path": "addons/l10n_hr_edi",
+  "core": false,
   "depends": [
    "l10n_hr",
    "account_edi_ubl_cii",
@@ -3222,8 +3222,8 @@
   "license": "LGPL-3"
  },
  "l10n_hr_kuna": {
-  "path": "/home/user/odoo/addons/l10n_hr_kuna",
-  "core": true,
+  "path": "addons/l10n_hr_kuna",
+  "core": false,
   "depends": [
    "account"
   ],
@@ -3235,8 +3235,8 @@
   "license": "LGPL-3"
  },
  "l10n_hu": {
-  "path": "/home/user/odoo/addons/l10n_hu",
-  "core": true,
+  "path": "addons/l10n_hu",
+  "core": false,
   "depends": [
    "account",
    "base_vat"
@@ -3251,8 +3251,8 @@
   "license": "LGPL-3"
  },
  "l10n_hu_edi": {
-  "path": "/home/user/odoo/addons/l10n_hu_edi",
-  "core": true,
+  "path": "addons/l10n_hu_edi",
+  "core": false,
   "depends": [
    "account_debit_note",
    "base_iban",
@@ -3268,8 +3268,8 @@
   "license": "LGPL-3"
  },
  "l10n_hu_edi_receive": {
-  "path": "/home/user/odoo/addons/l10n_hu_edi_receive",
-  "core": true,
+  "path": "addons/l10n_hu_edi_receive",
+  "core": false,
   "depends": [
    "l10n_hu_edi"
   ],
@@ -3281,8 +3281,8 @@
   "license": "LGPL-3"
  },
  "l10n_id": {
-  "path": "/home/user/odoo/addons/l10n_id",
-  "core": true,
+  "path": "addons/l10n_id",
+  "core": false,
   "depends": [
    "account",
    "base_iban",
@@ -3298,8 +3298,8 @@
   "license": "LGPL-3"
  },
  "l10n_id_efaktur_coretax": {
-  "path": "/home/user/odoo/addons/l10n_id_efaktur_coretax",
-  "core": true,
+  "path": "addons/l10n_id_efaktur_coretax",
+  "core": false,
   "depends": [
    "l10n_id"
   ],
@@ -3311,8 +3311,8 @@
   "license": "LGPL-3"
  },
  "l10n_id_pos": {
-  "path": "/home/user/odoo/addons/l10n_id_pos",
-  "core": true,
+  "path": "addons/l10n_id_pos",
+  "core": false,
   "depends": [
    "l10n_id",
    "point_of_sale"
@@ -3325,8 +3325,8 @@
   "license": "LGPL-3"
  },
  "l10n_ie": {
-  "path": "/home/user/odoo/addons/l10n_ie",
-  "core": true,
+  "path": "addons/l10n_ie",
+  "core": false,
   "depends": [
    "account",
    "base_iban",
@@ -3343,8 +3343,8 @@
   "license": "LGPL-3"
  },
  "l10n_il": {
-  "path": "/home/user/odoo/addons/l10n_il",
-  "core": true,
+  "path": "addons/l10n_il",
+  "core": false,
   "depends": [
    "account"
   ],
@@ -3358,8 +3358,8 @@
   "license": "LGPL-3"
  },
  "l10n_in": {
-  "path": "/home/user/odoo/addons/l10n_in",
-  "core": true,
+  "path": "addons/l10n_in",
+  "core": false,
   "depends": [
    "account_tax_python",
    "base_vat",
@@ -3377,8 +3377,8 @@
   "license": "LGPL-3"
  },
  "l10n_in_edi": {
-  "path": "/home/user/odoo/addons/l10n_in_edi",
-  "core": true,
+  "path": "addons/l10n_in_edi",
+  "core": false,
   "depends": [
    "account_edi",
    "l10n_in"
@@ -3391,8 +3391,8 @@
   "license": "LGPL-3"
  },
  "l10n_in_ewaybill": {
-  "path": "/home/user/odoo/addons/l10n_in_ewaybill",
-  "core": true,
+  "path": "addons/l10n_in_ewaybill",
+  "core": false,
   "depends": [
    "l10n_in"
   ],
@@ -3404,8 +3404,8 @@
   "license": "LGPL-3"
  },
  "l10n_in_ewaybill_irn": {
-  "path": "/home/user/odoo/addons/l10n_in_ewaybill_irn",
-  "core": true,
+  "path": "addons/l10n_in_ewaybill_irn",
+  "core": false,
   "depends": [
    "l10n_in_ewaybill",
    "l10n_in_edi"
@@ -3418,8 +3418,8 @@
   "license": "LGPL-3"
  },
  "l10n_in_ewaybill_stock": {
-  "path": "/home/user/odoo/addons/l10n_in_ewaybill_stock",
-  "core": true,
+  "path": "addons/l10n_in_ewaybill_stock",
+  "core": false,
   "depends": [
    "l10n_in_stock",
    "l10n_in_ewaybill"
@@ -3432,8 +3432,8 @@
   "license": "LGPL-3"
  },
  "l10n_in_hr_holidays": {
-  "path": "/home/user/odoo/addons/l10n_in_hr_holidays",
-  "core": true,
+  "path": "addons/l10n_in_hr_holidays",
+  "core": false,
   "depends": [
    "hr_holidays"
   ],
@@ -3447,8 +3447,8 @@
   "license": "LGPL-3"
  },
  "l10n_in_pos": {
-  "path": "/home/user/odoo/addons/l10n_in_pos",
-  "core": true,
+  "path": "addons/l10n_in_pos",
+  "core": false,
   "depends": [
    "l10n_in",
    "point_of_sale"
@@ -3461,8 +3461,8 @@
   "license": "LGPL-3"
  },
  "l10n_in_purchase_stock": {
-  "path": "/home/user/odoo/addons/l10n_in_purchase_stock",
-  "core": true,
+  "path": "addons/l10n_in_purchase_stock",
+  "core": false,
   "depends": [
    "l10n_in_stock",
    "purchase_stock"
@@ -3475,8 +3475,8 @@
   "license": "LGPL-3"
  },
  "l10n_in_sale": {
-  "path": "/home/user/odoo/addons/l10n_in_sale",
-  "core": true,
+  "path": "addons/l10n_in_sale",
+  "core": false,
   "depends": [
    "l10n_in",
    "sale"
@@ -3489,8 +3489,8 @@
   "license": "LGPL-3"
  },
  "l10n_in_sale_stock": {
-  "path": "/home/user/odoo/addons/l10n_in_sale_stock",
-  "core": true,
+  "path": "addons/l10n_in_sale_stock",
+  "core": false,
   "depends": [
    "l10n_in_sale",
    "l10n_in_stock",
@@ -3504,8 +3504,8 @@
   "license": "LGPL-3"
  },
  "l10n_in_stock": {
-  "path": "/home/user/odoo/addons/l10n_in_stock",
-  "core": true,
+  "path": "addons/l10n_in_stock",
+  "core": false,
   "depends": [
    "l10n_in",
    "stock",
@@ -3519,8 +3519,8 @@
   "license": "LGPL-3"
  },
  "l10n_iq": {
-  "path": "/home/user/odoo/addons/l10n_iq",
-  "core": true,
+  "path": "addons/l10n_iq",
+  "core": false,
   "depends": [
    "account"
   ],
@@ -3534,8 +3534,8 @@
   "license": "LGPL-3"
  },
  "l10n_it": {
-  "path": "/home/user/odoo/addons/l10n_it",
-  "core": true,
+  "path": "addons/l10n_it",
+  "core": false,
   "depends": [
    "account",
    "base_iban",
@@ -3552,8 +3552,8 @@
   "license": "LGPL-3"
  },
  "l10n_it_edi": {
-  "path": "/home/user/odoo/addons/l10n_it_edi",
-  "core": true,
+  "path": "addons/l10n_it_edi",
+  "core": false,
   "depends": [
    "l10n_it",
    "account_edi_proxy_client",
@@ -3569,8 +3569,8 @@
   "license": "LGPL-3"
  },
  "l10n_it_edi_doi": {
-  "path": "/home/user/odoo/addons/l10n_it_edi_doi",
-  "core": true,
+  "path": "addons/l10n_it_edi_doi",
+  "core": false,
   "depends": [
    "l10n_it_edi",
    "sale"
@@ -3583,8 +3583,8 @@
   "license": "LGPL-3"
  },
  "l10n_it_edi_sale": {
-  "path": "/home/user/odoo/addons/l10n_it_edi_sale",
-  "core": true,
+  "path": "addons/l10n_it_edi_sale",
+  "core": false,
   "depends": [
    "l10n_it_edi",
    "sale"
@@ -3597,8 +3597,8 @@
   "license": "LGPL-3"
  },
  "l10n_it_stock_ddt": {
-  "path": "/home/user/odoo/addons/l10n_it_stock_ddt",
-  "core": true,
+  "path": "addons/l10n_it_stock_ddt",
+  "core": false,
   "depends": [
    "l10n_it_edi",
    "stock_delivery",
@@ -3612,8 +3612,8 @@
   "license": "LGPL-3"
  },
  "l10n_jo": {
-  "path": "/home/user/odoo/addons/l10n_jo",
-  "core": true,
+  "path": "addons/l10n_jo",
+  "core": false,
   "depends": [
    "account"
   ],
@@ -3627,8 +3627,8 @@
   "license": "LGPL-3"
  },
  "l10n_jo_edi": {
-  "path": "/home/user/odoo/addons/l10n_jo_edi",
-  "core": true,
+  "path": "addons/l10n_jo_edi",
+  "core": false,
   "depends": [
    "account_edi_ubl_cii",
    "l10n_jo"
@@ -3643,8 +3643,8 @@
   "license": "LGPL-3"
  },
  "l10n_jo_edi_pos": {
-  "path": "/home/user/odoo/addons/l10n_jo_edi_pos",
-  "core": true,
+  "path": "addons/l10n_jo_edi_pos",
+  "core": false,
   "depends": [
    "l10n_jo_edi",
    "pos_edi_ubl"
@@ -3657,8 +3657,8 @@
   "license": "LGPL-3"
  },
  "l10n_jp": {
-  "path": "/home/user/odoo/addons/l10n_jp",
-  "core": true,
+  "path": "addons/l10n_jp",
+  "core": false,
   "depends": [
    "account"
   ],
@@ -3672,8 +3672,8 @@
   "license": "LGPL-3"
  },
  "l10n_jp_ubl_pint": {
-  "path": "/home/user/odoo/addons/l10n_jp_ubl_pint",
-  "core": true,
+  "path": "addons/l10n_jp_ubl_pint",
+  "core": false,
   "depends": [
    "account_edi_ubl_cii"
   ],
@@ -3685,8 +3685,8 @@
   "license": "LGPL-3"
  },
  "l10n_ke": {
-  "path": "/home/user/odoo/addons/l10n_ke",
-  "core": true,
+  "path": "addons/l10n_ke",
+  "core": false,
   "depends": [
    "account"
   ],
@@ -3700,8 +3700,8 @@
   "license": "LGPL-3"
  },
  "l10n_ke_edi_tremol": {
-  "path": "/home/user/odoo/addons/l10n_ke_edi_tremol",
-  "core": true,
+  "path": "addons/l10n_ke_edi_tremol",
+  "core": false,
   "depends": [
    "l10n_ke"
   ],
@@ -3713,8 +3713,8 @@
   "license": "LGPL-3"
  },
  "l10n_kh": {
-  "path": "/home/user/odoo/addons/l10n_kh",
-  "core": true,
+  "path": "addons/l10n_kh",
+  "core": false,
   "depends": [
    "account_qr_code_emv",
    "l10n_account_withholding_tax"
@@ -3727,8 +3727,8 @@
   "license": "LGPL-3"
  },
  "l10n_km": {
-  "path": "/home/user/odoo/addons/l10n_km",
-  "core": true,
+  "path": "addons/l10n_km",
+  "core": false,
   "depends": [
    "l10n_syscohada",
    "account"
@@ -3743,8 +3743,8 @@
   "license": "LGPL-3"
  },
  "l10n_kr": {
-  "path": "/home/user/odoo/addons/l10n_kr",
-  "core": true,
+  "path": "addons/l10n_kr",
+  "core": false,
   "depends": [
    "account"
   ],
@@ -3758,8 +3758,8 @@
   "license": "LGPL-3"
  },
  "l10n_kw": {
-  "path": "/home/user/odoo/addons/l10n_kw",
-  "core": true,
+  "path": "addons/l10n_kw",
+  "core": false,
   "depends": [
    "account",
    "l10n_gcc_invoice"
@@ -3774,8 +3774,8 @@
   "license": "LGPL-3"
  },
  "l10n_kz": {
-  "path": "/home/user/odoo/addons/l10n_kz",
-  "core": true,
+  "path": "addons/l10n_kz",
+  "core": false,
   "depends": [
    "account"
   ],
@@ -3789,8 +3789,8 @@
   "license": "LGPL-3"
  },
  "l10n_latam_base": {
-  "path": "/home/user/odoo/addons/l10n_latam_base",
-  "core": true,
+  "path": "addons/l10n_latam_base",
+  "core": false,
   "depends": [
    "contacts",
    "base_vat"
@@ -3803,8 +3803,8 @@
   "license": "LGPL-3"
  },
  "l10n_latam_check": {
-  "path": "/home/user/odoo/addons/l10n_latam_check",
-  "core": true,
+  "path": "addons/l10n_latam_check",
+  "core": false,
   "depends": [
    "account",
    "base_vat"
@@ -3817,8 +3817,8 @@
   "license": "LGPL-3"
  },
  "l10n_latam_invoice_document": {
-  "path": "/home/user/odoo/addons/l10n_latam_invoice_document",
-  "core": true,
+  "path": "addons/l10n_latam_invoice_document",
+  "core": false,
   "depends": [
    "account",
    "account_debit_note"
@@ -3831,8 +3831,8 @@
   "license": "LGPL-3"
  },
  "l10n_lb_account": {
-  "path": "/home/user/odoo/addons/l10n_lb_account",
-  "core": true,
+  "path": "addons/l10n_lb_account",
+  "core": false,
   "depends": [
    "account"
   ],
@@ -3846,8 +3846,8 @@
   "license": "LGPL-3"
  },
  "l10n_lk": {
-  "path": "/home/user/odoo/addons/l10n_lk",
-  "core": true,
+  "path": "addons/l10n_lk",
+  "core": false,
   "depends": [
    "account",
    "l10n_account_withholding_tax"
@@ -3862,8 +3862,8 @@
   "license": "LGPL-3"
  },
  "l10n_lk_invoice": {
-  "path": "/home/user/odoo/addons/l10n_lk_invoice",
-  "core": true,
+  "path": "addons/l10n_lk_invoice",
+  "core": false,
   "depends": [
    "l10n_lk"
   ],
@@ -3877,8 +3877,8 @@
   "license": "LGPL-3"
  },
  "l10n_lt": {
-  "path": "/home/user/odoo/addons/l10n_lt",
-  "core": true,
+  "path": "addons/l10n_lt",
+  "core": false,
   "depends": [
    "account",
    "account_edi_ubl_cii"
@@ -3893,8 +3893,8 @@
   "license": "LGPL-3"
  },
  "l10n_lu": {
-  "path": "/home/user/odoo/addons/l10n_lu",
-  "core": true,
+  "path": "addons/l10n_lu",
+  "core": false,
   "depends": [
    "account",
    "base_iban",
@@ -3911,8 +3911,8 @@
   "license": "LGPL-3"
  },
  "l10n_lv": {
-  "path": "/home/user/odoo/addons/l10n_lv",
-  "core": true,
+  "path": "addons/l10n_lv",
+  "core": false,
   "depends": [
    "account",
    "base_vat",
@@ -3928,8 +3928,8 @@
   "license": "LGPL-3"
  },
  "l10n_ma": {
-  "path": "/home/user/odoo/addons/l10n_ma",
-  "core": true,
+  "path": "addons/l10n_ma",
+  "core": false,
   "depends": [
    "base",
    "account"
@@ -3944,8 +3944,8 @@
   "license": "LGPL-3"
  },
  "l10n_mc": {
-  "path": "/home/user/odoo/addons/l10n_mc",
-  "core": true,
+  "path": "addons/l10n_mc",
+  "core": false,
   "depends": [
    "l10n_fr_account",
    "account"
@@ -3960,8 +3960,8 @@
   "license": "LGPL-3"
  },
  "l10n_ml": {
-  "path": "/home/user/odoo/addons/l10n_ml",
-  "core": true,
+  "path": "addons/l10n_ml",
+  "core": false,
   "depends": [
    "l10n_syscohada",
    "account"
@@ -3976,8 +3976,8 @@
   "license": "LGPL-3"
  },
  "l10n_mn": {
-  "path": "/home/user/odoo/addons/l10n_mn",
-  "core": true,
+  "path": "addons/l10n_mn",
+  "core": false,
   "depends": [
    "account"
   ],
@@ -3991,8 +3991,8 @@
   "license": "LGPL-3"
  },
  "l10n_mq": {
-  "path": "/home/user/odoo/addons/l10n_mq",
-  "core": true,
+  "path": "addons/l10n_mq",
+  "core": false,
   "depends": [
    "l10n_fr_account",
    "account"
@@ -4007,8 +4007,8 @@
   "license": "LGPL-3"
  },
  "l10n_mr": {
-  "path": "/home/user/odoo/addons/l10n_mr",
-  "core": true,
+  "path": "addons/l10n_mr",
+  "core": false,
   "depends": [
    "account",
    "base_vat"
@@ -4021,8 +4021,8 @@
   "license": "LGPL-3"
  },
  "l10n_mt": {
-  "path": "/home/user/odoo/addons/l10n_mt",
-  "core": true,
+  "path": "addons/l10n_mt",
+  "core": false,
   "depends": [
    "account",
    "base_vat",
@@ -4038,8 +4038,8 @@
   "license": "LGPL-3"
  },
  "l10n_mt_pos": {
-  "path": "/home/user/odoo/addons/l10n_mt_pos",
-  "core": true,
+  "path": "addons/l10n_mt_pos",
+  "core": false,
   "depends": [
    "point_of_sale"
   ],
@@ -4051,8 +4051,8 @@
   "license": "LGPL-3"
  },
  "l10n_mu_account": {
-  "path": "/home/user/odoo/addons/l10n_mu_account",
-  "core": true,
+  "path": "addons/l10n_mu_account",
+  "core": false,
   "depends": [
    "account"
   ],
@@ -4066,8 +4066,8 @@
   "license": "LGPL-3"
  },
  "l10n_mx": {
-  "path": "/home/user/odoo/addons/l10n_mx",
-  "core": true,
+  "path": "addons/l10n_mx",
+  "core": false,
   "depends": [
    "account"
   ],
@@ -4081,8 +4081,8 @@
   "license": "LGPL-3"
  },
  "l10n_my": {
-  "path": "/home/user/odoo/addons/l10n_my",
-  "core": true,
+  "path": "addons/l10n_my",
+  "core": false,
   "depends": [
    "account",
    "account_tax_python"
@@ -4097,8 +4097,8 @@
   "license": "LGPL-3"
  },
  "l10n_my_edi": {
-  "path": "/home/user/odoo/addons/l10n_my_edi",
-  "core": true,
+  "path": "addons/l10n_my_edi",
+  "core": false,
   "depends": [
    "l10n_my",
    "l10n_my_ubl_pint",
@@ -4112,8 +4112,8 @@
   "license": "LGPL-3"
  },
  "l10n_my_edi_pos": {
-  "path": "/home/user/odoo/addons/l10n_my_edi_pos",
-  "core": true,
+  "path": "addons/l10n_my_edi_pos",
+  "core": false,
   "depends": [
    "l10n_my_edi",
    "point_of_sale"
@@ -4126,8 +4126,8 @@
   "license": "LGPL-3"
  },
  "l10n_my_ubl_pint": {
-  "path": "/home/user/odoo/addons/l10n_my_ubl_pint",
-  "core": true,
+  "path": "addons/l10n_my_ubl_pint",
+  "core": false,
   "depends": [
    "account_edi_ubl_cii"
   ],
@@ -4139,8 +4139,8 @@
   "license": "LGPL-3"
  },
  "l10n_mz": {
-  "path": "/home/user/odoo/addons/l10n_mz",
-  "core": true,
+  "path": "addons/l10n_mz",
+  "core": false,
   "depends": [
    "base",
    "account"
@@ -4155,8 +4155,8 @@
   "license": "LGPL-3"
  },
  "l10n_ne": {
-  "path": "/home/user/odoo/addons/l10n_ne",
-  "core": true,
+  "path": "addons/l10n_ne",
+  "core": false,
   "depends": [
    "l10n_syscohada",
    "account"
@@ -4171,8 +4171,8 @@
   "license": "LGPL-3"
  },
  "l10n_ng": {
-  "path": "/home/user/odoo/addons/l10n_ng",
-  "core": true,
+  "path": "addons/l10n_ng",
+  "core": false,
   "depends": [
    "base_vat",
    "account"
@@ -4187,8 +4187,8 @@
   "license": "LGPL-3"
  },
  "l10n_nl": {
-  "path": "/home/user/odoo/addons/l10n_nl",
-  "core": true,
+  "path": "addons/l10n_nl",
+  "core": false,
   "depends": [
    "base_iban",
    "base_vat",
@@ -4205,8 +4205,8 @@
   "license": "LGPL-3"
  },
  "l10n_no": {
-  "path": "/home/user/odoo/addons/l10n_no",
-  "core": true,
+  "path": "addons/l10n_no",
+  "core": false,
   "depends": [
    "base_iban",
    "base_vat",
@@ -4223,8 +4223,8 @@
   "license": "LGPL-3"
  },
  "l10n_nz": {
-  "path": "/home/user/odoo/addons/l10n_nz",
-  "core": true,
+  "path": "addons/l10n_nz",
+  "core": false,
   "depends": [
    "account"
   ],
@@ -4238,8 +4238,8 @@
   "license": "LGPL-3"
  },
  "l10n_om": {
-  "path": "/home/user/odoo/addons/l10n_om",
-  "core": true,
+  "path": "addons/l10n_om",
+  "core": false,
   "depends": [
    "account",
    "l10n_gcc_invoice"
@@ -4252,8 +4252,8 @@
   "license": "LGPL-3"
  },
  "l10n_pa": {
-  "path": "/home/user/odoo/addons/l10n_pa",
-  "core": true,
+  "path": "addons/l10n_pa",
+  "core": false,
   "depends": [
    "account"
   ],
@@ -4267,8 +4267,8 @@
   "license": "LGPL-3"
  },
  "l10n_pe": {
-  "path": "/home/user/odoo/addons/l10n_pe",
-  "core": true,
+  "path": "addons/l10n_pe",
+  "core": false,
   "depends": [
    "base_vat",
    "base_address_extended",
@@ -4287,8 +4287,8 @@
   "license": "LGPL-3"
  },
  "l10n_pe_pos": {
-  "path": "/home/user/odoo/addons/l10n_pe_pos",
-  "core": true,
+  "path": "addons/l10n_pe_pos",
+  "core": false,
   "depends": [
    "l10n_pe",
    "point_of_sale"
@@ -4301,8 +4301,8 @@
   "license": "LGPL-3"
  },
  "l10n_ph": {
-  "path": "/home/user/odoo/addons/l10n_ph",
-  "core": true,
+  "path": "addons/l10n_ph",
+  "core": false,
   "depends": [
    "account",
    "base_vat",
@@ -4318,8 +4318,8 @@
   "license": "LGPL-3"
  },
  "l10n_pk": {
-  "path": "/home/user/odoo/addons/l10n_pk",
-  "core": true,
+  "path": "addons/l10n_pk",
+  "core": false,
   "depends": [
    "account"
   ],
@@ -4333,8 +4333,8 @@
   "license": "LGPL-3"
  },
  "l10n_pl": {
-  "path": "/home/user/odoo/addons/l10n_pl",
-  "core": true,
+  "path": "addons/l10n_pl",
+  "core": false,
   "depends": [
    "base_iban",
    "base_vat",
@@ -4351,8 +4351,8 @@
   "license": "LGPL-3"
  },
  "l10n_pl_bank_verification": {
-  "path": "/home/user/odoo/addons/l10n_pl_bank_verification",
-  "core": true,
+  "path": "addons/l10n_pl_bank_verification",
+  "core": false,
   "depends": [
    "l10n_pl"
   ],
@@ -4364,8 +4364,8 @@
   "license": "LGPL-3"
  },
  "l10n_pl_edi": {
-  "path": "/home/user/odoo/addons/l10n_pl_edi",
-  "core": true,
+  "path": "addons/l10n_pl_edi",
+  "core": false,
   "depends": [
    "l10n_pl",
    "certificate"
@@ -4380,8 +4380,8 @@
   "license": "LGPL-3"
  },
  "l10n_pl_edi_jst": {
-  "path": "/home/user/odoo/addons/l10n_pl_edi_jst",
-  "core": true,
+  "path": "addons/l10n_pl_edi_jst",
+  "core": false,
   "depends": [
    "l10n_pl",
    "l10n_pl_edi"
@@ -4394,8 +4394,8 @@
   "license": "LGPL-3"
  },
  "l10n_pt": {
-  "path": "/home/user/odoo/addons/l10n_pt",
-  "core": true,
+  "path": "addons/l10n_pt",
+  "core": false,
   "depends": [
    "base",
    "account",
@@ -4412,8 +4412,8 @@
   "license": "LGPL-3"
  },
  "l10n_qa": {
-  "path": "/home/user/odoo/addons/l10n_qa",
-  "core": true,
+  "path": "addons/l10n_qa",
+  "core": false,
   "depends": [
    "account",
    "l10n_gcc_invoice"
@@ -4428,8 +4428,8 @@
   "license": "LGPL-3"
  },
  "l10n_re": {
-  "path": "/home/user/odoo/addons/l10n_re",
-  "core": true,
+  "path": "addons/l10n_re",
+  "core": false,
   "depends": [
    "l10n_fr_account",
    "account"
@@ -4444,8 +4444,8 @@
   "license": "LGPL-3"
  },
  "l10n_ro": {
-  "path": "/home/user/odoo/addons/l10n_ro",
-  "core": true,
+  "path": "addons/l10n_ro",
+  "core": false,
   "depends": [
    "account",
    "base_vat",
@@ -4461,8 +4461,8 @@
   "license": "LGPL-3"
  },
  "l10n_ro_cpv_code": {
-  "path": "/home/user/odoo/addons/l10n_ro_cpv_code",
-  "core": true,
+  "path": "addons/l10n_ro_cpv_code",
+  "core": false,
   "depends": [
    "l10n_ro_edi"
   ],
@@ -4474,8 +4474,8 @@
   "license": "LGPL-3"
  },
  "l10n_ro_edi": {
-  "path": "/home/user/odoo/addons/l10n_ro_edi",
-  "core": true,
+  "path": "addons/l10n_ro_edi",
+  "core": false,
   "depends": [
    "account_edi_ubl_cii",
    "l10n_ro"
@@ -4488,8 +4488,8 @@
   "license": "LGPL-3"
  },
  "l10n_ro_edi_stock": {
-  "path": "/home/user/odoo/addons/l10n_ro_edi_stock",
-  "core": true,
+  "path": "addons/l10n_ro_edi_stock",
+  "core": false,
   "depends": [
    "stock_delivery",
    "l10n_ro_edi",
@@ -4503,8 +4503,8 @@
   "license": "LGPL-3"
  },
  "l10n_ro_edi_stock_batch": {
-  "path": "/home/user/odoo/addons/l10n_ro_edi_stock_batch",
-  "core": true,
+  "path": "addons/l10n_ro_edi_stock_batch",
+  "core": false,
   "depends": [
    "l10n_ro_edi_stock",
    "stock_picking_batch"
@@ -4517,8 +4517,8 @@
   "license": "LGPL-3"
  },
  "l10n_rs": {
-  "path": "/home/user/odoo/addons/l10n_rs",
-  "core": true,
+  "path": "addons/l10n_rs",
+  "core": false,
   "depends": [
    "account",
    "base_vat"
@@ -4533,8 +4533,8 @@
   "license": "LGPL-3"
  },
  "l10n_rs_edi": {
-  "path": "/home/user/odoo/addons/l10n_rs_edi",
-  "core": true,
+  "path": "addons/l10n_rs_edi",
+  "core": false,
   "depends": [
    "account_edi_ubl_cii",
    "l10n_rs"
@@ -4547,8 +4547,8 @@
   "license": "LGPL-3"
  },
  "l10n_rw": {
-  "path": "/home/user/odoo/addons/l10n_rw",
-  "core": true,
+  "path": "addons/l10n_rw",
+  "core": false,
   "depends": [
    "account"
   ],
@@ -4562,8 +4562,8 @@
   "license": "LGPL-3"
  },
  "l10n_sa": {
-  "path": "/home/user/odoo/addons/l10n_sa",
-  "core": true,
+  "path": "addons/l10n_sa",
+  "core": false,
   "depends": [
    "l10n_gcc_invoice",
    "account",
@@ -4579,8 +4579,8 @@
   "license": "LGPL-3"
  },
  "l10n_sa_edi": {
-  "path": "/home/user/odoo/addons/l10n_sa_edi",
-  "core": true,
+  "path": "addons/l10n_sa_edi",
+  "core": false,
   "depends": [
    "account_edi",
    "account_edi_ubl_cii",
@@ -4596,8 +4596,8 @@
   "license": "LGPL-3"
  },
  "l10n_sa_edi_pos": {
-  "path": "/home/user/odoo/addons/l10n_sa_edi_pos",
-  "core": true,
+  "path": "addons/l10n_sa_edi_pos",
+  "core": false,
   "depends": [
    "l10n_sa_pos",
    "l10n_sa_edi"
@@ -4610,8 +4610,8 @@
   "license": "LGPL-3"
  },
  "l10n_sa_pos": {
-  "path": "/home/user/odoo/addons/l10n_sa_pos",
-  "core": true,
+  "path": "addons/l10n_sa_pos",
+  "core": false,
   "depends": [
    "l10n_gcc_pos",
    "l10n_sa"
@@ -4624,8 +4624,8 @@
   "license": "LGPL-3"
  },
  "l10n_sa_withholding_tax": {
-  "path": "/home/user/odoo/addons/l10n_sa_withholding_tax",
-  "core": true,
+  "path": "addons/l10n_sa_withholding_tax",
+  "core": false,
   "depends": [
    "l10n_account_withholding_tax",
    "l10n_sa"
@@ -4640,8 +4640,8 @@
   "license": "LGPL-3"
  },
  "l10n_se": {
-  "path": "/home/user/odoo/addons/l10n_se",
-  "core": true,
+  "path": "addons/l10n_se",
+  "core": false,
   "depends": [
    "account",
    "base_vat",
@@ -4657,8 +4657,8 @@
   "license": "LGPL-3"
  },
  "l10n_sg": {
-  "path": "/home/user/odoo/addons/l10n_sg",
-  "core": true,
+  "path": "addons/l10n_sg",
+  "core": false,
   "depends": [
    "account_qr_code_emv",
    "account"
@@ -4673,8 +4673,8 @@
   "license": "LGPL-3"
  },
  "l10n_sg_ubl_pint": {
-  "path": "/home/user/odoo/addons/l10n_sg_ubl_pint",
-  "core": true,
+  "path": "addons/l10n_sg_ubl_pint",
+  "core": false,
   "depends": [
    "account_edi_ubl_cii"
   ],
@@ -4686,8 +4686,8 @@
   "license": "LGPL-3"
  },
  "l10n_si": {
-  "path": "/home/user/odoo/addons/l10n_si",
-  "core": true,
+  "path": "addons/l10n_si",
+  "core": false,
   "depends": [
    "account",
    "base_vat",
@@ -4703,8 +4703,8 @@
   "license": "LGPL-3"
  },
  "l10n_sk": {
-  "path": "/home/user/odoo/addons/l10n_sk",
-  "core": true,
+  "path": "addons/l10n_sk",
+  "core": false,
   "depends": [
    "base_iban",
    "base_vat",
@@ -4720,8 +4720,8 @@
   "license": "LGPL-3"
  },
  "l10n_sn": {
-  "path": "/home/user/odoo/addons/l10n_sn",
-  "core": true,
+  "path": "addons/l10n_sn",
+  "core": false,
   "depends": [
    "l10n_syscohada",
    "account"
@@ -4736,8 +4736,8 @@
   "license": "LGPL-3"
  },
  "l10n_syscohada": {
-  "path": "/home/user/odoo/addons/l10n_syscohada",
-  "core": true,
+  "path": "addons/l10n_syscohada",
+  "core": false,
   "depends": [
    "account"
   ],
@@ -4749,8 +4749,8 @@
   "license": "LGPL-3"
  },
  "l10n_td": {
-  "path": "/home/user/odoo/addons/l10n_td",
-  "core": true,
+  "path": "addons/l10n_td",
+  "core": false,
   "depends": [
    "l10n_syscohada",
    "account"
@@ -4765,8 +4765,8 @@
   "license": "LGPL-3"
  },
  "l10n_test_pos_qr_payment": {
-  "path": "/home/user/odoo/addons/l10n_test_pos_qr_payment",
-  "core": true,
+  "path": "addons/l10n_test_pos_qr_payment",
+  "core": false,
   "depends": [
    "point_of_sale",
    "account_qr_code_sepa",
@@ -4783,8 +4783,8 @@
   "license": "LGPL-3"
  },
  "l10n_tg": {
-  "path": "/home/user/odoo/addons/l10n_tg",
-  "core": true,
+  "path": "addons/l10n_tg",
+  "core": false,
   "depends": [
    "l10n_syscohada",
    "account"
@@ -4799,8 +4799,8 @@
   "license": "LGPL-3"
  },
  "l10n_th": {
-  "path": "/home/user/odoo/addons/l10n_th",
-  "core": true,
+  "path": "addons/l10n_th",
+  "core": false,
   "depends": [
    "account_qr_code_emv",
    "account"
@@ -4815,8 +4815,8 @@
   "license": "LGPL-3"
  },
  "l10n_tn": {
-  "path": "/home/user/odoo/addons/l10n_tn",
-  "core": true,
+  "path": "addons/l10n_tn",
+  "core": false,
   "depends": [
    "account"
   ],
@@ -4830,8 +4830,8 @@
   "license": "LGPL-3"
  },
  "l10n_tr": {
-  "path": "/home/user/odoo/addons/l10n_tr",
-  "core": true,
+  "path": "addons/l10n_tr",
+  "core": false,
   "depends": [
    "account"
   ],
@@ -4845,8 +4845,8 @@
   "license": "LGPL-3"
  },
  "l10n_tr_nilvera": {
-  "path": "/home/user/odoo/addons/l10n_tr_nilvera",
-  "core": true,
+  "path": "addons/l10n_tr_nilvera",
+  "core": false,
   "depends": [
    "l10n_tr",
    "account_edi_ubl_cii"
@@ -4859,8 +4859,8 @@
   "license": "LGPL-3"
  },
  "l10n_tr_nilvera_base_vat": {
-  "path": "/home/user/odoo/addons/l10n_tr_nilvera_base_vat",
-  "core": true,
+  "path": "addons/l10n_tr_nilvera_base_vat",
+  "core": false,
   "depends": [
    "l10n_tr_nilvera",
    "base_vat"
@@ -4873,8 +4873,8 @@
   "license": "LGPL-3"
  },
  "l10n_tr_nilvera_edispatch": {
-  "path": "/home/user/odoo/addons/l10n_tr_nilvera_edispatch",
-  "core": true,
+  "path": "addons/l10n_tr_nilvera_edispatch",
+  "core": false,
   "depends": [
    "l10n_tr_nilvera",
    "stock"
@@ -4887,8 +4887,8 @@
   "license": "LGPL-3"
  },
  "l10n_tr_nilvera_einvoice": {
-  "path": "/home/user/odoo/addons/l10n_tr_nilvera_einvoice",
-  "core": true,
+  "path": "addons/l10n_tr_nilvera_einvoice",
+  "core": false,
   "depends": [
    "l10n_tr_nilvera",
    "account_edi_ubl_cii"
@@ -4903,8 +4903,8 @@
   "license": "LGPL-3"
  },
  "l10n_tr_nilvera_einvoice_extended": {
-  "path": "/home/user/odoo/addons/l10n_tr_nilvera_einvoice_extended",
-  "core": true,
+  "path": "addons/l10n_tr_nilvera_einvoice_extended",
+  "core": false,
   "depends": [
    "l10n_tr_nilvera_einvoice",
    "contacts"
@@ -4919,8 +4919,8 @@
   "license": "LGPL-3"
  },
  "l10n_tw": {
-  "path": "/home/user/odoo/addons/l10n_tw",
-  "core": true,
+  "path": "addons/l10n_tw",
+  "core": false,
   "depends": [
    "account",
    "base_address_extended"
@@ -4935,8 +4935,8 @@
   "license": "LGPL-3"
  },
  "l10n_tw_edi_ecpay": {
-  "path": "/home/user/odoo/addons/l10n_tw_edi_ecpay",
-  "core": true,
+  "path": "addons/l10n_tw_edi_ecpay",
+  "core": false,
   "depends": [
    "l10n_tw",
    "base_vat"
@@ -4949,8 +4949,8 @@
   "license": "LGPL-3"
  },
  "l10n_tw_edi_ecpay_pos": {
-  "path": "/home/user/odoo/addons/l10n_tw_edi_ecpay_pos",
-  "core": true,
+  "path": "addons/l10n_tw_edi_ecpay_pos",
+  "core": false,
   "depends": [
    "point_of_sale",
    "l10n_tw_edi_ecpay"
@@ -4963,8 +4963,8 @@
   "license": "LGPL-3"
  },
  "l10n_tw_edi_ecpay_website_sale": {
-  "path": "/home/user/odoo/addons/l10n_tw_edi_ecpay_website_sale",
-  "core": true,
+  "path": "addons/l10n_tw_edi_ecpay_website_sale",
+  "core": false,
   "depends": [
    "website_sale",
    "l10n_tw_edi_ecpay"
@@ -4977,8 +4977,8 @@
   "license": "LGPL-3"
  },
  "l10n_tz_account": {
-  "path": "/home/user/odoo/addons/l10n_tz_account",
-  "core": true,
+  "path": "addons/l10n_tz_account",
+  "core": false,
   "depends": [
    "account"
   ],
@@ -4992,8 +4992,8 @@
   "license": "LGPL-3"
  },
  "l10n_ua": {
-  "path": "/home/user/odoo/addons/l10n_ua",
-  "core": true,
+  "path": "addons/l10n_ua",
+  "core": false,
   "depends": [
    "account"
   ],
@@ -5007,8 +5007,8 @@
   "license": "LGPL-3"
  },
  "l10n_ug": {
-  "path": "/home/user/odoo/addons/l10n_ug",
-  "core": true,
+  "path": "addons/l10n_ug",
+  "core": false,
   "depends": [
    "account"
   ],
@@ -5022,8 +5022,8 @@
   "license": "LGPL-3"
  },
  "l10n_uk": {
-  "path": "/home/user/odoo/addons/l10n_uk",
-  "core": true,
+  "path": "addons/l10n_uk",
+  "core": false,
   "depends": [
    "account",
    "base_iban",
@@ -5039,8 +5039,8 @@
   "license": "LGPL-3"
  },
  "l10n_us": {
-  "path": "/home/user/odoo/addons/l10n_us",
-  "core": true,
+  "path": "addons/l10n_us",
+  "core": false,
   "depends": [
    "base"
   ],
@@ -5052,8 +5052,8 @@
   "license": "LGPL-3"
  },
  "l10n_us_account": {
-  "path": "/home/user/odoo/addons/l10n_us_account",
-  "core": true,
+  "path": "addons/l10n_us_account",
+  "core": false,
   "depends": [
    "l10n_us",
    "account"
@@ -5068,8 +5068,8 @@
   "license": "LGPL-3"
  },
  "l10n_uy": {
-  "path": "/home/user/odoo/addons/l10n_uy",
-  "core": true,
+  "path": "addons/l10n_uy",
+  "core": false,
   "depends": [
    "account",
    "l10n_latam_invoice_document",
@@ -5085,8 +5085,8 @@
   "license": "LGPL-3"
  },
  "l10n_uy_pos": {
-  "path": "/home/user/odoo/addons/l10n_uy_pos",
-  "core": true,
+  "path": "addons/l10n_uy_pos",
+  "core": false,
   "depends": [
    "l10n_uy",
    "point_of_sale"
@@ -5099,8 +5099,8 @@
   "license": "LGPL-3"
  },
  "l10n_uz": {
-  "path": "/home/user/odoo/addons/l10n_uz",
-  "core": true,
+  "path": "addons/l10n_uz",
+  "core": false,
   "depends": [
    "account",
    "base_vat"
@@ -5113,8 +5113,8 @@
   "license": "LGPL-3"
  },
  "l10n_ve": {
-  "path": "/home/user/odoo/addons/l10n_ve",
-  "core": true,
+  "path": "addons/l10n_ve",
+  "core": false,
   "depends": [
    "account"
   ],
@@ -5128,8 +5128,8 @@
   "license": "LGPL-3"
  },
  "l10n_vn": {
-  "path": "/home/user/odoo/addons/l10n_vn",
-  "core": true,
+  "path": "addons/l10n_vn",
+  "core": false,
   "depends": [
    "account_qr_code_emv",
    "base_iban",
@@ -5145,8 +5145,8 @@
   "license": "LGPL-3"
  },
  "l10n_vn_edi_viettel": {
-  "path": "/home/user/odoo/addons/l10n_vn_edi_viettel",
-  "core": true,
+  "path": "addons/l10n_vn_edi_viettel",
+  "core": false,
   "depends": [
    "l10n_vn"
   ],
@@ -5158,8 +5158,8 @@
   "license": "LGPL-3"
  },
  "l10n_vn_edi_viettel_pos": {
-  "path": "/home/user/odoo/addons/l10n_vn_edi_viettel_pos",
-  "core": true,
+  "path": "addons/l10n_vn_edi_viettel_pos",
+  "core": false,
   "depends": [
    "l10n_vn_edi_viettel",
    "point_of_sale"
@@ -5172,8 +5172,8 @@
   "license": "LGPL-3"
  },
  "l10n_yt": {
-  "path": "/home/user/odoo/addons/l10n_yt",
-  "core": true,
+  "path": "addons/l10n_yt",
+  "core": false,
   "depends": [
    "l10n_fr_account",
    "account"
@@ -5188,8 +5188,8 @@
   "license": "LGPL-3"
  },
  "l10n_za": {
-  "path": "/home/user/odoo/addons/l10n_za",
-  "core": true,
+  "path": "addons/l10n_za",
+  "core": false,
   "depends": [
    "account",
    "base_vat"
@@ -5204,8 +5204,8 @@
   "license": "LGPL-3"
  },
  "l10n_zm_account": {
-  "path": "/home/user/odoo/addons/l10n_zm_account",
-  "core": true,
+  "path": "addons/l10n_zm_account",
+  "core": false,
   "depends": [
    "account"
   ],
@@ -5219,8 +5219,8 @@
   "license": "LGPL-3"
  },
  "link_tracker": {
-  "path": "/home/user/odoo/addons/link_tracker",
-  "core": true,
+  "path": "addons/link_tracker",
+  "core": false,
   "depends": [
    "utm",
    "mail"
@@ -5233,8 +5233,8 @@
   "license": "LGPL-3"
  },
  "loyalty": {
-  "path": "/home/user/odoo/addons/loyalty",
-  "core": true,
+  "path": "addons/loyalty",
+  "core": false,
   "depends": [
    "product",
    "portal",
@@ -5248,8 +5248,8 @@
   "license": "LGPL-3"
  },
  "lunch": {
-  "path": "/home/user/odoo/addons/lunch",
-  "core": true,
+  "path": "addons/lunch",
+  "core": false,
   "depends": [
    "mail"
   ],
@@ -5261,8 +5261,8 @@
   "license": "LGPL-3"
  },
  "mail": {
-  "path": "/home/user/odoo/addons/mail",
-  "core": true,
+  "path": "addons/mail",
+  "core": false,
   "depends": [
    "base",
    "base_setup",
@@ -5278,8 +5278,8 @@
   "license": "LGPL-3"
  },
  "mail_bot": {
-  "path": "/home/user/odoo/addons/mail_bot",
-  "core": true,
+  "path": "addons/mail_bot",
+  "core": false,
   "depends": [
    "mail"
   ],
@@ -5291,8 +5291,8 @@
   "license": "LGPL-3"
  },
  "mail_bot_hr": {
-  "path": "/home/user/odoo/addons/mail_bot_hr",
-  "core": true,
+  "path": "addons/mail_bot_hr",
+  "core": false,
   "depends": [
    "mail_bot",
    "hr"
@@ -5305,8 +5305,8 @@
   "license": "LGPL-3"
  },
  "mail_group": {
-  "path": "/home/user/odoo/addons/mail_group",
-  "core": true,
+  "path": "addons/mail_group",
+  "core": false,
   "depends": [
    "mail",
    "portal"
@@ -5319,8 +5319,8 @@
   "license": "LGPL-3"
  },
  "mail_plugin": {
-  "path": "/home/user/odoo/addons/mail_plugin",
-  "core": true,
+  "path": "addons/mail_plugin",
+  "core": false,
   "depends": [
    "web",
    "contacts",
@@ -5334,8 +5334,8 @@
   "license": "LGPL-3"
  },
  "maintenance": {
-  "path": "/home/user/odoo/addons/maintenance",
-  "core": true,
+  "path": "addons/maintenance",
+  "core": false,
   "depends": [
    "mail"
   ],
@@ -5347,8 +5347,8 @@
   "license": "LGPL-3"
  },
  "marketing_card": {
-  "path": "/home/user/odoo/addons/marketing_card",
-  "core": true,
+  "path": "addons/marketing_card",
+  "core": false,
   "depends": [
    "link_tracker",
    "mass_mailing",
@@ -5362,8 +5362,8 @@
   "license": "LGPL-3"
  },
  "mass_mailing": {
-  "path": "/home/user/odoo/addons/mass_mailing",
-  "core": true,
+  "path": "addons/mass_mailing",
+  "core": false,
   "depends": [
    "contacts",
    "mail",
@@ -5382,8 +5382,8 @@
   "license": "LGPL-3"
  },
  "mass_mailing_crm": {
-  "path": "/home/user/odoo/addons/mass_mailing_crm",
-  "core": true,
+  "path": "addons/mass_mailing_crm",
+  "core": false,
   "depends": [
    "crm",
    "mass_mailing"
@@ -5396,8 +5396,8 @@
   "license": "LGPL-3"
  },
  "mass_mailing_crm_sms": {
-  "path": "/home/user/odoo/addons/mass_mailing_crm_sms",
-  "core": true,
+  "path": "addons/mass_mailing_crm_sms",
+  "core": false,
   "depends": [
    "mass_mailing_crm",
    "mass_mailing_sms"
@@ -5410,8 +5410,8 @@
   "license": "LGPL-3"
  },
  "mass_mailing_event": {
-  "path": "/home/user/odoo/addons/mass_mailing_event",
-  "core": true,
+  "path": "addons/mass_mailing_event",
+  "core": false,
   "depends": [
    "event",
    "mass_mailing"
@@ -5424,8 +5424,8 @@
   "license": "LGPL-3"
  },
  "mass_mailing_event_sms": {
-  "path": "/home/user/odoo/addons/mass_mailing_event_sms",
-  "core": true,
+  "path": "addons/mass_mailing_event_sms",
+  "core": false,
   "depends": [
    "event",
    "mass_mailing",
@@ -5441,8 +5441,8 @@
   "license": "LGPL-3"
  },
  "mass_mailing_event_track": {
-  "path": "/home/user/odoo/addons/mass_mailing_event_track",
-  "core": true,
+  "path": "addons/mass_mailing_event_track",
+  "core": false,
   "depends": [
    "website_event_track",
    "mass_mailing"
@@ -5455,8 +5455,8 @@
   "license": "LGPL-3"
  },
  "mass_mailing_event_track_sms": {
-  "path": "/home/user/odoo/addons/mass_mailing_event_track_sms",
-  "core": true,
+  "path": "addons/mass_mailing_event_track_sms",
+  "core": false,
   "depends": [
    "mass_mailing",
    "mass_mailing_sms",
@@ -5471,8 +5471,8 @@
   "license": "LGPL-3"
  },
  "mass_mailing_sale": {
-  "path": "/home/user/odoo/addons/mass_mailing_sale",
-  "core": true,
+  "path": "addons/mass_mailing_sale",
+  "core": false,
   "depends": [
    "sale",
    "mass_mailing"
@@ -5485,8 +5485,8 @@
   "license": "LGPL-3"
  },
  "mass_mailing_sale_sms": {
-  "path": "/home/user/odoo/addons/mass_mailing_sale_sms",
-  "core": true,
+  "path": "addons/mass_mailing_sale_sms",
+  "core": false,
   "depends": [
    "mass_mailing_sale",
    "mass_mailing_sms"
@@ -5499,8 +5499,8 @@
   "license": "LGPL-3"
  },
  "mass_mailing_slides": {
-  "path": "/home/user/odoo/addons/mass_mailing_slides",
-  "core": true,
+  "path": "addons/mass_mailing_slides",
+  "core": false,
   "depends": [
    "website_slides",
    "mass_mailing"
@@ -5513,8 +5513,8 @@
   "license": "LGPL-3"
  },
  "mass_mailing_sms": {
-  "path": "/home/user/odoo/addons/mass_mailing_sms",
-  "core": true,
+  "path": "addons/mass_mailing_sms",
+  "core": false,
   "depends": [
    "portal",
    "mass_mailing",
@@ -5528,8 +5528,8 @@
   "license": "LGPL-3"
  },
  "mass_mailing_themes": {
-  "path": "/home/user/odoo/addons/mass_mailing_themes",
-  "core": true,
+  "path": "addons/mass_mailing_themes",
+  "core": false,
   "depends": [
    "mass_mailing"
   ],
@@ -5541,8 +5541,8 @@
   "license": "LGPL-3"
  },
  "microsoft_account": {
-  "path": "/home/user/odoo/addons/microsoft_account",
-  "core": true,
+  "path": "addons/microsoft_account",
+  "core": false,
   "depends": [
    "base_setup"
   ],
@@ -5554,8 +5554,8 @@
   "license": "LGPL-3"
  },
  "microsoft_calendar": {
-  "path": "/home/user/odoo/addons/microsoft_calendar",
-  "core": true,
+  "path": "addons/microsoft_calendar",
+  "core": false,
   "depends": [
    "microsoft_account",
    "calendar"
@@ -5568,8 +5568,8 @@
   "license": "LGPL-3"
  },
  "microsoft_outlook": {
-  "path": "/home/user/odoo/addons/microsoft_outlook",
-  "core": true,
+  "path": "addons/microsoft_outlook",
+  "core": false,
   "depends": [
    "mail"
   ],
@@ -5581,8 +5581,8 @@
   "license": "LGPL-3"
  },
  "mrp": {
-  "path": "/home/user/odoo/addons/mrp",
-  "core": true,
+  "path": "addons/mrp",
+  "core": false,
   "depends": [
    "product",
    "stock",
@@ -5596,8 +5596,8 @@
   "license": "LGPL-3"
  },
  "mrp_account": {
-  "path": "/home/user/odoo/addons/mrp_account",
-  "core": true,
+  "path": "addons/mrp_account",
+  "core": false,
   "depends": [
    "mrp",
    "stock_account"
@@ -5610,8 +5610,8 @@
   "license": "LGPL-3"
  },
  "mrp_landed_costs": {
-  "path": "/home/user/odoo/addons/mrp_landed_costs",
-  "core": true,
+  "path": "addons/mrp_landed_costs",
+  "core": false,
   "depends": [
    "stock_landed_costs",
    "mrp"
@@ -5624,8 +5624,8 @@
   "license": "LGPL-3"
  },
  "mrp_product_expiry": {
-  "path": "/home/user/odoo/addons/mrp_product_expiry",
-  "core": true,
+  "path": "addons/mrp_product_expiry",
+  "core": false,
   "depends": [
    "mrp",
    "product_expiry"
@@ -5638,8 +5638,8 @@
   "license": "LGPL-3"
  },
  "mrp_repair": {
-  "path": "/home/user/odoo/addons/mrp_repair",
-  "core": true,
+  "path": "addons/mrp_repair",
+  "core": false,
   "depends": [
    "repair",
    "mrp"
@@ -5652,8 +5652,8 @@
   "license": "LGPL-3"
  },
  "mrp_subcontracting": {
-  "path": "/home/user/odoo/addons/mrp_subcontracting",
-  "core": true,
+  "path": "addons/mrp_subcontracting",
+  "core": false,
   "depends": [
    "mrp"
   ],
@@ -5665,8 +5665,8 @@
   "license": "LGPL-3"
  },
  "mrp_subcontracting_account": {
-  "path": "/home/user/odoo/addons/mrp_subcontracting_account",
-  "core": true,
+  "path": "addons/mrp_subcontracting_account",
+  "core": false,
   "depends": [
    "mrp_subcontracting",
    "mrp_account"
@@ -5679,8 +5679,8 @@
   "license": "LGPL-3"
  },
  "mrp_subcontracting_dropshipping": {
-  "path": "/home/user/odoo/addons/mrp_subcontracting_dropshipping",
-  "core": true,
+  "path": "addons/mrp_subcontracting_dropshipping",
+  "core": false,
   "depends": [
    "mrp_subcontracting",
    "stock_dropshipping"
@@ -5693,8 +5693,8 @@
   "license": "LGPL-3"
  },
  "mrp_subcontracting_landed_costs": {
-  "path": "/home/user/odoo/addons/mrp_subcontracting_landed_costs",
-  "core": true,
+  "path": "addons/mrp_subcontracting_landed_costs",
+  "core": false,
   "depends": [
    "stock_landed_costs",
    "mrp_subcontracting"
@@ -5707,8 +5707,8 @@
   "license": "LGPL-3"
  },
  "mrp_subcontracting_purchase": {
-  "path": "/home/user/odoo/addons/mrp_subcontracting_purchase",
-  "core": true,
+  "path": "addons/mrp_subcontracting_purchase",
+  "core": false,
   "depends": [
    "mrp_subcontracting",
    "purchase_mrp"
@@ -5721,8 +5721,8 @@
   "license": "LGPL-3"
  },
  "mrp_subcontracting_repair": {
-  "path": "/home/user/odoo/addons/mrp_subcontracting_repair",
-  "core": true,
+  "path": "addons/mrp_subcontracting_repair",
+  "core": false,
   "depends": [
    "mrp_subcontracting",
    "repair"
@@ -5735,8 +5735,8 @@
   "license": "LGPL-3"
  },
  "onboarding": {
-  "path": "/home/user/odoo/addons/onboarding",
-  "core": true,
+  "path": "addons/onboarding",
+  "core": false,
   "depends": [
    "web"
   ],
@@ -5748,8 +5748,8 @@
   "license": "LGPL-3"
  },
  "partner_autocomplete": {
-  "path": "/home/user/odoo/addons/partner_autocomplete",
-  "core": true,
+  "path": "addons/partner_autocomplete",
+  "core": false,
   "depends": [
    "iap_mail"
   ],
@@ -5761,8 +5761,8 @@
   "license": "LGPL-3"
  },
  "partnership": {
-  "path": "/home/user/odoo/addons/partnership",
-  "core": true,
+  "path": "addons/partnership",
+  "core": false,
   "depends": [
    "crm",
    "sale"
@@ -5775,8 +5775,8 @@
   "license": "LGPL-3"
  },
  "payment": {
-  "path": "/home/user/odoo/addons/payment",
-  "core": true,
+  "path": "addons/payment",
+  "core": false,
   "depends": [
    "onboarding",
    "portal"
@@ -5789,8 +5789,8 @@
   "license": "LGPL-3"
  },
  "payment_adyen": {
-  "path": "/home/user/odoo/addons/payment_adyen",
-  "core": true,
+  "path": "addons/payment_adyen",
+  "core": false,
   "depends": [
    "payment"
   ],
@@ -5802,8 +5802,8 @@
   "license": "LGPL-3"
  },
  "payment_aps": {
-  "path": "/home/user/odoo/addons/payment_aps",
-  "core": true,
+  "path": "addons/payment_aps",
+  "core": false,
   "depends": [
    "payment"
   ],
@@ -5815,8 +5815,8 @@
   "license": "LGPL-3"
  },
  "payment_asiapay": {
-  "path": "/home/user/odoo/addons/payment_asiapay",
-  "core": true,
+  "path": "addons/payment_asiapay",
+  "core": false,
   "depends": [
    "payment"
   ],
@@ -5828,8 +5828,8 @@
   "license": "LGPL-3"
  },
  "payment_authorize": {
-  "path": "/home/user/odoo/addons/payment_authorize",
-  "core": true,
+  "path": "addons/payment_authorize",
+  "core": false,
   "depends": [
    "payment"
   ],
@@ -5841,8 +5841,8 @@
   "license": "LGPL-3"
  },
  "payment_buckaroo": {
-  "path": "/home/user/odoo/addons/payment_buckaroo",
-  "core": true,
+  "path": "addons/payment_buckaroo",
+  "core": false,
   "depends": [
    "payment"
   ],
@@ -5854,8 +5854,8 @@
   "license": "LGPL-3"
  },
  "payment_custom": {
-  "path": "/home/user/odoo/addons/payment_custom",
-  "core": true,
+  "path": "addons/payment_custom",
+  "core": false,
   "depends": [
    "payment"
   ],
@@ -5867,8 +5867,8 @@
   "license": "LGPL-3"
  },
  "payment_demo": {
-  "path": "/home/user/odoo/addons/payment_demo",
-  "core": true,
+  "path": "addons/payment_demo",
+  "core": false,
   "depends": [
    "payment"
   ],
@@ -5880,8 +5880,8 @@
   "license": "LGPL-3"
  },
  "payment_dpo": {
-  "path": "/home/user/odoo/addons/payment_dpo",
-  "core": true,
+  "path": "addons/payment_dpo",
+  "core": false,
   "depends": [
    "payment"
   ],
@@ -5893,8 +5893,8 @@
   "license": "LGPL-3"
  },
  "payment_ecpay": {
-  "path": "/home/user/odoo/addons/payment_ecpay",
-  "core": true,
+  "path": "addons/payment_ecpay",
+  "core": false,
   "depends": [
    "payment"
   ],
@@ -5906,8 +5906,8 @@
   "license": "LGPL-3"
  },
  "payment_flutterwave": {
-  "path": "/home/user/odoo/addons/payment_flutterwave",
-  "core": true,
+  "path": "addons/payment_flutterwave",
+  "core": false,
   "depends": [
    "payment"
   ],
@@ -5919,8 +5919,8 @@
   "license": "LGPL-3"
  },
  "payment_iyzico": {
-  "path": "/home/user/odoo/addons/payment_iyzico",
-  "core": true,
+  "path": "addons/payment_iyzico",
+  "core": false,
   "depends": [
    "payment"
   ],
@@ -5932,8 +5932,8 @@
   "license": "LGPL-3"
  },
  "payment_mercado_pago": {
-  "path": "/home/user/odoo/addons/payment_mercado_pago",
-  "core": true,
+  "path": "addons/payment_mercado_pago",
+  "core": false,
   "depends": [
    "payment"
   ],
@@ -5945,8 +5945,8 @@
   "license": "LGPL-3"
  },
  "payment_mollie": {
-  "path": "/home/user/odoo/addons/payment_mollie",
-  "core": true,
+  "path": "addons/payment_mollie",
+  "core": false,
   "depends": [
    "payment"
   ],
@@ -5958,8 +5958,8 @@
   "license": "LGPL-3"
  },
  "payment_nuvei": {
-  "path": "/home/user/odoo/addons/payment_nuvei",
-  "core": true,
+  "path": "addons/payment_nuvei",
+  "core": false,
   "depends": [
    "payment"
   ],
@@ -5971,8 +5971,8 @@
   "license": "LGPL-3"
  },
  "payment_paymob": {
-  "path": "/home/user/odoo/addons/payment_paymob",
-  "core": true,
+  "path": "addons/payment_paymob",
+  "core": false,
   "depends": [
    "payment"
   ],
@@ -5984,8 +5984,8 @@
   "license": "LGPL-3"
  },
  "payment_paypal": {
-  "path": "/home/user/odoo/addons/payment_paypal",
-  "core": true,
+  "path": "addons/payment_paypal",
+  "core": false,
   "depends": [
    "payment"
   ],
@@ -5997,8 +5997,8 @@
   "license": "LGPL-3"
  },
  "payment_payu": {
-  "path": "/home/user/odoo/addons/payment_payu",
-  "core": true,
+  "path": "addons/payment_payu",
+  "core": false,
   "depends": [
    "payment"
   ],
@@ -6010,8 +6010,8 @@
   "license": "LGPL-3"
  },
  "payment_razorpay": {
-  "path": "/home/user/odoo/addons/payment_razorpay",
-  "core": true,
+  "path": "addons/payment_razorpay",
+  "core": false,
   "depends": [
    "payment"
   ],
@@ -6023,8 +6023,8 @@
   "license": "LGPL-3"
  },
  "payment_redsys": {
-  "path": "/home/user/odoo/addons/payment_redsys",
-  "core": true,
+  "path": "addons/payment_redsys",
+  "core": false,
   "depends": [
    "payment"
   ],
@@ -6036,8 +6036,8 @@
   "license": "LGPL-3"
  },
  "payment_stripe": {
-  "path": "/home/user/odoo/addons/payment_stripe",
-  "core": true,
+  "path": "addons/payment_stripe",
+  "core": false,
   "depends": [
    "payment"
   ],
@@ -6049,8 +6049,8 @@
   "license": "LGPL-3"
  },
  "payment_toss_payments": {
-  "path": "/home/user/odoo/addons/payment_toss_payments",
-  "core": true,
+  "path": "addons/payment_toss_payments",
+  "core": false,
   "depends": [
    "payment"
   ],
@@ -6062,8 +6062,8 @@
   "license": "LGPL-3"
  },
  "payment_worldline": {
-  "path": "/home/user/odoo/addons/payment_worldline",
-  "core": true,
+  "path": "addons/payment_worldline",
+  "core": false,
   "depends": [
    "payment"
   ],
@@ -6075,8 +6075,8 @@
   "license": "LGPL-3"
  },
  "payment_xendit": {
-  "path": "/home/user/odoo/addons/payment_xendit",
-  "core": true,
+  "path": "addons/payment_xendit",
+  "core": false,
   "depends": [
    "payment"
   ],
@@ -6088,8 +6088,8 @@
   "license": "LGPL-3"
  },
  "phone_validation": {
-  "path": "/home/user/odoo/addons/phone_validation",
-  "core": true,
+  "path": "addons/phone_validation",
+  "core": false,
   "depends": [
    "base",
    "mail"
@@ -6102,8 +6102,8 @@
   "license": "LGPL-3"
  },
  "point_of_sale": {
-  "path": "/home/user/odoo/addons/point_of_sale",
-  "core": true,
+  "path": "addons/point_of_sale",
+  "core": false,
   "depends": [
    "resource",
    "stock_account",
@@ -6123,8 +6123,8 @@
   "license": "LGPL-3"
  },
  "portal": {
-  "path": "/home/user/odoo/addons/portal",
-  "core": true,
+  "path": "addons/portal",
+  "core": false,
   "depends": [
    "web",
    "html_editor",
@@ -6140,8 +6140,8 @@
   "license": "LGPL-3"
  },
  "portal_rating": {
-  "path": "/home/user/odoo/addons/portal_rating",
-  "core": true,
+  "path": "addons/portal_rating",
+  "core": false,
   "depends": [
    "portal",
    "rating"
@@ -6154,8 +6154,8 @@
   "license": "LGPL-3"
  },
  "pos_account_tax_python": {
-  "path": "/home/user/odoo/addons/pos_account_tax_python",
-  "core": true,
+  "path": "addons/pos_account_tax_python",
+  "core": false,
   "depends": [
    "account_tax_python",
    "point_of_sale"
@@ -6168,8 +6168,8 @@
   "license": "LGPL-3"
  },
  "pos_adyen": {
-  "path": "/home/user/odoo/addons/pos_adyen",
-  "core": true,
+  "path": "addons/pos_adyen",
+  "core": false,
   "depends": [
    "point_of_sale"
   ],
@@ -6181,8 +6181,8 @@
   "license": "LGPL-3"
  },
  "pos_cashdro": {
-  "path": "/home/user/odoo/addons/pos_cashdro",
-  "core": true,
+  "path": "addons/pos_cashdro",
+  "core": false,
   "depends": [
    "point_of_sale"
   ],
@@ -6194,8 +6194,8 @@
   "license": "LGPL-3"
  },
  "pos_cashmatic": {
-  "path": "/home/user/odoo/addons/pos_cashmatic",
-  "core": true,
+  "path": "addons/pos_cashmatic",
+  "core": false,
   "depends": [
    "point_of_sale"
   ],
@@ -6207,8 +6207,8 @@
   "license": "LGPL-3"
  },
  "pos_discount": {
-  "path": "/home/user/odoo/addons/pos_discount",
-  "core": true,
+  "path": "addons/pos_discount",
+  "core": false,
   "depends": [
    "point_of_sale"
   ],
@@ -6220,8 +6220,8 @@
   "license": "LGPL-3"
  },
  "pos_dpopay": {
-  "path": "/home/user/odoo/addons/pos_dpopay",
-  "core": true,
+  "path": "addons/pos_dpopay",
+  "core": false,
   "depends": [
    "point_of_sale"
   ],
@@ -6233,8 +6233,8 @@
   "license": "LGPL-3"
  },
  "pos_edi_ubl": {
-  "path": "/home/user/odoo/addons/pos_edi_ubl",
-  "core": true,
+  "path": "addons/pos_edi_ubl",
+  "core": false,
   "depends": [
    "point_of_sale",
    "account_edi_ubl_cii"
@@ -6247,8 +6247,8 @@
   "license": "LGPL-3"
  },
  "pos_event": {
-  "path": "/home/user/odoo/addons/pos_event",
-  "core": true,
+  "path": "addons/pos_event",
+  "core": false,
   "depends": [
    "point_of_sale",
    "event_product"
@@ -6261,8 +6261,8 @@
   "license": "LGPL-3"
  },
  "pos_event_sale": {
-  "path": "/home/user/odoo/addons/pos_event_sale",
-  "core": true,
+  "path": "addons/pos_event_sale",
+  "core": false,
   "depends": [
    "pos_event",
    "pos_sale"
@@ -6275,8 +6275,8 @@
   "license": "LGPL-3"
  },
  "pos_glory_cash": {
-  "path": "/home/user/odoo/addons/pos_glory_cash",
-  "core": true,
+  "path": "addons/pos_glory_cash",
+  "core": false,
   "depends": [
    "point_of_sale"
   ],
@@ -6288,8 +6288,8 @@
   "license": "LGPL-3"
  },
  "pos_hr": {
-  "path": "/home/user/odoo/addons/pos_hr",
-  "core": true,
+  "path": "addons/pos_hr",
+  "core": false,
   "depends": [
    "point_of_sale",
    "hr"
@@ -6302,8 +6302,8 @@
   "license": "LGPL-3"
  },
  "pos_hr_restaurant": {
-  "path": "/home/user/odoo/addons/pos_hr_restaurant",
-  "core": true,
+  "path": "addons/pos_hr_restaurant",
+  "core": false,
   "depends": [
    "pos_hr",
    "pos_restaurant"
@@ -6316,8 +6316,8 @@
   "license": "LGPL-3"
  },
  "pos_imin": {
-  "path": "/home/user/odoo/addons/pos_imin",
-  "core": true,
+  "path": "addons/pos_imin",
+  "core": false,
   "depends": [
    "point_of_sale"
   ],
@@ -6329,8 +6329,8 @@
   "license": "LGPL-3"
  },
  "pos_loyalty": {
-  "path": "/home/user/odoo/addons/pos_loyalty",
-  "core": true,
+  "path": "addons/pos_loyalty",
+  "core": false,
   "depends": [
    "loyalty",
    "point_of_sale"
@@ -6343,8 +6343,8 @@
   "license": "LGPL-3"
  },
  "pos_mercado_pago": {
-  "path": "/home/user/odoo/addons/pos_mercado_pago",
-  "core": true,
+  "path": "addons/pos_mercado_pago",
+  "core": false,
   "depends": [
    "point_of_sale"
   ],
@@ -6356,8 +6356,8 @@
   "license": "LGPL-3"
  },
  "pos_mollie": {
-  "path": "/home/user/odoo/addons/pos_mollie",
-  "core": true,
+  "path": "addons/pos_mollie",
+  "core": false,
   "depends": [
    "point_of_sale",
    "payment_mollie"
@@ -6370,8 +6370,8 @@
   "license": "LGPL-3"
  },
  "pos_mrp": {
-  "path": "/home/user/odoo/addons/pos_mrp",
-  "core": true,
+  "path": "addons/pos_mrp",
+  "core": false,
   "depends": [
    "point_of_sale",
    "mrp"
@@ -6384,8 +6384,8 @@
   "license": "LGPL-3"
  },
  "pos_online_payment": {
-  "path": "/home/user/odoo/addons/pos_online_payment",
-  "core": true,
+  "path": "addons/pos_online_payment",
+  "core": false,
   "depends": [
    "point_of_sale",
    "account_payment"
@@ -6398,8 +6398,8 @@
   "license": "LGPL-3"
  },
  "pos_online_payment_self_order": {
-  "path": "/home/user/odoo/addons/pos_online_payment_self_order",
-  "core": true,
+  "path": "addons/pos_online_payment_self_order",
+  "core": false,
   "depends": [
    "pos_online_payment",
    "pos_self_order"
@@ -6412,8 +6412,8 @@
   "license": "LGPL-3"
  },
  "pos_pine_labs": {
-  "path": "/home/user/odoo/addons/pos_pine_labs",
-  "core": true,
+  "path": "addons/pos_pine_labs",
+  "core": false,
   "depends": [
    "point_of_sale"
   ],
@@ -6425,8 +6425,8 @@
   "license": "LGPL-3"
  },
  "pos_qfpay": {
-  "path": "/home/user/odoo/addons/pos_qfpay",
-  "core": true,
+  "path": "addons/pos_qfpay",
+  "core": false,
   "depends": [
    "point_of_sale"
   ],
@@ -6438,8 +6438,8 @@
   "license": "LGPL-3"
  },
  "pos_razorpay": {
-  "path": "/home/user/odoo/addons/pos_razorpay",
-  "core": true,
+  "path": "addons/pos_razorpay",
+  "core": false,
   "depends": [
    "point_of_sale"
   ],
@@ -6451,8 +6451,8 @@
   "license": "LGPL-3"
  },
  "pos_repair": {
-  "path": "/home/user/odoo/addons/pos_repair",
-  "core": true,
+  "path": "addons/pos_repair",
+  "core": false,
   "depends": [
    "point_of_sale",
    "repair"
@@ -6465,8 +6465,8 @@
   "license": "LGPL-3"
  },
  "pos_restaurant": {
-  "path": "/home/user/odoo/addons/pos_restaurant",
-  "core": true,
+  "path": "addons/pos_restaurant",
+  "core": false,
   "depends": [
    "point_of_sale"
   ],
@@ -6478,8 +6478,8 @@
   "license": "LGPL-3"
  },
  "pos_restaurant_adyen": {
-  "path": "/home/user/odoo/addons/pos_restaurant_adyen",
-  "core": true,
+  "path": "addons/pos_restaurant_adyen",
+  "core": false,
   "depends": [
    "pos_adyen",
    "pos_restaurant",
@@ -6493,8 +6493,8 @@
   "license": "LGPL-3"
  },
  "pos_restaurant_loyalty": {
-  "path": "/home/user/odoo/addons/pos_restaurant_loyalty",
-  "core": true,
+  "path": "addons/pos_restaurant_loyalty",
+  "core": false,
   "depends": [
    "pos_restaurant",
    "pos_loyalty"
@@ -6507,8 +6507,8 @@
   "license": "LGPL-3"
  },
  "pos_restaurant_stripe": {
-  "path": "/home/user/odoo/addons/pos_restaurant_stripe",
-  "core": true,
+  "path": "addons/pos_restaurant_stripe",
+  "core": false,
   "depends": [
    "pos_stripe",
    "pos_restaurant",
@@ -6522,8 +6522,8 @@
   "license": "LGPL-3"
  },
  "pos_safaricom": {
-  "path": "/home/user/odoo/addons/pos_safaricom",
-  "core": true,
+  "path": "addons/pos_safaricom",
+  "core": false,
   "depends": [
    "point_of_sale"
   ],
@@ -6535,8 +6535,8 @@
   "license": "LGPL-3"
  },
  "pos_sale": {
-  "path": "/home/user/odoo/addons/pos_sale",
-  "core": true,
+  "path": "addons/pos_sale",
+  "core": false,
   "depends": [
    "point_of_sale",
    "sale_management"
@@ -6549,8 +6549,8 @@
   "license": "LGPL-3"
  },
  "pos_sale_loyalty": {
-  "path": "/home/user/odoo/addons/pos_sale_loyalty",
-  "core": true,
+  "path": "addons/pos_sale_loyalty",
+  "core": false,
   "depends": [
    "pos_sale",
    "pos_loyalty"
@@ -6563,8 +6563,8 @@
   "license": "LGPL-3"
  },
  "pos_sale_margin": {
-  "path": "/home/user/odoo/addons/pos_sale_margin",
-  "core": true,
+  "path": "addons/pos_sale_margin",
+  "core": false,
   "depends": [
    "pos_sale",
    "sale_margin"
@@ -6577,8 +6577,8 @@
   "license": "LGPL-3"
  },
  "pos_self_order": {
-  "path": "/home/user/odoo/addons/pos_self_order",
-  "core": true,
+  "path": "addons/pos_self_order",
+  "core": false,
   "depends": [
    "pos_restaurant",
    "http_routing",
@@ -6594,8 +6594,8 @@
   "license": "LGPL-3"
  },
  "pos_self_order_adyen": {
-  "path": "/home/user/odoo/addons/pos_self_order_adyen",
-  "core": true,
+  "path": "addons/pos_self_order_adyen",
+  "core": false,
   "depends": [
    "pos_adyen",
    "pos_self_order"
@@ -6608,8 +6608,8 @@
   "license": "LGPL-3"
  },
  "pos_self_order_pine_labs": {
-  "path": "/home/user/odoo/addons/pos_self_order_pine_labs",
-  "core": true,
+  "path": "addons/pos_self_order_pine_labs",
+  "core": false,
   "depends": [
    "pos_pine_labs",
    "pos_self_order"
@@ -6622,8 +6622,8 @@
   "license": "LGPL-3"
  },
  "pos_self_order_qfpay": {
-  "path": "/home/user/odoo/addons/pos_self_order_qfpay",
-  "core": true,
+  "path": "addons/pos_self_order_qfpay",
+  "core": false,
   "depends": [
    "pos_qfpay",
    "pos_self_order"
@@ -6636,8 +6636,8 @@
   "license": "LGPL-3"
  },
  "pos_self_order_razorpay": {
-  "path": "/home/user/odoo/addons/pos_self_order_razorpay",
-  "core": true,
+  "path": "addons/pos_self_order_razorpay",
+  "core": false,
   "depends": [
    "pos_razorpay",
    "pos_self_order"
@@ -6650,8 +6650,8 @@
   "license": "LGPL-3"
  },
  "pos_self_order_sale": {
-  "path": "/home/user/odoo/addons/pos_self_order_sale",
-  "core": true,
+  "path": "addons/pos_self_order_sale",
+  "core": false,
   "depends": [
    "pos_sale",
    "pos_self_order"
@@ -6664,8 +6664,8 @@
   "license": "LGPL-3"
  },
  "pos_self_order_stripe": {
-  "path": "/home/user/odoo/addons/pos_self_order_stripe",
-  "core": true,
+  "path": "addons/pos_self_order_stripe",
+  "core": false,
   "depends": [
    "pos_stripe",
    "pos_self_order"
@@ -6678,8 +6678,8 @@
   "license": "LGPL-3"
  },
  "pos_self_order_viva_com": {
-  "path": "/home/user/odoo/addons/pos_self_order_viva_com",
-  "core": true,
+  "path": "addons/pos_self_order_viva_com",
+  "core": false,
   "depends": [
    "pos_viva_com",
    "pos_self_order"
@@ -6692,8 +6692,8 @@
   "license": "LGPL-3"
  },
  "pos_sms": {
-  "path": "/home/user/odoo/addons/pos_sms",
-  "core": true,
+  "path": "addons/pos_sms",
+  "core": false,
   "depends": [
    "point_of_sale",
    "sms"
@@ -6706,8 +6706,8 @@
   "license": "LGPL-3"
  },
  "pos_stripe": {
-  "path": "/home/user/odoo/addons/pos_stripe",
-  "core": true,
+  "path": "addons/pos_stripe",
+  "core": false,
   "depends": [
    "point_of_sale",
    "payment_stripe"
@@ -6720,8 +6720,8 @@
   "license": "LGPL-3"
  },
  "pos_viva_com": {
-  "path": "/home/user/odoo/addons/pos_viva_com",
-  "core": true,
+  "path": "addons/pos_viva_com",
+  "core": false,
   "depends": [
    "point_of_sale"
   ],
@@ -6733,8 +6733,8 @@
   "license": "LGPL-3"
  },
  "privacy_lookup": {
-  "path": "/home/user/odoo/addons/privacy_lookup",
-  "core": true,
+  "path": "addons/privacy_lookup",
+  "core": false,
   "depends": [
    "mail"
   ],
@@ -6746,8 +6746,8 @@
   "license": "LGPL-3"
  },
  "product": {
-  "path": "/home/user/odoo/addons/product",
-  "core": true,
+  "path": "addons/product",
+  "core": false,
   "depends": [
    "base",
    "mail",
@@ -6761,8 +6761,8 @@
   "license": "LGPL-3"
  },
  "product_email_template": {
-  "path": "/home/user/odoo/addons/product_email_template",
-  "core": true,
+  "path": "addons/product_email_template",
+  "core": false,
   "depends": [
    "account"
   ],
@@ -6774,8 +6774,8 @@
   "license": "LGPL-3"
  },
  "product_expiry": {
-  "path": "/home/user/odoo/addons/product_expiry",
-  "core": true,
+  "path": "addons/product_expiry",
+  "core": false,
   "depends": [
    "stock"
   ],
@@ -6787,8 +6787,8 @@
   "license": "LGPL-3"
  },
  "product_margin": {
-  "path": "/home/user/odoo/addons/product_margin",
-  "core": true,
+  "path": "addons/product_margin",
+  "core": false,
   "depends": [
    "account"
   ],
@@ -6800,8 +6800,8 @@
   "license": "LGPL-3"
  },
  "product_matrix": {
-  "path": "/home/user/odoo/addons/product_matrix",
-  "core": true,
+  "path": "addons/product_matrix",
+  "core": false,
   "depends": [
    "account"
   ],
@@ -6813,8 +6813,8 @@
   "license": "LGPL-3"
  },
  "project": {
-  "path": "/home/user/odoo/addons/project",
-  "core": true,
+  "path": "addons/project",
+  "core": false,
   "depends": [
    "analytic",
    "base_setup",
@@ -6834,8 +6834,8 @@
   "license": "LGPL-3"
  },
  "project_account": {
-  "path": "/home/user/odoo/addons/project_account",
-  "core": true,
+  "path": "addons/project_account",
+  "core": false,
   "depends": [
    "account",
    "project"
@@ -6848,8 +6848,8 @@
   "license": "LGPL-3"
  },
  "project_hr_expense": {
-  "path": "/home/user/odoo/addons/project_hr_expense",
-  "core": true,
+  "path": "addons/project_hr_expense",
+  "core": false,
   "depends": [
    "project_account",
    "hr_expense"
@@ -6862,8 +6862,8 @@
   "license": "LGPL-3"
  },
  "project_hr_skills": {
-  "path": "/home/user/odoo/addons/project_hr_skills",
-  "core": true,
+  "path": "addons/project_hr_skills",
+  "core": false,
   "depends": [
    "project",
    "hr_skills"
@@ -6876,8 +6876,8 @@
   "license": "LGPL-3"
  },
  "project_mail_plugin": {
-  "path": "/home/user/odoo/addons/project_mail_plugin",
-  "core": true,
+  "path": "addons/project_mail_plugin",
+  "core": false,
   "depends": [
    "project",
    "mail_plugin"
@@ -6890,8 +6890,8 @@
   "license": "LGPL-3"
  },
  "project_mrp": {
-  "path": "/home/user/odoo/addons/project_mrp",
-  "core": true,
+  "path": "addons/project_mrp",
+  "core": false,
   "depends": [
    "mrp",
    "project"
@@ -6904,8 +6904,8 @@
   "license": "LGPL-3"
  },
  "project_mrp_account": {
-  "path": "/home/user/odoo/addons/project_mrp_account",
-  "core": true,
+  "path": "addons/project_mrp_account",
+  "core": false,
   "depends": [
    "mrp_account",
    "project_mrp"
@@ -6918,8 +6918,8 @@
   "license": "LGPL-3"
  },
  "project_mrp_sale": {
-  "path": "/home/user/odoo/addons/project_mrp_sale",
-  "core": true,
+  "path": "addons/project_mrp_sale",
+  "core": false,
   "depends": [
    "project_mrp",
    "sale_mrp",
@@ -6933,8 +6933,8 @@
   "license": "LGPL-3"
  },
  "project_mrp_stock_landed_costs": {
-  "path": "/home/user/odoo/addons/project_mrp_stock_landed_costs",
-  "core": true,
+  "path": "addons/project_mrp_stock_landed_costs",
+  "core": false,
   "depends": [
    "project_mrp_account",
    "mrp_landed_costs"
@@ -6947,8 +6947,8 @@
   "license": "LGPL-3"
  },
  "project_purchase": {
-  "path": "/home/user/odoo/addons/project_purchase",
-  "core": true,
+  "path": "addons/project_purchase",
+  "core": false,
   "depends": [
    "purchase",
    "project_account"
@@ -6961,8 +6961,8 @@
   "license": "LGPL-3"
  },
  "project_purchase_stock": {
-  "path": "/home/user/odoo/addons/project_purchase_stock",
-  "core": true,
+  "path": "addons/project_purchase_stock",
+  "core": false,
   "depends": [
    "project_purchase",
    "project_stock"
@@ -6975,8 +6975,8 @@
   "license": "LGPL-3"
  },
  "project_sale_expense": {
-  "path": "/home/user/odoo/addons/project_sale_expense",
-  "core": true,
+  "path": "addons/project_sale_expense",
+  "core": false,
   "depends": [
    "sale_project",
    "sale_expense",
@@ -6990,8 +6990,8 @@
   "license": "LGPL-3"
  },
  "project_sms": {
-  "path": "/home/user/odoo/addons/project_sms",
-  "core": true,
+  "path": "addons/project_sms",
+  "core": false,
   "depends": [
    "project",
    "sms"
@@ -7004,8 +7004,8 @@
   "license": "LGPL-3"
  },
  "project_stock": {
-  "path": "/home/user/odoo/addons/project_stock",
-  "core": true,
+  "path": "addons/project_stock",
+  "core": false,
   "depends": [
    "stock",
    "project"
@@ -7018,8 +7018,8 @@
   "license": "LGPL-3"
  },
  "project_stock_account": {
-  "path": "/home/user/odoo/addons/project_stock_account",
-  "core": true,
+  "path": "addons/project_stock_account",
+  "core": false,
   "depends": [
    "stock_account",
    "project_stock"
@@ -7032,8 +7032,8 @@
   "license": "LGPL-3"
  },
  "project_stock_landed_costs": {
-  "path": "/home/user/odoo/addons/project_stock_landed_costs",
-  "core": true,
+  "path": "addons/project_stock_landed_costs",
+  "core": false,
   "depends": [
    "project_stock_account",
    "stock_landed_costs"
@@ -7046,8 +7046,8 @@
   "license": "LGPL-3"
  },
  "project_timesheet_holidays": {
-  "path": "/home/user/odoo/addons/project_timesheet_holidays",
-  "core": true,
+  "path": "addons/project_timesheet_holidays",
+  "core": false,
   "depends": [
    "hr_timesheet",
    "hr_holidays"
@@ -7060,8 +7060,8 @@
   "license": "LGPL-3"
  },
  "project_todo": {
-  "path": "/home/user/odoo/addons/project_todo",
-  "core": true,
+  "path": "addons/project_todo",
+  "core": false,
   "depends": [
    "project"
   ],
@@ -7073,8 +7073,8 @@
   "license": "LGPL-3"
  },
  "purchase": {
-  "path": "/home/user/odoo/addons/purchase",
-  "core": true,
+  "path": "addons/purchase",
+  "core": false,
   "depends": [
    "account"
   ],
@@ -7086,8 +7086,8 @@
   "license": "LGPL-3"
  },
  "purchase_edi_ubl_bis3": {
-  "path": "/home/user/odoo/addons/purchase_edi_ubl_bis3",
-  "core": true,
+  "path": "addons/purchase_edi_ubl_bis3",
+  "core": false,
   "depends": [
    "purchase",
    "account_edi_ubl_cii"
@@ -7100,8 +7100,8 @@
   "license": "LGPL-3"
  },
  "purchase_mrp": {
-  "path": "/home/user/odoo/addons/purchase_mrp",
-  "core": true,
+  "path": "addons/purchase_mrp",
+  "core": false,
   "depends": [
    "mrp",
    "purchase_stock"
@@ -7114,8 +7114,8 @@
   "license": "LGPL-3"
  },
  "purchase_product_matrix": {
-  "path": "/home/user/odoo/addons/purchase_product_matrix",
-  "core": true,
+  "path": "addons/purchase_product_matrix",
+  "core": false,
   "depends": [
    "purchase",
    "product_matrix"
@@ -7128,8 +7128,8 @@
   "license": "LGPL-3"
  },
  "purchase_repair": {
-  "path": "/home/user/odoo/addons/purchase_repair",
-  "core": true,
+  "path": "addons/purchase_repair",
+  "core": false,
   "depends": [
    "repair",
    "purchase_stock"
@@ -7142,8 +7142,8 @@
   "license": "LGPL-3"
  },
  "purchase_requisition": {
-  "path": "/home/user/odoo/addons/purchase_requisition",
-  "core": true,
+  "path": "addons/purchase_requisition",
+  "core": false,
   "depends": [
    "purchase"
   ],
@@ -7155,8 +7155,8 @@
   "license": "LGPL-3"
  },
  "purchase_requisition_sale": {
-  "path": "/home/user/odoo/addons/purchase_requisition_sale",
-  "core": true,
+  "path": "addons/purchase_requisition_sale",
+  "core": false,
   "depends": [
    "purchase_requisition",
    "sale_purchase"
@@ -7169,8 +7169,8 @@
   "license": "LGPL-3"
  },
  "purchase_requisition_stock": {
-  "path": "/home/user/odoo/addons/purchase_requisition_stock",
-  "core": true,
+  "path": "addons/purchase_requisition_stock",
+  "core": false,
   "depends": [
    "purchase_requisition",
    "purchase_stock"
@@ -7183,8 +7183,8 @@
   "license": "LGPL-3"
  },
  "purchase_stock": {
-  "path": "/home/user/odoo/addons/purchase_stock",
-  "core": true,
+  "path": "addons/purchase_stock",
+  "core": false,
   "depends": [
    "stock_account",
    "purchase"
@@ -7197,8 +7197,8 @@
   "license": "LGPL-3"
  },
  "rating": {
-  "path": "/home/user/odoo/addons/rating",
-  "core": true,
+  "path": "addons/rating",
+  "core": false,
   "depends": [
    "mail"
   ],
@@ -7210,8 +7210,8 @@
   "license": "LGPL-3"
  },
  "repair": {
-  "path": "/home/user/odoo/addons/repair",
-  "core": true,
+  "path": "addons/repair",
+  "core": false,
   "depends": [
    "sale_stock",
    "sale_management"
@@ -7224,8 +7224,8 @@
   "license": "LGPL-3"
  },
  "resource": {
-  "path": "/home/user/odoo/addons/resource",
-  "core": true,
+  "path": "addons/resource",
+  "core": false,
   "depends": [
    "base",
    "web"
@@ -7238,8 +7238,8 @@
   "license": "LGPL-3"
  },
  "resource_mail": {
-  "path": "/home/user/odoo/addons/resource_mail",
-  "core": true,
+  "path": "addons/resource_mail",
+  "core": false,
   "depends": [
    "resource",
    "mail"
@@ -7252,8 +7252,8 @@
   "license": "LGPL-3"
  },
  "rpc": {
-  "path": "/home/user/odoo/addons/rpc",
-  "core": true,
+  "path": "addons/rpc",
+  "core": false,
   "depends": [
    "base"
   ],
@@ -7265,8 +7265,8 @@
   "license": "LGPL-3"
  },
  "sale": {
-  "path": "/home/user/odoo/addons/sale",
-  "core": true,
+  "path": "addons/sale",
+  "core": false,
   "depends": [
    "sales_team",
    "account_payment",
@@ -7280,8 +7280,8 @@
   "license": "LGPL-3"
  },
  "sale_crm": {
-  "path": "/home/user/odoo/addons/sale_crm",
-  "core": true,
+  "path": "addons/sale_crm",
+  "core": false,
   "depends": [
    "sale",
    "crm"
@@ -7294,8 +7294,8 @@
   "license": "LGPL-3"
  },
  "sale_edi_ubl": {
-  "path": "/home/user/odoo/addons/sale_edi_ubl",
-  "core": true,
+  "path": "addons/sale_edi_ubl",
+  "core": false,
   "depends": [
    "sale",
    "account_edi_ubl_cii"
@@ -7308,8 +7308,8 @@
   "license": "LGPL-3"
  },
  "sale_expense": {
-  "path": "/home/user/odoo/addons/sale_expense",
-  "core": true,
+  "path": "addons/sale_expense",
+  "core": false,
   "depends": [
    "sale_management",
    "hr_expense"
@@ -7322,8 +7322,8 @@
   "license": "LGPL-3"
  },
  "sale_expense_margin": {
-  "path": "/home/user/odoo/addons/sale_expense_margin",
-  "core": true,
+  "path": "addons/sale_expense_margin",
+  "core": false,
   "depends": [
    "sale_expense",
    "sale_margin"
@@ -7336,8 +7336,8 @@
   "license": "LGPL-3"
  },
  "sale_gelato": {
-  "path": "/home/user/odoo/addons/sale_gelato",
-  "core": true,
+  "path": "addons/sale_gelato",
+  "core": false,
   "depends": [
    "sale",
    "delivery"
@@ -7350,8 +7350,8 @@
   "license": "LGPL-3"
  },
  "sale_gelato_stock": {
-  "path": "/home/user/odoo/addons/sale_gelato_stock",
-  "core": true,
+  "path": "addons/sale_gelato_stock",
+  "core": false,
   "depends": [
    "sale_gelato",
    "sale_stock"
@@ -7364,8 +7364,8 @@
   "license": "LGPL-3"
  },
  "sale_loyalty": {
-  "path": "/home/user/odoo/addons/sale_loyalty",
-  "core": true,
+  "path": "addons/sale_loyalty",
+  "core": false,
   "depends": [
    "sale",
    "loyalty"
@@ -7378,8 +7378,8 @@
   "license": "LGPL-3"
  },
  "sale_loyalty_delivery": {
-  "path": "/home/user/odoo/addons/sale_loyalty_delivery",
-  "core": true,
+  "path": "addons/sale_loyalty_delivery",
+  "core": false,
   "depends": [
    "sale_loyalty",
    "delivery"
@@ -7392,8 +7392,8 @@
   "license": "LGPL-3"
  },
  "sale_management": {
-  "path": "/home/user/odoo/addons/sale_management",
-  "core": true,
+  "path": "addons/sale_management",
+  "core": false,
   "depends": [
    "sale",
    "digest"
@@ -7406,8 +7406,8 @@
   "license": "LGPL-3"
  },
  "sale_margin": {
-  "path": "/home/user/odoo/addons/sale_margin",
-  "core": true,
+  "path": "addons/sale_margin",
+  "core": false,
   "depends": [
    "sale_management"
   ],
@@ -7419,8 +7419,8 @@
   "license": "LGPL-3"
  },
  "sale_mrp": {
-  "path": "/home/user/odoo/addons/sale_mrp",
-  "core": true,
+  "path": "addons/sale_mrp",
+  "core": false,
   "depends": [
    "mrp",
    "sale_stock"
@@ -7433,8 +7433,8 @@
   "license": "LGPL-3"
  },
  "sale_mrp_margin": {
-  "path": "/home/user/odoo/addons/sale_mrp_margin",
-  "core": true,
+  "path": "addons/sale_mrp_margin",
+  "core": false,
   "depends": [
    "sale_mrp",
    "sale_stock_margin"
@@ -7447,8 +7447,8 @@
   "license": "LGPL-3"
  },
  "sale_pdf_quote_builder": {
-  "path": "/home/user/odoo/addons/sale_pdf_quote_builder",
-  "core": true,
+  "path": "addons/sale_pdf_quote_builder",
+  "core": false,
   "depends": [
    "sale_management"
   ],
@@ -7460,8 +7460,8 @@
   "license": "LGPL-3"
  },
  "sale_product_matrix": {
-  "path": "/home/user/odoo/addons/sale_product_matrix",
-  "core": true,
+  "path": "addons/sale_product_matrix",
+  "core": false,
   "depends": [
    "sale",
    "product_matrix"
@@ -7474,8 +7474,8 @@
   "license": "LGPL-3"
  },
  "sale_project": {
-  "path": "/home/user/odoo/addons/sale_project",
-  "core": true,
+  "path": "addons/sale_project",
+  "core": false,
   "depends": [
    "sale_management",
    "sale_service",
@@ -7492,8 +7492,8 @@
   "license": "LGPL-3"
  },
  "sale_project_stock": {
-  "path": "/home/user/odoo/addons/sale_project_stock",
-  "core": true,
+  "path": "addons/sale_project_stock",
+  "core": false,
   "depends": [
    "sale_project",
    "sale_stock",
@@ -7507,8 +7507,8 @@
   "license": "LGPL-3"
  },
  "sale_project_stock_account": {
-  "path": "/home/user/odoo/addons/sale_project_stock_account",
-  "core": true,
+  "path": "addons/sale_project_stock_account",
+  "core": false,
   "depends": [
    "sale_project",
    "project_stock_account"
@@ -7521,8 +7521,8 @@
   "license": "LGPL-3"
  },
  "sale_purchase": {
-  "path": "/home/user/odoo/addons/sale_purchase",
-  "core": true,
+  "path": "addons/sale_purchase",
+  "core": false,
   "depends": [
    "sale",
    "purchase"
@@ -7535,8 +7535,8 @@
   "license": "LGPL-3"
  },
  "sale_purchase_project": {
-  "path": "/home/user/odoo/addons/sale_purchase_project",
-  "core": true,
+  "path": "addons/sale_purchase_project",
+  "core": false,
   "depends": [
    "sale_purchase",
    "project_purchase",
@@ -7550,8 +7550,8 @@
   "license": "LGPL-3"
  },
  "sale_purchase_stock": {
-  "path": "/home/user/odoo/addons/sale_purchase_stock",
-  "core": true,
+  "path": "addons/sale_purchase_stock",
+  "core": false,
   "depends": [
    "sale_stock",
    "purchase_stock",
@@ -7565,8 +7565,8 @@
   "license": "LGPL-3"
  },
  "sale_service": {
-  "path": "/home/user/odoo/addons/sale_service",
-  "core": true,
+  "path": "addons/sale_service",
+  "core": false,
   "depends": [
    "sale_management"
   ],
@@ -7578,8 +7578,8 @@
   "license": "LGPL-3"
  },
  "sale_sms": {
-  "path": "/home/user/odoo/addons/sale_sms",
-  "core": true,
+  "path": "addons/sale_sms",
+  "core": false,
   "depends": [
    "sale",
    "sms"
@@ -7592,8 +7592,8 @@
   "license": "LGPL-3"
  },
  "sale_stock": {
-  "path": "/home/user/odoo/addons/sale_stock",
-  "core": true,
+  "path": "addons/sale_stock",
+  "core": false,
   "depends": [
    "sale",
    "stock_account"
@@ -7606,8 +7606,8 @@
   "license": "LGPL-3"
  },
  "sale_stock_margin": {
-  "path": "/home/user/odoo/addons/sale_stock_margin",
-  "core": true,
+  "path": "addons/sale_stock_margin",
+  "core": false,
   "depends": [
    "sale_stock",
    "sale_margin"
@@ -7620,8 +7620,8 @@
   "license": "LGPL-3"
  },
  "sale_stock_product_expiry": {
-  "path": "/home/user/odoo/addons/sale_stock_product_expiry",
-  "core": true,
+  "path": "addons/sale_stock_product_expiry",
+  "core": false,
   "depends": [
    "sale_stock",
    "product_expiry"
@@ -7634,8 +7634,8 @@
   "license": "LGPL-3"
  },
  "sale_timesheet": {
-  "path": "/home/user/odoo/addons/sale_timesheet",
-  "core": true,
+  "path": "addons/sale_timesheet",
+  "core": false,
   "depends": [
    "sale_project",
    "hr_timesheet"
@@ -7648,8 +7648,8 @@
   "license": "LGPL-3"
  },
  "sale_timesheet_margin": {
-  "path": "/home/user/odoo/addons/sale_timesheet_margin",
-  "core": true,
+  "path": "addons/sale_timesheet_margin",
+  "core": false,
   "depends": [
    "sale_margin",
    "sale_timesheet"
@@ -7662,8 +7662,8 @@
   "license": "LGPL-3"
  },
  "sales_team": {
-  "path": "/home/user/odoo/addons/sales_team",
-  "core": true,
+  "path": "addons/sales_team",
+  "core": false,
   "depends": [
    "base",
    "mail"
@@ -7676,8 +7676,8 @@
   "license": "LGPL-3"
  },
  "sms": {
-  "path": "/home/user/odoo/addons/sms",
-  "core": true,
+  "path": "addons/sms",
+  "core": false,
   "depends": [
    "base",
    "iap_mail",
@@ -7692,8 +7692,8 @@
   "license": "LGPL-3"
  },
  "sms_twilio": {
-  "path": "/home/user/odoo/addons/sms_twilio",
-  "core": true,
+  "path": "addons/sms_twilio",
+  "core": false,
   "depends": [
    "sms"
   ],
@@ -7705,8 +7705,8 @@
   "license": "LGPL-3"
  },
  "snailmail": {
-  "path": "/home/user/odoo/addons/snailmail",
-  "core": true,
+  "path": "addons/snailmail",
+  "core": false,
   "depends": [
    "iap_mail",
    "mail"
@@ -7719,8 +7719,8 @@
   "license": "LGPL-3"
  },
  "snailmail_account": {
-  "path": "/home/user/odoo/addons/snailmail_account",
-  "core": true,
+  "path": "addons/snailmail_account",
+  "core": false,
   "depends": [
    "account",
    "snailmail"
@@ -7733,8 +7733,8 @@
   "license": "LGPL-3"
  },
  "social_media": {
-  "path": "/home/user/odoo/addons/social_media",
-  "core": true,
+  "path": "addons/social_media",
+  "core": false,
   "depends": [
    "base"
   ],
@@ -7746,8 +7746,8 @@
   "license": "LGPL-3"
  },
  "spreadsheet": {
-  "path": "/home/user/odoo/addons/spreadsheet",
-  "core": true,
+  "path": "addons/spreadsheet",
+  "core": false,
   "depends": [
    "bus",
    "web",
@@ -7761,8 +7761,8 @@
   "license": "LGPL-3"
  },
  "spreadsheet_account": {
-  "path": "/home/user/odoo/addons/spreadsheet_account",
-  "core": true,
+  "path": "addons/spreadsheet_account",
+  "core": false,
   "depends": [
    "spreadsheet",
    "account"
@@ -7775,8 +7775,8 @@
   "license": "LGPL-3"
  },
  "spreadsheet_dashboard": {
-  "path": "/home/user/odoo/addons/spreadsheet_dashboard",
-  "core": true,
+  "path": "addons/spreadsheet_dashboard",
+  "core": false,
   "depends": [
    "spreadsheet"
   ],
@@ -7788,8 +7788,8 @@
   "license": "LGPL-3"
  },
  "spreadsheet_dashboard_account": {
-  "path": "/home/user/odoo/addons/spreadsheet_dashboard_account",
-  "core": true,
+  "path": "addons/spreadsheet_dashboard_account",
+  "core": false,
   "depends": [
    "spreadsheet_dashboard",
    "account"
@@ -7804,8 +7804,8 @@
   "license": "LGPL-3"
  },
  "spreadsheet_dashboard_event_sale": {
-  "path": "/home/user/odoo/addons/spreadsheet_dashboard_event_sale",
-  "core": true,
+  "path": "addons/spreadsheet_dashboard_event_sale",
+  "core": false,
   "depends": [
    "spreadsheet_dashboard",
    "event_sale"
@@ -7820,8 +7820,8 @@
   "license": "LGPL-3"
  },
  "spreadsheet_dashboard_hr_expense": {
-  "path": "/home/user/odoo/addons/spreadsheet_dashboard_hr_expense",
-  "core": true,
+  "path": "addons/spreadsheet_dashboard_hr_expense",
+  "core": false,
   "depends": [
    "spreadsheet_dashboard",
    "sale_expense"
@@ -7836,8 +7836,8 @@
   "license": "LGPL-3"
  },
  "spreadsheet_dashboard_hr_timesheet": {
-  "path": "/home/user/odoo/addons/spreadsheet_dashboard_hr_timesheet",
-  "core": true,
+  "path": "addons/spreadsheet_dashboard_hr_timesheet",
+  "core": false,
   "depends": [
    "spreadsheet_dashboard",
    "hr_timesheet"
@@ -7852,8 +7852,8 @@
   "license": "LGPL-3"
  },
  "spreadsheet_dashboard_im_livechat": {
-  "path": "/home/user/odoo/addons/spreadsheet_dashboard_im_livechat",
-  "core": true,
+  "path": "addons/spreadsheet_dashboard_im_livechat",
+  "core": false,
   "depends": [
    "spreadsheet_dashboard",
    "im_livechat"
@@ -7868,8 +7868,8 @@
   "license": "LGPL-3"
  },
  "spreadsheet_dashboard_pos_hr": {
-  "path": "/home/user/odoo/addons/spreadsheet_dashboard_pos_hr",
-  "core": true,
+  "path": "addons/spreadsheet_dashboard_pos_hr",
+  "core": false,
   "depends": [
    "spreadsheet_dashboard",
    "pos_hr"
@@ -7884,8 +7884,8 @@
   "license": "LGPL-3"
  },
  "spreadsheet_dashboard_pos_restaurant": {
-  "path": "/home/user/odoo/addons/spreadsheet_dashboard_pos_restaurant",
-  "core": true,
+  "path": "addons/spreadsheet_dashboard_pos_restaurant",
+  "core": false,
   "depends": [
    "spreadsheet_dashboard",
    "pos_hr",
@@ -7902,8 +7902,8 @@
   "license": "LGPL-3"
  },
  "spreadsheet_dashboard_sale": {
-  "path": "/home/user/odoo/addons/spreadsheet_dashboard_sale",
-  "core": true,
+  "path": "addons/spreadsheet_dashboard_sale",
+  "core": false,
   "depends": [
    "spreadsheet_dashboard",
    "sale"
@@ -7918,8 +7918,8 @@
   "license": "LGPL-3"
  },
  "spreadsheet_dashboard_sale_timesheet": {
-  "path": "/home/user/odoo/addons/spreadsheet_dashboard_sale_timesheet",
-  "core": true,
+  "path": "addons/spreadsheet_dashboard_sale_timesheet",
+  "core": false,
   "depends": [
    "spreadsheet_dashboard",
    "sale_timesheet"
@@ -7934,8 +7934,8 @@
   "license": "LGPL-3"
  },
  "spreadsheet_dashboard_stock_account": {
-  "path": "/home/user/odoo/addons/spreadsheet_dashboard_stock_account",
-  "core": true,
+  "path": "addons/spreadsheet_dashboard_stock_account",
+  "core": false,
   "depends": [
    "spreadsheet_dashboard",
    "stock_account"
@@ -7950,8 +7950,8 @@
   "license": "LGPL-3"
  },
  "spreadsheet_dashboard_website_sale": {
-  "path": "/home/user/odoo/addons/spreadsheet_dashboard_website_sale",
-  "core": true,
+  "path": "addons/spreadsheet_dashboard_website_sale",
+  "core": false,
   "depends": [
    "spreadsheet_dashboard",
    "website_sale"
@@ -7966,8 +7966,8 @@
   "license": "LGPL-3"
  },
  "spreadsheet_dashboard_website_sale_slides": {
-  "path": "/home/user/odoo/addons/spreadsheet_dashboard_website_sale_slides",
-  "core": true,
+  "path": "addons/spreadsheet_dashboard_website_sale_slides",
+  "core": false,
   "depends": [
    "spreadsheet_dashboard",
    "website_sale_slides"
@@ -7982,8 +7982,8 @@
   "license": "LGPL-3"
  },
  "stock": {
-  "path": "/home/user/odoo/addons/stock",
-  "core": true,
+  "path": "addons/stock",
+  "core": false,
   "depends": [
    "product",
    "barcodes_gs1_nomenclature",
@@ -7997,8 +7997,8 @@
   "license": "LGPL-3"
  },
  "stock_account": {
-  "path": "/home/user/odoo/addons/stock_account",
-  "core": true,
+  "path": "addons/stock_account",
+  "core": false,
   "depends": [
    "stock",
    "account"
@@ -8011,8 +8011,8 @@
   "license": "LGPL-3"
  },
  "stock_delivery": {
-  "path": "/home/user/odoo/addons/stock_delivery",
-  "core": true,
+  "path": "addons/stock_delivery",
+  "core": false,
   "depends": [
    "sale_stock",
    "delivery"
@@ -8025,8 +8025,8 @@
   "license": "LGPL-3"
  },
  "stock_dropshipping": {
-  "path": "/home/user/odoo/addons/stock_dropshipping",
-  "core": true,
+  "path": "addons/stock_dropshipping",
+  "core": false,
   "depends": [
    "sale_purchase_stock"
   ],
@@ -8038,8 +8038,8 @@
   "license": "LGPL-3"
  },
  "stock_fleet": {
-  "path": "/home/user/odoo/addons/stock_fleet",
-  "core": true,
+  "path": "addons/stock_fleet",
+  "core": false,
   "depends": [
    "stock_picking_batch",
    "fleet"
@@ -8052,8 +8052,8 @@
   "license": "LGPL-3"
  },
  "stock_landed_costs": {
-  "path": "/home/user/odoo/addons/stock_landed_costs",
-  "core": true,
+  "path": "addons/stock_landed_costs",
+  "core": false,
   "depends": [
    "stock_account",
    "purchase_stock"
@@ -8066,8 +8066,8 @@
   "license": "LGPL-3"
  },
  "stock_maintenance": {
-  "path": "/home/user/odoo/addons/stock_maintenance",
-  "core": true,
+  "path": "addons/stock_maintenance",
+  "core": false,
   "depends": [
    "stock",
    "maintenance"
@@ -8080,8 +8080,8 @@
   "license": "LGPL-3"
  },
  "stock_picking_batch": {
-  "path": "/home/user/odoo/addons/stock_picking_batch",
-  "core": true,
+  "path": "addons/stock_picking_batch",
+  "core": false,
   "depends": [
    "stock"
   ],
@@ -8093,8 +8093,8 @@
   "license": "LGPL-3"
  },
  "stock_sms": {
-  "path": "/home/user/odoo/addons/stock_sms",
-  "core": true,
+  "path": "addons/stock_sms",
+  "core": false,
   "depends": [
    "stock",
    "sms"
@@ -8107,8 +8107,8 @@
   "license": "LGPL-3"
  },
  "survey": {
-  "path": "/home/user/odoo/addons/survey",
-  "core": true,
+  "path": "addons/survey",
+  "core": false,
   "depends": [
    "auth_signup",
    "http_routing",
@@ -8124,8 +8124,8 @@
   "license": "LGPL-3"
  },
  "survey_crm": {
-  "path": "/home/user/odoo/addons/survey_crm",
-  "core": true,
+  "path": "addons/survey_crm",
+  "core": false,
   "depends": [
    "survey",
    "crm"
@@ -8138,8 +8138,8 @@
   "license": "LGPL-3"
  },
  "test_base_automation": {
-  "path": "/home/user/odoo/addons/test_base_automation",
-  "core": true,
+  "path": "addons/test_base_automation",
+  "core": false,
   "depends": [
    "base_automation"
   ],
@@ -8151,8 +8151,8 @@
   "license": "LGPL-3"
  },
  "test_crm_full": {
-  "path": "/home/user/odoo/addons/test_crm_full",
-  "core": true,
+  "path": "addons/test_crm_full",
+  "core": false,
   "depends": [
    "crm",
    "crm_iap_enrich",
@@ -8173,8 +8173,8 @@
   "license": "LGPL-3"
  },
  "test_discuss_full": {
-  "path": "/home/user/odoo/addons/test_discuss_full",
-  "core": true,
+  "path": "addons/test_discuss_full",
+  "core": false,
   "depends": [
    "calendar",
    "crm",
@@ -8199,8 +8199,8 @@
   "license": "LGPL-3"
  },
  "test_event_full": {
-  "path": "/home/user/odoo/addons/test_event_full",
-  "core": true,
+  "path": "addons/test_event_full",
+  "core": false,
   "depends": [
    "event",
    "event_booth",
@@ -8224,8 +8224,8 @@
   "license": "LGPL-3"
  },
  "test_html_field_history": {
-  "path": "/home/user/odoo/addons/test_html_field_history",
-  "core": true,
+  "path": "addons/test_html_field_history",
+  "core": false,
   "depends": [
    "html_editor"
   ],
@@ -8237,8 +8237,8 @@
   "license": "LGPL-3"
  },
  "test_import_export": {
-  "path": "/home/user/odoo/addons/test_import_export",
-  "core": true,
+  "path": "addons/test_import_export",
+  "core": false,
   "depends": [
    "web",
    "base_import",
@@ -8252,8 +8252,8 @@
   "license": "LGPL-3"
  },
  "test_mail": {
-  "path": "/home/user/odoo/addons/test_mail",
-  "core": true,
+  "path": "addons/test_mail",
+  "core": false,
   "depends": [
    "mail",
    "test_orm"
@@ -8266,8 +8266,8 @@
   "license": "LGPL-3"
  },
  "test_mail_full": {
-  "path": "/home/user/odoo/addons/test_mail_full",
-  "core": true,
+  "path": "addons/test_mail_full",
+  "core": false,
   "depends": [
    "mail",
    "mail_bot",
@@ -8289,8 +8289,8 @@
   "license": "LGPL-3"
  },
  "test_mail_sms": {
-  "path": "/home/user/odoo/addons/test_mail_sms",
-  "core": true,
+  "path": "addons/test_mail_sms",
+  "core": false,
   "depends": [
    "mail",
    "sms",
@@ -8305,8 +8305,8 @@
   "license": "LGPL-3"
  },
  "test_mass_mailing": {
-  "path": "/home/user/odoo/addons/test_mass_mailing",
-  "core": true,
+  "path": "addons/test_mass_mailing",
+  "core": false,
   "depends": [
    "mass_mailing",
    "mass_mailing_sms",
@@ -8322,8 +8322,8 @@
   "license": "LGPL-3"
  },
  "test_resource": {
-  "path": "/home/user/odoo/addons/test_resource",
-  "core": true,
+  "path": "addons/test_resource",
+  "core": false,
   "depends": [
    "resource"
   ],
@@ -8335,8 +8335,8 @@
   "license": "LGPL-3"
  },
  "test_sale_product_configurators": {
-  "path": "/home/user/odoo/addons/test_sale_product_configurators",
-  "core": true,
+  "path": "addons/test_sale_product_configurators",
+  "core": false,
   "depends": [
    "event_sale",
    "sale_management",
@@ -8350,8 +8350,8 @@
   "license": "LGPL-3"
  },
  "test_sale_purchase_edi_ubl": {
-  "path": "/home/user/odoo/addons/test_sale_purchase_edi_ubl",
-  "core": true,
+  "path": "addons/test_sale_purchase_edi_ubl",
+  "core": false,
   "depends": [
    "purchase_edi_ubl_bis3",
    "sale_edi_ubl"
@@ -8364,8 +8364,8 @@
   "license": "LGPL-3"
  },
  "test_spreadsheet": {
-  "path": "/home/user/odoo/addons/test_spreadsheet",
-  "core": true,
+  "path": "addons/test_spreadsheet",
+  "core": false,
   "depends": [
    "spreadsheet"
   ],
@@ -8377,8 +8377,8 @@
   "license": "LGPL-3"
  },
  "test_website": {
-  "path": "/home/user/odoo/addons/test_website",
-  "core": true,
+  "path": "addons/test_website",
+  "core": false,
   "depends": [
    "web_unsplash",
    "website",
@@ -8392,8 +8392,8 @@
   "license": "LGPL-3"
  },
  "test_website_modules": {
-  "path": "/home/user/odoo/addons/test_website_modules",
-  "core": true,
+  "path": "addons/test_website_modules",
+  "core": false,
   "depends": [
    "theme_default",
    "website",
@@ -8413,8 +8413,8 @@
   "license": "LGPL-3"
  },
  "test_website_slides_full": {
-  "path": "/home/user/odoo/addons/test_website_slides_full",
-  "core": true,
+  "path": "addons/test_website_slides_full",
+  "core": false,
   "depends": [
    "website_sale_slides",
    "website_slides_forum",
@@ -8428,8 +8428,8 @@
   "license": "LGPL-3"
  },
  "theme_default": {
-  "path": "/home/user/odoo/addons/theme_default",
-  "core": true,
+  "path": "addons/theme_default",
+  "core": false,
   "depends": [
    "website"
   ],
@@ -8441,8 +8441,8 @@
   "license": "LGPL-3"
  },
  "transifex": {
-  "path": "/home/user/odoo/addons/transifex",
-  "core": true,
+  "path": "addons/transifex",
+  "core": false,
   "depends": [
    "base",
    "web"
@@ -8455,8 +8455,8 @@
   "license": "LGPL-3"
  },
  "uom": {
-  "path": "/home/user/odoo/addons/uom",
-  "core": true,
+  "path": "addons/uom",
+  "core": false,
   "depends": [
    "base"
   ],
@@ -8468,8 +8468,8 @@
   "license": "LGPL-3"
  },
  "utm": {
-  "path": "/home/user/odoo/addons/utm",
-  "core": true,
+  "path": "addons/utm",
+  "core": false,
   "depends": [
    "base",
    "web"
@@ -8482,8 +8482,8 @@
   "license": "LGPL-3"
  },
  "web": {
-  "path": "/home/user/odoo/addons/web",
-  "core": true,
+  "path": "addons/web",
+  "core": false,
   "depends": [
    "base"
   ],
@@ -8495,8 +8495,8 @@
   "license": "LGPL-3"
  },
  "web_hierarchy": {
-  "path": "/home/user/odoo/addons/web_hierarchy",
-  "core": true,
+  "path": "addons/web_hierarchy",
+  "core": false,
   "depends": [
    "web"
   ],
@@ -8508,8 +8508,8 @@
   "license": "LGPL-3"
  },
  "web_tour": {
-  "path": "/home/user/odoo/addons/web_tour",
-  "core": true,
+  "path": "addons/web_tour",
+  "core": false,
   "depends": [
    "web"
   ],
@@ -8521,8 +8521,8 @@
   "license": "LGPL-3"
  },
  "web_unsplash": {
-  "path": "/home/user/odoo/addons/web_unsplash",
-  "core": true,
+  "path": "addons/web_unsplash",
+  "core": false,
   "depends": [
    "base_setup",
    "html_editor"
@@ -8535,8 +8535,8 @@
   "license": "LGPL-3"
  },
  "website": {
-  "path": "/home/user/odoo/addons/website",
-  "core": true,
+  "path": "addons/website",
+  "core": false,
   "depends": [
    "digest",
    "web",
@@ -8558,8 +8558,8 @@
   "license": "LGPL-3"
  },
  "website_blog": {
-  "path": "/home/user/odoo/addons/website_blog",
-  "core": true,
+  "path": "addons/website_blog",
+  "core": false,
   "depends": [
    "website_mail",
    "website_partner",
@@ -8573,8 +8573,8 @@
   "license": "LGPL-3"
  },
  "website_cf_turnstile": {
-  "path": "/home/user/odoo/addons/website_cf_turnstile",
-  "core": true,
+  "path": "addons/website_cf_turnstile",
+  "core": false,
   "depends": [
    "website"
   ],
@@ -8586,8 +8586,8 @@
   "license": "LGPL-3"
  },
  "website_crm": {
-  "path": "/home/user/odoo/addons/website_crm",
-  "core": true,
+  "path": "addons/website_crm",
+  "core": false,
   "depends": [
    "website",
    "crm"
@@ -8600,8 +8600,8 @@
   "license": "LGPL-3"
  },
  "website_crm_iap_reveal": {
-  "path": "/home/user/odoo/addons/website_crm_iap_reveal",
-  "core": true,
+  "path": "addons/website_crm_iap_reveal",
+  "core": false,
   "depends": [
    "iap_crm",
    "iap_mail",
@@ -8616,8 +8616,8 @@
   "license": "LGPL-3"
  },
  "website_crm_livechat": {
-  "path": "/home/user/odoo/addons/website_crm_livechat",
-  "core": true,
+  "path": "addons/website_crm_livechat",
+  "core": false,
   "depends": [
    "website_crm",
    "website_livechat"
@@ -8630,8 +8630,8 @@
   "license": "LGPL-3"
  },
  "website_crm_partner_assign": {
-  "path": "/home/user/odoo/addons/website_crm_partner_assign",
-  "core": true,
+  "path": "addons/website_crm_partner_assign",
+  "core": false,
   "depends": [
    "base_geolocalize",
    "crm",
@@ -8649,8 +8649,8 @@
   "license": "LGPL-3"
  },
  "website_crm_sms": {
-  "path": "/home/user/odoo/addons/website_crm_sms",
-  "core": true,
+  "path": "addons/website_crm_sms",
+  "core": false,
   "depends": [
    "website_sms",
    "crm"
@@ -8663,8 +8663,8 @@
   "license": "LGPL-3"
  },
  "website_customer": {
-  "path": "/home/user/odoo/addons/website_customer",
-  "core": true,
+  "path": "addons/website_customer",
+  "core": false,
   "depends": [
    "website_crm_partner_assign",
    "website_partner",
@@ -8678,8 +8678,8 @@
   "license": "LGPL-3"
  },
  "website_event": {
-  "path": "/home/user/odoo/addons/website_event",
-  "core": true,
+  "path": "addons/website_event",
+  "core": false,
   "depends": [
    "event",
    "website",
@@ -8695,8 +8695,8 @@
   "license": "LGPL-3"
  },
  "website_event_booth": {
-  "path": "/home/user/odoo/addons/website_event_booth",
-  "core": true,
+  "path": "addons/website_event_booth",
+  "core": false,
   "depends": [
    "website_event",
    "event_booth"
@@ -8709,8 +8709,8 @@
   "license": "LGPL-3"
  },
  "website_event_booth_exhibitor": {
-  "path": "/home/user/odoo/addons/website_event_booth_exhibitor",
-  "core": true,
+  "path": "addons/website_event_booth_exhibitor",
+  "core": false,
   "depends": [
    "website_event_exhibitor",
    "website_event_booth"
@@ -8723,8 +8723,8 @@
   "license": "LGPL-3"
  },
  "website_event_booth_sale": {
-  "path": "/home/user/odoo/addons/website_event_booth_sale",
-  "core": true,
+  "path": "addons/website_event_booth_sale",
+  "core": false,
   "depends": [
    "event_booth_sale",
    "website_event_booth",
@@ -8738,8 +8738,8 @@
   "license": "LGPL-3"
  },
  "website_event_booth_sale_exhibitor": {
-  "path": "/home/user/odoo/addons/website_event_booth_sale_exhibitor",
-  "core": true,
+  "path": "addons/website_event_booth_sale_exhibitor",
+  "core": false,
   "depends": [
    "website_event_exhibitor",
    "website_event_booth_sale"
@@ -8752,8 +8752,8 @@
   "license": "LGPL-3"
  },
  "website_event_crm": {
-  "path": "/home/user/odoo/addons/website_event_crm",
-  "core": true,
+  "path": "addons/website_event_crm",
+  "core": false,
   "depends": [
    "event_crm",
    "website_event"
@@ -8766,8 +8766,8 @@
   "license": "LGPL-3"
  },
  "website_event_exhibitor": {
-  "path": "/home/user/odoo/addons/website_event_exhibitor",
-  "core": true,
+  "path": "addons/website_event_exhibitor",
+  "core": false,
   "depends": [
    "website_event"
   ],
@@ -8779,8 +8779,8 @@
   "license": "LGPL-3"
  },
  "website_event_sale": {
-  "path": "/home/user/odoo/addons/website_event_sale",
-  "core": true,
+  "path": "addons/website_event_sale",
+  "core": false,
   "depends": [
    "website_event",
    "event_sale",
@@ -8794,8 +8794,8 @@
   "license": "LGPL-3"
  },
  "website_event_track": {
-  "path": "/home/user/odoo/addons/website_event_track",
-  "core": true,
+  "path": "addons/website_event_track",
+  "core": false,
   "depends": [
    "website_event"
   ],
@@ -8807,8 +8807,8 @@
   "license": "LGPL-3"
  },
  "website_event_track_live": {
-  "path": "/home/user/odoo/addons/website_event_track_live",
-  "core": true,
+  "path": "addons/website_event_track_live",
+  "core": false,
   "depends": [
    "website_event_track"
   ],
@@ -8820,8 +8820,8 @@
   "license": "LGPL-3"
  },
  "website_event_track_live_quiz": {
-  "path": "/home/user/odoo/addons/website_event_track_live_quiz",
-  "core": true,
+  "path": "addons/website_event_track_live_quiz",
+  "core": false,
   "depends": [
    "website_event_track_live",
    "website_event_track_quiz"
@@ -8834,8 +8834,8 @@
   "license": "LGPL-3"
  },
  "website_event_track_quiz": {
-  "path": "/home/user/odoo/addons/website_event_track_quiz",
-  "core": true,
+  "path": "addons/website_event_track_quiz",
+  "core": false,
   "depends": [
    "website_profile",
    "website_event_track"
@@ -8848,8 +8848,8 @@
   "license": "LGPL-3"
  },
  "website_forum": {
-  "path": "/home/user/odoo/addons/website_forum",
-  "core": true,
+  "path": "addons/website_forum",
+  "core": false,
   "depends": [
    "auth_signup",
    "website_mail",
@@ -8863,8 +8863,8 @@
   "license": "LGPL-3"
  },
  "website_google_map": {
-  "path": "/home/user/odoo/addons/website_google_map",
-  "core": true,
+  "path": "addons/website_google_map",
+  "core": false,
   "depends": [
    "base_geolocalize",
    "website_partner"
@@ -8877,8 +8877,8 @@
   "license": "LGPL-3"
  },
  "website_hr_recruitment": {
-  "path": "/home/user/odoo/addons/website_hr_recruitment",
-  "core": true,
+  "path": "addons/website_hr_recruitment",
+  "core": false,
   "depends": [
    "hr_recruitment",
    "website_mail"
@@ -8894,8 +8894,8 @@
   "license": "LGPL-3"
  },
  "website_hr_recruitment_livechat": {
-  "path": "/home/user/odoo/addons/website_hr_recruitment_livechat",
-  "core": true,
+  "path": "addons/website_hr_recruitment_livechat",
+  "core": false,
   "depends": [
    "website_hr_recruitment",
    "im_livechat"
@@ -8908,8 +8908,8 @@
   "license": "LGPL-3"
  },
  "website_links": {
-  "path": "/home/user/odoo/addons/website_links",
-  "core": true,
+  "path": "addons/website_links",
+  "core": false,
   "depends": [
    "website",
    "link_tracker"
@@ -8922,8 +8922,8 @@
   "license": "LGPL-3"
  },
  "website_livechat": {
-  "path": "/home/user/odoo/addons/website_livechat",
-  "core": true,
+  "path": "addons/website_livechat",
+  "core": false,
   "depends": [
    "website",
    "im_livechat"
@@ -8936,8 +8936,8 @@
   "license": "LGPL-3"
  },
  "website_mail": {
-  "path": "/home/user/odoo/addons/website_mail",
-  "core": true,
+  "path": "addons/website_mail",
+  "core": false,
   "depends": [
    "website",
    "mail"
@@ -8950,8 +8950,8 @@
   "license": "LGPL-3"
  },
  "website_mail_group": {
-  "path": "/home/user/odoo/addons/website_mail_group",
-  "core": true,
+  "path": "addons/website_mail_group",
+  "core": false,
   "depends": [
    "mail_group",
    "website"
@@ -8964,8 +8964,8 @@
   "license": "LGPL-3"
  },
  "website_mass_mailing": {
-  "path": "/home/user/odoo/addons/website_mass_mailing",
-  "core": true,
+  "path": "addons/website_mass_mailing",
+  "core": false,
   "depends": [
    "website",
    "mass_mailing",
@@ -8982,8 +8982,8 @@
   "license": "LGPL-3"
  },
  "website_mass_mailing_sms": {
-  "path": "/home/user/odoo/addons/website_mass_mailing_sms",
-  "core": true,
+  "path": "addons/website_mass_mailing_sms",
+  "core": false,
   "depends": [
    "website_mass_mailing",
    "mass_mailing_sms"
@@ -8996,8 +8996,8 @@
   "license": "LGPL-3"
  },
  "website_partner": {
-  "path": "/home/user/odoo/addons/website_partner",
-  "core": true,
+  "path": "addons/website_partner",
+  "core": false,
   "depends": [
    "website"
   ],
@@ -9009,8 +9009,8 @@
   "license": "LGPL-3"
  },
  "website_payment": {
-  "path": "/home/user/odoo/addons/website_payment",
-  "core": true,
+  "path": "addons/website_payment",
+  "core": false,
   "depends": [
    "website",
    "account_payment",
@@ -9024,8 +9024,8 @@
   "license": "LGPL-3"
  },
  "website_profile": {
-  "path": "/home/user/odoo/addons/website_profile",
-  "core": true,
+  "path": "addons/website_profile",
+  "core": false,
   "depends": [
    "html_editor",
    "website_partner",
@@ -9039,8 +9039,8 @@
   "license": "LGPL-3"
  },
  "website_project": {
-  "path": "/home/user/odoo/addons/website_project",
-  "core": true,
+  "path": "addons/website_project",
+  "core": false,
   "depends": [
    "website",
    "project"
@@ -9053,8 +9053,8 @@
   "license": "LGPL-3"
  },
  "website_sale": {
-  "path": "/home/user/odoo/addons/website_sale",
-  "core": true,
+  "path": "addons/website_sale",
+  "core": false,
   "depends": [
    "website",
    "sale",
@@ -9073,8 +9073,8 @@
   "license": "LGPL-3"
  },
  "website_sale_autocomplete": {
-  "path": "/home/user/odoo/addons/website_sale_autocomplete",
-  "core": true,
+  "path": "addons/website_sale_autocomplete",
+  "core": false,
   "depends": [
    "website_sale",
    "google_address_autocomplete"
@@ -9087,8 +9087,8 @@
   "license": "LGPL-3"
  },
  "website_sale_collect": {
-  "path": "/home/user/odoo/addons/website_sale_collect",
-  "core": true,
+  "path": "addons/website_sale_collect",
+  "core": false,
   "depends": [
    "base_geolocalize",
    "payment_custom",
@@ -9102,8 +9102,8 @@
   "license": "LGPL-3"
  },
  "website_sale_collect_wishlist": {
-  "path": "/home/user/odoo/addons/website_sale_collect_wishlist",
-  "core": true,
+  "path": "addons/website_sale_collect_wishlist",
+  "core": false,
   "depends": [
    "website_sale_wishlist",
    "website_sale_collect"
@@ -9116,8 +9116,8 @@
   "license": "LGPL-3"
  },
  "website_sale_comparison": {
-  "path": "/home/user/odoo/addons/website_sale_comparison",
-  "core": true,
+  "path": "addons/website_sale_comparison",
+  "core": false,
   "depends": [
    "website_sale"
   ],
@@ -9129,8 +9129,8 @@
   "license": "LGPL-3"
  },
  "website_sale_comparison_wishlist": {
-  "path": "/home/user/odoo/addons/website_sale_comparison_wishlist",
-  "core": true,
+  "path": "addons/website_sale_comparison_wishlist",
+  "core": false,
   "depends": [
    "website_sale_comparison",
    "website_sale_wishlist"
@@ -9143,8 +9143,8 @@
   "license": "LGPL-3"
  },
  "website_sale_gelato": {
-  "path": "/home/user/odoo/addons/website_sale_gelato",
-  "core": true,
+  "path": "addons/website_sale_gelato",
+  "core": false,
   "depends": [
    "sale_gelato",
    "website_sale"
@@ -9157,8 +9157,8 @@
   "license": "LGPL-3"
  },
  "website_sale_loyalty": {
-  "path": "/home/user/odoo/addons/website_sale_loyalty",
-  "core": true,
+  "path": "addons/website_sale_loyalty",
+  "core": false,
   "depends": [
    "website_sale",
    "website_links",
@@ -9175,8 +9175,8 @@
   "license": "LGPL-3"
  },
  "website_sale_mass_mailing": {
-  "path": "/home/user/odoo/addons/website_sale_mass_mailing",
-  "core": true,
+  "path": "addons/website_sale_mass_mailing",
+  "core": false,
   "depends": [
    "website_sale",
    "website_mass_mailing"
@@ -9189,8 +9189,8 @@
   "license": "LGPL-3"
  },
  "website_sale_mondialrelay": {
-  "path": "/home/user/odoo/addons/website_sale_mondialrelay",
-  "core": true,
+  "path": "addons/website_sale_mondialrelay",
+  "core": false,
   "depends": [
    "website_sale",
    "delivery_mondialrelay"
@@ -9203,8 +9203,8 @@
   "license": "LGPL-3"
  },
  "website_sale_mrp": {
-  "path": "/home/user/odoo/addons/website_sale_mrp",
-  "core": true,
+  "path": "addons/website_sale_mrp",
+  "core": false,
   "depends": [
    "website_sale_stock",
    "sale_mrp"
@@ -9217,8 +9217,8 @@
   "license": "LGPL-3"
  },
  "website_sale_slides": {
-  "path": "/home/user/odoo/addons/website_sale_slides",
-  "core": true,
+  "path": "addons/website_sale_slides",
+  "core": false,
   "depends": [
    "website_slides",
    "website_sale"
@@ -9231,8 +9231,8 @@
   "license": "LGPL-3"
  },
  "website_sale_stock": {
-  "path": "/home/user/odoo/addons/website_sale_stock",
-  "core": true,
+  "path": "addons/website_sale_stock",
+  "core": false,
   "depends": [
    "website_sale",
    "sale_stock",
@@ -9246,8 +9246,8 @@
   "license": "LGPL-3"
  },
  "website_sale_stock_wishlist": {
-  "path": "/home/user/odoo/addons/website_sale_stock_wishlist",
-  "core": true,
+  "path": "addons/website_sale_stock_wishlist",
+  "core": false,
   "depends": [
    "website_sale_stock",
    "website_sale_wishlist"
@@ -9260,8 +9260,8 @@
   "license": "LGPL-3"
  },
  "website_sale_wishlist": {
-  "path": "/home/user/odoo/addons/website_sale_wishlist",
-  "core": true,
+  "path": "addons/website_sale_wishlist",
+  "core": false,
   "depends": [
    "website_sale"
   ],
@@ -9273,8 +9273,8 @@
   "license": "LGPL-3"
  },
  "website_slides": {
-  "path": "/home/user/odoo/addons/website_slides",
-  "core": true,
+  "path": "addons/website_slides",
+  "core": false,
   "depends": [
    "portal_rating",
    "website",
@@ -9289,8 +9289,8 @@
   "license": "LGPL-3"
  },
  "website_slides_forum": {
-  "path": "/home/user/odoo/addons/website_slides_forum",
-  "core": true,
+  "path": "addons/website_slides_forum",
+  "core": false,
   "depends": [
    "website_slides",
    "website_forum"
@@ -9303,8 +9303,8 @@
   "license": "LGPL-3"
  },
  "website_slides_survey": {
-  "path": "/home/user/odoo/addons/website_slides_survey",
-  "core": true,
+  "path": "addons/website_slides_survey",
+  "core": false,
   "depends": [
    "website_slides",
    "survey"
@@ -9317,8 +9317,8 @@
   "license": "LGPL-3"
  },
  "website_sms": {
-  "path": "/home/user/odoo/addons/website_sms",
-  "core": true,
+  "path": "addons/website_sms",
+  "core": false,
   "depends": [
    "website",
    "sms"
@@ -9331,8 +9331,8 @@
   "license": "LGPL-3"
  },
  "website_timesheet": {
-  "path": "/home/user/odoo/addons/website_timesheet",
-  "core": true,
+  "path": "addons/website_timesheet",
+  "core": false,
   "depends": [
    "website",
    "hr_timesheet"
@@ -9345,7 +9345,7 @@
   "license": "LGPL-3"
  },
  "base": {
-  "path": "/home/user/odoo/odoo/addons/base",
+  "path": "odoo/addons/base",
   "core": true,
   "depends": [],
   "category": "Hidden",
@@ -9356,7 +9356,7 @@
   "license": "LGPL-3"
  },
  "test_access_rights": {
-  "path": "/home/user/odoo/odoo/addons/test_access_rights",
+  "path": "odoo/addons/test_access_rights",
   "core": true,
   "depends": [],
   "category": "Hidden/Tests",
@@ -9367,7 +9367,7 @@
   "license": "LGPL-3"
  },
  "test_action_bindings": {
-  "path": "/home/user/odoo/odoo/addons/test_action_bindings",
+  "path": "odoo/addons/test_action_bindings",
   "core": true,
   "depends": [],
   "category": "Hidden/Tests",
@@ -9378,7 +9378,7 @@
   "license": "LGPL-3"
  },
  "test_assetsbundle": {
-  "path": "/home/user/odoo/odoo/addons/test_assetsbundle",
+  "path": "odoo/addons/test_assetsbundle",
   "core": true,
   "depends": [
    "base"
@@ -9391,7 +9391,7 @@
   "license": "LGPL-3"
  },
  "test_auth_custom": {
-  "path": "/home/user/odoo/odoo/addons/test_auth_custom",
+  "path": "odoo/addons/test_auth_custom",
   "core": true,
   "depends": [],
   "category": "Hidden",
@@ -9402,7 +9402,7 @@
   "license": "LGPL-3"
  },
  "test_convert": {
-  "path": "/home/user/odoo/odoo/addons/test_convert",
+  "path": "odoo/addons/test_convert",
   "core": true,
   "depends": [],
   "category": "Hidden/Tests",
@@ -9413,7 +9413,7 @@
   "license": "LGPL-3"
  },
  "test_converter": {
-  "path": "/home/user/odoo/odoo/addons/test_converter",
+  "path": "odoo/addons/test_converter",
   "core": true,
   "depends": [
    "base"
@@ -9426,7 +9426,7 @@
   "license": "LGPL-3"
  },
  "test_data_module": {
-  "path": "/home/user/odoo/odoo/addons/test_data_module",
+  "path": "odoo/addons/test_data_module",
   "core": true,
   "depends": [],
   "category": "Hidden/Tests",
@@ -9437,7 +9437,7 @@
   "license": "LGPL-3"
  },
  "test_data_module_install": {
-  "path": "/home/user/odoo/odoo/addons/test_data_module_install",
+  "path": "odoo/addons/test_data_module_install",
   "core": true,
   "depends": [
    "test_data_module"
@@ -9450,7 +9450,7 @@
   "license": "LGPL-3"
  },
  "test_http": {
-  "path": "/home/user/odoo/odoo/addons/test_http",
+  "path": "odoo/addons/test_http",
   "core": true,
   "depends": [
    "web",
@@ -9466,7 +9466,7 @@
   "license": "LGPL-3"
  },
  "test_inherit": {
-  "path": "/home/user/odoo/odoo/addons/test_inherit",
+  "path": "odoo/addons/test_inherit",
   "core": true,
   "depends": [
    "base",
@@ -9480,7 +9480,7 @@
   "license": "LGPL-3"
  },
  "test_inherit_depends": {
-  "path": "/home/user/odoo/odoo/addons/test_inherit_depends",
+  "path": "odoo/addons/test_inherit_depends",
   "core": true,
   "depends": [
    "test_inherit",
@@ -9494,7 +9494,7 @@
   "license": "LGPL-3"
  },
  "test_inherits": {
-  "path": "/home/user/odoo/odoo/addons/test_inherits",
+  "path": "odoo/addons/test_inherits",
   "core": true,
   "depends": [
    "base"
@@ -9507,7 +9507,7 @@
   "license": "LGPL-3"
  },
  "test_inherits_depends": {
-  "path": "/home/user/odoo/odoo/addons/test_inherits_depends",
+  "path": "odoo/addons/test_inherits_depends",
   "core": true,
   "depends": [
    "test_inherits"
@@ -9520,7 +9520,7 @@
   "license": "LGPL-3"
  },
  "test_lint": {
-  "path": "/home/user/odoo/odoo/addons/test_lint",
+  "path": "odoo/addons/test_lint",
   "core": true,
   "depends": [
    "base"
@@ -9533,7 +9533,7 @@
   "license": "LGPL-3"
  },
  "test_main_flows": {
-  "path": "/home/user/odoo/odoo/addons/test_main_flows",
+  "path": "odoo/addons/test_main_flows",
   "core": true,
   "depends": [
    "web_tour",
@@ -9551,7 +9551,7 @@
   "license": "LGPL-3"
  },
  "test_mimetypes": {
-  "path": "/home/user/odoo/odoo/addons/test_mimetypes",
+  "path": "odoo/addons/test_mimetypes",
   "core": true,
   "depends": [],
   "category": "Hidden/Tests",
@@ -9562,7 +9562,7 @@
   "license": "LGPL-3"
  },
  "test_orm": {
-  "path": "/home/user/odoo/odoo/addons/test_orm",
+  "path": "odoo/addons/test_orm",
   "core": true,
   "depends": [
    "base",
@@ -9577,7 +9577,7 @@
   "license": "LGPL-3"
  },
  "test_read_group": {
-  "path": "/home/user/odoo/odoo/addons/test_read_group",
+  "path": "odoo/addons/test_read_group",
   "core": true,
   "depends": [
    "base",
@@ -9591,7 +9591,7 @@
   "license": "LGPL-3"
  },
  "test_rpc": {
-  "path": "/home/user/odoo/odoo/addons/test_rpc",
+  "path": "odoo/addons/test_rpc",
   "core": true,
   "depends": [
    "web",
@@ -9605,7 +9605,7 @@
   "license": "LGPL-3"
  },
  "test_search_panel": {
-  "path": "/home/user/odoo/odoo/addons/test_search_panel",
+  "path": "odoo/addons/test_search_panel",
   "core": true,
   "depends": [
    "web"
@@ -9618,7 +9618,7 @@
   "license": "LGPL-3"
  },
  "test_testing_utilities": {
-  "path": "/home/user/odoo/odoo/addons/test_testing_utilities",
+  "path": "odoo/addons/test_testing_utilities",
   "core": true,
   "depends": [
    "base",
@@ -9632,7 +9632,7 @@
   "license": "LGPL-3"
  },
  "test_translation_import": {
-  "path": "/home/user/odoo/odoo/addons/test_translation_import",
+  "path": "odoo/addons/test_translation_import",
   "core": true,
   "depends": [
    "base"
@@ -9645,7 +9645,7 @@
   "license": "LGPL-3"
  },
  "test_uninstall": {
-  "path": "/home/user/odoo/odoo/addons/test_uninstall",
+  "path": "odoo/addons/test_uninstall",
   "core": true,
   "depends": [
    "base"
