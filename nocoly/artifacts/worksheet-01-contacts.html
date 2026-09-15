@@ -231,15 +231,15 @@
     </dl>
     <div class="scoreline">
       <span class="chip pass">13 of 13 tests pass</span>
+      <span class="chip pass">6 rerun for the display name</span>
       <span class="chip note">4 differences from Odoo</span>
-      <span class="chip decide">1 change in progress</span>
     </div>
   </header>
 
   <aside class="decision" aria-labelledby="decision-title">
-    <span class="chip decide small" style="justify-self:start">Decided 15 Sep · being built</span>
-    <h2 id="decision-title">Contacts will show “Company, Person” like Odoo</h2>
-    <p>Odoo names a company’s contact “Company, Person” and a nameless address “Company, Delivery” — in lists, cards and every partner picker. Nocoly currently shows the Name alone, so a nameless address is blank in the list and “Unnamed” on its card. The owner chose to match Odoo now: a <em>Display Name</em> formula becomes the title field, then the affected tests are rerun and this page is updated.</p>
+    <span class="chip pass small" style="justify-self:start">Decided 15 Sep · built and retested</span>
+    <h2 id="decision-title">Contacts show “Company, Person”, like Odoo</h2>
+    <p>Odoo names a company’s contact “Company, Person” and a nameless address “Company, Delivery” — in lists, cards, record titles and partner pickers. At the owner’s request, <em>Display Name</em>, a formula, is now the title field. Rerunning the six tests it touches showed the Contacts and Archived tables had lost their Display Name column (HAP never shows a hidden field as a column), so Display Name now shows read-only on a saved contact’s form, under Image. Check it on any record and in the Contacts and Kanban views.</p>
   </aside>
 
   <nav class="toc" aria-label="Sections">
@@ -258,7 +258,7 @@
         <table>
           <thead><tr><th class="num">#</th><th>Field</th><th>Odoo field</th><th>Nocoly type</th><th>Required</th><th>Default</th><th>Notes</th></tr></thead>
           <tbody>
-            <tr><td class="num">1</td><td class="label">Name</td><td><code>name</code></td><td>Text · title field</td><td>when Address Type = Contact</td><td class="muted">—</td><td>Placeholder “Name (company or person)”. Odoo constraint <code>_check_name</code>: “Contacts require a name”; a nameless invoice or delivery address is allowed</td></tr>
+            <tr><td class="num">1</td><td class="label">Name</td><td><code>name</code></td><td>Text</td><td>when Address Type = Contact</td><td class="muted">—</td><td>Placeholder “Name (company or person)”. Odoo constraint <code>_check_name</code>: “Contacts require a name”; a nameless invoice or delivery address is allowed. Not the title field: Display Name is</td></tr>
             <tr><td class="num">2</td><td class="label">Company</td><td><code>parent_id</code></td><td>Relation → Contacts, single</td><td>no</td><td class="muted">—</td><td>Placeholder “Company Employer”. Picker lists contacts that have no company and are not archived — Odoo 19.4 domain <code>[('parent_id', '=', False)]</code></td></tr>
             <tr><td class="num">3</td><td class="label">Address Type</td><td><code>type</code></td><td>Dropdown: Contact · Invoice · Delivery · Other</td><td>yes</td><td>Contact</td><td>Odoo shows it only when adding a contact from a company’s Contacts tab; here, only once Company is set</td></tr>
             <tr><td class="num">4</td><td class="label">Email</td><td><code>email</code></td><td>Email</td><td>no</td><td class="muted">—</td><td></td></tr>
@@ -275,6 +275,8 @@
             <tr><td class="num">20</td><td class="label">Reference</td><td><code>ref</code></td><td>Text</td><td>no</td><td class="muted">—</td><td>Tab Sales &amp; Purchase</td></tr>
             <tr><td class="num">21</td><td class="label">Notes</td><td><code>comment</code></td><td>Rich text</td><td>no</td><td class="muted">—</td><td>Tab Notes. Placeholder “Internal notes...”</td></tr>
             <tr><td class="num">22</td><td class="label">Active</td><td><code>active</code></td><td>Checkbox</td><td class="muted">—</td><td>checked</td><td>Hidden. Set by Archive and Unarchive</td></tr>
+            <tr><td class="num">23</td><td class="label">Display Name</td><td><code>complete_name</code></td><td>Function formula, text · title field</td><td class="muted">—</td><td class="muted">—</td><td>Read-only, under Image on a saved contact; not on the create form. Odoo <code>_get_complete_name</code>: the Company’s name, “, ” and the Name — or the Address Type for a nameless Invoice, Delivery or Other address. A contact without a Company is its Name</td></tr>
+            <tr><td class="num">—</td><td class="label">Parent name</td><td><code>parent_name</code></td><td>Lookup of the Company’s Name, stored</td><td class="muted">—</td><td class="muted">—</td><td>Hidden helper feeding Display Name; renaming a company updates its contacts within seconds, without a workflow</td></tr>
           </tbody>
         </table>
       </div>
@@ -293,7 +295,7 @@
           </tbody>
         </table>
       </div>
-      <p class="aside">A HAP form is a 12-column grid, so Odoo’s two columns become paired rows. HAP has no avatar slot; Image sits under the address.</p>
+      <p class="aside">A HAP form is a 12-column grid, so Odoo’s two columns become paired rows. HAP has no avatar slot; Image sits under the address, with Display Name, read-only, below it once the contact is saved.</p>
     </div>
 
     <div class="block">
@@ -329,9 +331,9 @@
         <table>
           <thead><tr><th>View</th><th>Type</th><th>Shows</th><th>Odoo 19.4</th></tr></thead>
           <tbody>
-            <tr><td class="label">Contacts</td><td>table</td><td>Active records. Columns Name · Company · Email · Phone · Country, sorted by Name A→Z. Quick filters Salesperson · Company · Country</td><td>List view: Name, Email, Phone, Activities, Country; a person’s name reads “Company, Person”, so Company is its own column here. Group-bys Salesperson, Company, Country</td></tr>
-            <tr><td class="label">Kanban</td><td>gallery</td><td>Active records. Image cover; Name, Email, Phone, City, Country</td><td>Kanban view</td></tr>
-            <tr><td class="label">Archived</td><td>table</td><td>Archived records, same columns</td><td>The Archived filter</td></tr>
+            <tr><td class="label">Contacts</td><td>table</td><td>Active records. Columns Display Name · Email · Phone · Country, sorted by Display Name A→Z. Quick filters Salesperson · Company · Country</td><td>List view: the display name (“Company, Person”), Email, Phone, Activities, Country, ordered by <code>complete_name</code>. Group-bys Salesperson, Company, Country</td></tr>
+            <tr><td class="label">Kanban</td><td>gallery</td><td>Active records. Image cover; title Display Name; Email, Phone, City, Country; sorted by Display Name</td><td>Kanban view</td></tr>
+            <tr><td class="label">Archived</td><td>table</td><td>Archived records, same columns and sort</td><td>The Archived filter</td></tr>
           </tbody>
         </table>
       </div>
@@ -380,7 +382,7 @@
 
   <section id="build" aria-labelledby="build-title">
     <div class="section-head"><span class="n">2</span><h2 class="section" id="build-title">Build</h2></div>
-    <p class="prose">Built by <code>nocoly/build/contacts.py</code> in six steps — fields, layout, rules, views, buttons, automations — each safe to re-run. Every id is in <code>nocoly/build/ids.json</code>.</p>
+    <p class="prose">Built by <code>nocoly/build/contacts.py</code> — steps fields, display, layout, rules, views, buttons, automations — each safe to re-run. Every id is in <code>nocoly/build/ids.json</code>; <code>contacts.py names</code> prints every contact’s Name, Company, Address Type and Display Name.</p>
 
     <div class="table-wrap">
       <table>
@@ -389,7 +391,8 @@
           <tr><td class="label">App</td><td>ERP Master</td><td class="id">6cb4d051-a33c-4bf9-b56f-5f47f0e85dc9</td></tr>
           <tr><td class="label">Menu group</td><td>Contacts</td><td class="id">6aa8a3a93e5e4ad5b852a6d3</td></tr>
           <tr><td class="label">Worksheet</td><td>Contacts, alias <code>res_partner</code></td><td class="id">6aa8a3b34a22ad87b728c4fe</td></tr>
-          <tr><td class="label">Controls</td><td>28 — the 22 fields, 3 tabs, 3 dividers; aliases are Odoo field names</td><td class="muted">—</td></tr>
+          <tr><td class="label">Controls</td><td>30 — the 23 fields, the Parent name lookup, 3 tabs, 3 dividers; aliases are Odoo field names</td><td class="muted">—</td></tr>
+          <tr><td class="label">Title field</td><td>Display Name, a function formula · Parent name, its lookup</td><td class="id">6aa8e4544a73a3142152d665 · 6aa8e4504a22ad87b728ce91</td></tr>
           <tr><td class="label">Rules</td><td>The 3 above</td><td class="muted">—</td></tr>
           <tr><td class="label">Views</td><td>Contacts · Kanban · Archived</td><td class="id">6aa8a3b34a22ad87b728c502 · 6aa8a4d11204328eb1af06f9 · 6aa8a4d14a73a3142152ca08</td></tr>
           <tr><td class="label">Buttons</td><td>Archive · Unarchive, each running a one-step workflow that sets Active</td><td class="id">6aa8a5654720c515252bda3d · 6aa8a5674a73a3142152ca18</td></tr>
@@ -402,6 +405,7 @@
     <div class="block">
       <h3>History</h3>
       <p>Built first from the Odoo 19.0 source, then moved to 19.4 the same day, keeping every id: the Person / Company switch removed, DUNS added, the rules and views that depended on the switch retired, Company shown on every contact. A last pass copied Company ID and DUNS on linking, kept archived companies out of the Company picker, and stopped the push automation running for contacts that have nobody under them.</p>
+      <p>After the first UI test the owner asked for Odoo’s display name. Parent name and Display Name were added and Display Name made the title field; the views moved to Display Name columns and sort. Renaming the test company updated its contacts’ Display Name within six seconds. Rerunning the tests it touches showed that HAP never shows a hidden field as a table column, so Display Name became read-only and hidden on create instead of hidden.</p>
     </div>
 
     <div class="block">
@@ -415,22 +419,22 @@
 
   <section id="tests" aria-labelledby="tests-title">
     <div class="section-head"><span class="n">3</span><h2 class="section" id="tests-title">Tests and differences</h2></div>
-    <p class="prose">Run in the Nocoly UI in Chrome on 15 Sep 2026. After each step the stored values were read back with the hap CLI. Test records are named <code>TEST …</code>.</p>
+    <p class="prose">Run in the Nocoly UI in Chrome on 15 Sep 2026. After each step the stored values were read back with the hap CLI. Tests 1, 2, 4, 5, 6 and 10 were rerun the same day, after Display Name was added; their results are the rerun’s. Test records are named <code>TEST …</code>.</p>
 
     <div class="table-wrap">
       <table>
         <thead><tr><th class="num">#</th><th>Check</th><th>Steps</th><th>Expected</th><th>Result</th></tr></thead>
         <tbody>
-          <tr><td class="num">1</td><td class="label">Empty form</td><td>+ Record → Submit</td><td>Name marked required; “Contacts require a name”</td><td><div class="result"><span class="chip pass small">Pass</span>“Please fill in Name” on the field and a “Contacts require a name” dialog</div></td></tr>
-          <tr><td class="num">2</td><td class="label">Company record</td><td>Fill Name, Email, Phone, Website, Tax ID, Company ID, DUNS and address → Submit</td><td>Saved; in Contacts and Kanban, not Archived</td><td><div class="result"><span class="chip pass small">Pass</span>Every value read back; Address Type defaulted to Contact, Active to checked; 03-2287 6543 stored as +60322876543</div></td></tr>
+          <tr><td class="num">1</td><td class="label">Empty form</td><td>+ Record → Submit</td><td>Name marked required; “Contacts require a name”; no Display Name on the form</td><td><div class="result"><span class="chip pass small">Pass</span>“Please fill in Name” on the field and a “Contacts require a name” dialog</div></td></tr>
+          <tr><td class="num">2</td><td class="label">Company record</td><td>Fill Name, Email, Phone, Website, Tax ID, Company ID, DUNS and address → Submit</td><td>Saved; in Contacts and Kanban, not Archived, under its Name</td><td><div class="result"><span class="chip pass small">Pass</span>Rerun with TEST Solo Trading: Display Name = its Name, the record’s title, read-only under Image. First run: every value read back, 03-2287 6543 stored as +60322876543</div></td></tr>
           <tr><td class="num">3</td><td class="label">Address Type hidden</td><td>Open the new company</td><td>No Address Type field</td><td><div class="result"><span class="chip pass small">Pass</span></div></td></tr>
-          <tr><td class="num">4</td><td class="label">Company picker</td><td>New record → open Company</td><td>Contacts without a company; no archived ones</td><td><div class="result"><span class="chip pass small">Pass</span>Only TEST QA Trading Sdn Bhd, never the people under it; “No records available” while it was archived</div></td></tr>
-          <tr><td class="num">5</td><td class="label">Contact under a company</td><td>From the company’s Contacts tab, add TEST Person One with no address</td><td>Address Type shows, default Contact; within seconds the person has the company’s address, Tax ID, Company ID and DUNS</td><td><div class="result"><span class="chip pass small">Pass</span>All eight values copied</div></td></tr>
-          <tr><td class="num">6</td><td class="label">Nameless address</td><td>Add a Delivery address with no name</td><td>Saves; no address copied</td><td><div class="result"><span class="chip pass small">Pass</span>Got Tax ID, Company ID and DUNS, no address</div></td></tr>
+          <tr><td class="num">4</td><td class="label">Company picker</td><td>New record → open Company</td><td>Contacts without a company; no archived ones</td><td><div class="result"><span class="chip pass small">Pass</span>TEST Solo Trading and TEST QA Trading Sdn Bhd only, never the people or addresses; empty while the company was archived</div></td></tr>
+          <tr><td class="num">5</td><td class="label">Contact under a company</td><td>From the company’s Contacts tab, add a person with no address</td><td>Address Type shows, default Contact; within seconds the company’s address, Tax ID, Company ID and DUNS; named “Company, Person”</td><td><div class="result"><span class="chip pass small">Pass</span>TEST Person Three: “TEST QA Trading Sdn Bhd, TEST Person Three”, all eight values and the salesperson copied</div></td></tr>
+          <tr><td class="num">6</td><td class="label">Nameless address</td><td>Add an Invoice or Delivery address with no name</td><td>Saves; no address copied; named “Company, Address Type”</td><td><div class="result"><span class="chip pass small">Pass</span>“TEST QA Trading Sdn Bhd, Invoice”: Tax ID, Company ID and DUNS, no address. The Delivery address is titled “TEST QA Trading Sdn Bhd, Delivery”</div></td></tr>
           <tr><td class="num">7</td><td class="label">Salesperson</td><td>Set the company’s Salesperson, add another contact without one</td><td>The contact gets the company’s salesperson</td><td><div class="result"><span class="chip pass small">Pass</span>TEST Person Two got it</div></td></tr>
           <tr><td class="num">8</td><td class="label">Push address</td><td>Change the company’s City</td><td>Contact-type contacts get it; the Delivery address does not</td><td><div class="result"><span class="chip pass small">Pass</span>Cyberjaya → Putrajaya on both people; Delivery stayed blank</div></td></tr>
           <tr><td class="num">9</td><td class="label">Push identifiers</td><td>Change the company’s Tax ID</td><td>Every contact under it gets it</td><td><div class="result"><span class="chip pass small">Pass</span>All three got C2584563299, in the same save as test 8</div></td></tr>
-          <tr><td class="num">10</td><td class="label">Views</td><td>Contacts, Kanban and Archived tabs</td><td>Columns Name, Company, Email, Phone, Country; sorted by Name; Kanban shows image, email, phone, city, country</td><td><div class="result"><span class="chip pass small">Pass</span>See differences 1 and 4</div></td></tr>
+          <tr><td class="num">10</td><td class="label">Views</td><td>Contacts, Kanban and Archived tabs</td><td>Columns Display Name, Email, Phone, Country, sorted by Display Name; Kanban titled by Display Name with email, phone, city, country</td><td><div class="result"><span class="chip pass small">Pass</span>After one fix: the tables first lacked the Display Name column. Now 7 rows, “TEST QA Trading Sdn Bhd” to “TEST Solo Trading”; cards the same. See difference 4</div></td></tr>
           <tr><td class="num">11</td><td class="label">Archive</td><td>Archive a contact</td><td>Confirmation text; leaves Contacts, appears in Archived</td><td><div class="result"><span class="chip pass small">Pass</span>Exact text; its contacts kept showing it as their Company, as in Odoo</div></td></tr>
           <tr><td class="num">12</td><td class="label">Unarchive</td><td>Unarchive it from Archived</td><td>Back in Contacts</td><td><div class="result"><span class="chip pass small">Pass</span>No confirmation; “Operation completed”</div></td></tr>
           <tr><td class="num">13</td><td class="label">Odoo side by side</td><td>casimir.odoo.com Contacts vs Nocoly</td><td>Same fields as the Fields table, apart from Not built now</td><td><div class="result"><span class="chip pass small">Pass</span>See differences below</div></td></tr>
@@ -441,7 +445,7 @@
     <div class="block">
       <h3>Differences from Odoo seen in testing</h3>
       <ol class="differences">
-        <li><span class="n">1</span><div class="head"><strong>Display name</strong><span class="chip decide small">Being fixed</span></div><p>Odoo shows “Company, Person” and “Company, Delivery”; Nocoly shows the Name alone. The owner chose to match Odoo — see the top of the page.</p></li>
+        <li><span class="n">1</span><div class="head"><strong>Display Name on the form</strong><span class="chip note small">Note</span></div><p>Names now match Odoo in lists, cards, titles and pickers. Unlike Odoo, a saved contact’s form also shows Display Name, read-only, under Image — HAP never shows a hidden field as a table column.</p></li>
         <li><span class="n">2</span><div class="head"><strong>Archive and Unarchive</strong><span class="chip note small">Note</span></div><p>The button that does not apply is greyed out rather than hidden.</p></li>
         <li><span class="n">3</span><div class="head"><strong>“Modifying form data” bar</strong><span class="chip note small">HAP behaviour</span></div><p>After adding a contact from the Contacts tab, or picking a Salesperson, an open record keeps a Modifying form data — Cancel / Save bar although the change is already stored. Clicking Save clears it.</p></li>
         <li><span class="n">4</span><div class="head"><strong>Kanban card</strong><span class="chip note small">Note</span></div><p>The image sits on top of the card; Odoo puts the avatar on the left.</p></li>
@@ -450,10 +454,10 @@
 
     <div class="block">
       <h3>Test records left for review</h3>
-      <div class="records"><span>TEST QA Trading Sdn Bhd</span><span>TEST Person One</span><span>TEST Person Two</span><span>nameless Delivery address</span></div>
+      <div class="records"><span>TEST QA Trading Sdn Bhd</span><span>TEST Person One</span><span>TEST Person Two</span><span>TEST Person Three</span><span>nameless Delivery address</span><span>nameless Invoice address</span><span>TEST Solo Trading</span></div>
       <p class="aside">Inspect them freely; remove them after sign-off.</p>
     </div>
   </section>
 
-  <footer>Source: <code>nocoly/worksheets/01-contacts.md</code> in ca1phas/odoo, branch 19.0.</footer>
+  <footer>Source: <code>nocoly/worksheets/01-contacts.md</code> in ca1phas/odoo, branch 19.0. Reviewing guide: <code>nocoly/REVIEWING.md</code>.</footer>
 </main>

@@ -41,12 +41,12 @@ record was seeded from the Odoo tenant.
 
 | # | Worksheet | Odoo model | State | Hand-off |
 |---|---|---|---|---|
-| 01 | Contacts | `res.partner` | Built, UI-tested 13/13 — "Company, Person" display name now built; its tests rerun next | [md](worksheets/01-contacts.md) · [page](https://claude.ai/artifact/JHfvYa7uKiucMfkPnyH2Xu) |
+| 01 | Contacts | `res.partner` | Built, UI-tested 13/13; "Company, Person" display name built and its 6 tests rerun — ready for review | [md](worksheets/01-contacts.md) · [page](https://claude.ai/artifact/JHfvYa7uKiucMfkPnyH2Xu) |
 | 02 | Units & Packagings | `uom.uom` | Built, seeded (30 units), UI-tested 18/19 + 1 partly — ready for review | [md](worksheets/02-units-and-packagings.md) · [page](https://claude.ai/artifact/LDoy447FXWYd5gkdDUNDJo) |
-| 03 | Products | `product.template` | Built and seeded (14 products) — UI test next | [md](worksheets/03-products.md) |
-| 04 | Product Variants | `product.product` | Not started | — |
-| 05 | Journals | `account.journal` | CLI-built + HAP UI/live ohyes Odoo validated — Teh Li Wei; implementation agents skip this worksheet | [md](worksheets/05-journals.md) · `build/journals.py` |
-| 06 | Invoices | `account.move` | Not started | — |
+| 03 | Products | `product.template` | Built, seeded (14 products), UI-tested 15/17 + 2 partly — ready for review | [md](worksheets/03-products.md) · [page](https://claude.ai/artifact/4fKn4CsuYPTT6zSAMVZFSv) |
+| 04 | Product Variants | `product.product` | Built, seeded (one variant per product), UI-tested 16/16 — ready for review | [md](worksheets/04-product-variants.md) · [page](https://claude.ai/artifact/1xo4yDavxjPNwHsUMHFYGV) |
+| 05 | Journals | `account.journal` | First build by Teh Li Wei; completed against casimir and UI-tested by us | [md](worksheets/05-journals.md) |
+| 06 | Invoices | `account.move` | Being built by Teh Li Wei after Journals; our re-check follows | — |
 | 07 | Invoice Lines | `account.move.line` | Not started | — |
 
 ## Odoo words and HAP words

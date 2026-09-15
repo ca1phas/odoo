@@ -6,8 +6,9 @@ the tenant's admin user is served, so parts restricted to Accounting groups (`ac
 absent from the form, notably the Default / Suspense / Profit / Loss account fields and Currency. Behaviour the
 tenant cannot show comes from the Odoo 19.0 source, `addons/account/models/account_journal.py`.
 
-An earlier Journals hand-off used the colleague's own tenant, ohyes.odoo.com; those notes are kept in
-`reference/ohyes/account.journal.md`. **This file is the reference** (owner, 15 Sep 2026).
+Teh Li Wei's first Journals hand-off (branch `codex/journals-phase1-handoff`) was read from his own tenant,
+ohyes.odoo.com; those notes are kept in `reference/ohyes/account.journal.md`. **This file, from casimir.odoo.com,
+is the reference** (owner, 15 Sep 2026).
 
 Menu: Invoicing › Configuration › Accounting › **Journals** — action *Journals*, `list,kanban,form`, no default filter.
 The Invoicing dashboard is a second action on the model (*Dashboard*, `kanban,form`, default filter Favorites).

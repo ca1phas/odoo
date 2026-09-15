@@ -7,7 +7,7 @@
 | Odoo model | `product.template` |
 | Reference | **casimir.odoo.com — Odoo saas~19.4+e**: fields by module, form, list, kanban, search, defaults, order and all 14 records, extracted read-only to `nocoly/reference/odoo-19.4/product.template.md`. Behaviour the tenant cannot show — onchange checks, domains, defaults in code — is read from the Odoo 19.0 source in this repo: `addons/product/models/product_template.py` |
 | Phase | 1 — core worksheet 3 of 7 |
-| Status | Built with the hap CLI and seeded on 15 Sep 2026 · UI test to do |
+| Status | Built with the hap CLI and seeded on 15 Sep 2026 · UI-tested on 15 Sep 2026: 15 of 17 pass, 2 in part · ready for review |
 
 The catalogue: every good and service a company sells or buys, with its price, cost and unit. Only the `product`
 module's own fields are here, plus Sales Description; Sales, Purchase, Inventory, Invoicing and the optional bundles
@@ -124,8 +124,8 @@ None.
 The 14 products of the extract, all active and none favourite: Name, Internal Reference, Product Type, Sales,
 Purchase, Sales Price, Cost, Unit (Units, Hours or Days, from Units & Packagings) and Sales Description; Weight and
 Volume 0, as on the tenant. The Ergonomic Office Chair's internal note — a stray pasted code snippet — is not
-copied. The monitor, chair and desk have 3, 4 and 3 variants on the tenant (hence no Internal Reference and a Cost
-of 0 there); their variants wait for Product Variants.
+copied. The monitor, chair and desk have 2, 3 and 2 active variants on the tenant, plus each one's archived original
+variant (hence no Internal Reference and a Cost of 0 on the product); their variants wait for Product Variants.
 
 ## 2 · Build
 
@@ -177,25 +177,47 @@ and only the UI test can show them working.
 
 ## 3 · Test list
 
-Run in the Nocoly UI. Test records are named `TEST …`. CLI read-backs run from the repo root:
-`~/.hap-venv/bin/python nocoly/build/products.py product "<Name>"`.
+Run in the Nocoly UI in Chrome on 15 Sep 2026; stored values read back with
+`~/.hap-venv/bin/python nocoly/build/products.py product "<Name>"` from the repo root. Test records are named `TEST …`.
 
 | # | Check | Steps | Expected | Result |
 |---|---|---|---|---|
-| 1 | Menu | Open ERP Master | Menu group **Products** holds Products, then Units & Packagings. Products opens on the **Products** gallery; its views are Products · List · Archived | |
-| 2 | Empty form and defaults | Products → + Record, look | Name (placeholder "e.g. Cheese Burger"); Favorite unchecked, Sales and Purchase checked; Image. Tab General Information: Product Type **Goods**, Sales Price **RM 1.00**, Unit **Units**, Cost **RM 0.00**, Internal Reference, Internal Notes (placeholder "This note is only for internal purposes."). Tabs Sales and Inventory shown; Weight 0.00 kg, Volume 0.00 m³. No Active field | |
-| 3 | Required fields | Clear Unit, leave Name empty → Submit | Name and Unit marked required; not saved | |
-| 4 | Unit picker | Open Unit | Only active units — the 14 standard ones, e.g. Days showing 8 · Hours — plus any active TEST unit; no Dozens, cm or km | |
-| 5 | Packagings picker | Unit = Units; tab Sales → Packagings | Active units except Units; more than one can be picked. Change Unit to Hours: Units is offered, Hours is not | |
-| 6 | Sales tab hides | Uncheck Sales; check it again | The Sales tab disappears, then comes back | |
-| 7 | Inventory tab hides | Product Type = Service; back to Goods | The Inventory tab disappears, then comes back | |
-| 8 | Negative cost | Cost −1 | "The cost of a product can't be negative." under Cost; Submit refused | |
-| 9 | Save a product | Name "TEST Product", Internal Reference TEST-0001, Sales Price 1890, Cost 5.5, Packagings Pack of 6, Sales Description "TEST line", Weight 1.5 → Submit | Saved. Sales Price and Cost show the RM symbol and 2 decimals (5.50). CLI: code TEST-0001, type Goods, sale_ok and purchase_ok True, list_price 1890.00, standard_price 5.50, uom Units, active True, weight 1.50 | |
-| 10 | One-way relations | Open a unit in Units & Packagings | No Products or Packagings field, and no new column in its views | |
-| 11 | Views | Products, List, Archived | Products: cards with image, Name, Internal Reference, Sales Price, Unit. List: columns Name, Internal Reference, Sales Price, Cost, Unit. Both: the 14 products and TEST Product, sorted by Name (27" 4K Monitor first). Archived: empty | |
-| 12 | Favourites first | Mark Whiteboard Marker Set Favorite; then unmark it | It moves to the top of Products and List, then back to its place by name, just before Wireless Keyboard & Mouse Set | |
-| 13 | Quick filters | List: Product Type = Service; then Purchase unchecked; then Favorite checked | Service: Annual Support Retainer, Implementation Consulting, both Nocoly HAP Licences, Onsite Training (per day). Purchase unchecked: the same five. Favorite checked: none | |
-| 14 | Archive | Open TEST Product → Archive | Confirmation as above with Archive / Cancel; TEST Product leaves Products and List and appears in Archived; on the record, Archive is greyed out and Unarchive available | |
-| 15 | Unarchive | Archived → TEST Product → Unarchive | No confirmation; back in Products and List | |
-| 16 | Seeded data | `~/.hap-venv/bin/python nocoly/build/products.py verify` | Every product OK; "14 in the extract; 0 missing or differing"; TEST Product listed as not in the extract | |
-| 17 | Odoo side by side | casimir.odoo.com Products vs Nocoly | Same fields as §1 apart from the "Not built now" list; the same 14 products with their references, types, Sales and Purchase flags, prices, costs, units and sales descriptions | |
+| 1 | Menu | Open ERP Master | Menu group **Products** holds Products, then Units & Packagings. Products opens on the **Products** gallery; its views are Products · List · Archived | **Pass** — HAP reopens the view you last used; opened fresh, the worksheet starts on the gallery |
+| 2 | Empty form and defaults | Products → + Record, look | Name (placeholder "e.g. Cheese Burger"); Favorite unchecked, Sales and Purchase checked; Image. Tab General Information: Product Type **Goods**, Sales Price **RM 1.00**, Unit **Units**, Cost **RM 0.00**, Internal Reference, Internal Notes (placeholder "This note is only for internal purposes."). Tabs Sales and Inventory shown; Weight 0.00 kg, Volume 0.00 m³. No Active field | **Partly** — every field, default and tab as expected, with Odoo's help under the fields, but Internal Notes shows no placeholder, even when clicked into (difference 2). Sales Description shows its placeholder |
+| 3 | Required fields | Clear Unit, leave Name empty → Submit | Name and Unit marked required; not saved | **Pass** — "Please fill in Unit" as soon as Unit is cleared; Submit adds "Please fill in Name" and "Please fill in the record correctly" |
+| 4 | Unit picker | Open Unit | Only active units — the 14 standard ones, e.g. Days showing 8 · Hours — plus any active TEST unit; no Dozens, cm or km | **Partly** — exactly 17: the 14 standard active units and the 3 TEST units; no Dozens, cm or km. Names only, without Contains and Reference Unit (difference 1); typing "Hours" also finds Minutes and Days |
+| 5 | Packagings picker | Unit = Units; tab Sales → Packagings | Active units except Units; more than one can be picked. Change Unit to Hours: Units is offered, Hours is not | **Pass** — 16 units without Units; Pack of 6 and Days picked together; with Unit Hours, the 16 include Units and not Hours |
+| 6 | Sales tab hides | Uncheck Sales; check it again | The Sales tab disappears, then comes back | **Pass** |
+| 7 | Inventory tab hides | Product Type = Service; back to Goods | The Inventory tab disappears, then comes back | **Pass** |
+| 8 | Negative cost | Cost −1 | "The cost of a product can't be negative." under Cost; Submit refused | **Pass** — shown as you type, beside Cost; Submit opens "Please correct form errors" with the same message |
+| 9 | Save a product | Name "TEST Product", Internal Reference TEST-0001, Sales Price 1890, Cost 5.5, Packagings Pack of 6, Sales Description "TEST line", Weight 1.5 → Submit | Saved. Sales Price and Cost show the RM symbol and 2 decimals (5.50). CLI: code TEST-0001, type Goods, sale_ok and purchase_ok True, list_price 1890.00, standard_price 5.50, uom Units, active True, weight 1.50 | **Pass** — RM 1,890.00 and RM 5.50 in the form; CLI as expected, with packagings Pack of 6, description_sale "TEST line", volume 0.00 |
+| 10 | One-way relations | Open a unit in Units & Packagings | No Products or Packagings field, and no new column in its views | **Pass** — Units shows Unit Name, Contains and Reference Unit only; both views keep their three columns; `units.py verify` still 0 differing |
+| 11 | Views | Products, List, Archived | Products: cards with image, Name, Internal Reference, Sales Price, Unit. List: columns Name, Internal Reference, Sales Price, Cost, Unit. Both: the 14 products and TEST Product, sorted by Name (27" 4K Monitor first). Archived: empty | **Pass** — 15 cards and 15 rows; TEST Product between Steel Filing Cabinet 4-Drawer and Whiteboard Marker Set |
+| 12 | Favourites first | Mark Whiteboard Marker Set Favorite; then unmark it | It moves to the top of Products and List, then back to its place by name, just before Wireless Keyboard & Mouse Set | **Pass** — after a refresh each time (difference 3); the change is stored with Save on the record's *Modifying form data* bar |
+| 13 | Quick filters | List: Product Type = Service; then clear it and click Purchase twice (ticked, then unticked); then Favorite ticked | Service: Annual Support Retainer, Implementation Consulting, both Nocoly HAP Licences, Onsite Training (per day). Purchase unticked: the same five. Favorite ticked: none | **Pass** — Purchase ticked lists the 9 goods and TEST Product; Service with Purchase ticked lists none; Favorite ticked lists Whiteboard Marker Set while it is a favourite (difference 4) |
+| 14 | Archive | Open TEST Product → Archive | Confirmation as above with Archive / Cancel; TEST Product leaves Products and List and appears in Archived; on the record, Archive is greyed out and Unarchive available | **Pass** — exact text; "Operation completed" and the record closes (difference 5) |
+| 15 | Unarchive | Archived → TEST Product → Unarchive | No confirmation; back in Products and List | **Pass** — Archived empty again, List back to 15 |
+| 16 | Seeded data | `~/.hap-venv/bin/python nocoly/build/products.py verify` | Every product OK; "14 in the extract; 0 missing or differing"; TEST Product listed as not in the extract | **Pass** — "14 in the extract; 0 missing or differing; 1 not in the extract ['TEST Product']" |
+| 17 | Odoo side by side | casimir.odoo.com Products vs Nocoly | Same fields as §1 apart from the "Not built now" list; the same 14 products with their references, types, Sales and Purchase flags, prices, costs, units and sales descriptions | **Pass** — Sales › Products shows the same 14 in the same order, prices and references; the laptop's General Information, Sales and Inventory tabs hold §1's fields and the Not built now ones |
+
+### Differences from Odoo seen in testing
+
+1. **Unit and Packagings pickers list names only.** Odoo's unit dropdown hints each unit's ratio ("Days 8.0
+   Hours"); HAP's dropdown shows the name. The search still reads Contains and Reference Unit: "Hours" finds Minutes
+   and Days. The same as Units & Packagings, difference 1.
+2. **Internal Notes has no placeholder.** HAP's rich-text editor never shows a field's hint; the text is stored on the
+   field and shows nowhere. Odoo shows "This note is only for internal purposes." in the empty field.
+3. **Favorite is a checkbox, not a star**, and an open record's changes are kept with Save on the *Modifying form
+   data* bar. The open view re-sorts only after Refresh.
+4. **Checkbox quick filters have two states once used.** Sales, Purchase and Favorite start unset; a click filters
+   for ticked, the next for unticked — the box then looks empty but still filters. Reload the view to clear them.
+   Odoo's Sales and Purchase filters are on or off.
+5. **Archive and Unarchive.** The button that does not apply is greyed out rather than hidden, as on Contacts and
+   Units & Packagings, and the record closes once it leaves the open view; Odoo keeps the form open with an
+   *Archived* ribbon.
+
+### Test records left in the worksheet
+
+TEST Product — TEST-0001, Goods, Sales Price RM 1,890.00, Cost RM 5.50, Unit Units, Packagings Pack of 6, Sales
+Description "TEST line", Weight 1.50 kg. Whiteboard Marker Set is back to not favourite. Remove TEST Product after
+sign-off.
