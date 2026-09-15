@@ -7,7 +7,7 @@
 | Odoo model | `res.partner` |
 | Reference | **casimir.odoo.com — Odoo saas~19.4+e** (form, list, kanban and search views read from the live tenant). Behaviour the tenant cannot show — constraints, sync rules — is read from the Odoo 19.0 source in this repo: `odoo/addons/base/models/res_partner.py` |
 | Phase | 1 — core worksheet 1 of 7 |
-| Status | Built with the hap CLI and matched to 19.4 on 15 Sep 2026 · **UI-tested: 13 of 13 pass**, 4 differences from Odoo noted · ready for review |
+| Status | Built with the hap CLI and matched to 19.4 on 15 Sep 2026 · **UI-tested: 13 of 13 pass** · "Company, Person" display name added the same day, and the six tests it touches rerun and passing after one fix · 4 differences from Odoo noted · ready for review |
 
 One worksheet holds companies, the people who work at them, and their extra addresses (invoice, delivery,
 other) — as Odoo keeps all three in `res.partner`, linked by **Company**.
@@ -37,7 +37,7 @@ Labels are Odoo's. "Hidden" means not on the form but used by views, rules or bu
 | 20 | Reference | `ref` | Text | no | — | Tab **Sales & Purchase** |
 | 21 | Notes | `comment` | Rich text | no | — | Tab **Notes**. Placeholder "Internal notes..." |
 | 22 | Active | `active` | Checkbox | — | checked | Hidden. Set by Archive / Unarchive |
-| 23 | Display Name | `complete_name` | Function formula, text · **title field** | — | — | Hidden. Odoo `_get_complete_name`: the Name — or, for a nameless Invoice, Delivery or Other address under a company, its Address Type — prefixed with the Company's Name and ", " when there is a Company: "TEST QA Trading Sdn Bhd, TEST Person One", "TEST QA Trading Sdn Bhd, Delivery". A contact without a Company is its Name. Trimmed, as Odoo strips it |
+| 23 | Display Name | `complete_name` | Function formula, text · **title field** | — | — | Read-only, under Image on a saved contact; not on the create form. Odoo `_get_complete_name`: the Name — or, for a nameless Invoice, Delivery or Other address under a company, its Address Type — prefixed with the Company's Name and ", " when there is a Company: "TEST QA Trading Sdn Bhd, TEST Person One", "TEST QA Trading Sdn Bhd, Delivery". A contact without a Company is its Name. Trimmed, as Odoo strips it |
 | — | Parent name | `parent_name` *(helper)* | Lookup through Company of its Name, stored | — | — | Hidden. Feeds Display Name. Odoo's related field `parent_id.name` |
 
 **How Display Name works.** A number formula has no IF, so Display Name is a HAP *function formula* with a text
@@ -53,8 +53,7 @@ IF(ISBLANK(Company), TRIM(Name),
 Contacts nest one level only (the Company picker lists contacts that have no company), so the Company's Name is
 always the top-level company's. Parent name is a stored lookup: renaming a company updates its contacts' Parent name
 and Display Name within seconds, without a workflow — tested by renaming TEST QA Trading Sdn Bhd and back. Display
-Name is hidden on the form, but HAP still hands the title field to record titles, tables, cards and pickers (the
-lists blank other hidden fields).
+Name is read-only rather than hidden because HAP leaves hidden fields out of table columns, the title field included.
 
 ### Form layout
 
@@ -66,7 +65,8 @@ lists blank other hidden fields).
 | Tabs: Contacts · Sales & Purchase · Invoicing · Notes | Tabs: Contacts · Sales & Purchase · Notes |
 
 A HAP form is a 12-column grid, so Odoo's two columns become paired rows. HAP has no avatar slot; Image sits
-under the address. Display Name is not on the form, as in Odoo, whose form shows Name; it is the record's title.
+under the address. Display Name is the record's title, and shows read-only under Image once the contact is saved;
+Odoo's form shows Name only.
 
 ### Rules
 
@@ -154,6 +154,11 @@ Renaming the company changed its three contacts' Display Name within six seconds
 workflow ran. The three rules, both buttons, the two automations and the Archive / Unarchive workflows read back
 unchanged, and so did the other 28 controls apart from Name no longer being the title.
 
+**Display name retest, 15 Sep 2026.** The rerun of the tests it touches found the Contacts and Archived tables
+without their Display Name column: HAP leaves a hidden field out of table columns, title or not. `contacts.py
+display` now makes Display Name read-only and hidden on create (`fieldPermission` "100") instead of hidden, and
+`contacts.py layout` gives it a full row under Image, with Parent name, still hidden, below it.
+
 ### Cleanup, 15 Sep 2026
 
 - The 3 rules the 19.0 build left disabled — *Company is hidden on companies*, *Job Position only for persons*,
@@ -176,37 +181,37 @@ unchanged, and so did the other 28 controls apart from Name no longer being the 
   their plain names (`IF`, `CONCAT`, `TRIM`, `ISBLANK` — no `c` prefix, unlike a number formula), a dropdown
   compares as its label (`$type$ == "Delivery"`), and `ISBLANK` works on a Relation. It recomputes when a stored
   lookup it reads changes.
-- A function formula can be the **title field while hidden**: the list calls behind tables, cards and pickers
-  still return the title's value, while they blank hidden fields in general (a hidden checkbox came back "0");
-  `record get` returns all of them.
+- A **hidden title field** still reaches record titles, cards and pickers, but **not table columns**: a table
+  leaves out every hidden field, even one listed in its columns. The list calls behind views blank hidden fields in
+  general (a hidden checkbox came back "0"); `record get` returns all of them.
 
 ## 3 · Test list
 
 Run in the Nocoly UI in Chrome on 15 Sep 2026; stored values were read back with the hap CLI after each step.
-Test records are named `TEST …`.
+Tests 1, 2, 4, 5, 6 and 10 were rerun the same day once Display Name had been added; their results below are the
+rerun's, with the first run's in brackets. Test records are named `TEST …`.
 
 | # | Check | Steps | Expected | Result |
 |---|---|---|---|---|
-| 1 | Empty form | + Record → Submit | Name is marked required; "Contacts require a name" | **Pass** — "Please fill in Name" on the field and a "Contacts require a name" dialog |
-| 2 | Company record | Fill Name, Email, Phone, Website, Tax ID, Company ID, DUNS, address → Submit | Saved; appears in Contacts and Kanban, not Archived | **Pass** — every value read back; Address Type defaulted to Contact, Active to checked. Phone 03-2287 6543 stored as +60322876543 |
+| 1 | Empty form | + Record → Submit | Name is marked required; "Contacts require a name". No Display Name or Address Type on the form | **Pass** — "Please fill in Name" on the field and a "Contacts require a name" dialog; the form lists no Display Name |
+| 2 | Company record | Fill Name, Email, Phone, Website, Tax ID, Company ID, DUNS, address → Submit | Saved; appears in Contacts and Kanban, not Archived, as its Name | **Pass** — rerun with TEST Solo Trading (Name, Email, City, Country): Display Name "TEST Solo Trading", the record's title, shown read-only under Image. [First run: every value read back; Address Type defaulted to Contact, Active to checked; Phone 03-2287 6543 stored as +60322876543] |
 | 3 | Address Type hidden | Open the new company | No Address Type field (it has no Company) | **Pass** |
-| 4 | Company picker | New record → open Company | Lists contacts without a company; not archived ones | **Pass** — lists only TEST QA Trading Sdn Bhd, never the people under it; "No records available" while that company was archived |
-| 5 | Contact under a company | From the company's Contacts tab, add "TEST Person One" with no address | Address Type shows, default Contact. Within seconds the person has the company's address, Tax ID, Company ID and DUNS | **Pass** — all eight values copied |
-| 6 | Nameless address | Add a Delivery address with no name | Saves (Name not required) and gets no address copied | **Pass** — saved; got Tax ID, Company ID and DUNS, no address |
+| 4 | Company picker | New record → open Company | Lists contacts without a company, by name; not archived ones | **Pass** — lists TEST Solo Trading and TEST QA Trading Sdn Bhd, never the people or addresses under it. [First run: "No records available" while that company was archived] |
+| 5 | Contact under a company | From the company's Contacts tab, add a person with no address | Address Type shows, default Contact. Within seconds the person has the company's address, Tax ID, Company ID and DUNS, and the Display Name "Company, Person" | **Pass** — TEST Person Three: "TEST QA Trading Sdn Bhd, TEST Person Three"; all eight values and the salesperson copied. [First run: TEST Person One] |
+| 6 | Nameless address | Add an address with no name, Address Type Invoice or Delivery | Saves (Name not required), gets no address copied, and is named "Company, Address Type" | **Pass** — an Invoice address: "TEST QA Trading Sdn Bhd, Invoice"; Tax ID, Company ID and DUNS copied, no address. The first run's Delivery address is now titled "TEST QA Trading Sdn Bhd, Delivery" |
 | 7 | Salesperson | Set the company's Salesperson, then add another contact without one | The contact gets the company's salesperson | **Pass** — TEST Person Two got the salesperson |
 | 8 | Push address | Change the company's City | Contact-type contacts get the new City; the Delivery address does not | **Pass** — Cyberjaya → Putrajaya on both people; the Delivery address stayed blank |
 | 9 | Push identifiers | Change the company's Tax ID | Every contact under it gets the new Tax ID | **Pass** — all three got C2584563299 (changed in the same save as test 8) |
-| 10 | Views | Contacts, Kanban and Archived tabs | Columns Name, Company, Email, Phone, Country; sorted by Name; Kanban shows image, email, phone, city, country | **Pass** — see differences 1 and 4 |
+| 10 | Views | Contacts, Kanban and Archived tabs | Contacts and Archived: columns Display Name, Email, Phone, Country, sorted by Display Name. Kanban: Display Name as the card title; email, phone, city, country | **Pass** after one fix — the rerun first found no Display Name column in either table (see Build, *Display name retest*); now 7 rows from "TEST QA Trading Sdn Bhd" to "TEST Solo Trading", cards the same, Archived with the four columns. See difference 4 |
 | 11 | Archive | Archive a contact | Confirmation text as above; it leaves Contacts and appears in Archived | **Pass** — exact text; the company moved to Archived; its contacts kept showing it as their Company, as in Odoo |
 | 12 | Unarchive | Unarchive it from Archived | Back in Contacts | **Pass** — no confirmation, "Operation completed", back in Contacts |
 | 13 | Odoo side by side | casimir.odoo.com Contacts vs Nocoly | Same fields as in §1, apart from the "Not built now" list | **Pass** — see differences below |
 
 ### Differences from Odoo seen in testing
 
-1. **Display name.** Odoo names a company's contact "Company, Person" and a nameless address "Company, Delivery" —
-   in lists, cards and every partner picker. Nocoly shows the Name alone, so a nameless address is blank in the list
-   and "Unnamed" on its card. This will matter when Invoices picks a customer. **Owner's decision, 15 Sep: match
-   Odoo now** — a *Display Name* formula becomes the title field; the affected tests are rerun afterwards.
+1. **Display Name on the form.** Names now match Odoo — "Company, Person" and "Company, Delivery" in lists, cards,
+   record titles and pickers (the owner's decision after the first run, when Nocoly showed the Name alone). Unlike
+   Odoo, a saved contact's form also shows Display Name, read-only, under Image: HAP drops hidden fields from tables.
 2. **Archive / Unarchive.** The button that does not apply is greyed out rather than hidden.
 3. **"Modifying form data" bar.** After adding a contact from the Contacts tab, or picking a Salesperson, an open
    record keeps a *Modifying form data — Cancel / Save* bar although the change is already stored. Clicking Save
@@ -215,5 +220,5 @@ Test records are named `TEST …`.
 
 ### Test records left in the worksheet
 
-TEST QA Trading Sdn Bhd · TEST Person One · TEST Person Two · a nameless Delivery address under the company. Left
-for the reviewer to inspect; remove them after sign-off.
+TEST QA Trading Sdn Bhd · TEST Person One · TEST Person Two · TEST Person Three · a nameless Delivery and a nameless
+Invoice address under the company · TEST Solo Trading. Left for the reviewer to inspect; remove them after sign-off.

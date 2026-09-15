@@ -46,7 +46,8 @@ PLACE = {
     'Misc': (16, 0, 12, 'Sales & Purchase'), 'Reference': (17, 0, 6, 'Sales & Purchase'),
     'Notes': (19, 0, 12, 'Notes'),
     'Active': (20, 0, 6, None),
-    'Parent name': (21, 0, 6, None), 'Display Name': (21, 1, 6, None),
+    'Display Name': (21, 0, 12, None),
+    'Parent name': (22, 0, 6, None),
 }
 TABS = {'Contacts': 11, 'Sales & Purchase': 13, 'Notes': 18}
 HINTS = {'Name': 'Name (company or person)', 'Company': 'Company Employer', 'Email': 'Email', 'Phone': 'Phone',
@@ -159,11 +160,13 @@ def step_layout():
 DISPLAYED_TYPES = ['Invoice', 'Delivery', 'Other']   # res.partner _complete_name_displayed_types
 DESC = {
     'Parent name': "The Company's Name, a stored lookup read by Display Name. Odoo parent_name.",
-    'Display Name': 'The title field. The Name (or, for a nameless Invoice, Delivery or Other address under a '
-                    "company, its Address Type), with the Company's Name and \", \" in front when there is a "
-                    'Company. Odoo complete_name (_get_complete_name).',
+    'Display Name': 'How this contact appears in lists and pickers: the Company\'s name, a comma and the Name — '
+                    'or the Address Type for a nameless address.',
 }
-HIDDEN_HELPERS = list(DESC)                          # hidden on the form, as Odoo's form shows Name
+# A hidden field drops out of table columns (cards and pickers still get the title), so Display Name is shown
+# read-only, once the record exists; Parent name is hidden.
+PERMISSION = {'Parent name': field_permission_str(hidden=True),
+              'Display Name': field_permission_str(readonly=True, hidden_on_create=True)}
 
 
 def complete_name_expression(f):
@@ -185,7 +188,7 @@ def function_source(expression):
 
 def step_display():
     """Display Name (Odoo complete_name) as the title field: a stored lookup of the Company's Name (Odoo
-    parent_name) and a text function formula, both hidden. Name keeps its rules. Safe to re-run."""
+    parent_name), hidden, and a text function formula, read-only. Name keeps its rules. Safe to re-run."""
     def fields():
         return hap.by_name(c for c in hap.controls(WS) if c['type'] != 52)
 
@@ -215,11 +218,10 @@ def step_display():
         print(f"  Display Name: read back {display.get('dataSource')!r}; rewriting")
         display['dataSource'] = function_source(expression)
         stale.append('Display Name expression')
-    hidden = field_permission_str(hidden=True)
-    for name in HIDDEN_HELPERS:
-        if (f[name].get('desc'), f[name].get('fieldPermission')) != (DESC[name], hidden):
-            f[name].update(desc=DESC[name], fieldPermission=hidden)
-            stale.append(f'{name} description / hidden')
+    for name, permission in PERMISSION.items():
+        if (f[name].get('desc'), f[name].get('fieldPermission')) != (DESC[name], permission):
+            f[name].update(desc=DESC[name], fieldPermission=permission)
+            stale.append(f'{name} description / permission')
     for c in ctrls:
         c['attribute'] = want[c['controlId']]           # one title field: Display Name, no longer Name
     if stale:
@@ -311,8 +313,8 @@ def step_views():
                           'filterType': 0, 'dateRange': 0, 'dateRangeType': 0, 'value': '', 'values': [],
                           'minValue': '', 'maxValue': '', 'isAsc': True, 'dynamicSource': [], 'advancedSetting': {},
                           'isGroup': False, 'groupFilters': [], 'emptyRule': 0}]}
-    # Odoo 19.4 list shows display_name ("Company, Person"), email, phone, country by default. Display Name is
-    # hidden on the form, but HAP returns the title field to tables, cards and pickers all the same.
+    # Odoo 19.4 list shows display_name ("Company, Person"), email, phone, country by default. A table leaves out
+    # hidden fields, title or not, which is why Display Name is read-only rather than hidden (see PERMISSION).
     columns = i('Display Name', 'Email', 'Phone', 'Country')
     views = {
         'Contacts': dict(viewType='table', filter=active('eq'), tableFields=columns,

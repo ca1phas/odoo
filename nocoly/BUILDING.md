@@ -68,8 +68,10 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   `advancedSetting.bidirectional` "0". The target worksheet gets no reverse field.
 - A **static Relation default** is `defsource: [{"staticValue": "[\"<rowid>\"]"}]`; the server stores the whole record
   in place of the id. The API applies no defaults — only the form does.
-- A **hidden title field** still reaches record titles, tables, cards and pickers; the list calls behind them blank
-  other hidden fields.
+- A **hidden field never shows as a table column**, even as the title and listed in the view's columns. A hidden
+  title still reaches record titles, cards and pickers. To keep a computed title off the create form but in
+  tables, make it read-only and hidden on create: `fieldPermission` "100" (the three places are hidden · read-only ·
+  hidden on create, and `0` switches each one on). The list calls behind views blank other hidden fields.
 - A single select's `advancedSetting.direction`: 2 horizontal · 1 vertical · 0 matrix.
 - `worksheet add-fields` keeps a control's client-side 32-hex id, and a formula or text combination added that way
   computes nothing until an `update-fields` save re-mints the id. Inside one `update-fields` save, references to

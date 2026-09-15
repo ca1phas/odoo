@@ -34,7 +34,8 @@ the owner's direction. Newest last.
 | 15 Sep 2026 | Upstream sync (a contact's edit rewriting its company) is left out | Avoids automation loops; edit the company instead | planner |
 | 15 Sep 2026 | **Show "Company, Person" as the display name, like Odoo** | Customer pickers on Invoices must identify the company | owner |
 | 15 Sep 2026 | Delete the three rules the 19.0 build left disabled | They referred to a deleted field and did nothing | owner |
-| 15 Sep 2026 | Display Name is a hidden function formula over a stored lookup of the Company's name, and the title field; the views drop their Company column and sort by it | HAP's only text IF is in function formulas; a hidden title still reaches titles, tables, cards and pickers | implementation agent, accepted by planner |
+| 15 Sep 2026 | Display Name is a function formula over a stored lookup of the Company's name, and the title field; the views drop their Company column and sort by it | HAP's only text IF is in function formulas | implementation agent, accepted by planner |
+| 15 Sep 2026 | Display Name is **read-only on a saved contact's form**, under Image, and not on the create form — rather than hidden | The retest found a hidden field dropped from every table, so Contacts and Archived lost their first column; an always-true rule hiding it on the form would be a workaround reviewers must learn | planner |
 
 ## Worksheet 02 · Units & Packagings
 
