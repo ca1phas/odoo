@@ -1,0 +1,181 @@
+<title>ERP Master Units &amp; Packagings</title>
+<meta name="description" content="Review pack for worksheet 02 of the Odoo-to-Nocoly build: requirements, build ids and UI test results.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<link rel="stylesheet" href="review.css">
+
+<main class="page">
+
+  <header class="identity">
+    <div class="eyebrow"><span>ERP Master</span><span>Phase 1</span><span>Worksheet 02 of 7</span></div>
+    <h1>Units &amp; Packagings <span class="model">uom.uom</span></h1>
+    <p class="lede">Every unit of measure and packaging in one worksheet. A unit is a multiple — <strong>Contains</strong> — of its <strong>Reference Unit</strong>, up to a unit that has none. <strong>Absolute Quantity</strong> multiplies that chain out (km = 1000 × m’s 1000 = 1,000,000) and is what every later unit conversion reads.</p>
+    <dl class="meta">
+      <div><dt>Reference</dt><dd>casimir.odoo.com — Odoo saas~19.4+e</dd></div>
+      <div><dt>Behaviour read from</dt><dd>Odoo 19.0 source, <code>uom_uom.py</code></dd></div>
+      <div><dt>Nocoly</dt><dd>App ERP Master · menu group Products</dd></div>
+      <div><dt>Built and tested</dt><dd>15 Sep 2026 — 30 standard units seeded</dd></div>
+    </dl>
+    <div class="scoreline">
+      <span class="chip pass">18 of 19 tests pass</span>
+      <span class="chip note">1 passes in part</span>
+      <span class="chip note">3 differences from Odoo</span>
+    </div>
+  </header>
+
+  <aside class="callout" aria-labelledby="note-title">
+    <span class="chip note small" style="justify-self:start">Worth knowing before you review</span>
+    <h2 id="note-title">Absolute Quantity is hidden, as in Odoo — check it from the CLI</h2>
+    <p>The form shows Unit Name, Contains and Reference Unit only. Absolute Quantity, Sequence and the recursion check’s Parent Path are hidden. To see them for any unit, run <code>~/.hap-venv/bin/python nocoly/build/units.py unit "Unit Name"</code>; <code>units.py verify</code> compares all 30 standard units with Odoo.</p>
+  </aside>
+
+  <nav class="toc" aria-label="Sections">
+    <a href="#requirements"><span>1</span>Requirements</a>
+    <a href="#build"><span>2</span>Build</a>
+    <a href="#tests"><span>3</span>Tests and differences</a>
+  </nav>
+
+  <section id="requirements" aria-labelledby="req-title">
+    <div class="section-head"><span class="n">1</span><h2 class="section" id="req-title">Requirements</h2></div>
+
+    <div class="block">
+      <h3>Fields</h3>
+      <p class="aside">Labels are Odoo’s. Hidden means not on the form but used by views, rules or later worksheets.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th class="num">#</th><th>Field</th><th>Odoo field</th><th>Nocoly type</th><th>Required</th><th>Default</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td class="num">1</td><td class="label">Unit Name</td><td><code>name</code></td><td>Text · title field</td><td>yes</td><td class="muted">—</td><td></td></tr>
+            <tr><td class="num">2</td><td class="label">Contains</td><td><code>relative_factor</code></td><td>Number, 7 decimals</td><td>yes</td><td>1</td><td>Odoo’s help as its description. Cannot be 0</td></tr>
+            <tr><td class="num">3</td><td class="label">Reference Unit</td><td><code>relative_uom_id</code></td><td>Relation → Units &amp; Packagings, single</td><td>no</td><td class="muted">—</td><td>Placeholder “Reference Unit”; the picker lists active units only</td></tr>
+            <tr><td class="num">4</td><td class="label">Absolute Quantity</td><td><code>factor</code></td><td>Formula, 9 decimals</td><td class="muted">—</td><td class="muted">—</td><td>Hidden. Contains × the Reference Unit’s Absolute Quantity, or Contains alone; a change up the chain reaches every unit below</td></tr>
+            <tr><td class="num">5</td><td class="label">Sequence</td><td><code>sequence</code></td><td>Formula, integer</td><td class="muted">—</td><td class="muted">—</td><td>Hidden. min(int(Contains × 100), 1000); both views sort on it</td></tr>
+            <tr><td class="num">6</td><td class="label">Active</td><td><code>active</code></td><td>Checkbox</td><td class="muted">—</td><td>checked</td><td>Hidden. Set by Archive / Unarchive</td></tr>
+            <tr><td class="num">7</td><td class="label">Related UoMs</td><td><code>related_uom_ids</code></td><td>Relation, multiple — reverse of Reference Unit</td><td class="muted">—</td><td class="muted">—</td><td>Hidden; HAP creates it with the Reference Unit relation</td></tr>
+            <tr><td class="num">8</td><td class="label">Parent Path</td><td><code>parent_path</code></td><td>Text combination</td><td class="muted">—</td><td class="muted">—</td><td>Hidden, technical: the chain of record ids down to this unit; the recursion rule reads it</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="aside">Two more hidden lookups — the Reference Unit’s Absolute Quantity and Parent Path — feed the formulas.</p>
+    </div>
+
+    <div class="block">
+      <h3>Rules</h3>
+      <p class="aside">All three are validation rules, checked in the form and on API writes.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Rule</th><th>When</th><th>Message</th><th>Odoo source</th></tr></thead>
+          <tbody>
+            <tr><td class="label">Contains cannot be 0</td><td>Contains = 0</td><td>“The conversion ratio for a unit of measure cannot be 0!”, as you type</td><td>SQL constraint <code>_factor_gt_zero</code></td></tr>
+            <tr><td class="label">A unit without a Reference Unit contains 1</td><td>No Reference Unit and Contains ≠ 1</td><td>“Reference unit of measure is missing.”, on submit</td><td><code>_check_factor</code></td></tr>
+            <tr><td class="label">Reference Unit cannot be the unit or one below it</td><td>The chosen unit’s Parent Path contains this unit</td><td>“Recursion Detected.”, as you pick</td><td>ORM <code>_parent_store</code> recursion check</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="aside">Without the third rule a reference loop (km → m → km) would make HAP recompute Absolute Quantity endlessly.</p>
+    </div>
+
+    <div class="block">
+      <h3>Buttons and views</h3>
+      <div class="table-wrap">
+        <table class="narrow">
+          <thead><tr><th>Element</th><th>What it does</th></tr></thead>
+          <tbody>
+            <tr><td class="label">Archive</td><td>Active → unchecked, after “Are you sure that you want to archive this record?”</td></tr>
+            <tr><td class="label">Unarchive</td><td>Active → checked, no confirmation</td></tr>
+            <tr><td class="label">Units &amp; Packagings view</td><td>Active units: Unit Name · Contains · Reference Unit, sorted by Sequence, then Unit Name. No Kanban — Odoo’s action is list and form only</td></tr>
+            <tr><td class="label">Archived view</td><td>Archived units, same columns and sort</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="block">
+      <h3>Not built now, and why</h3>
+      <div class="table-wrap">
+        <table class="narrow">
+          <thead><tr><th>Odoo 19.4 field or feature</th><th>Why not now</th></tr></thead>
+          <tbody>
+            <tr><td>UN/ECE Code <code>unece_code</code></td><td>From <code>account_edi_ubl_cii</code> — e-invoicing, which comes with Invoicing</td></tr>
+            <tr><td>Packaging Barcodes <code>product_uom_ids</code></td><td>Module <code>product</code>; comes with Products and Product Variants</td></tr>
+            <tr><td>Drag-and-drop ordering</td><td>Sequence is a formula; it also follows Contains, where Odoo sets it once at creation</td></tr>
+            <tr><td>Contains left blank for a unit with Contains 1 and no reference</td><td>A HAP table cannot hide one cell</td></tr>
+            <tr><td>Standard units cannot be deleted; deleting a unit deletes the units below it</td><td>No HAP rule can block or cascade a delete — restrict deleting in Roles; archive instead</td></tr>
+            <tr><td>Warning when a standard unit’s Contains changes</td><td>HAP has no on-change warning</td></tr>
+            <tr><td>Fields read-only when opened from a product; ratio locked once stock moves exist</td><td>Come with Products and with Inventory, which is not in Phase 1</td></tr>
+            <tr><td>Roles</td><td>Set once for the app at the end of Phase 1</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section id="build" aria-labelledby="build-title">
+    <div class="section-head"><span class="n">2</span><h2 class="section" id="build-title">Build</h2></div>
+    <p class="prose">Built by <code>nocoly/build/units.py</code> — steps create, fields, computed, layout, rules, views, buttons, seed — each safe to re-run. Helpers shared with later worksheets are in <code>nocoly/build/common.py</code>; every id is in <code>nocoly/build/ids.json</code>.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Element</th><th>Built</th><th>Id</th></tr></thead>
+        <tbody>
+          <tr><td class="label">Menu group</td><td>Products, after Contacts</td><td class="id">6aa8d12ddb26b712423d345d</td></tr>
+          <tr><td class="label">Worksheet</td><td>Units &amp; Packagings, alias <code>uom_uom</code></td><td class="id">6aa8d14d4a73a3142152d3f6</td></tr>
+          <tr><td class="label">Controls</td><td>10 — the 8 fields and 2 hidden lookups</td><td class="muted">—</td></tr>
+          <tr><td class="label">Rules</td><td>The 3 above</td><td class="id">6aa8d6c21204328eb1af0db9 · 6aa8d6c34720c515252be287 · 6aa8d6c3f363582dd37a582b</td></tr>
+          <tr><td class="label">Views</td><td>Units &amp; Packagings · Archived</td><td class="id">6aa8d14d4a73a3142152d3fa · 6aa8d8554720c515252be2d3</td></tr>
+          <tr><td class="label">Buttons</td><td>Archive · Unarchive, each with a one-step workflow</td><td class="id">6aa8d8814720c515252be2f8 · 6aa8d8894a73a3142152d499</td></tr>
+          <tr><td class="label">Records</td><td>The 30 standard units — 14 active, 16 archived, as in Odoo</td><td class="muted">—</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose">Absolute Quantity is a stored lookup plus a formula, so it follows the chain with no workflow; the implementation agent added the recursion check and Odoo’s “Reference unit of measure is missing.” rule, both accepted into the plan.</p>
+  </section>
+
+  <section id="tests" aria-labelledby="tests-title">
+    <div class="section-head"><span class="n">3</span><h2 class="section" id="tests-title">Tests and differences</h2></div>
+    <p class="prose">Run in the Nocoly UI in Chrome on 15 Sep 2026, reading stored values back with <code>units.py unit</code> after each step. Test records are named <code>TEST …</code>.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th class="num">#</th><th>Check</th><th>Expected</th><th>Result</th></tr></thead>
+        <tbody>
+          <tr><td class="num">1</td><td class="label">Menu</td><td>Products group after Contacts; two views, no Kanban</td><td><div class="result"><span class="chip pass small">Pass</span></div></td></tr>
+          <tr><td class="num">2</td><td class="label">Active view</td><td>14 units: Minutes, g, Hours, KWH, m², ml, mm, Units, Pack of 6, Days, kg, L, m, t</td><td><div class="result"><span class="chip pass small">Pass</span>Exact order and values</div></td></tr>
+          <tr><td class="num">3</td><td class="label">Archived view</td><td>16 units, in³ to qt (US)</td><td><div class="result"><span class="chip pass small">Pass</span></div></td></tr>
+          <tr><td class="num">4</td><td class="label">Empty form</td><td>Unit Name; Contains 1 with Odoo’s help; Reference Unit; Unit Name required on submit</td><td><div class="result"><span class="chip pass small">Pass</span></div></td></tr>
+          <tr><td class="num">5</td><td class="label">Contains 0</td><td>“…cannot be 0!”; submit refused</td><td><div class="result"><span class="chip pass small">Pass</span>As you type; the refusal also lists the missing-reference message</div></td></tr>
+          <tr><td class="num">6</td><td class="label">Missing reference</td><td>Contains 10, no reference: “Reference unit of measure is missing.”</td><td><div class="result"><span class="chip pass small">Pass</span></div></td></tr>
+          <tr><td class="num">7</td><td class="label">Reference Unit picker</td><td>Only active units, each with its ratio</td><td><div class="result"><span class="chip note small">Partly</span>Exactly the 14 active units, names only — difference 1</div></td></tr>
+          <tr><td class="num">8</td><td class="label">Save with a reference</td><td>TEST Box of 10 → Units: saved; absolute 10, sequence 1000, last row</td><td><div class="result"><span class="chip pass small">Pass</span></div></td></tr>
+          <tr><td class="num">9</td><td class="label">Chain</td><td>TEST Crate, 5 × TEST Box of 10: absolute 50</td><td><div class="result"><span class="chip pass small">Pass</span></div></td></tr>
+          <tr><td class="num">10</td><td class="label">Change up the chain</td><td>Box of 10 Contains 12: 12 and 60</td><td><div class="result"><span class="chip pass small">Pass</span>Within 10 seconds</div></td></tr>
+          <tr><td class="num">11</td><td class="label">Change the reference</td><td>Box of 10 → Pack of 6: 72 and 360</td><td><div class="result"><span class="chip pass small">Pass</span></div></td></tr>
+          <tr><td class="num">12</td><td class="label">Recursion — itself</td><td>“Recursion Detected.”</td><td><div class="result"><span class="chip pass small">Pass</span>HAP never offers a record in its own picker; the API refusal was proven at build time</div></td></tr>
+          <tr><td class="num">13</td><td class="label">Recursion — below</td><td>Box of 10 → TEST Crate: “Recursion Detected.”</td><td><div class="result"><span class="chip pass small">Pass</span>Save refused</div></td></tr>
+          <tr><td class="num">14</td><td class="label">Sequence</td><td>TEST Half, 0.5 × Units: second row; sequence 50</td><td><div class="result"><span class="chip pass small">Pass</span>After a refresh — difference 2</div></td></tr>
+          <tr><td class="num">15</td><td class="label">Archive</td><td>Confirmation; moves to Archived</td><td><div class="result"><span class="chip pass small">Pass</span>Archive greyed on the archived record — difference 3</div></td></tr>
+          <tr><td class="num">16</td><td class="label">Archived out of the picker</td><td>TEST Crate not offered</td><td><div class="result"><span class="chip pass small">Pass</span></div></td></tr>
+          <tr><td class="num">17</td><td class="label">Unarchive</td><td>No confirmation; back in the main view</td><td><div class="result"><span class="chip pass small">Pass</span></div></td></tr>
+          <tr><td class="num">18</td><td class="label">Standard data</td><td><code>units.py verify</code>: 0 differing, 0 stale</td><td><div class="result"><span class="chip pass small">Pass</span>30 OK; the three TEST units listed as extra</div></td></tr>
+          <tr><td class="num">19</td><td class="label">Odoo side by side</td><td>Same fields and the same 30 units</td><td><div class="result"><span class="chip pass small">Pass</span>Through the extract and test 18 — the tenant shows no Units menu</div></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="block">
+      <h3>Differences from Odoo seen in testing</h3>
+      <ol class="differences">
+        <li><span class="n">1</span><div class="head"><strong>Reference Unit picker</strong><span class="chip note small">Note</span></div><p>Odoo’s dropdown hints each unit’s ratio (“Days 8.0 Hours”); HAP lists names only. The ratio shows once a unit is picked. Its search also matches the Reference Unit column: “Units” finds Pack of 6.</p></li>
+        <li><span class="n">2</span><div class="head"><strong>New records sit at the top of the open view</strong><span class="chip note small">HAP behaviour</span></div><p>Until the view is refreshed, whatever their Sequence.</p></li>
+        <li><span class="n">3</span><div class="head"><strong>Archive and Unarchive</strong><span class="chip note small">Note</span></div><p>The button that does not apply is greyed out rather than hidden, as on Contacts.</p></li>
+      </ol>
+    </div>
+
+    <div class="block">
+      <h3>Test records left for review</h3>
+      <div class="records"><span>TEST Box of 10 — 12 × Pack of 6</span><span>TEST Crate — 5 × TEST Box of 10</span><span>TEST Half — 0.5 × Units</span></div>
+      <p class="aside">Inspect them freely; remove them after sign-off.</p>
+    </div>
+  </section>
+
+  <footer>Source: <code>nocoly/worksheets/02-units-and-packagings.md</code> in ca1phas/odoo, branch 19.0. Reviewing guide: <code>nocoly/REVIEWING.md</code>.</footer>
+</main>
