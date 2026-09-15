@@ -1,0 +1,1217 @@
+{
+ "Website": {
+  "module": "website",
+  "category": "Website",
+  "depends": [
+   "digest",
+   "web",
+   "html_editor",
+   "http_routing",
+   "portal",
+   "social_media",
+   "auth_signup",
+   "mail",
+   "google_recaptcha",
+   "utm",
+   "html_builder"
+  ],
+  "closure": 16,
+  "requires_apps": [
+   "Discuss"
+  ],
+  "master": [
+   "utm"
+  ],
+  "connects": {
+   "CRM": [
+    "website_crm",
+    "website_crm_sms",
+    "website_event_crm"
+   ],
+   "Email Marketing": [
+    "mass_mailing_event_track",
+    "mass_mailing_event_track_sms",
+    "mass_mailing_slides",
+    "website_mass_mailing"
+   ],
+   "Employees": [
+    "hr_skills_slides",
+    "website_hr_recruitment",
+    "website_timesheet"
+   ],
+   "Events": [
+    "website_event_booth_sale",
+    "website_event_sale"
+   ],
+   "Inventory": [
+    "website_sale_mondialrelay",
+    "website_sale_stock"
+   ],
+   "Invoicing": [
+    "website_event_booth_sale",
+    "website_event_sale",
+    "website_payment",
+    "website_sale_loyalty"
+   ],
+   "Live Chat": [
+    "website_livechat"
+   ],
+   "Manufacturing": [
+    "website_sale_mrp"
+   ],
+   "Project": [
+    "website_project",
+    "website_timesheet"
+   ],
+   "Recruitment": [
+    "website_hr_recruitment"
+   ],
+   "SMS Marketing": [
+    "mass_mailing_event_track_sms",
+    "website_mass_mailing_sms"
+   ],
+   "Sales": [
+    "website_event_booth_sale",
+    "website_event_sale",
+    "website_sale_loyalty"
+   ],
+   "Survey": [
+    "website_slides_survey"
+   ],
+   "Timesheet": [
+    "website_timesheet"
+   ]
+  },
+  "bridge_total": 21
+ },
+ "eCommerce": {
+  "module": "website_sale",
+  "category": "Website",
+  "depends": [
+   "website",
+   "sale",
+   "website_payment",
+   "website_mail",
+   "portal_rating",
+   "digest",
+   "delivery",
+   "html_builder"
+  ],
+  "closure": 32,
+  "requires_apps": [
+   "Discuss",
+   "Invoicing",
+   "Sales",
+   "Website"
+  ],
+  "master": [
+   "account",
+   "analytic",
+   "delivery",
+   "payment",
+   "product",
+   "sales_team",
+   "uom",
+   "utm"
+  ],
+  "connects": {
+   "Email Marketing": [
+    "website_sale_mass_mailing"
+   ],
+   "Events": [
+    "website_event_booth_sale",
+    "website_event_sale"
+   ],
+   "Inventory": [
+    "website_sale_mondialrelay",
+    "website_sale_stock"
+   ],
+   "Manufacturing": [
+    "website_sale_mrp"
+   ]
+  },
+  "bridge_total": 6
+ },
+ "Blog": {
+  "module": "website_blog",
+  "category": "Website",
+  "depends": [
+   "website_mail",
+   "website_partner",
+   "html_builder"
+  ],
+  "closure": 19,
+  "requires_apps": [
+   "Discuss",
+   "Website"
+  ],
+  "master": [
+   "utm"
+  ],
+  "connects": {},
+  "bridge_total": 0
+ },
+ "Forum": {
+  "module": "website_forum",
+  "category": "Website",
+  "depends": [
+   "auth_signup",
+   "website_mail",
+   "website_profile"
+  ],
+  "closure": 21,
+  "requires_apps": [
+   "Discuss",
+   "Website"
+  ],
+  "master": [
+   "utm"
+  ],
+  "connects": {
+   "eLearning": [
+    "website_slides_forum"
+   ]
+  },
+  "bridge_total": 1
+ },
+ "eLearning": {
+  "module": "website_slides",
+  "category": "Website",
+  "depends": [
+   "portal_rating",
+   "website",
+   "website_mail",
+   "website_profile"
+  ],
+  "closure": 23,
+  "requires_apps": [
+   "Discuss",
+   "Website"
+  ],
+  "master": [
+   "utm"
+  ],
+  "connects": {
+   "Email Marketing": [
+    "mass_mailing_slides"
+   ],
+   "Employees": [
+    "hr_skills_slides"
+   ],
+   "Forum": [
+    "website_slides_forum"
+   ],
+   "Survey": [
+    "website_slides_survey"
+   ]
+  },
+  "bridge_total": 4
+ },
+ "Live Chat": {
+  "module": "im_livechat",
+  "category": "Website",
+  "depends": [
+   "mail",
+   "rating",
+   "digest",
+   "utm"
+  ],
+  "closure": 14,
+  "requires_apps": [
+   "Discuss"
+  ],
+  "master": [
+   "utm"
+  ],
+  "connects": {
+   "CRM": [
+    "crm_livechat",
+    "website_crm_livechat"
+   ],
+   "Employees": [
+    "hr_livechat"
+   ],
+   "Website": [
+    "website_livechat"
+   ]
+  },
+  "bridge_total": 4
+ },
+ "CRM": {
+  "module": "crm",
+  "category": "Sales",
+  "depends": [
+   "base_setup",
+   "sales_team",
+   "mail",
+   "calendar",
+   "resource",
+   "utm",
+   "web_tour",
+   "contacts",
+   "digest",
+   "phone_validation"
+  ],
+  "closure": 17,
+  "requires_apps": [
+   "Discuss"
+  ],
+  "master": [
+   "sales_team",
+   "utm"
+  ],
+  "connects": {
+   "Email Marketing": [
+    "mass_mailing_crm"
+   ],
+   "Events": [
+    "event_crm"
+   ],
+   "Invoicing": [
+    "event_crm_sale",
+    "sale_crm"
+   ],
+   "Live Chat": [
+    "crm_livechat",
+    "website_crm_livechat"
+   ],
+   "SMS Marketing": [
+    "mass_mailing_crm_sms"
+   ],
+   "Sales": [
+    "event_crm_sale",
+    "sale_crm"
+   ],
+   "Survey": [
+    "survey_crm"
+   ],
+   "Website": [
+    "website_crm",
+    "website_crm_sms",
+    "website_event_crm"
+   ]
+  },
+  "bridge_total": 11
+ },
+ "Sales": {
+  "module": "sale",
+  "category": "Sales",
+  "depends": [
+   "sales_team",
+   "account_payment",
+   "utm"
+  ],
+  "closure": 21,
+  "requires_apps": [
+   "Discuss",
+   "Invoicing"
+  ],
+  "master": [
+   "account",
+   "analytic",
+   "payment",
+   "product",
+   "sales_team",
+   "uom",
+   "utm"
+  ],
+  "connects": {
+   "CRM": [
+    "event_crm_sale",
+    "sale_crm"
+   ],
+   "Email Marketing": [
+    "mass_mailing_sale",
+    "website_sale_mass_mailing"
+   ],
+   "Employees": [
+    "project_sale_expense",
+    "sale_expense",
+    "sale_timesheet"
+   ],
+   "Events": [
+    "event_sale",
+    "pos_event_sale",
+    "website_event_booth_sale",
+    "website_event_sale"
+   ],
+   "Expenses": [
+    "project_sale_expense",
+    "sale_expense"
+   ],
+   "Inventory": [
+    "pos_sale",
+    "project_mrp_sale",
+    "sale_project_stock",
+    "sale_project_stock_account",
+    "sale_purchase_stock",
+    "sale_stock"
+   ],
+   "Manufacturing": [
+    "mrp_repair",
+    "mrp_subcontracting_dropshipping",
+    "mrp_subcontracting_repair",
+    "project_mrp_sale",
+    "sale_mrp"
+   ],
+   "Point of Sale": [
+    "pos_repair",
+    "pos_sale"
+   ],
+   "Project": [
+    "project_mrp_sale",
+    "project_sale_expense",
+    "sale_project",
+    "sale_project_stock",
+    "sale_purchase_project"
+   ],
+   "Purchase": [
+    "purchase_repair",
+    "sale_purchase",
+    "sale_purchase_project",
+    "sale_purchase_stock"
+   ],
+   "SMS Marketing": [
+    "mass_mailing_sale_sms"
+   ],
+   "Timesheet": [
+    "sale_timesheet"
+   ],
+   "Website": [
+    "website_event_booth_sale",
+    "website_event_sale",
+    "website_sale_loyalty"
+   ]
+  },
+  "bridge_total": 28
+ },
+ "Point of Sale": {
+  "module": "point_of_sale",
+  "category": "Sales",
+  "depends": [
+   "resource",
+   "stock_account",
+   "barcodes",
+   "html_editor",
+   "digest",
+   "phone_validation",
+   "partner_autocomplete",
+   "iot_base",
+   "google_address_autocomplete"
+  ],
+  "closure": 27,
+  "requires_apps": [
+   "Discuss",
+   "Inventory",
+   "Invoicing"
+  ],
+  "master": [
+   "account",
+   "analytic",
+   "product",
+   "stock_account",
+   "uom"
+  ],
+  "connects": {
+   "Employees": [
+    "pos_hr"
+   ],
+   "Events": [
+    "pos_event"
+   ],
+   "Manufacturing": [
+    "pos_mrp"
+   ],
+   "Repair": [
+    "pos_repair"
+   ],
+   "Sales": [
+    "pos_repair",
+    "pos_sale"
+   ]
+  },
+  "bridge_total": 5
+ },
+ "Invoicing": {
+  "module": "account",
+  "category": "Finance",
+  "depends": [
+   "base_setup",
+   "onboarding",
+   "product",
+   "analytic",
+   "portal",
+   "digest"
+  ],
+  "closure": 16,
+  "requires_apps": [
+   "Discuss"
+  ],
+  "master": [
+   "analytic",
+   "product",
+   "uom"
+  ],
+  "connects": {
+   "CRM": [
+    "event_crm_sale",
+    "sale_crm"
+   ],
+   "Email Marketing": [
+    "mass_mailing_sale",
+    "website_sale_mass_mailing"
+   ],
+   "Employees": [
+    "pos_hr",
+    "sale_timesheet"
+   ],
+   "Events": [
+    "event_product",
+    "website_event_booth_sale",
+    "website_event_sale"
+   ],
+   "Fleet": [
+    "account_fleet"
+   ],
+   "Inventory": [
+    "project_mrp_sale",
+    "project_purchase_stock",
+    "stock_account"
+   ],
+   "Manufacturing": [
+    "mrp_account",
+    "mrp_landed_costs",
+    "mrp_repair",
+    "mrp_subcontracting_dropshipping",
+    "mrp_subcontracting_landed_costs",
+    "mrp_subcontracting_repair",
+    "pos_mrp",
+    "project_mrp_sale",
+    "purchase_mrp",
+    "sale_mrp"
+   ],
+   "Project": [
+    "project_account",
+    "project_mrp_account",
+    "project_mrp_sale",
+    "project_stock_account"
+   ],
+   "SMS Marketing": [
+    "mass_mailing_sale_sms"
+   ],
+   "Timesheet": [
+    "sale_timesheet"
+   ],
+   "Website": [
+    "website_event_booth_sale",
+    "website_event_sale",
+    "website_payment",
+    "website_sale_loyalty"
+   ]
+  },
+  "bridge_total": 28
+ },
+ "Expenses": {
+  "module": "hr_expense",
+  "category": "Finance",
+  "depends": [
+   "account",
+   "web_tour",
+   "hr"
+  ],
+  "closure": 20,
+  "requires_apps": [
+   "Discuss",
+   "Employees",
+   "Invoicing"
+  ],
+  "master": [
+   "account",
+   "analytic",
+   "product",
+   "uom"
+  ],
+  "connects": {
+   "Project": [
+    "project_hr_expense",
+    "project_sale_expense"
+   ],
+   "Sales": [
+    "project_sale_expense",
+    "sale_expense"
+   ]
+  },
+  "bridge_total": 3
+ },
+ "Inventory": {
+  "module": "stock",
+  "category": "Inventory & Manufacturing",
+  "depends": [
+   "product",
+   "barcodes_gs1_nomenclature",
+   "digest"
+  ],
+  "closure": 16,
+  "requires_apps": [
+   "Discuss"
+  ],
+  "master": [
+   "product",
+   "uom"
+  ],
+  "connects": {
+   "Employees": [
+    "pos_hr"
+   ],
+   "Events": [
+    "pos_event"
+   ],
+   "Invoicing": [
+    "project_mrp_sale",
+    "project_purchase_stock",
+    "stock_account"
+   ],
+   "Maintenance": [
+    "stock_maintenance"
+   ],
+   "Project": [
+    "project_mrp",
+    "project_mrp_sale",
+    "project_stock",
+    "sale_project_stock"
+   ],
+   "Purchase": [
+    "project_purchase_stock",
+    "purchase_stock",
+    "sale_purchase_stock"
+   ],
+   "Sales": [
+    "pos_sale",
+    "project_mrp_sale",
+    "sale_project_stock",
+    "sale_project_stock_account",
+    "sale_purchase_stock",
+    "sale_stock"
+   ],
+   "Website": [
+    "website_sale_mondialrelay",
+    "website_sale_stock"
+   ],
+   "eCommerce": [
+    "website_sale_mondialrelay",
+    "website_sale_stock"
+   ]
+  },
+  "bridge_total": 16
+ },
+ "Manufacturing": {
+  "module": "mrp",
+  "category": "Inventory & Manufacturing",
+  "depends": [
+   "product",
+   "stock",
+   "resource"
+  ],
+  "closure": 17,
+  "requires_apps": [
+   "Discuss",
+   "Inventory"
+  ],
+  "master": [
+   "product",
+   "uom"
+  ],
+  "connects": {
+   "Invoicing": [
+    "mrp_account",
+    "mrp_landed_costs",
+    "mrp_repair",
+    "mrp_subcontracting_dropshipping",
+    "mrp_subcontracting_landed_costs",
+    "mrp_subcontracting_repair",
+    "pos_mrp",
+    "project_mrp_sale",
+    "purchase_mrp",
+    "sale_mrp"
+   ],
+   "Point of Sale": [
+    "pos_mrp"
+   ],
+   "Project": [
+    "project_mrp",
+    "project_mrp_sale"
+   ],
+   "Purchase": [
+    "mrp_landed_costs",
+    "mrp_subcontracting_dropshipping",
+    "mrp_subcontracting_landed_costs",
+    "purchase_mrp"
+   ],
+   "Repair": [
+    "mrp_repair",
+    "mrp_subcontracting_repair"
+   ],
+   "Sales": [
+    "mrp_repair",
+    "mrp_subcontracting_dropshipping",
+    "mrp_subcontracting_repair",
+    "project_mrp_sale",
+    "sale_mrp"
+   ],
+   "Website": [
+    "website_sale_mrp"
+   ],
+   "eCommerce": [
+    "website_sale_mrp"
+   ]
+  },
+  "bridge_total": 12
+ },
+ "Purchase": {
+  "module": "purchase",
+  "category": "Inventory & Manufacturing",
+  "depends": [
+   "account"
+  ],
+  "closure": 17,
+  "requires_apps": [
+   "Discuss",
+   "Invoicing"
+  ],
+  "master": [
+   "account",
+   "analytic",
+   "product",
+   "uom"
+  ],
+  "connects": {
+   "Inventory": [
+    "project_purchase_stock",
+    "purchase_stock",
+    "sale_purchase_stock"
+   ],
+   "Manufacturing": [
+    "mrp_landed_costs",
+    "mrp_subcontracting_dropshipping",
+    "mrp_subcontracting_landed_costs",
+    "purchase_mrp"
+   ],
+   "Project": [
+    "project_mrp_stock_landed_costs",
+    "project_purchase",
+    "project_stock_landed_costs",
+    "sale_purchase_project"
+   ],
+   "Repair": [
+    "purchase_repair"
+   ],
+   "Sales": [
+    "purchase_repair",
+    "sale_purchase",
+    "sale_purchase_project",
+    "sale_purchase_stock"
+   ]
+  },
+  "bridge_total": 13
+ },
+ "Maintenance": {
+  "module": "maintenance",
+  "category": "Inventory & Manufacturing",
+  "depends": [
+   "mail"
+  ],
+  "closure": 7,
+  "requires_apps": [
+   "Discuss"
+  ],
+  "master": [],
+  "connects": {
+   "Employees": [
+    "hr_maintenance"
+   ],
+   "Inventory": [
+    "stock_maintenance"
+   ]
+  },
+  "bridge_total": 2
+ },
+ "Employees": {
+  "module": "hr",
+  "category": "Human Resources",
+  "depends": [
+   "base_setup",
+   "digest",
+   "phone_validation",
+   "resource_mail",
+   "web"
+  ],
+  "closure": 14,
+  "requires_apps": [
+   "Discuss"
+  ],
+  "master": [],
+  "connects": {
+   "Events": [
+    "hr_skills_event"
+   ],
+   "Fleet": [
+    "hr_fleet"
+   ],
+   "Inventory": [
+    "pos_hr"
+   ],
+   "Invoicing": [
+    "pos_hr",
+    "sale_timesheet"
+   ],
+   "Live Chat": [
+    "hr_livechat"
+   ],
+   "Maintenance": [
+    "hr_maintenance"
+   ],
+   "Point of Sale": [
+    "pos_hr"
+   ],
+   "Project": [
+    "project_hr_expense",
+    "project_hr_skills",
+    "project_sale_expense"
+   ],
+   "Sales": [
+    "project_sale_expense",
+    "sale_expense",
+    "sale_timesheet"
+   ],
+   "Survey": [
+    "hr_skills_survey"
+   ],
+   "Website": [
+    "hr_skills_slides",
+    "website_hr_recruitment",
+    "website_timesheet"
+   ],
+   "eLearning": [
+    "hr_skills_slides"
+   ]
+  },
+  "bridge_total": 14
+ },
+ "Recruitment": {
+  "module": "hr_recruitment",
+  "category": "Human Resources",
+  "depends": [
+   "hr",
+   "calendar",
+   "utm",
+   "attachment_indexation",
+   "web_tour",
+   "digest"
+  ],
+  "closure": 18,
+  "requires_apps": [
+   "Discuss",
+   "Employees"
+  ],
+  "master": [
+   "utm"
+  ],
+  "connects": {
+   "Website": [
+    "website_hr_recruitment"
+   ]
+  },
+  "bridge_total": 1
+ },
+ "Time Off": {
+  "module": "hr_holidays",
+  "category": "Human Resources",
+  "depends": [
+   "hr",
+   "calendar",
+   "resource"
+  ],
+  "closure": 16,
+  "requires_apps": [
+   "Discuss",
+   "Employees"
+  ],
+  "master": [],
+  "connects": {
+   "Project": [
+    "project_timesheet_holidays"
+   ],
+   "Timesheet": [
+    "project_timesheet_holidays"
+   ]
+  },
+  "bridge_total": 1
+ },
+ "Fleet": {
+  "module": "fleet",
+  "category": "Human Resources",
+  "depends": [
+   "base",
+   "mail"
+  ],
+  "closure": 7,
+  "requires_apps": [
+   "Discuss"
+  ],
+  "master": [],
+  "connects": {
+   "Employees": [
+    "hr_fleet"
+   ],
+   "Invoicing": [
+    "account_fleet"
+   ]
+  },
+  "bridge_total": 2
+ },
+ "Email Marketing": {
+  "module": "mass_mailing",
+  "category": "Marketing",
+  "depends": [
+   "contacts",
+   "mail",
+   "html_builder",
+   "utm",
+   "link_tracker",
+   "social_media",
+   "web_tour",
+   "digest"
+  ],
+  "closure": 17,
+  "requires_apps": [
+   "Discuss"
+  ],
+  "master": [
+   "utm"
+  ],
+  "connects": {
+   "CRM": [
+    "mass_mailing_crm"
+   ],
+   "Events": [
+    "mass_mailing_event",
+    "mass_mailing_event_sms",
+    "mass_mailing_event_track",
+    "mass_mailing_event_track_sms"
+   ],
+   "Invoicing": [
+    "mass_mailing_sale",
+    "website_sale_mass_mailing"
+   ],
+   "Sales": [
+    "mass_mailing_sale",
+    "website_sale_mass_mailing"
+   ],
+   "Website": [
+    "mass_mailing_event_track",
+    "mass_mailing_event_track_sms",
+    "mass_mailing_slides",
+    "website_mass_mailing"
+   ],
+   "eCommerce": [
+    "website_sale_mass_mailing"
+   ],
+   "eLearning": [
+    "mass_mailing_slides"
+   ]
+  },
+  "bridge_total": 9
+ },
+ "SMS Marketing": {
+  "module": "mass_mailing_sms",
+  "category": "Marketing",
+  "depends": [
+   "portal",
+   "mass_mailing",
+   "sms"
+  ],
+  "closure": 22,
+  "requires_apps": [
+   "Discuss",
+   "Email Marketing"
+  ],
+  "master": [
+   "utm"
+  ],
+  "connects": {
+   "CRM": [
+    "mass_mailing_crm_sms"
+   ],
+   "Events": [
+    "mass_mailing_event_sms",
+    "mass_mailing_event_track_sms"
+   ],
+   "Invoicing": [
+    "mass_mailing_sale_sms"
+   ],
+   "Sales": [
+    "mass_mailing_sale_sms"
+   ],
+   "Website": [
+    "mass_mailing_event_track_sms",
+    "website_mass_mailing_sms"
+   ]
+  },
+  "bridge_total": 5
+ },
+ "Events": {
+  "module": "event",
+  "category": "Marketing",
+  "depends": [
+   "barcodes",
+   "base_setup",
+   "mail",
+   "phone_validation",
+   "portal",
+   "utm"
+  ],
+  "closure": 13,
+  "requires_apps": [
+   "Discuss"
+  ],
+  "master": [
+   "utm"
+  ],
+  "connects": {
+   "CRM": [
+    "event_crm"
+   ],
+   "Email Marketing": [
+    "mass_mailing_event",
+    "mass_mailing_event_sms",
+    "mass_mailing_event_track",
+    "mass_mailing_event_track_sms"
+   ],
+   "Employees": [
+    "hr_skills_event"
+   ],
+   "Inventory": [
+    "pos_event"
+   ],
+   "Invoicing": [
+    "event_product",
+    "website_event_booth_sale",
+    "website_event_sale"
+   ],
+   "Point of Sale": [
+    "pos_event"
+   ],
+   "SMS Marketing": [
+    "mass_mailing_event_sms",
+    "mass_mailing_event_track_sms"
+   ],
+   "Sales": [
+    "event_sale",
+    "pos_event_sale",
+    "website_event_booth_sale",
+    "website_event_sale"
+   ],
+   "Website": [
+    "website_event_booth_sale",
+    "website_event_sale"
+   ],
+   "eCommerce": [
+    "website_event_booth_sale",
+    "website_event_sale"
+   ]
+  },
+  "bridge_total": 12
+ },
+ "Survey": {
+  "module": "survey",
+  "category": "Marketing",
+  "depends": [
+   "auth_signup",
+   "http_routing",
+   "mail",
+   "web_tour",
+   "gamification"
+  ],
+  "closure": 10,
+  "requires_apps": [
+   "Discuss"
+  ],
+  "master": [],
+  "connects": {
+   "CRM": [
+    "survey_crm"
+   ],
+   "Employees": [
+    "hr_skills_survey"
+   ],
+   "Website": [
+    "website_slides_survey"
+   ],
+   "eLearning": [
+    "website_slides_survey"
+   ]
+  },
+  "bridge_total": 3
+ },
+ "Project": {
+  "module": "project",
+  "category": "Services",
+  "depends": [
+   "analytic",
+   "base_setup",
+   "mail",
+   "portal",
+   "rating",
+   "resource",
+   "web",
+   "web_tour",
+   "digest"
+  ],
+  "closure": 15,
+  "requires_apps": [
+   "Discuss"
+  ],
+  "master": [
+   "analytic",
+   "uom"
+  ],
+  "connects": {
+   "Employees": [
+    "project_hr_expense",
+    "project_hr_skills",
+    "project_sale_expense"
+   ],
+   "Expenses": [
+    "project_hr_expense",
+    "project_sale_expense"
+   ],
+   "Inventory": [
+    "project_mrp",
+    "project_mrp_sale",
+    "project_stock",
+    "sale_project_stock"
+   ],
+   "Invoicing": [
+    "project_account",
+    "project_mrp_account",
+    "project_mrp_sale",
+    "project_stock_account"
+   ],
+   "Manufacturing": [
+    "project_mrp",
+    "project_mrp_sale"
+   ],
+   "Purchase": [
+    "project_mrp_stock_landed_costs",
+    "project_purchase",
+    "project_stock_landed_costs",
+    "sale_purchase_project"
+   ],
+   "Sales": [
+    "project_mrp_sale",
+    "project_sale_expense",
+    "sale_project",
+    "sale_project_stock",
+    "sale_purchase_project"
+   ],
+   "Time Off": [
+    "project_timesheet_holidays"
+   ],
+   "Website": [
+    "website_project",
+    "website_timesheet"
+   ]
+  },
+  "bridge_total": 18
+ },
+ "Timesheet": {
+  "module": "hr_timesheet",
+  "category": "Services",
+  "depends": [
+   "hr",
+   "hr_hourly_cost",
+   "analytic",
+   "project",
+   "uom"
+  ],
+  "closure": 20,
+  "requires_apps": [
+   "Discuss",
+   "Employees",
+   "Project"
+  ],
+  "master": [
+   "analytic",
+   "uom"
+  ],
+  "connects": {
+   "Invoicing": [
+    "sale_timesheet"
+   ],
+   "Sales": [
+    "sale_timesheet"
+   ],
+   "Time Off": [
+    "project_timesheet_holidays"
+   ],
+   "Website": [
+    "website_timesheet"
+   ]
+  },
+  "bridge_total": 3
+ },
+ "Discuss": {
+  "module": "mail",
+  "category": "Productivity",
+  "depends": [
+   "base",
+   "base_setup",
+   "bus",
+   "web_tour",
+   "html_editor"
+  ],
+  "closure": 6,
+  "requires_apps": [],
+  "master": [],
+  "connects": {},
+  "bridge_total": 0
+ },
+ "Repair": {
+  "module": "repair",
+  "category": "Inventory & Manufacturing",
+  "depends": [
+   "sale_stock",
+   "sale_management"
+  ],
+  "closure": 28,
+  "requires_apps": [
+   "Discuss",
+   "Inventory",
+   "Invoicing",
+   "Sales"
+  ],
+  "master": [
+   "account",
+   "analytic",
+   "payment",
+   "product",
+   "sales_team",
+   "stock_account",
+   "uom",
+   "utm"
+  ],
+  "connects": {
+   "Manufacturing": [
+    "mrp_repair",
+    "mrp_subcontracting_repair"
+   ],
+   "Point of Sale": [
+    "pos_repair"
+   ],
+   "Purchase": [
+    "purchase_repair"
+   ]
+  },
+  "bridge_total": 4
+ }
+}

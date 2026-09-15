@@ -1,0 +1,128 @@
+<section>
+  <div class="col">
+    <p class="eyebrow">Phases 2–4</p>
+    <h2>The Sales group, app by app</h2>
+    <p>Three apps, each shipped on its own. Every worksheet below relates <em>down</em> into phase 1 and never sideways into another app — except the one control that links an order to its opportunity, which is free here because CRM was built first.</p>
+  </div>
+
+  <div class="pgroup">
+    <div class="phead"><span class="pn">Phase 2</span><h3>CRM</h3><span class="pc">4 worksheets · new app</span></div>
+    <p class="pintro">The cheapest real app in Odoo: <code>crm</code> requires no product, no unit, no tax and no account. Its entire foundation is Contacts, Sales Teams, the three UTM worksheets and Activity Types — all standing after phase 1. Build it first among the apps and you exercise worksheets, subtables, views, roles, workflows and cross-app Relations on a surface small enough to throw away.</p>
+    <div class="tw"><table>
+      <thead><tr><th class="s">#</th><th>Worksheet</th><th>Relations to wire</th></tr></thead><tbody>
+      <tr><td class="s">1</td><td class="w"><b>Stages</b><span>crm.stage</span></td><td class="r">Sales Team → Sales Teams</td></tr>
+      <tr><td class="s">2</td><td class="w"><b>Lost Reasons</b><span>crm.lost.reason</span></td><td class="r"><i>none</i></td></tr>
+      <tr><td class="s">3</td><td class="w"><b>Recurring Plans</b><span>crm.recurring.plan</span></td><td class="r"><i>none</i></td></tr>
+      <tr><td class="s">4</td><td class="w"><b>Leads</b><span>crm.lead</span></td><td class="r">Customer → Contacts · Stage → Stages · Sales Team → Sales Teams · Salesperson → <i>Collaborator</i> · Lost Reason → Lost Reasons · Campaign → Campaigns · Source → Sources · Medium → Mediums · Recurring Plan → Recurring Plans · Country → Countries · State → States · Tags → Contact Tags</td></tr>
+    </tbody></table></div>
+    <p class="pintro">Then the app furniture: views for My Pipeline · All Opportunities · Lost (Odoo's kanban is a sheet view grouped by Stage), a Won / Lost action button pair, and a role that can read Contacts across the app boundary.</p>
+  </div>
+
+  <div class="pgroup">
+    <div class="phead"><span class="pn">Phase 3</span><h3>Sales</h3><span class="pc">5 worksheets · new app</span></div>
+    <p class="pintro">Quote to cash. Orders is the widest worksheet in the system — around eighty controls — so build it last in the phase, after everything it points at exists. Note step 3's Opportunity control: built in order it is one control among eighty, not a retrofit onto a live table.</p>
+    <div class="tw"><table>
+      <thead><tr><th class="s">#</th><th>Worksheet</th><th>Relations to wire</th></tr></thead><tbody>
+      <tr><td class="s">1</td><td class="w"><b>Quotation Templates</b><span>sale.order.template</span></td><td class="r"><i>none</i></td></tr>
+      <tr><td class="s">2</td><td class="w"><b>Template Lines</b><span>sale.order.template.line</span></td><td class="r">Template → Quotation Templates <i>(subtable)</i> · Product → Product Variants · Unit → Units</td></tr>
+      <tr><td class="s">3</td><td class="w"><b>Orders</b><span>sale.order</span></td><td class="r">Customer → Contacts · Invoice Address → Contacts · Delivery Address → Contacts · Pricelist → Pricelists · Payment Terms → Payment Terms · Fiscal Position → Fiscal Positions · Incoterm → Incoterms · Sales Team → Sales Teams · Salesperson → <i>Collaborator</i> · Campaign / Source / Medium → UTM · Template → Quotation Templates · Analytic Account → Analytic Accounts · <em>Opportunity → Leads</em></td></tr>
+      <tr><td class="s">4</td><td class="w"><b>Order Lines</b><span>sale.order.line</span></td><td class="r">Order → Orders <i>(subtable)</i> · Product → <em>Product Variants</em> <i>(the variant, not the template — this is the choice that is expensive to change later)</i> · Unit → Units · Taxes → Taxes <i>(subType 2)</i></td></tr>
+      <tr><td class="s">5</td><td class="w"><b>Headers / Footers</b><span>sale.pdf.form.field</span></td><td class="r"><i>none</i> <em>then append: Orders ▸ Invoices → Invoices · Invoices ▸ Source Order → Orders</em></td></tr>
+    </tbody></table></div>
+    <p class="pintro">Then the workflows that make it an app: pricing a line from the pricelist, Confirm, Create Invoice (writing Invoices with Move Type = Customer Invoice), Register Payment, Lock and Cancel — plus the Formula and Rollup chain that turns line Taxes into an order total.</p>
+  </div>
+
+  <div class="pgroup">
+    <div class="phead"><span class="pn">Phase 4</span><h3>Point of Sale</h3><span class="pc">12 worksheets · new app</span></div>
+    <p class="pintro"><b>Blocked until phase 5.</b> <code>point_of_sale</code> hard-depends on <code>stock_account</code> — every POS order moves stock and posts a journal entry. Build Inventory first and this phase is ordinary; build it here and it drags a stock subset along. The worksheets are POS Configs, Sessions, POS Orders and Lines, POS Payments and Payment Methods, POS Categories, Bills, Notes, Printers and Combos, all relating into the phase-1 catalogue and, once Inventory exists, into Transfers.</p>
+  </div>
+</section>
+
+<section>
+  <div class="col">
+    <p class="eyebrow">Phases 5–11</p>
+    <h2>The remaining groups</h2>
+    <p>Ordered so each group's hard dependencies are already standing. Every one expands into the same shape as phases 2–4: worksheets first in dependency order, Relation controls wired as each is created, then views, roles and workflows.</p>
+  </div>
+  <div class="tw"><table>
+    <thead><tr><th class="s">#</th><th>Group</th><th class="n">Worksheets</th><th>Apps inside it</th><th>Why here</th></tr></thead><tbody>
+    <tr><td class="s">5</td><td class="w"><b>Inventory &amp; Manufacturing</b></td><td class="n">45</td><td class="r">Purchase 3 · Inventory 21 · Manufacturing 14 · Maintenance 5 · Repair 2</td><td class="r">Unblocks phase 4; Purchase closes procure-to-pay against the Invoices worksheet already built</td></tr>
+    <tr><td class="s">6</td><td class="w"><b>Services</b></td><td class="n">12</td><td class="r">Project 11 · Timesheet 1</td><td class="r">Needs Analytic Accounts and Lines, which phase 1 already laid down</td></tr>
+    <tr><td class="s">7</td><td class="w"><b>Human Resources</b></td><td class="n">35</td><td class="r">Employees 10 · Recruitment 8 · Time Off 6 · Fleet 11</td><td class="r">No Sales bridge at all — buildable in parallel with any phase from 2 onward</td></tr>
+    <tr><td class="s">8</td><td class="w"><b>Finance</b></td><td class="n">4</td><td class="r">Expenses · bank statements · reconciliation</td><td class="r">Thin, because Invoices, Journals, Taxes and the Chart of Accounts were all phase 1. Expenses needs Employees, so it follows phase 7</td></tr>
+    <tr><td class="s">9</td><td class="w"><b>Marketing</b></td><td class="n">28</td><td class="r">Email Marketing 7 · SMS Marketing · Events 16 · Survey 5</td><td class="r">Relates into Contacts and the UTM worksheets; Events also needs Products for paid tickets</td></tr>
+    <tr><td class="s">10</td><td class="w"><b>Website</b></td><td class="n">49</td><td class="r">Website 12 · eCommerce 8 · eLearning 11 · Live Chat 9 · Forum 5 · Blog 4</td><td class="r">eCommerce needs Sales and Inventory both standing; the largest group in the plan</td></tr>
+    <tr><td class="s">11</td><td class="w"><b>Productivity</b></td><td class="n">3</td><td class="r">Discuss</td><td class="r">Almost entirely native already — channels, messages and followers are platform features, not worksheets</td></tr>
+  </tbody></table></div>
+</section>
+
+<section>
+  <div class="col">
+    <p class="eyebrow">Timeline</p>
+    <h2>Nine months at forty hours a week</h2>
+    <p>Calibrated against the build you already did, not invented. Decoding the creation timestamps inside the live worksheet IDs shows the existing Sales app went up over <b>seven days — twenty-eight worksheets on day one alone</b> — and reached about 88% parity. That tells you the important thing: creating worksheets is nearly free. The hours go everywhere else.</p>
+  </div>
+  <div class="mdl">
+    <div><b>0.5 h</b><span>lookup worksheet — create, controls, seed</span></div>
+    <div><b>2 h</b><span>master worksheet — relations, form</span></div>
+    <div><b>3 h</b><span>line worksheet — subtable, rollups, lookups</span></div>
+    <div><b>8 h</b><span>transaction worksheet — wide form, status bar, totals</span></div>
+    <div><b>1.5 h</b><span>each button workflow</span></div>
+    <div><b>4 h</b><span>views, per app</span></div>
+    <div><b>3 h</b><span>roles and validation rules, per app</span></div>
+    <div><b>6 h</b><span>reporting pages and pivots, per app</span></div>
+    <div><b>5 h</b><span>PDF and email templates, per document-producing app</span></div>
+    <div><b>0.4 h</b><span>UI click-through, per worksheet</span></div>
+    <div><b>×1.25</b><span>correction loop after testing</span></div>
+  </div>
+  <div class="col">
+    <p>Run it backwards over the existing Sales build — 33 worksheets, 16 button workflows, one app, PDFs and emails, four reporting pages — and it predicts <b>136 hours</b>. You have spent roughly 100, and the app sits at 88% parity with the click-through check paused half-done and the variants generation workflow disabled. The <b>36-hour gap is the tail</b>, and it is the part an estimate usually forgets.</p>
+  </div>
+  <div class="tw"><table class="tl">
+    <thead><tr><th class="s">Ph</th><th>Phase</th><th class="n">WS</th><th class="n">Hours</th><th>At 40 h/week</th><th class="n">Cum wk</th></tr></thead>
+    <tbody><tr><td class="s">1</td><td class="w"><b>Core Foundation</b></td><td class="n">7</td><td class="n">48 h</td><td class="wk found"><i style="width:13%"></i>1.2 wk</td><td class="n">1</td></tr><tr><td class="s">1</td><td class="w"><b>Optional bundles — all 17</b></td><td class="n">29</td><td class="n">100 h</td><td class="wk found"><i style="width:27%"></i>2.5 wk</td><td class="n">4</td></tr><tr><td class="s">2</td><td class="w"><b>CRM</b></td><td class="n">4</td><td class="n">36 h</td><td class="wk "><i style="width:10%"></i>0.9 wk</td><td class="n">5</td></tr><tr><td class="s">3</td><td class="w"><b>Sales</b></td><td class="n">5</td><td class="n">73 h</td><td class="wk "><i style="width:20%"></i>1.8 wk</td><td class="n">6</td></tr><tr><td class="s">4</td><td class="w"><b>Point of Sale</b></td><td class="n">12</td><td class="n">77 h</td><td class="wk "><i style="width:21%"></i>1.9 wk</td><td class="n">8</td></tr><tr><td class="s">5</td><td class="w"><b>Inventory &amp; Manufacturing</b></td><td class="n">45</td><td class="n">288 h</td><td class="wk big"><i style="width:78%"></i>7.2 wk</td><td class="n">16</td></tr><tr><td class="s">6</td><td class="w"><b>Services</b></td><td class="n">12</td><td class="n">97 h</td><td class="wk "><i style="width:26%"></i>2.4 wk</td><td class="n">18</td></tr><tr><td class="s">7</td><td class="w"><b>Human Resources</b></td><td class="n">35</td><td class="n">184 h</td><td class="wk "><i style="width:50%"></i>4.6 wk</td><td class="n">23</td></tr><tr><td class="s">8</td><td class="w"><b>Finance</b></td><td class="n">4</td><td class="n">49 h</td><td class="wk "><i style="width:13%"></i>1.2 wk</td><td class="n">24</td></tr><tr><td class="s">9</td><td class="w"><b>Marketing</b></td><td class="n">28</td><td class="n">165 h</td><td class="wk "><i style="width:45%"></i>4.1 wk</td><td class="n">28</td></tr><tr><td class="s">10</td><td class="w"><b>Website</b></td><td class="n">49</td><td class="n">367 h</td><td class="wk big"><i style="width:100%"></i>9.2 wk</td><td class="n">37</td></tr><tr><td class="s">11</td><td class="w"><b>Productivity</b></td><td class="n">3</td><td class="n">20 h</td><td class="wk "><i style="width:5%"></i>0.5 wk</td><td class="n">38</td></tr></tbody>
+    <tfoot><tr><td class="s"></td><td class="w"><b>Everything</b></td><td class="n">233</td><td class="n">1502 h</td><td class="wk">38 weeks</td><td class="n">≈ 8.6 mo</td></tr></tfoot>
+  </table></div>
+  <div class="note">
+    <p><b>Two phases distort the total.</b> <em>Website</em> at 9 weeks is a quarter of the plan and is not worksheet work — Nocoly is a database, not a site builder, so eCommerce and public pages mean a separate front end talking to HAP over the v3 API. Treat it as its own project. <em>Inventory &amp; Manufacturing</em> at 7 weeks is genuine: 45 worksheets and the 27-control bridge back into Sales.</p>
+    <p>Drop both and the working ERP — foundation, CRM, Sales, POS, Services, HR, Finance, Marketing — lands in about <b>21 weeks</b>, roughly five months.</p>
+  </div>
+  <div class="note acc">
+    <p><b>What the rate assumes.</b> The 40 h/week is your input — and it is the rate you have already demonstrated: the existing Sales app took roughly 100 hours across seven days, which is well above forty a week. The productivity inside it is yours; the productivity inside it is the one you demonstrated — several background agents in parallel, Odoo open beside you as the reference, results read back rather than trusted. A person working the HAP form designer alone would be several times slower. The estimate carries no allowance for rebuilding a worksheet you got wrong, which is exactly what the dependency ordering in this plan exists to prevent.</p>
+  </div>
+  <div class="col">
+    <h3 style="font-family:Archivo,sans-serif;font-size:18px;margin-top:30px">Milestones worth naming</h3>
+    <ul class="checks">
+      <li><b>Week 1</b> — core foundation standing. Seven worksheets, no app yet, but every later phase now has something to relate into.</li>
+      <li><b>Week 5</b> — CRM live. First complete app: pipeline, views, roles, rules, a won-to-quotation workflow, and a click-through pass behind it.</li>
+      <li><b>Week 6</b> — quote to cash. Orders, Order Lines, Invoices, Payments, quotation PDFs. The point the system starts replacing something.</li>
+      <li><b>Week 16</b> — the physical business. Inventory, Purchase and Manufacturing in; delivery-driven invoicing real rather than modelled.</li>
+      <li><b>Week 28</b> — everything except the public web.</li>
+    </ul>
+  </div>
+</section>
+<section>
+  <div class="col">
+    <p class="eyebrow">Throughout</p>
+    <h2>Four rules that hold in every phase</h2>
+  </div>
+  <div class="rules">
+    <div class="rule"><span class="num">01</span><div>
+      <h4>A worksheet is finished when its relations are wired</h4>
+      <p>Create the worksheet, add its Relation controls, read them back, then move to the next number. Half-wired tables left for a later pass are how a foundation drifts out of dependency order — and HAP will happily let you point a Relation at a worksheet that doesn't exist yet.</p></div></div>
+    <div class="rule"><span class="num">02</span><div>
+      <h4>Relations point down, never sideways</h4>
+      <p>An app worksheet relates into phase 1 freely. It relates into another app's worksheet only through a named bridge pack — a documented set of controls appended to one side, built after both apps stand. Odoo enforces this with separate modules; here it is a review rule.</p></div></div>
+    <div class="rule"><span class="num">03</span><div>
+      <h4>Bridges are their own deliverable</h4>
+      <p>Nocoly has no <code>auto_install</code>, so the trigger is a checklist. One file per pair — <code>state/bridge_sale_stock.json</code> — naming the controls it appends, the workflows it owns and the invariants it must not break. Never smuggled into either app's build.</p></div></div>
+    <div class="rule"><span class="num">04</span><div>
+      <h4>Every phase ends on a seeded, readable-back check</h4>
+      <p>Seed each new worksheet from the matching Odoo tenant and read it back before declaring the phase done. Several HAP writes return success and store nothing; a phase that was never read back is a phase you will re-debug three phases later.</p></div></div>
+  </div>
+</section>
+
+<footer class="col">
+  <p>Worksheet counts are persistent models defined by each module at ca1phas/odoo 7bbce824 (19.0 Community), excluding transient wizards, abstract mixins, and <code>ir.*</code>/<code>report.*</code>/<code>theme.*</code> infrastructure. Models that HAP provides natively — users, groups, messages, followers, attachments, model metadata — are excluded from phase 1. Group membership follows odoo.com/page/all-apps; Enterprise-only apps in each group are not counted.</p>
+</footer>
+</div>

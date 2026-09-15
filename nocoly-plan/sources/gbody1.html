@@ -1,0 +1,156 @@
+<div class="page">
+<header class="mast">
+  <p class="kicker">Greenfield build plan · Odoo 19.0 Community → Nocoly HAP</p>
+  <h1>Nocoly Ground-Up Build</h1>
+  <p class="lede">Eleven phases. One builds the worksheets every app relates into; the other ten are Odoo's own app groups, added whole. Within each phase, worksheets and their relations go in one at a time, in dependency order.</p>
+  <div class="byline">
+    <span>11 phases</span><span>233 worksheets</span><span>~38 weeks at 40 h/wk</span><span>ca1phas/odoo @ 7bbce824</span><span>14 Sep 2026</span>
+  </div>
+</header>
+
+<section>
+  <div class="col">
+    <p class="eyebrow">The shape</p>
+    <h2>One foundation, ten app groups</h2>
+    <p>Phase 1 is the only phase that isn't an app. It holds the worksheets that more than one group points a Relation control at. Only seven of those are unavoidable; the rest belong to optional features and are deferred to the phase that first needs them. Nothing here belongs to a single app, which is why it is built first and never moved afterwards.</p>
+    <p>Everything after it is an Odoo catalogue group taken whole. The Sales group splits into its three apps because they are the spine of the system and each is worth shipping on its own; the remaining seven groups go in as groups.</p>
+  </div>
+  <div class="wallui">
+    <div class="wctl">
+      <div class="wslider">
+        <label for="ph">Phase</label>
+        <input id="ph" type="range" min="1" max="11" value="3" step="1" aria-label="Build phase">
+        <span class="wphl" id="phl">3 — Sales</span>
+      </div>
+      <div class="wchips" id="chips"></div>
+      <div class="wstats" id="stats"></div>
+    </div>
+    <div class="wall" id="wall"></div>
+    <div class="wdetail" id="detail"></div>
+  </div>
+  <p class="figcap">Drag the slider to add phases. Switch a feature bundle off and the worksheets that use it turn dotted; switch off one another phase hard-depends on and they turn orange. Point of Sale at phase 4 is orange until Inventory lands at phase 5 — that is the one ordering exception in the plan, showing itself.</p>
+  <div class="note">
+    <p><b>Point of Sale is the one phase that can't run in its numbered order.</b> <code>point_of_sale</code> hard-depends on <code>stock_account</code>, so it needs Inventory standing before it. Either build phase 5 before phase 4, or accept that phase 4 drags a subset of Inventory in with it. Every other phase in the plan is buildable in the order shown.</p>
+  </div>
+</section>
+
+<section>
+  <div class="pgroup">
+    <div class="phead found"><span class="pn">Phase 1</span><h3>Core Foundation</h3><span class="pc">7 core · 29 optional, deferred</span></div>
+    <p class="pintro">Seven worksheets are genuinely unavoidable. Everything else in the foundation — taxes, the chart of accounts, categories, payment terms, variants, pricelists — is a feature you switch on when you need it. The rule for deciding: <b>a worksheet is core only if Odoo enforces it with <code>required=True</code> from a model that is itself core, or the concept is unrepresentable without it.</b> Every other worksheet is a bundle, and the evidence for each call is in the table below.</p>
+
+    <p class="blockh">Core · Identity</p>
+    <div class="tw"><table>
+      <thead><tr><th class="s">#</th><th>Worksheet</th><th>Relations to wire</th></tr></thead><tbody>
+      <tr><td class="s">1</td><td class="w"><b>Contacts</b><span>res.partner</span></td><td class="r">Parent Company → Contacts <i>(self)</i> · Salesperson → <i>Collaborator</i>. Country and State stay plain Text until the Geography bundle lands.</td></tr>
+    </tbody></table></div>
+
+    <p class="blockh">Core · Catalogue</p>
+    <div class="tw"><table>
+      <thead><tr><th class="s">#</th><th>Worksheet</th><th>Relations to wire</th></tr></thead><tbody>
+      <tr><td class="s">2</td><td class="w"><b>Units &amp; Packagings</b><span>uom.uom</span></td><td class="r">Parent Unit → Units <i>(self)</i>. Seed a handful; the conversion machinery is gated behind <code>uom.group_uom</code> and can wait. Odoo 19 merged uom.category and product.packaging into this one table.</td></tr>
+      <tr><td class="s">3</td><td class="w"><b>Products</b><span>product.template</span></td><td class="r">Sales Unit → Units · Purchase Unit → Units · <i>Category → Product Categories once that bundle is on</i></td></tr>
+      <tr><td class="s">4</td><td class="w"><b>Product Variants</b><span>product.product</span></td><td class="r">Product → Products. <i>Core even with variants switched off — every template carries exactly one variant, and every order line, stock move and invoice line points here rather than at the template.</i></td></tr>
+    </tbody></table></div>
+
+    <p class="blockh">Core · Money</p>
+    <div class="tw"><table>
+      <thead><tr><th class="s">#</th><th>Worksheet</th><th>Relations to wire</th></tr></thead><tbody>
+      <tr><td class="s">5</td><td class="w"><b>Journals</b><span>account.journal</span></td><td class="r"><i>Default Account → Chart of Accounts once that bundle is on</i></td></tr>
+      <tr><td class="s">6</td><td class="w"><b>Invoices</b><span>account.move</span></td><td class="r"><em>Move Type Dropdown on day one</em> — Customer Invoice · Vendor Bill · Credit Note · Vendor Refund. Partner → Contacts · Journal → Journals · <i>Payment Terms once that bundle is on</i></td></tr>
+      <tr><td class="s">7</td><td class="w"><b>Invoice Lines</b><span>account.move.line</span></td><td class="r">Invoice → Invoices <i>(subtable)</i> · Product → Product Variants · Unit → Units · <i>Taxes and Account once those bundles are on</i></td></tr>
+    </tbody></table></div>
+  </div>
+</section>
+
+<section>
+  <div class="col">
+    <p class="eyebrow">Verification</p>
+    <h2>How each call was decided</h2>
+    <p>Read out of the Odoo 19 source rather than assumed. Where a field carries <code>required=True</code>, the database will not let the row exist without it — that is the hard evidence. Where it doesn't, the worksheet is a feature, however much you may want it on day one.</p>
+  </div>
+  <div class="tw"><table>
+    <thead><tr><th>Worksheet</th><th>Verdict</th><th>Evidence from the source</th></tr></thead><tbody>
+    <tr><td class="w"><b>Contacts</b></td><td><span class="pill have">core</span></td><td class="r">No <code>required=True</code>, but unrepresentable: an invoice with no party is not a business document. The most-referenced model in the repo — 57 modules, 58 extensions.</td></tr>
+    <tr><td class="w"><b>Units &amp; Packagings</b></td><td><span class="pill have">core</span></td><td class="r"><code>product.template.uom_id</code> <b>required=True</b> — no product exists without a unit</td></tr>
+    <tr><td class="w"><b>Products</b></td><td><span class="pill have">core</span></td><td class="r"><code>product.product.product_tmpl_id</code> <b>required=True</b></td></tr>
+    <tr><td class="w"><b>Product Variants</b></td><td><span class="pill have">core</span></td><td class="r">Every order line, invoice line and stock move points at the variant, not the template</td></tr>
+    <tr><td class="w"><b>Journals</b></td><td><span class="pill have">core</span></td><td class="r"><code>account.move.journal_id</code> <b>required=True</b> — no move of any kind exists without a journal</td></tr>
+    <tr><td class="w"><b>Invoices</b></td><td><span class="pill have">core</span></td><td class="r"><code>account.move.line.move_id</code> and <code>account.payment.move_id</code> both <b>required=True</b></td></tr>
+    <tr><td class="w"><b>Invoice Lines</b></td><td><span class="pill have">core</span></td><td class="r">An invoice with no lines carries no amount</td></tr>
+    <tr><td class="w"><b>Taxes</b></td><td><span class="pill cost">bundle</span></td><td class="r"><b>Nothing in the repository declares <code>required=True</code> on <code>account.tax</code>.</b> <code>account.move.line.tax_ids</code> is computed and optional. Structurally a feature — practically you will switch it on immediately.</td></tr>
+    <tr><td class="w"><b>Chart of Accounts</b></td><td><span class="pill cost">bundle</span></td><td class="r">The only <code>required=True</code> references come from <code>account.fiscal.position.account</code> — itself an optional bundle. <code>account.journal.default_account_id</code> is <b>not</b> required.</td></tr>
+    <tr><td class="w"><b>Product Categories</b></td><td><span class="pill cost">bundle</span></td><td class="r"><code>product.template.categ_id</code> is <b>not required</b> in Odoo 19 — no <code>required=True</code>, no default — and nothing else points at it</td></tr>
+    <tr><td class="w"><b>Payment Terms</b></td><td><span class="pill cost">bundle</span></td><td class="r">The only <code>required=True</code> reference is <code>account.payment.term.line.payment_id</code> — its own line table. <code>account.move.invoice_payment_term_id</code> is optional.</td></tr>
+    <tr><td class="w"><b>Payment Methods · Payments</b></td><td><span class="pill cost">bundle</span></td><td class="r">Nothing requires either. Your current Sales build already models payment as an Amount Paid field on Invoices — real-world proof that this is a feature, not a foundation.</td></tr>
+    <tr><td class="w"><b>Activity Types</b></td><td><span class="pill cost">bundle</span></td><td class="r"><code>mail.activity.mixin</code> is an <b>AbstractModel</b> that models opt into. The only worksheet pointing at Activity Types is Plan Steps, itself in the same bundle. Nothing in the core touches it.</td></tr>
+  </tbody></table></div>
+  <div class="note">
+    <p><b>Structurally optional is not the same as skippable.</b> Taxes carries no <code>required=True</code> anywhere in Odoo, yet no Malaysian invoice is correct without it and every rollup in your existing build hangs off the Taxes lookup. The distinction the table draws is about <em>build order and blast radius</em>, not importance: a bundle can be added later without touching what already exists, a core worksheet cannot.</p>
+  </div>
+</section>
+
+<section>
+  <div class="col">
+    <p class="eyebrow">Deferred</p>
+    <h2>Seventeen optional bundles</h2>
+    <p>Each bundle is one feature, switchable on its own. Where Odoo ships a settings toggle, the toggle is named — that is evidence the feature is genuinely optional rather than a judgment call. Build a bundle when you reach the phase in the last column.</p>
+  </div>
+  <div class="tw"><table>
+    <thead><tr><th>Bundle</th><th>Odoo toggle</th><th class="n">WS</th><th>Worksheets</th><th>Needed by</th></tr></thead><tbody>
+    <tr><td class="w"><b>Taxes</b></td><td class="m">—</td><td class="n">1</td><td class="r">Taxes</td><td class="r"><b>day one</b> in any real jurisdiction · <em>requires Geography</em></td></tr>
+    <tr><td class="w"><b>Chart of Accounts</b></td><td class="m">—</td><td class="n">1</td><td class="r">Chart of Accounts</td><td class="r"><b>Phase 8</b> Finance · real double-entry</td></tr>
+    <tr><td class="w"><b>Product Categories</b></td><td class="m">—</td><td class="n">1</td><td class="r">Product Categories</td><td class="r">product reporting · stock valuation</td></tr>
+    <tr><td class="w"><b>Payment Terms</b></td><td class="m">—</td><td class="n">1</td><td class="r">Payment Terms</td><td class="r">any due date beyond immediate</td></tr>
+    <tr><td class="w"><b>Payments</b></td><td class="m">—</td><td class="n">2</td><td class="r">Payment Methods · Payments</td><td class="r">receipts as records rather than a field</td></tr>
+    <tr><td class="w"><b>Product Variants</b></td><td class="m">product.group_product_variant</td><td class="n">4</td><td class="r">Attributes · Attribute Values · Product Attribute Lines · Template Attribute Values</td><td class="r">first product with options</td></tr>
+    <tr><td class="w"><b>Pricelists</b></td><td class="m">product.group_product_pricelist</td><td class="n">2</td><td class="r">Pricelists · Price Rules</td><td class="r"><b>Phase 3</b> Sales</td></tr>
+    <tr><td class="w"><b>Marketing attribution</b></td><td class="m">—</td><td class="n">3</td><td class="r">Campaigns · Sources · Mediums</td><td class="r"><b>Phase 2</b> CRM</td></tr>
+    <tr><td class="w"><b>Sales Teams</b></td><td class="m">—</td><td class="n">1</td><td class="r">Sales Teams</td><td class="r"><b>Phase 2</b> CRM</td></tr>
+    <tr><td class="w"><b>Analytic Accounting</b></td><td class="m">analytic.group_analytic_accounting</td><td class="n">2</td><td class="r">Analytic Accounts · Analytic Lines</td><td class="r"><b>Phase 6</b> Services — Project and Timesheet both post here</td></tr>
+    <tr><td class="w"><b>Activities</b></td><td class="m">—</td><td class="n">3</td><td class="r">Activity Types · Activity Plans · Plan Steps</td><td class="r">first scheduled follow-up</td></tr>
+    <tr><td class="w"><b>Geography</b></td><td class="m">—</td><td class="n">2</td><td class="r">Countries · States</td><td class="r">before Fiscal Positions; until then Contacts keeps Text</td></tr>
+    <tr><td class="w"><b>Fiscal Positions</b></td><td class="m">—</td><td class="n">1</td><td class="r">Fiscal Positions</td><td class="r">first exempt or cross-border customer · <em>requires Geography and Taxes</em></td></tr>
+    <tr><td class="w"><b>Incoterms</b></td><td class="m">—</td><td class="n">1</td><td class="r">Incoterms</td><td class="r">first international shipment</td></tr>
+    <tr><td class="w"><b>Multi-currency</b></td><td class="m">base.group_multi_currency</td><td class="n">1</td><td class="r">Currencies</td><td class="r">second currency · single-currency lives in the Currency control itself</td></tr>
+    <tr><td class="w"><b>Product Combos</b></td><td class="m">—</td><td class="n">2</td><td class="r">Combo Choices · Combo Items</td><td class="r"><b>Phase 4</b> Point of Sale</td></tr>
+    <tr><td class="w"><b>Contact Tags</b></td><td class="m">—</td><td class="n">1</td><td class="r">Contact Tags</td><td class="r">first segmented mailing or report</td></tr>
+  </tbody></table></div>
+  <div class="note">
+    <p><b>Two bundles are cheap now and expensive later.</b> <em>Product Variants</em> — order lines, stock moves and invoice lines all point at Product Variants from the start, so turning attributes on later only adds tables; but pointing those lines at Products instead of Variants to "keep it simple" is the one decision in this plan that costs a rebuild. <em>Geography</em> — Fiscal Positions select by country in Odoo, so if you expect any tax exemption at all, build Countries before Contacts rather than after.</p>
+  </div>
+  <div class="note acc">
+    <p><b>Don't build these — Nocoly already is them.</b> <code>res.users</code> → Collaborator · <code>res.groups</code> → roles · <code>mail.message</code> / <code>mail.thread</code> / <code>mail.followers</code> → record discussion · <code>ir.attachment</code> → the Attachment control · <code>ir.model</code> / <code>ir.model.fields</code> → worksheets and controls · <code>res.lang</code> → platform i18n. Odoo needs them as tables because it is building the platform; you are already standing on one. That is why the core is seven worksheets and not sixty.</p>
+  </div>
+</section>
+<section>
+  <div class="col">
+    <p class="eyebrow">Verification</p>
+    <h2>And every bundle, checked the same way</h2>
+    <p>A bundle is only honest if nothing structurally depends on it. Same test, run across all twenty-nine bundle worksheets — and it turned up two corrections to an earlier draft of this plan.</p>
+  </div>
+  <div class="tw"><table>
+    <thead><tr><th>Bundle</th><th>Odoo toggle</th><th>Evidence</th></tr></thead><tbody>
+    <tr><td class="w"><b>Taxes</b></td><td class="m">—</td><td class="r">No <code>required=True</code> on <code>account.tax</code> anywhere. <em>But <code>account.tax.country_id</code> is required=True</em> — so Taxes cannot stand without Geography. Encoded as a hard dependency above.</td></tr>
+    <tr><td class="w"><b>Geography</b></td><td class="m">—</td><td class="r"><code>res.country.state.country_id</code> required=True (its own child). Nothing else requires Countries except <code>account.tax</code> — which is why Geography must precede Taxes.</td></tr>
+    <tr><td class="w"><b>Chart of Accounts</b></td><td class="m">—</td><td class="r">Only <code>account.fiscal.position.account</code> requires it — itself an optional sub-table</td></tr>
+    <tr><td class="w"><b>Product Categories</b></td><td class="m">—</td><td class="r">Nothing requires it; <code>categ_id</code> is not required in Odoo 19</td></tr>
+    <tr><td class="w"><b>Payment Terms</b></td><td class="m">—</td><td class="r">Only its own line table</td></tr>
+    <tr><td class="w"><b>Payments</b></td><td class="m">—</td><td class="r">Nothing requires Payment Methods or Payments</td></tr>
+    <tr><td class="w"><b>Product Variants</b></td><td class="m">product.group_product_variant</td><td class="r">Security group in <code>addons/product/security</code>. Internal requires only — Attr Lines needs Attributes, Tmpl Attr Values needs Attribute Values. Nothing outside the bundle.</td></tr>
+    <tr><td class="w"><b>Pricelists</b></td><td class="m">product.group_product_pricelist</td><td class="r">Security group. No <code>required=True</code> reference anywhere.</td></tr>
+    <tr><td class="w"><b>Analytic Accounting</b></td><td class="m">analytic.group_analytic_accounting</td><td class="r">Security group. No required reference to either worksheet.</td></tr>
+    <tr><td class="w"><b>Multi-currency</b></td><td class="m">base.group_multi_currency</td><td class="r"><em>The one Odoo genuinely requires</em> — <code>account.move.currency_id</code> and <code>res.company.currency_id</code> are both required=True. It stays a bundle because Nocoly's <b>Currency control carries its own currency code</b>, so a single-currency build needs no Currencies worksheet at all. Build one only for a second currency.</td></tr>
+    <tr><td class="w"><b>Marketing attribution</b></td><td class="m">—</td><td class="r">Nothing requires Campaigns or Mediums; Sources only by <code>utm.source.mixin</code></td></tr>
+    <tr><td class="w"><b>Sales Teams</b></td><td class="m">—</td><td class="r">Only <code>crm.team.member</code> requires it — its own membership table</td></tr>
+    <tr><td class="w"><b>Activities</b></td><td class="m">—</td><td class="r"><code>mail.activity.mixin</code> is an AbstractModel models opt into; only Plan Steps points at Activity Types</td></tr>
+    <tr><td class="w"><b>Fiscal Positions</b></td><td class="m">—</td><td class="r">Only its own tax- and account-mapping sub-tables require it. Needs Geography and Taxes standing first.</td></tr>
+    <tr><td class="w"><b>Incoterms</b></td><td class="m">—</td><td class="r">Nothing requires it</td></tr>
+    <tr><td class="w"><b>Product Combos</b></td><td class="m">—</td><td class="r">Nothing requires either worksheet</td></tr>
+    <tr><td class="w"><b>Contact Tags</b></td><td class="m">—</td><td class="r">Nothing requires it</td></tr>
+  </tbody></table></div>
+  <div class="note">
+    <p><b>Two corrections the check produced.</b> <em>Taxes needs Geography</em> — <code>account.tax.country_id</code> carries <code>required=True</code>, so a Taxes worksheet with no Countries behind it is incomplete; switch Taxes on in the wall above without Geography and it turns orange. <em>Multi-currency is the one bundle Odoo really does require</em>, and it only stays optional because a Nocoly Currency control carries its currency itself — a platform difference, not an Odoo one.</p>
+  </div>
+</section>
+

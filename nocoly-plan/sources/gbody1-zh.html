@@ -1,0 +1,156 @@
+<div class="page">
+<header class="mast">
+  <p class="kicker">从零搭建方案 · Odoo 19.0 Community → Nocoly HAP</p>
+  <h1>Nocoly 从零搭建</h1>
+  <p class="lede">十一个阶段。第一个阶段搭的是所有 app 都要关联进去的 worksheet；其余十个就是 Odoo 自己的 app group，整组搬过来。每个阶段内部，worksheet 和它们的 Relation 按依赖顺序一张一张地加。</p>
+  <div class="byline">
+    <span>11 个阶段</span><span>233 张 worksheet</span><span>约 38 周（每周 40 小时）</span><span>ca1phas/odoo @ 7bbce824</span>
+  </div>
+</header>
+
+<section>
+  <div class="col">
+    <p class="eyebrow">整体形状</p>
+    <h2>一个 foundation，十个 app group</h2>
+    <p>Phase 1 是唯一不属于 app 的阶段。它装的是被不止一个 group 用 Relation control 指向的 worksheet。其中真正绕不开的只有七张；其余都属于可选功能，推迟到第一个真正需要它的阶段再建。这里的任何一张 worksheet 都不归某一个 app 所有——所以它先建，而且之后再也不搬。</p>
+    <p>它之后的每一个阶段都是 Odoo app 目录里的一整个 group。Sales group 拆成三个 app 单独推进，因为它们是整个系统的主干、而且每一个单独上线都有价值；其余七个 group 按组整体推进。</p>
+  </div>
+  <div class="wallui">
+    <div class="wctl">
+      <div class="wslider">
+        <label for="ph">阶段</label>
+        <input id="ph" type="range" min="1" max="11" value="3" step="1" aria-label="搭建阶段">
+        <span class="wphl" id="phl">3 — Sales</span>
+      </div>
+      <div class="wchips" id="chips"></div>
+      <div class="wstats" id="stats"></div>
+    </div>
+    <div class="wall" id="wall"></div>
+    <div class="wdetail" id="detail"></div>
+  </div>
+  <p class="figcap">拖动滑块可以逐阶段往上加。关掉某个 feature bundle，用到它的 worksheet 会变成虚线；关掉某个阶段硬依赖的东西，它们会变成橙色。Phase 4 的 Point of Sale 在 Inventory 于 Phase 5 落地之前一直是橙色——这就是整个方案里唯一的顺序例外，它自己显现了出来。</p>
+  <div class="note">
+    <p><b>Point of Sale 是唯一无法按编号顺序执行的阶段。</b><code>point_of_sale</code> 硬依赖 <code>stock_account</code>，所以它需要 Inventory 先立起来。要么把 Phase 5 挪到 Phase 4 之前，要么接受 Phase 4 会把 Inventory 的一部分一起拖进来。方案中其余所有阶段都可以按图示顺序搭建。</p>
+  </div>
+</section>
+
+<section>
+  <div class="pgroup">
+    <div class="phead found"><span class="pn">Phase 1</span><h3>Core Foundation</h3><span class="pc">7 张 core · 29 张可选、可推迟</span></div>
+    <p class="pintro">真正绕不开的只有七张 worksheet。foundation 里的其余部分——Taxes、Chart of Accounts、Product Categories、Payment Terms、variants、Pricelists——都是你用得着时才打开的功能。判断规则是：<b>只有当 Odoo 用 <code>required=True</code> 从一个本身就是 core 的模型上强制它，或者离开它这个概念根本无法表达时，一张 worksheet 才算 core。</b>其余一律算作 feature bundle，每一项判断的依据都列在下面的表里。</p>
+
+    <p class="blockh">Core · Identity</p>
+    <div class="tw"><table>
+      <thead><tr><th class="s">#</th><th>worksheet</th><th>需要接的 Relation</th></tr></thead><tbody>
+      <tr><td class="s">1</td><td class="w"><b>Contacts</b><span>res.partner</span></td><td class="r">Parent Company → Contacts <i>（自关联）</i> · Salesperson → <i>Collaborator</i>。在 Geography bundle 落地之前，Country 和 State 先用纯 Text。</td></tr>
+    </tbody></table></div>
+
+    <p class="blockh">Core · Catalogue</p>
+    <div class="tw"><table>
+      <thead><tr><th class="s">#</th><th>worksheet</th><th>需要接的 Relation</th></tr></thead><tbody>
+      <tr><td class="s">2</td><td class="w"><b>Units &amp; Packagings</b><span>uom.uom</span></td><td class="r">Parent Unit → Units <i>（自关联）</i>。先录几个常用单位就够；换算机制被 <code>uom.group_uom</code> 关着，可以等。Odoo 19 已经把 uom.category 和 product.packaging 合并进了这一张表。</td></tr>
+      <tr><td class="s">3</td><td class="w"><b>Products</b><span>product.template</span></td><td class="r">Sales Unit → Units · Purchase Unit → Units · <i>Product Categories bundle 启用后再接 Category</i></td></tr>
+      <tr><td class="s">4</td><td class="w"><b>Product Variants</b><span>product.product</span></td><td class="r">Product → Products。<i>即使 variants 功能关着它也是 core——每个 template 都恰好带一个 variant，而 Order Lines、stock move、Invoice Lines 指向的都是这里，不是 template。</i></td></tr>
+    </tbody></table></div>
+
+    <p class="blockh">Core · Money</p>
+    <div class="tw"><table>
+      <thead><tr><th class="s">#</th><th>worksheet</th><th>需要接的 Relation</th></tr></thead><tbody>
+      <tr><td class="s">5</td><td class="w"><b>Journals</b><span>account.journal</span></td><td class="r"><i>Chart of Accounts bundle 启用后再接 Default Account</i></td></tr>
+      <tr><td class="s">6</td><td class="w"><b>Invoices</b><span>account.move</span></td><td class="r"><em>第一天就加上 Move Type 这个 Dropdown</em>——Customer Invoice · Vendor Bill · Credit Note · Vendor Refund。Partner → Contacts · Journal → Journals · <i>Payment Terms bundle 启用后再接</i></td></tr>
+      <tr><td class="s">7</td><td class="w"><b>Invoice Lines</b><span>account.move.line</span></td><td class="r">Invoice → Invoices <i>（subtable）</i> · Product → Product Variants · Unit → Units · <i>Taxes 与 Chart of Accounts bundle 启用后再接</i></td></tr>
+    </tbody></table></div>
+  </div>
+</section>
+
+<section>
+  <div class="col">
+    <p class="eyebrow">核验</p>
+    <h2>每一项判断的依据</h2>
+    <p>以下结论是从 Odoo 19 源码里读出来的，不是猜的。凡是字段带了 <code>required=True</code>，数据库就不允许这条记录在缺它的情况下存在——这是硬证据。没有这个标记的，就只是一项功能，哪怕你第一天就想要它。</p>
+  </div>
+  <div class="tw"><table>
+    <thead><tr><th>worksheet</th><th>结论</th><th>源码依据</th></tr></thead><tbody>
+    <tr><td class="w"><b>Contacts</b></td><td><span class="pill have">core</span></td><td class="r">没有 <code>required=True</code>，但无法表达：一张没有往来方的 invoice 不成其为业务凭证。它是整个仓库里被引用最多的模型——57 个模块、58 处扩展。</td></tr>
+    <tr><td class="w"><b>Units &amp; Packagings</b></td><td><span class="pill have">core</span></td><td class="r"><code>product.template.uom_id</code> <b>required=True</b> —— 没有 unit 就没有 product</td></tr>
+    <tr><td class="w"><b>Products</b></td><td><span class="pill have">core</span></td><td class="r"><code>product.product.product_tmpl_id</code> <b>required=True</b></td></tr>
+    <tr><td class="w"><b>Product Variants</b></td><td><span class="pill have">core</span></td><td class="r">Order Lines、Invoice Lines、stock move 指向的都是 variant，而不是 template</td></tr>
+    <tr><td class="w"><b>Journals</b></td><td><span class="pill have">core</span></td><td class="r"><code>account.move.journal_id</code> <b>required=True</b> —— 任何类型的 move 都不能没有 journal</td></tr>
+    <tr><td class="w"><b>Invoices</b></td><td><span class="pill have">core</span></td><td class="r"><code>account.move.line.move_id</code> 与 <code>account.payment.move_id</code> 都是 <b>required=True</b></td></tr>
+    <tr><td class="w"><b>Invoice Lines</b></td><td><span class="pill have">core</span></td><td class="r">没有 line 的 invoice 不带金额</td></tr>
+    <tr><td class="w"><b>Taxes</b></td><td><span class="pill cost">bundle</span></td><td class="r"><b>整个仓库里没有任何一处对 <code>account.tax</code> 声明 <code>required=True</code>。</b><code>account.move.line.tax_ids</code> 是计算字段且可为空。结构上它是功能——实际上你会第一天就打开它。</td></tr>
+    <tr><td class="w"><b>Chart of Accounts</b></td><td><span class="pill cost">bundle</span></td><td class="r">唯一带 <code>required=True</code> 的引用来自 <code>account.fiscal.position.account</code>——而它本身也是可选子表。<code>account.journal.default_account_id</code> <b>并非</b>必填。</td></tr>
+    <tr><td class="w"><b>Product Categories</b></td><td><span class="pill cost">bundle</span></td><td class="r">Odoo 19 里 <code>product.template.categ_id</code> <b>不是必填</b>——既无 <code>required=True</code>，也无默认值——而且没有别的东西指向它</td></tr>
+    <tr><td class="w"><b>Payment Terms</b></td><td><span class="pill cost">bundle</span></td><td class="r">唯一的 <code>required=True</code> 引用是 <code>account.payment.term.line.payment_id</code>——它自己的 line 表。<code>account.move.invoice_payment_term_id</code> 可为空。</td></tr>
+    <tr><td class="w"><b>Payment Methods · Payments</b></td><td><span class="pill cost">bundle</span></td><td class="r">两者都没有被强制引用。你现有的 Sales app 本来就是把付款做成 Invoices 上的 Amount Paid 字段——这是它属于功能而非 foundation 的现实证据。</td></tr>
+    <tr><td class="w"><b>Activity Types</b></td><td><span class="pill cost">bundle</span></td><td class="r"><code>mail.activity.mixin</code> 是模型自愿继承的 <b>AbstractModel</b>。唯一指向 Activity Types 的 worksheet 是 Plan Steps，而它本身就在同一个 bundle 里。core 层没有任何东西碰它。</td></tr>
+  </tbody></table></div>
+  <div class="note">
+    <p><b>结构上可选，不等于可以省略。</b>Odoo 里没有任何一处对 Taxes 声明 <code>required=True</code>，但没有它，马来西亚的 invoice 就是错的，而且你现有 app 里每一个 Rollup 都挂在 Taxes 的 Lookup 上。这张表划的是<em>搭建顺序和改动影响面</em>，不是重要性：bundle 可以事后加、不动已有的东西；core worksheet 不行。</p>
+  </div>
+</section>
+
+<section>
+  <div class="col">
+    <p class="eyebrow">可推迟</p>
+    <h2>十七个 optional bundle</h2>
+    <p>每个 bundle 对应一项功能，可以单独开关。凡是 Odoo 自己带了设置开关的，开关名都列了出来——那是这项功能确实可选的证据，而不是主观判断。等推进到最后一列所写的阶段时再建。</p>
+  </div>
+  <div class="tw"><table>
+    <thead><tr><th>bundle</th><th>Odoo 开关</th><th class="n">表数</th><th>包含的 worksheet</th><th>何时需要</th></tr></thead><tbody>
+    <tr><td class="w"><b>Taxes</b></td><td class="m">—</td><td class="n">1</td><td class="r">Taxes</td><td class="r"><b>第一天</b>，任何真实法域都是 · <em>需要 Geography</em></td></tr>
+    <tr><td class="w"><b>Chart of Accounts</b></td><td class="m">—</td><td class="n">1</td><td class="r">Chart of Accounts</td><td class="r"><b>Phase 8</b> Finance · 真正的复式记账</td></tr>
+    <tr><td class="w"><b>Product Categories</b></td><td class="m">—</td><td class="n">1</td><td class="r">Product Categories</td><td class="r">产品报表 · 库存计价</td></tr>
+    <tr><td class="w"><b>Payment Terms</b></td><td class="m">—</td><td class="n">1</td><td class="r">Payment Terms</td><td class="r">任何非即时付款的到期日</td></tr>
+    <tr><td class="w"><b>Payments</b></td><td class="m">—</td><td class="n">2</td><td class="r">Payment Methods · Payments</td><td class="r">把收款做成 record 而不是一个字段</td></tr>
+    <tr><td class="w"><b>Product Variants</b></td><td class="m">product.group_product_variant</td><td class="n">4</td><td class="r">Attributes · Attribute Values · Product Attribute Lines · Template Attribute Values</td><td class="r">第一个带选项的 product</td></tr>
+    <tr><td class="w"><b>Pricelists</b></td><td class="m">product.group_product_pricelist</td><td class="n">2</td><td class="r">Pricelists · Price Rules</td><td class="r"><b>Phase 3</b> Sales</td></tr>
+    <tr><td class="w"><b>Marketing attribution</b></td><td class="m">—</td><td class="n">3</td><td class="r">Campaigns · Sources · Mediums</td><td class="r"><b>Phase 2</b> CRM</td></tr>
+    <tr><td class="w"><b>Sales Teams</b></td><td class="m">—</td><td class="n">1</td><td class="r">Sales Teams</td><td class="r"><b>Phase 2</b> CRM</td></tr>
+    <tr><td class="w"><b>Analytic Accounting</b></td><td class="m">analytic.group_analytic_accounting</td><td class="n">2</td><td class="r">Analytic Accounts · Analytic Lines</td><td class="r"><b>Phase 6</b> Services —— Project 和 Timesheet 都往这里记</td></tr>
+    <tr><td class="w"><b>Activities</b></td><td class="m">—</td><td class="n">3</td><td class="r">Activity Types · Activity Plans · Plan Steps</td><td class="r">第一次安排跟进</td></tr>
+    <tr><td class="w"><b>Geography</b></td><td class="m">—</td><td class="n">2</td><td class="r">Countries · States</td><td class="r">在 Fiscal Positions 之前；在那之前 Contacts 先用 Text</td></tr>
+    <tr><td class="w"><b>Fiscal Positions</b></td><td class="m">—</td><td class="n">1</td><td class="r">Fiscal Positions</td><td class="r">第一个免税或跨境客户 · <em>需要 Geography 与 Taxes</em></td></tr>
+    <tr><td class="w"><b>Incoterms</b></td><td class="m">—</td><td class="n">1</td><td class="r">Incoterms</td><td class="r">第一次国际发货</td></tr>
+    <tr><td class="w"><b>Multi-currency</b></td><td class="m">base.group_multi_currency</td><td class="n">1</td><td class="r">Currencies</td><td class="r">第二种币种 · 单币种时币种就在 Currency control 自己身上</td></tr>
+    <tr><td class="w"><b>Product Combos</b></td><td class="m">—</td><td class="n">2</td><td class="r">Combo Choices · Combo Items</td><td class="r"><b>Phase 4</b> Point of Sale</td></tr>
+    <tr><td class="w"><b>Contact Tags</b></td><td class="m">—</td><td class="n">1</td><td class="r">Contact Tags</td><td class="r">第一次做分群邮件或报表</td></tr>
+  </tbody></table></div>
+  <div class="note">
+    <p><b>有两个 bundle 现在做便宜，以后做很贵。</b><em>Product Variants</em>——Order Lines、stock move、Invoice Lines 从一开始就指向 Product Variants，所以以后再打开 attributes 只是加表；但为了"简单一点"把这些 line 指向 Products 而不是 Variants，是整个方案里唯一一个要付出重建代价的决定。<em>Geography</em>——Odoo 的 Fiscal Positions 是按 Country 选的，所以只要你预计会有任何免税情形，就把 Countries 放在 Contacts 之前建，而不是之后。</p>
+  </div>
+  <div class="note acc">
+    <p><b>这些不用建 —— Nocoly 本身就是。</b><code>res.users</code> → Collaborator · <code>res.groups</code> → role · <code>mail.message</code> / <code>mail.thread</code> / <code>mail.followers</code> → record discussion · <code>ir.attachment</code> → Attachment control · <code>ir.model</code> / <code>ir.model.fields</code> → worksheet 与 control · <code>res.lang</code> → 平台多语言。Odoo 需要把它们做成表，是因为它在造平台；而你已经站在一个平台上了。这就是为什么 core 是七张 worksheet 而不是六十张。</p>
+  </div>
+</section>
+
+<section>
+  <div class="col">
+    <p class="eyebrow">核验</p>
+    <h2>每个 bundle 也用同一套标准查过</h2>
+    <p>一个 bundle 只有在没有任何东西结构性依赖它时，才称得上诚实。同样的检验跑遍全部二十九张 bundle worksheet——而且查出了本方案早期草稿里的两处错误。</p>
+  </div>
+  <div class="tw"><table>
+    <thead><tr><th>bundle</th><th>Odoo 开关</th><th>依据</th></tr></thead><tbody>
+    <tr><td class="w"><b>Taxes</b></td><td class="m">—</td><td class="r">整个仓库对 <code>account.tax</code> 没有任何 <code>required=True</code>。<em>但是 <code>account.tax.country_id</code> 是 required=True</em> —— 所以 Taxes 离不开 Geography。上面的模型里已经把它标成硬依赖。</td></tr>
+    <tr><td class="w"><b>Geography</b></td><td class="m">—</td><td class="r"><code>res.country.state.country_id</code> required=True（它自己的子表）。除 <code>account.tax</code> 外没有别的东西必须要 Countries——这正是 Geography 必须排在 Taxes 之前的原因。</td></tr>
+    <tr><td class="w"><b>Chart of Accounts</b></td><td class="m">—</td><td class="r">唯一要求它的是 <code>account.fiscal.position.account</code>——本身就是可选子表</td></tr>
+    <tr><td class="w"><b>Product Categories</b></td><td class="m">—</td><td class="r">没有任何东西要求它；Odoo 19 里 <code>categ_id</code> 非必填</td></tr>
+    <tr><td class="w"><b>Payment Terms</b></td><td class="m">—</td><td class="r">只有它自己的 line 表</td></tr>
+    <tr><td class="w"><b>Payments</b></td><td class="m">—</td><td class="r">Payment Methods 和 Payments 都没有被强制引用</td></tr>
+    <tr><td class="w"><b>Product Variants</b></td><td class="m">product.group_product_variant</td><td class="r"><code>addons/product/security</code> 里的权限组。只有 bundle 内部的相互依赖——Attribute Lines 需要 Attributes、Template Attribute Values 需要 Attribute Values。bundle 之外没有任何依赖。</td></tr>
+    <tr><td class="w"><b>Pricelists</b></td><td class="m">product.group_product_pricelist</td><td class="r">权限组。任何地方都没有 <code>required=True</code> 的引用。</td></tr>
+    <tr><td class="w"><b>Analytic Accounting</b></td><td class="m">analytic.group_analytic_accounting</td><td class="r">权限组。两张 worksheet 都没有被强制引用。</td></tr>
+    <tr><td class="w"><b>Multi-currency</b></td><td class="m">base.group_multi_currency</td><td class="r"><em>这是唯一一个 Odoo 真正强制要求的</em>——<code>account.move.currency_id</code> 和 <code>res.company.currency_id</code> 都是 required=True。它仍然算 optional bundle，是因为 Nocoly 的 <b>Currency control 自身就带币种</b>，所以单币种的实现根本不需要 Currencies 这张 worksheet。只有出现第二种币种时才建。</td></tr>
+    <tr><td class="w"><b>Marketing attribution</b></td><td class="m">—</td><td class="r">没有东西要求 Campaigns 或 Mediums；Sources 只被 <code>utm.source.mixin</code> 要求</td></tr>
+    <tr><td class="w"><b>Sales Teams</b></td><td class="m">—</td><td class="r">只有 <code>crm.team.member</code> 要求它——它自己的成员表</td></tr>
+    <tr><td class="w"><b>Activities</b></td><td class="m">—</td><td class="r"><code>mail.activity.mixin</code> 是模型自愿继承的 AbstractModel；只有 Plan Steps 指向 Activity Types</td></tr>
+    <tr><td class="w"><b>Fiscal Positions</b></td><td class="m">—</td><td class="r">只有它自己的 tax mapping 和 account mapping 子表要求它。需要 Geography 和 Taxes 先立起来。</td></tr>
+    <tr><td class="w"><b>Incoterms</b></td><td class="m">—</td><td class="r">没有任何东西要求它</td></tr>
+    <tr><td class="w"><b>Product Combos</b></td><td class="m">—</td><td class="r">两张 worksheet 都没有被要求</td></tr>
+    <tr><td class="w"><b>Contact Tags</b></td><td class="m">—</td><td class="r">没有任何东西要求它</td></tr>
+  </tbody></table></div>
+  <div class="note">
+    <p><b>这次核验改正了两处。</b><em>Taxes 需要 Geography</em> —— <code>account.tax.country_id</code> 带着 <code>required=True</code>，所以背后没有 Countries 的 Taxes worksheet 是不完整的；在上面的砖墙里打开 Taxes 而不打开 Geography，它就会变橙。<em>Multi-currency 是唯一一个 Odoo 真正要求的 bundle</em>，它之所以仍算可选，只是因为 Nocoly 的 Currency control 自己带币种——这是平台差异，不是 Odoo 的差异。</p>
+  </div>
+</section>

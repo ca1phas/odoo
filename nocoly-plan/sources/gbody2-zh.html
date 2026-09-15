@@ -1,0 +1,129 @@
+<section>
+  <div class="col">
+    <p class="eyebrow">Phase 2–4</p>
+    <h2>Sales group，逐个 app 推进</h2>
+    <p>三个 app，各自独立上线。下面每一张 worksheet 都<em>向下</em>关联进 Phase 1，绝不横向关联到另一个 app——唯一的例外是把 Orders 接到 Leads 上的那一个 control，而在这里它是免费的，因为 CRM 先建好了。</p>
+  </div>
+
+  <div class="pgroup">
+    <div class="phead"><span class="pn">Phase 2</span><h3>CRM</h3><span class="pc">4 张 worksheet · 新 app</span></div>
+    <p class="pintro">Odoo 里最便宜的一个真实 app：<code>crm</code> 不需要 product、不需要 unit、不需要 tax、不需要 account。它的全部 foundation 就是 Contacts、Sales Teams、三张 UTM worksheet 和 Activity Types——Phase 1 之后全都已经就位。把它放在所有 app 的最前面，你就能在一个小到随时可以推倒重来的范围里，把 worksheet、subtable、view、role、workflow 和跨 app Relation 全部跑通一遍。</p>
+    <div class="tw"><table>
+      <thead><tr><th class="s">#</th><th>worksheet</th><th>需要接的 Relation</th></tr></thead><tbody>
+      <tr><td class="s">1</td><td class="w"><b>Stages</b><span>crm.stage</span></td><td class="r">Sales Team → Sales Teams</td></tr>
+      <tr><td class="s">2</td><td class="w"><b>Lost Reasons</b><span>crm.lost.reason</span></td><td class="r"><i>无</i></td></tr>
+      <tr><td class="s">3</td><td class="w"><b>Recurring Plans</b><span>crm.recurring.plan</span></td><td class="r"><i>无</i></td></tr>
+      <tr><td class="s">4</td><td class="w"><b>Leads</b><span>crm.lead</span></td><td class="r">Customer → Contacts · Stage → Stages · Sales Team → Sales Teams · Salesperson → <i>Collaborator</i> · Lost Reason → Lost Reasons · Campaign → Campaigns · Source → Sources · Medium → Mediums · Recurring Plan → Recurring Plans · Country → Countries · State → States · Tags → Contact Tags</td></tr>
+    </tbody></table></div>
+    <p class="pintro">然后是 app 本体的配套：My Pipeline · All Opportunities · Lost 三个 view（Odoo 的 kanban 在这里就是按 Stage 分组的 sheet view）、Won／Lost 一对 action button，以及一个能跨 app 边界读取 Contacts 的 role。</p>
+  </div>
+
+  <div class="pgroup">
+    <div class="phead"><span class="pn">Phase 3</span><h3>Sales</h3><span class="pc">5 张 worksheet · 新 app</span></div>
+    <p class="pintro">从报价到回款。Orders 是整个系统里最宽的一张 worksheet——大约八十个 control——所以把它放在本阶段最后建，等它要指向的东西全部就位之后。注意第 3 步里的 Opportunity control：按顺序建的时候，它只是八十个 control 里的一个，而不是往一张已经装着真实数据的表上做追加改造。</p>
+    <div class="tw"><table>
+      <thead><tr><th class="s">#</th><th>worksheet</th><th>需要接的 Relation</th></tr></thead><tbody>
+      <tr><td class="s">1</td><td class="w"><b>Quotation Templates</b><span>sale.order.template</span></td><td class="r"><i>无</i></td></tr>
+      <tr><td class="s">2</td><td class="w"><b>Template Lines</b><span>sale.order.template.line</span></td><td class="r">Template → Quotation Templates <i>（subtable）</i> · Product → Product Variants · Unit → Units</td></tr>
+      <tr><td class="s">3</td><td class="w"><b>Orders</b><span>sale.order</span></td><td class="r">Customer → Contacts · Invoice Address → Contacts · Delivery Address → Contacts · Pricelist → Pricelists · Payment Terms → Payment Terms · Fiscal Position → Fiscal Positions · Incoterm → Incoterms · Sales Team → Sales Teams · Salesperson → <i>Collaborator</i> · Campaign／Source／Medium → UTM · Template → Quotation Templates · Analytic Account → Analytic Accounts · <em>Opportunity → Leads</em></td></tr>
+      <tr><td class="s">4</td><td class="w"><b>Order Lines</b><span>sale.order.line</span></td><td class="r">Order → Orders <i>（subtable）</i> · Product → <em>Product Variants</em> <i>（指向 variant 而不是 template——这是以后最难改的一个选择）</i> · Unit → Units · Taxes → Taxes</td></tr>
+      <tr><td class="s">5</td><td class="w"><b>Headers / Footers</b><span>sale.pdf.form.field</span></td><td class="r"><i>无</i> <em>随后追加：Orders ▸ Invoices → Invoices · Invoices ▸ Source Order → Orders</em></td></tr>
+    </tbody></table></div>
+    <p class="pintro">然后是让它成为一个 app 的那些 workflow：按 Pricelist 给 line 定价、Confirm、Create Invoice（写入 Move Type = Customer Invoice 的 Invoices）、Register Payment、Lock 与 Cancel——以及把 line 上的 Taxes 汇总成订单总额的那条 Formula 与 Rollup 链。</p>
+  </div>
+
+  <div class="pgroup">
+    <div class="phead"><span class="pn">Phase 4</span><h3>Point of Sale</h3><span class="pc">12 张 worksheet · 新 app</span></div>
+    <p class="pintro"><b>在 Phase 5 之前无法开工。</b><code>point_of_sale</code> 硬依赖 <code>stock_account</code>——每一笔 POS 单据都会动库存并产生 journal entry。先把 Inventory 建起来，这个阶段就很普通；在这里硬上，它会拖着一部分 Inventory 一起进来。它的 worksheet 是 POS Configs、Sessions、POS Orders 与 POS Order Lines、POS Payments 与 POS Payment Methods、POS Categories、Bills、Notes、Presets、Printers 和 Combos，全部关联进 Phase 1 的 catalogue；Inventory 建好之后再接到 Transfers 上。</p>
+  </div>
+</section>
+
+<section>
+  <div class="col">
+    <p class="eyebrow">Phase 5–11</p>
+    <h2>其余各 group</h2>
+    <p>排序原则是让每个 group 的硬依赖都已经立好。每一个展开之后都跟 Phase 2–4 是同一个形状：先按依赖顺序建 worksheet、边建边接 Relation control，然后是 view、role 和 workflow。</p>
+  </div>
+  <div class="tw"><table>
+    <thead><tr><th class="s">#</th><th>group</th><th class="n">表数</th><th>包含的 app</th><th>为什么排在这里</th></tr></thead><tbody>
+    <tr><td class="s">5</td><td class="w"><b>Inventory &amp; Manufacturing</b></td><td class="n">45</td><td class="r">Purchase 3 · Inventory 21 · Manufacturing 14 · Maintenance 5 · Repair 2</td><td class="r">解开 Phase 4 的锁；Purchase 把 procure-to-pay 闭环接到已经建好的 Invoices 上</td></tr>
+    <tr><td class="s">6</td><td class="w"><b>Services</b></td><td class="n">12</td><td class="r">Project 11 · Timesheet 1</td><td class="r">需要 Analytic Accounts 与 Analytic Lines，Phase 1 已经铺好</td></tr>
+    <tr><td class="s">7</td><td class="w"><b>Human Resources</b></td><td class="n">35</td><td class="r">Employees 10 · Recruitment 8 · Time Off 6 · Fleet 11</td><td class="r">与 Sales 完全没有 bridge——从 Phase 2 起可以和任何阶段并行推进</td></tr>
+    <tr><td class="s">8</td><td class="w"><b>Finance</b></td><td class="n">4</td><td class="r">Expenses · Bank Statements · Reconciliation</td><td class="r">很薄，因为 Invoices、Journals、Taxes 和 Chart of Accounts 都在 Phase 1。Expenses 需要 Employees，所以排在 Phase 7 之后</td></tr>
+    <tr><td class="s">9</td><td class="w"><b>Marketing</b></td><td class="n">28</td><td class="r">Email Marketing 7 · SMS Marketing · Events 16 · Survey 5</td><td class="r">关联进 Contacts 和 UTM worksheet；Events 还需要 Products 来卖门票</td></tr>
+    <tr><td class="s">10</td><td class="w"><b>Website</b></td><td class="n">49</td><td class="r">Website 12 · eCommerce 8 · eLearning 11 · Live Chat 9 · Forum 5 · Blog 4</td><td class="r">eCommerce 需要 Sales 和 Inventory 同时立着；方案里最大的一个 group</td></tr>
+    <tr><td class="s">11</td><td class="w"><b>Productivity</b></td><td class="n">3</td><td class="r">Discuss</td><td class="r">几乎全是平台原生的——channel、message、follower 都是平台功能，不是 worksheet</td></tr>
+  </tbody></table></div>
+</section>
+
+<section>
+  <div class="col">
+    <p class="eyebrow">时间表</p>
+    <h2>每周四十小时，九个月</h2>
+    <p>这份估算是拿你已经做过的那一版校准出来的，不是凭空写的。把线上 worksheet ID 里的创建时间戳解码出来可以看到：现有的 Sales app 是在<b>七天里搭起来的——光第一天就建了二十八张 worksheet</b>——最终达到大约 88% 的 parity。这说明了一件要紧的事：建 worksheet 几乎不花时间，时间全花在别处。</p>
+  </div>
+  <div class="mdl">
+    <div><b>0.5 h</b><span>一张 lookup worksheet —— 建表、几个 control、录数据</span></div>
+    <div><b>2 h</b><span>一张 master worksheet —— Relation、表单</span></div>
+    <div><b>3 h</b><span>一张 line worksheet —— subtable、Rollup、Lookup</span></div>
+    <div><b>8 h</b><span>一张 transaction worksheet —— 宽表单、状态条、合计</span></div>
+    <div><b>1.5 h</b><span>每一个 button workflow</span></div>
+    <div><b>4 h</b><span>view，每个 app</span></div>
+    <div><b>3 h</b><span>role 与 validation rule，每个 app</span></div>
+    <div><b>6 h</b><span>reporting page 与 pivot，每个 app</span></div>
+    <div><b>5 h</b><span>PDF 与 email template，仅出单据的 app</span></div>
+    <div><b>0.4 h</b><span>UI click-through，每张 worksheet</span></div>
+    <div><b>×1.25</b><span>测试之后的返工循环</span></div>
+  </div>
+  <div class="col">
+    <p>把这个模型反过来套到现有的 Sales app 上——33 张 worksheet、16 个 button workflow、一个 app、PDF 和 email、四张 reporting page——它算出 <b>136 小时</b>。你实际投入了大约 100 小时，而 app 停在 88% parity，UI click-through 做了一半就暂停，variants 生成 workflow 处于禁用状态。<b>这 36 小时的差额就是尾巴</b>，而尾巴正是一般估算最容易漏掉的部分。</p>
+  </div>
+  <div class="tw"><table class="tl">
+    <thead><tr><th class="s">Phase</th><th>名称</th><th class="n">表数</th><th class="n">工时</th><th>每周 40 小时</th><th class="n">累计周</th></tr></thead>
+    <tbody><tr><td class="s">1</td><td class="w"><b>Core Foundation</b></td><td class="n">7</td><td class="n">48 h</td><td class="wk found"><i style="width:13%"></i>1.2 周</td><td class="n">1</td></tr><tr><td class="s">1</td><td class="w"><b>Optional bundles —— 全部 17 个</b></td><td class="n">29</td><td class="n">100 h</td><td class="wk found"><i style="width:27%"></i>2.5 周</td><td class="n">4</td></tr><tr><td class="s">2</td><td class="w"><b>CRM</b></td><td class="n">4</td><td class="n">36 h</td><td class="wk "><i style="width:10%"></i>0.9 周</td><td class="n">5</td></tr><tr><td class="s">3</td><td class="w"><b>Sales</b></td><td class="n">5</td><td class="n">73 h</td><td class="wk "><i style="width:20%"></i>1.8 周</td><td class="n">6</td></tr><tr><td class="s">4</td><td class="w"><b>Point of Sale</b></td><td class="n">12</td><td class="n">77 h</td><td class="wk "><i style="width:21%"></i>1.9 周</td><td class="n">8</td></tr><tr><td class="s">5</td><td class="w"><b>Inventory &amp; Manufacturing</b></td><td class="n">45</td><td class="n">288 h</td><td class="wk big"><i style="width:78%"></i>7.2 周</td><td class="n">16</td></tr><tr><td class="s">6</td><td class="w"><b>Services</b></td><td class="n">12</td><td class="n">97 h</td><td class="wk "><i style="width:26%"></i>2.4 周</td><td class="n">18</td></tr><tr><td class="s">7</td><td class="w"><b>Human Resources</b></td><td class="n">35</td><td class="n">184 h</td><td class="wk "><i style="width:50%"></i>4.6 周</td><td class="n">23</td></tr><tr><td class="s">8</td><td class="w"><b>Finance</b></td><td class="n">4</td><td class="n">49 h</td><td class="wk "><i style="width:13%"></i>1.2 周</td><td class="n">24</td></tr><tr><td class="s">9</td><td class="w"><b>Marketing</b></td><td class="n">28</td><td class="n">165 h</td><td class="wk "><i style="width:45%"></i>4.1 周</td><td class="n">28</td></tr><tr><td class="s">10</td><td class="w"><b>Website</b></td><td class="n">49</td><td class="n">367 h</td><td class="wk big"><i style="width:100%"></i>9.2 周</td><td class="n">37</td></tr><tr><td class="s">11</td><td class="w"><b>Productivity</b></td><td class="n">3</td><td class="n">20 h</td><td class="wk "><i style="width:5%"></i>0.5 周</td><td class="n">38</td></tr></tbody>
+    <tfoot><tr><td class="s"></td><td class="w"><b>全部</b></td><td class="n">233</td><td class="n">1502 h</td><td class="wk">38 周</td><td class="n">≈ 8.6 个月</td></tr></tfoot>
+  </table></div>
+  <div class="note">
+    <p><b>有两个阶段把总数拉偏了。</b><em>Website</em> 占 9 周，是整个方案的四分之一，而且它根本不是 worksheet 的活——Nocoly 是数据库，不是建站工具，所以 eCommerce 和公开页面意味着要另做一个前端，通过 v3 API 跟 HAP 对话。把它当成一个独立项目看待。<em>Inventory &amp; Manufacturing</em> 的 7 周是实打实的：45 张 worksheet，外加回接 Sales 的那 27 个 control 的 bridge pack。</p>
+    <p>把这两个去掉，能跑起来的那套 ERP——foundation、CRM、Sales、Point of Sale、Services、Human Resources、Finance、Marketing——大约 <b>21 周</b>落地，五个月左右。</p>
+  </div>
+  <div class="note acc">
+    <p><b>这个速率的前提。</b>每周 40 小时是你给的输入——而且这是你已经做到过的节奏：现有的 Sales app 用了七天约 100 小时，明显高于每周四十。至于这四十小时里的产出效率，用的是你自己那一套：同时驱动几个后台 agent、旁边开着 Odoo 作参照、结果一律读回来验证而不是直接相信。一个人单独在 HAP 表单设计器里点，会慢上好几倍。这份估算里没有留出"某张 worksheet 建错了要重做"的余量——而这正是本方案的依赖排序要预防的事。</p>
+  </div>
+  <div class="col">
+    <h3 style="font-family:Archivo,'Noto Sans SC',sans-serif;font-size:18px;margin-top:30px">值得标出来的里程碑</h3>
+    <ul class="checks">
+      <li><b>第 1 周</b> —— Core Foundation 立起来。七张 worksheet，还没有任何 app，但之后每个阶段都有东西可以关联进去了。</li>
+      <li><b>第 5 周</b> —— CRM 上线。第一个完整 app：pipeline、view、role、rule、Won 转报价的 workflow，背后还跟着一轮 UI click-through。</li>
+      <li><b>第 6 周</b> —— quote to cash。Orders、Order Lines、Invoices、Payments、报价 PDF。系统从这一刻起开始真正替代某样东西。</li>
+      <li><b>第 16 周</b> —— 实体业务。Inventory、Purchase、Manufacturing 接入；按发货驱动开票变成真的，而不是模拟出来的。</li>
+      <li><b>第 28 周</b> —— 除公开 Website 之外的一切。</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <div class="col">
+    <p class="eyebrow">贯穿始终</p>
+    <h2>每个阶段都成立的四条规矩</h2>
+  </div>
+  <div class="rules">
+    <div class="rule"><span class="num">01</span><div>
+      <h4>Relation 接完，这张 worksheet 才算做完</h4>
+      <p>建表、加 Relation control、读回来核对，然后才进入下一个编号。留着一半没接完、想着以后再补的表，正是 foundation 脱离依赖顺序的开端——而且 HAP 会很乐意让你把 Relation 指向一张还不存在的 worksheet。</p></div></div>
+    <div class="rule"><span class="num">02</span><div>
+      <h4>Relation 只向下，不横向</h4>
+      <p>app 里的 worksheet 可以随意关联进 Phase 1。要关联到另一个 app 的 worksheet，只能通过一个具名的 bridge pack——一组追加到其中一侧的 control，在两个 app 都立好之后再做。Odoo 是用独立模块来强制这一点的；在这里它是一条评审规矩。</p></div></div>
+    <div class="rule"><span class="num">03</span><div>
+      <h4>bridge pack 本身就是一项交付物</h4>
+      <p>Nocoly 没有 <code>auto_install</code>，所以触发只能靠清单。每一对 app 一个文件——<code>state/bridge_sale_stock.json</code>——写明它追加了哪些 control、拥有哪些 workflow、不能破坏哪些不变量。绝不夹带进任何一侧 app 的搭建里。</p></div></div>
+    <div class="rule"><span class="num">04</span><div>
+      <h4>每个阶段都以"录好数据并读回来"收尾</h4>
+      <p>每张新 worksheet 都从对应的 Odoo 租户录一份数据进去，并在宣布完成之前读回来核对。HAP 有好几种写入会返回成功却什么都没存下；一个没有读回来验证过的阶段，就是你三个阶段之后要重新调试的阶段。</p></div></div>
+  </div>
+</section>
+
+<footer class="col">
+  <p>worksheet 数量为 ca1phas/odoo 7bbce824（19.0 Community）中各模块定义的持久化模型，已排除 transient wizard、abstract mixin，以及 <code>ir.*</code>／<code>report.*</code>／<code>theme.*</code> 等基础设施模型。HAP 平台原生提供的模型——user、group、message、follower、attachment、模型元数据——不计入 Phase 1。group 归属依照 odoo.com/page/all-apps；各 group 中仅 Enterprise 提供的 app 不计入。</p>
+</footer>
+</div>

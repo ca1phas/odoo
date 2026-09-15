@@ -1,0 +1,1078 @@
+<title>Nocoly Expansion Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
+<style>
+:root{
+  --ground:#F6F2F7; --surface:#FFFFFF; --sunk:#EFE9F1; --ink:#1A1520; --ink-2:#5B5162; --ink-3:#877C8E;
+  --line:#E2D9E6; --line-2:#CEC1D4;
+  --acc:#9A579E; --acc-soft:#F2E6F3;
+  --req:#008C74; --req-soft:#DDF0EB;
+  --con:#AD5C15; --con-soft:#F8E9D9;
+  --s1:#F7ECF8; --s2:#ECD3ED; --s3:#DEB7DF; --s4:#CB98CE; --s5:#B477B7; --s6:#9A579E;
+  --on-s:#1A1520; --on-s-hi:#FFFFFF;
+  --shadow:0 1px 2px rgba(26,21,32,.05),0 8px 24px -14px rgba(26,21,32,.2);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#141017; --surface:#1E1824; --sunk:#271F2E; --ink:#EEE7F1; --ink-2:#B3A8BA; --ink-3:#8B7F93;
+  --line:#312838; --line-2:#453A4D;
+  --acc:#B36FB7; --acc-soft:#33213C;
+  --req:#00A58C; --req-soft:#0E3330;
+  --con:#C77434; --con-soft:#38261A;
+  --s1:#2A1E2B; --s2:#412942; --s3:#5B375D; --s4:#764679; --s5:#935896; --s6:#B26DB6;
+  --on-s:#EEE7F1; --on-s-hi:#16101A;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -14px rgba(0,0,0,.75);
+}}
+:root[data-theme="dark"]{
+  --ground:#141017; --surface:#1E1824; --sunk:#271F2E; --ink:#EEE7F1; --ink-2:#B3A8BA; --ink-3:#8B7F93;
+  --line:#312838; --line-2:#453A4D;
+  --acc:#B36FB7; --acc-soft:#33213C;
+  --req:#00A58C; --req-soft:#0E3330;
+  --con:#C77434; --con-soft:#38261A;
+  --s1:#2A1E2B; --s2:#412942; --s3:#5B375D; --s4:#764679; --s5:#935896; --s6:#B26DB6;
+  --on-s:#EEE7F1; --on-s-hi:#16101A;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -14px rgba(0,0,0,.75);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);
+  font-family:"Source Serif 4",Georgia,serif;font-size:17px;line-height:1.6;-webkit-font-smoothing:antialiased}
+.page{max-width:1120px;margin:0 auto;padding-inline:20px;padding-block:0 72px}
+.col{max-width:660px}
+h1,h2,h3,h4,.eyebrow,.lede,.tag,.chip,th{font-family:Archivo,"Helvetica Neue",Arial,sans-serif}
+code,.mono{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace}
+.mast{padding-block:56px 36px;border-bottom:1px solid var(--line)}
+.kicker{font-family:"IBM Plex Mono",monospace;font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--acc);margin:0 0 18px}
+h1{font-size:clamp(36px,6.6vw,58px);line-height:1.03;letter-spacing:-.025em;font-weight:700;margin:0 0 20px;text-wrap:balance}
+.lede{font-size:clamp(17px,2.2vw,19px);line-height:1.5;color:var(--ink-2);font-weight:500;margin:0;max-width:620px}
+.byline{margin-top:26px;font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--ink-3);display:flex;flex-wrap:wrap;gap:6px 18px}
+section{padding-block:44px;border-bottom:1px solid var(--line)}
+section:last-of-type{border-bottom:0}
+.eyebrow{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);margin:0 0 12px}
+h2{font-size:clamp(24px,3.2vw,31px);line-height:1.15;letter-spacing:-.018em;font-weight:700;margin:0 0 16px;text-wrap:balance}
+p{margin:0 0 15px}
+.col p:last-child{margin-bottom:0}
+code{font-size:.86em;background:var(--sunk);border:1px solid var(--line);padding:.06em .32em;border-radius:4px;color:var(--ink);white-space:nowrap}
+a{color:var(--acc)}
+.legend{display:flex;flex-wrap:wrap;gap:10px 26px;margin-block:22px;font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--ink-2)}
+.legend span{display:flex;align-items:center;gap:9px}
+.legend i{width:10px;height:10px;border-radius:2px;flex:none}
+.legend .lr i{background:var(--req)} .legend .lc i{background:var(--con)} .legend .la i{background:var(--acc)}
+.figure{background:var(--surface);border:1px solid var(--line);padding:22px 24px 18px;margin-block:24px}
+.figure h3{font-family:Archivo,sans-serif;font-size:15px;font-weight:600;margin:0 0 3px;letter-spacing:-.005em}
+.figure .sub{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--ink-3);margin:0 0 20px}
+.bars{display:flex;flex-direction:column;gap:7px}
+.bar{display:grid;grid-template-columns:minmax(76px,108px) 1fr 26px;gap:12px;align-items:center}
+.bar .bl{font-family:Archivo,sans-serif;font-size:12.5px;font-weight:500;color:var(--ink-2);text-align:right;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar .bt{height:13px;background:var(--sunk);border-radius:2px;position:relative}
+.bar .bt i{display:block;height:100%;background:var(--acc);border-radius:2px 4px 4px 2px;min-width:3px}
+.bar .bv{font-family:"IBM Plex Mono",monospace;font-size:11.5px;font-weight:500;color:var(--ink-2);
+  font-variant-numeric:tabular-nums;text-align:right}
+.bar:hover .bt i{background:var(--con)}
+.bar:hover .bl,.bar:hover .bv{color:var(--ink)}
+.axis{display:grid;grid-template-columns:minmax(76px,108px) 1fr 26px;gap:12px;margin-top:12px;
+  padding-top:9px;border-top:1px solid var(--line)}
+.axis .ticks{grid-column:2;display:flex;justify-content:space-between;
+  font-family:"IBM Plex Mono",monospace;font-size:10.5px;color:var(--ink-3)}
+
+figure{margin:0}
+.fig{background:var(--surface);border:1px solid var(--line);padding:22px 24px 16px;margin-block:24px}
+.netsvg,.mechsvg{display:block;width:100%;max-width:100%;height:auto}
+.mechsvg{max-width:700px;margin:0 auto}
+figcaption{font-family:"IBM Plex Mono",monospace;font-size:11.5px;line-height:1.6;color:var(--ink-3);
+  margin-top:14px;padding-top:12px;border-top:1px solid var(--line);max-width:640px}
+figcaption b{color:var(--ink-2);font-weight:500}
+.mbox{fill:var(--surface);stroke:var(--line-2);stroke-width:1.5}
+.mbox.bridge{fill:var(--con-soft);stroke:var(--con)}
+.mlabel{font-family:Archivo,sans-serif;font-size:15px;font-weight:600;fill:var(--ink)}
+.mlabel.bridge{fill:var(--con)}
+.mmod{font-family:"IBM Plex Mono",monospace;font-size:13px;fill:var(--ink-3)}
+.mmod.bridge{fill:var(--con)}
+.mdash{stroke:var(--line-2);stroke-width:1.5;stroke-dasharray:5 5}
+.mcross line{stroke:var(--ink-3);stroke-width:2;stroke-linecap:round}
+.mnote{font-family:"IBM Plex Mono",monospace;font-size:12px;fill:var(--ink-3)}
+.marrow{stroke:var(--con);stroke-width:1.6;fill:none}
+.arhead{fill:var(--con)}
+.mfield{font-family:"IBM Plex Mono",monospace;font-size:12px;fill:var(--con)}
+.catarc{stroke:var(--line-2);stroke-width:2}
+.catlabel{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.07em;
+  text-transform:uppercase;fill:var(--ink-3)}
+.edge{stroke:var(--acc)}
+.node{fill:var(--acc)}
+.node.iso{fill:none;stroke:var(--ink-3);stroke-width:1.4}
+.nlabel{font-family:Archivo,sans-serif;font-size:11.5px;fill:var(--ink-2)}
+.napp{cursor:pointer}
+.napp:focus{outline:none}
+.napp:focus-visible .node{stroke:var(--con);stroke-width:2.5}
+.netsvg.sel .edge{opacity:.05}
+.netsvg.sel .edge.on{opacity:.8;stroke:var(--con)}
+.netsvg.sel .nlabel{opacity:.28}
+.netsvg.sel .napp.on .nlabel{opacity:1;fill:var(--ink)}
+.netsvg.sel .node{opacity:.2}
+.netsvg.sel .napp.on .node{opacity:1;fill:var(--con)}
+.hint{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--ink-3);margin:0 0 4px}
+.controls{display:flex;flex-wrap:wrap;gap:8px;margin-block:26px 22px;align-items:center}
+.chip{font-family:"IBM Plex Mono",monospace;font-size:11.5px;font-weight:500;letter-spacing:.02em;
+  background:var(--surface);border:1px solid var(--line-2);color:var(--ink-2);padding:6px 12px;border-radius:2px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--acc);border-color:var(--acc);color:var(--on-s-hi)}
+.chip:focus-visible,input:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+#q{font-family:"IBM Plex Mono",monospace;font-size:12.5px;background:var(--surface);border:1px solid var(--line-2);
+  color:var(--ink);padding:7px 12px;border-radius:2px;min-width:180px;flex:1 1 180px;max-width:280px}
+.catgrp{margin-block:34px 0}
+.cathead{display:flex;align-items:baseline;gap:12px;padding-bottom:10px;border-bottom:2px solid var(--acc);margin-bottom:18px}
+.cathead h3{font-size:19px;font-weight:700;letter-spacing:-.01em;margin:0}
+.cathead span{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--ink-3);margin-left:auto}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px}
+.card{background:var(--surface);border:1px solid var(--line-2);border-radius:2px;padding:18px 20px;box-shadow:var(--shadow);
+  display:flex;flex-direction:column;gap:13px}
+.card.absent{box-shadow:none;background:transparent;border-style:dashed;opacity:.85}
+.ch{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
+.ch h4{font-size:17px;font-weight:600;letter-spacing:-.008em;margin:0}
+.ch .md{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--acc)}
+.ch .cl{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--ink-3);margin-left:auto;white-space:nowrap}
+.blk{display:flex;flex-direction:column;gap:6px}
+.blk .lbl{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
+.pills{display:flex;flex-wrap:wrap;gap:5px}
+.pill{font-family:"IBM Plex Mono",monospace;font-size:11px;font-weight:500;padding:3px 8px;border-radius:2px;white-space:nowrap}
+.pill.r{background:var(--req-soft);color:var(--req)}
+.pill.m{background:var(--sunk);color:var(--ink-2);border:1px solid var(--line)}
+.conn{display:flex;flex-direction:column;gap:7px}
+.cline{display:grid;grid-template-columns:minmax(88px,auto) 1fr;gap:4px 11px;align-items:baseline}
+.cline b{font-family:Archivo,sans-serif;font-size:12.5px;font-weight:600;color:var(--con)}
+.cline span{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--ink-2);line-height:1.55;word-break:break-word}
+.none{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--ink-3);font-style:normal}
+.note{background:var(--acc-soft);border:1px solid var(--line-2);border-left:3px solid var(--acc);padding:16px 18px;border-radius:2px;margin-block:22px}
+.note p{font-size:14.5px;line-height:1.55;color:var(--ink-2);margin:0}
+.note p+p{margin-top:9px}
+.empty{font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--ink-3);padding:26px 0}
+footer{padding-block:36px 0;font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--ink-3);line-height:1.8}
+@media (max-width:560px){
+  body{font-size:16px}
+  .grid{grid-template-columns:1fr}
+  .cline{grid-template-columns:1fr;gap:1px}
+  .ch .cl{margin-left:0;width:100%}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+<style>
+.verdict{background:var(--surface);border:1px solid var(--line-2);border-left:4px solid var(--acc);
+  box-shadow:var(--shadow);padding:26px 28px;margin-block:32px 0}
+.verdict p{font-size:18.5px;line-height:1.5;margin:0}
+.verdict p+p{margin-top:14px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));gap:1px;
+  background:var(--line);border:1px solid var(--line);margin-block:32px}
+.stat{background:var(--surface);padding:19px 18px}
+.stat .n{font-family:Archivo,sans-serif;font-weight:700;font-size:33px;line-height:1;
+  letter-spacing:-.03em;font-variant-numeric:tabular-nums;display:block}
+.stat .l{font-family:"IBM Plex Mono",monospace;font-size:11px;line-height:1.4;color:var(--ink-3);
+  margin-top:9px;display:block}
+.stat.acc .n{color:var(--acc)} .stat.hav .n{color:var(--req)} .stat.bri .n{color:var(--con)}
+.stack{margin-block:28px;display:flex;flex-direction:column;gap:9px}
+.layer{background:var(--surface);border:1px solid var(--line-2);padding:16px 18px;
+  display:grid;grid-template-columns:74px 1fr;gap:16px;align-items:start}
+.layer .tag{font-family:"IBM Plex Mono",monospace;font-size:11px;font-weight:600;letter-spacing:.06em;
+  color:var(--on-s-hi);padding:4px 0;text-align:center}
+.layer.l0 .tag{background:var(--ink-2);color:var(--surface)}
+.layer.l1 .tag{background:var(--req)} .layer.l2 .tag{background:var(--acc)} .layer.l3 .tag{background:var(--con)}
+.layer h4{font-family:Archivo,sans-serif;font-size:15px;font-weight:600;margin:1px 0 6px}
+.layer p{font-size:14.5px;line-height:1.5;color:var(--ink-2);margin:0 0 8px}
+.layer .mods{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--ink-3);line-height:1.7}
+.layer .mods b{color:var(--acc);font-weight:500}
+.layer.l1 .mods b{color:var(--req)} .layer.l3 .mods b{color:var(--con)}
+.proof{background:#141017;border:1px solid var(--line);padding:19px 21px;margin-block:24px;overflow-x:auto}
+.proof pre{margin:0;font-family:"IBM Plex Mono",monospace;font-size:12.5px;line-height:1.85;
+  white-space:pre;color:#C9BDD0}
+.proof .cm{color:#8A7C92} .proof .ok{color:#6FD3BE;font-weight:500} .proof .hi{color:#DDA0EE}
+.cov{margin-block:26px}
+.covbar{display:flex;height:44px;border:1px solid var(--line-2);overflow:hidden}
+.covbar span{display:flex;align-items:center;justify-content:center;
+  font-family:"IBM Plex Mono",monospace;font-size:12px;font-weight:600}
+.covbar .a{background:var(--req-soft);color:var(--req);flex:29}
+.covbar .b{background:var(--acc-soft);color:var(--acc);flex:7}
+.covkey{display:flex;flex-wrap:wrap;gap:8px 24px;margin-top:11px;
+  font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--ink-2)}
+.covkey i{display:inline-block;width:9px;height:9px;margin-right:7px}
+.covkey .ka i{background:var(--req)} .covkey .kb i{background:var(--acc)}
+.tw{overflow-x:auto;margin-block:24px;border:1px solid var(--line);background:var(--surface)}
+.tw table{border-collapse:collapse;width:100%;min-width:560px}
+.tw th,.tw td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+.tw th{font-family:Archivo,sans-serif;font-size:11px;letter-spacing:.09em;text-transform:uppercase;
+  font-weight:600;color:var(--ink-3);background:var(--sunk);white-space:nowrap}
+.tw td{font-size:14.5px;line-height:1.45}
+.tw tbody tr:last-child td{border-bottom:0}
+.tw td.n,.tw th.n{text-align:right;font-variant-numeric:tabular-nums;
+  font-family:"IBM Plex Mono",monospace;font-size:13px;white-space:nowrap}
+.tw td.m{font-family:"IBM Plex Mono",monospace;font-size:12.5px}
+.tw td.m b{color:var(--acc);font-weight:500}
+.v-have{color:var(--req);font-weight:600} .v-bri{color:var(--con);font-weight:600}
+.pill.have{background:var(--req-soft);color:var(--req)}
+.pill.sales{background:var(--acc-soft);color:var(--acc)}
+.pill.cost{background:var(--con-soft);color:var(--con)}
+.pill.gap{background:var(--sunk);color:var(--ink-3);border:1px solid var(--line-2)}
+.rules{display:flex;flex-direction:column;gap:1px;background:var(--line);border:1px solid var(--line);margin-block:26px}
+.rule{background:var(--surface);padding:19px 22px;display:grid;grid-template-columns:28px 1fr;gap:16px}
+.rule .num{font-family:"IBM Plex Mono",monospace;font-size:13px;font-weight:600;color:var(--acc);
+  padding-top:2px;font-variant-numeric:tabular-nums}
+.rule h4{font-family:Archivo,sans-serif;font-size:16px;font-weight:600;margin:0 0 7px}
+.rule p{font-size:14.5px;line-height:1.55;color:var(--ink-2);margin:0}
+.rule p+p{margin-top:9px}
+.phase{background:var(--surface);border:1px solid var(--line-2);border-left:4px solid var(--acc);
+  padding:22px 24px;margin-block:14px}
+.phase.big{border-left-color:var(--con)}
+.phase-h{display:flex;flex-wrap:wrap;align-items:baseline;gap:9px 14px;margin-bottom:5px}
+.phase-n{font-family:"IBM Plex Mono",monospace;font-size:11px;font-weight:600;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--acc)}
+.phase.big .phase-n{color:var(--con)}
+.phase h3{font-family:Archivo,sans-serif;font-size:20px;font-weight:700;margin:0;letter-spacing:-.015em}
+.phase .why{font-size:15px;color:var(--ink-2);margin:9px 0 0;line-height:1.55}
+.phase dl{display:grid;grid-template-columns:auto 1fr;gap:8px 16px;margin:16px 0 0;font-size:14px;line-height:1.5}
+.phase dt{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3);padding-top:3px;white-space:nowrap}
+.phase dd{margin:0;color:var(--ink-2)}
+.phase dd .mono{font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--ink)}
+.phase dd .wsid{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--ink-3)}
+.note{background:var(--con-soft);border:1px solid var(--line-2);border-left:3px solid var(--con);
+  padding:17px 19px;margin-block:24px}
+.note.acc{background:var(--acc-soft);border-left-color:var(--acc)}
+.note p{font-size:14.5px;line-height:1.55;color:var(--ink-2);margin:0}
+.note p+p{margin-top:10px}
+.note b{color:var(--con)} .note.acc b{color:var(--acc)}
+.checks{margin:16px 0 0;padding-left:0;list-style:none;display:flex;flex-direction:column;gap:11px}
+.checks li{font-size:14.5px;line-height:1.55;color:var(--ink-2);padding-left:25px;position:relative}
+.checks li::before{content:"";position:absolute;left:6px;top:.62em;width:6px;height:6px;background:var(--acc)}
+.checks b{color:var(--ink)}
+@media (max-width:560px){
+  .layer{grid-template-columns:1fr;gap:10px} .layer .tag{width:62px}
+  .rule{grid-template-columns:1fr;gap:8px}
+  .phase dl{grid-template-columns:1fr;gap:2px 0} .phase dt{padding-top:9px}
+}
+</style>
+<style>
+.bwrap{overflow-x:auto;margin-block:20px 0}
+.brickssvg{display:block;width:100%;min-width:860px;height:auto}
+.fslab{fill:var(--sunk);stroke:var(--line-2);stroke-width:1}
+.flabel{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.06em;fill:var(--ink-3)}
+.btext{font-family:Archivo,sans-serif;font-size:9.5px}
+.brick.found{fill:var(--req-soft);stroke:var(--req);stroke-width:1}
+.btext.found{fill:var(--req)}
+.brick.built{fill:var(--acc-soft);stroke:var(--acc);stroke-width:1}
+.btext.built{fill:var(--acc)}
+.brick.todo{fill:var(--surface);stroke:var(--line-2);stroke-width:1;stroke-dasharray:3 3}
+.btext.todo{fill:var(--ink-2)}
+.nameband{fill:var(--sunk);stroke:var(--line-2);stroke-width:1}
+.nameband.built{fill:var(--acc);stroke:var(--acc)}
+.nameapp{font-family:Archivo,sans-serif;font-size:12px;font-weight:700;fill:var(--ink)}
+.nameapp.built{fill:var(--on-s-hi)}
+.badge{font-family:"IBM Plex Mono",monospace;font-size:8.5px;letter-spacing:.05em;fill:var(--ink-3)}
+.badge.built{fill:var(--on-s-hi)}
+.tagbrick{fill:var(--con-soft);stroke:var(--con);stroke-width:1}
+.tagtext{font-family:"IBM Plex Mono",monospace;font-size:9px;fill:var(--con)}
+.tagnone{font-family:"IBM Plex Mono",monospace;font-size:9px;fill:var(--ink-3)}
+.count{font-family:"IBM Plex Mono",monospace;font-size:9.5px;fill:var(--ink-3)}
+.scrollnote{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--ink-3);margin:0 0 2px}
+</style>
+<div class="page">
+
+<header class="mast">
+  <p class="kicker">Architecture analysis &amp; build plan · Odoo 19.0 → Nocoly HAP</p>
+  <h1>Nocoly Expansion Map</h1>
+  <p class="lede">Odoo looks like a tangle of interconnected apps. It isn't — half its codebase exists purely to hold apps apart. That same seam is where the Nocoly build grows, one app at a time, without touching what already works.</p>
+  <div class="byline">
+    <span>ca1phas/odoo @ 7bbce824</span><span>662 modules parsed</span>
+    <span>Nocoly app 3e596740 · 40 worksheets</span><span>14 Sep 2026</span>
+  </div>
+</header>
+
+<section>
+  <div class="col">
+    <p class="eyebrow">The short answer</p>
+    <h2>Odoo already solved this problem</h2>
+    <p>The premise behind the question — that Odoo's apps are too entangled to copy one at a time — turns out to be false, and provably so. Odoo's app modules do not reference each other at all. Every cross-app feature lives in a separate <em>bridge module</em> that installs itself only when both sides are present, and that adds fields to existing models without ever editing them.</p>
+  </div>
+  <div class="verdict col">
+    <p><strong>Build one app at a time by copying Odoo's own seam.</strong> Each new Odoo app becomes a new Nocoly app holding only its own worksheets. Everything it shares with Sales — Products, Customers, Taxes, Units — it reaches by Relation control pointing at the worksheet that already exists. What couples it to Sales becomes an append-only set of controls on Orders.</p>
+    <p>Nothing existing is restructured, because Odoo never restructures either.</p>
+  </div>
+  <div class="stats">
+    <div class="stat acc"><span class="n">190</span><span class="l">bridge modules<br>(49% of all business modules)</span></div>
+    <div class="stat"><span class="n">0</span><span class="l">references to stock, mrp<br>or purchase in addons/sale</span></div>
+    <div class="stat"><span class="n">0</span><span class="l">new models added<br>by any sale_* bridge</span></div>
+    <div class="stat hav"><span class="n">29</span><span class="l">of Nocoly's 36 worksheets<br>are reusable backbone</span></div>
+  </div>
+</section>
+
+<section>
+  <div class="col">
+    <p class="eyebrow">Finding one</p>
+    <h2>Half the repo is glue, not apps</h2>
+    <p>Of 662 modules in the repository, 231 are country localisations and 41 are test harnesses — leaving <strong>390 real business modules</strong>. Of those, <strong>190 are bridges</strong>: modules flagged <code>auto_install</code> that depend on two or more other modules and exist solely to join them.</p>
+    <p>Odoo isn't 390 interconnected features; it's roughly 200 self-contained features and 190 connectors, kept in separate boxes on purpose. Install Sales and Inventory together and Odoo silently installs <code>sale_stock</code> — a third module neither of them knows about.</p>
+    <p>The apps themselves are small. Measured by transitive dependency closure, <code>mail</code> pulls in 6 modules, <code>account</code> 16, <code>stock</code> 16, <code>purchase</code> 17, <code>crm</code> 17. The largest application in the entire repo, <code>website_sale</code>, pulls 32.</p>
+  </div>
+</section>
+
+<section>
+  <p class="eyebrow">Finding two</p>
+  <div class="col"><h2>The four layers</h2>
+  <p>Every module sits in one of four bands. Dependencies only ever point downward, and the top band is the only one that knows about more than one app.</p></div>
+  <div class="stack">
+    <div class="layer l3"><span class="tag">L3</span><div>
+      <h4>Bridges — the only cross-app code</h4>
+      <p>Installed automatically when both sides are present. Adds fields to models it does not own. Defines no models of its own.</p>
+      <p class="mods"><b>sale_stock</b> · <b>sale_crm</b> · <b>sale_purchase</b> · <b>sale_mrp</b> · <b>sale_project</b> · <b>stock_account</b> · 184 more</p></div></div>
+    <div class="layer l2"><span class="tag">L2</span><div>
+      <h4>Apps — self-contained, sibling-blind</h4>
+      <p>Each defines only its own transaction models. Contains zero references to any other app.</p>
+      <p class="mods"><b>sale</b> (2 models) · <b>purchase</b> (3) · <b>crm</b> (6) · <b>project</b> (11) · <b>mrp</b> (14) · <b>stock</b> (23) · <b>point_of_sale</b> (15) · <b>hr</b> (10)</p></div></div>
+    <div class="layer l1"><span class="tag">L1</span><div>
+      <h4>Shared master data — the real backbone</h4>
+      <p>Owned by no app, needed by all of them. This is the layer that makes apps look entangled when they aren't: they don't depend on <em>each other</em>, they depend on <em>this</em>.</p>
+      <p class="mods"><b>product</b> → product.template, product.product, product.pricelist · <b>uom</b> → uom.uom · <b>account</b> → account.tax, account.move, account.payment.term</p></div></div>
+    <div class="layer l0"><span class="tag">L0</span><div>
+      <h4>Framework</h4>
+      <p>Partners, companies, currencies, users, messaging and activities. Extended by 117 modules but owned by none.</p>
+      <p class="mods">base → res.partner, res.company, res.currency, res.users · web · mail → mail.activity.*</p></div></div>
+  </div>
+  <div class="col">
+    <p>Note where <code>account</code> sits. It is the most-depended-upon module in the repo — 158 modules require it — but that is because it owns taxes and journal entries, which are master data, not because Accounting-the-app reaches into everything.</p>
+  </div>
+</section>
+
+<section>
+  <div class="col">
+    <p class="eyebrow">Finding three · the mechanism</p>
+    <h2>Bridges add, they never edit</h2>
+    <p>This is the pattern worth copying exactly. Here is the proof, run against the repository:</p>
+  </div>
+  <div class="proof">
+<pre><span class="cm">$ grep -rniE '\b(stock\.|mrp\.|purchase\.)' addons/sale/models/ | wc -l</span>
+<span class="ok">0</span>
+
+<span class="cm"># addons/sale_stock/models/sale_order.py</span>
+class SaleOrder(models.Model):
+    _inherit = <span class="hi">"sale.order"</span>          <span class="cm"># reopen, don't replace</span>
+
+    incoterm        = fields.Many2one('account.incoterms')
+    warehouse_id    = fields.Many2one('stock.warehouse')
+    picking_ids     = fields.One2many('stock.picking', 'sale_id')
+    delivery_status = fields.Selection([...])
+    <span class="cm">… 9 more appended fields, 0 fields changed, 0 models defined</span></pre>
+  </div>
+  <figure class="fig">
+<svg viewBox="0 0 760 300" role="img" class="mechsvg" aria-label="Sales and Inventory sit side by side with no reference between them; the sale_stock bridge module sits below, extending both, and installs only when both apps are present.">
+  <defs>
+    <marker id="ar" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="8" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,4 L0,8 z" class="arhead"/>
+    </marker>
+  </defs>
+
+  <rect class="mbox" x="80" y="30" width="190" height="62" rx="2"/>
+  <text class="mlabel" x="175" y="55" text-anchor="middle">Sales</text>
+  <text class="mmod"   x="175" y="75" text-anchor="middle">sale</text>
+
+  <rect class="mbox" x="490" y="30" width="190" height="62" rx="2"/>
+  <text class="mlabel" x="585" y="55" text-anchor="middle">Inventory</text>
+  <text class="mmod"   x="585" y="75" text-anchor="middle">stock</text>
+
+  <line class="mdash" x1="282" y1="61" x2="478" y2="61"/>
+  <g class="mcross">
+    <line x1="373" y1="54" x2="387" y2="68"/>
+    <line x1="387" y1="54" x2="373" y2="68"/>
+  </g>
+  <text class="mnote" x="380" y="42" text-anchor="middle">0 references, either way</text>
+
+  <rect class="mbox bridge" x="285" y="198" width="190" height="62" rx="2"/>
+  <text class="mlabel bridge" x="380" y="223" text-anchor="middle">bridge module</text>
+  <text class="mmod bridge"   x="380" y="243" text-anchor="middle">sale_stock</text>
+
+  <line class="marrow" x1="332" y1="196" x2="196" y2="96" marker-end="url(#ar)"/>
+  <line class="marrow" x1="428" y1="196" x2="564" y2="96" marker-end="url(#ar)"/>
+
+  <text class="mfield" x="322" y="141" text-anchor="middle">+13 fields on</text>
+  <text class="mfield" x="322" y="157" text-anchor="middle">sale.order</text>
+  <text class="mfield" x="438" y="141" text-anchor="middle">+sale_id on</text>
+  <text class="mfield" x="438" y="157" text-anchor="middle">stock.picking</text>
+
+  <text class="mnote" x="380" y="283" text-anchor="middle">auto_install — exists only while both apps do</text>
+</svg>
+    <figcaption><b>The unit of coupling is a third module.</b> Neither app names the other. The bridge depends on both and reopens their models to append fields, so adding Inventory changes no line of Sales — exactly the discipline the Nocoly build already follows on Orders: <b>append controls, never round-trip them.</b></figcaption>
+  </figure>
+</section>
+<section>
+  <div class="col">
+    <p class="eyebrow">Finding four · at scale</p>
+    <h2>Where the coupling concentrates</h2>
+    <p>Twenty-seven apps, seventy-four connected pairs. Each curve is one or more bridge modules; thicker means more of them. Apps are ordered around the ring by catalogue category, so a short curve joins neighbours and a long one crosses the business.</p>
+  </div>
+  <figure class="fig">
+    <p class="hint">Hover or tab to an app to isolate its connections.</p>
+<svg viewBox="0 0 900 900" role="img" class="netsvg" aria-label="Connectivity map of 27 Odoo apps: 74 pairs joined by bridge modules, with Sales, Invoicing, Inventory and Manufacturing forming the densest cluster.">
+<defs>
+<path id="cp0" d="M475.6,54.8A396.0,396.0 0 0 1 687.5,133.1" fill="none"/>
+<path id="cp1" d="M726.4,166.4A396.0,396.0 0 0 1 810.5,286.2" fill="none"/>
+<path id="cp2" d="M754.2,703.6A396.0,396.0 0 0 0 828.6,334.0" fill="none"/>
+<path id="cp3" d="M595.0,818.5A396.0,396.0 0 0 0 719.0,740.6" fill="none"/>
+<path id="cp4" d="M246.5,789.7A396.0,396.0 0 0 0 546.3,834.1" fill="none"/>
+<path id="cp5" d="M56.7,495.9A396.0,396.0 0 0 0 204.4,760.6" fill="none"/>
+<path id="cp6" d="M54.0,444.9A396.0,396.0 0 0 1 311.0,79.2" fill="none"/>
+<path id="cp7" d="M347.3,67.5A396.0,396.0 0 0 1 437.4,54.2" fill="none"/>
+</defs>
+<g class="catarcs">
+<path class="catarc" d="M475.0,62.8A388.0,388.0 0 0 1 682.7,139.5" fill="none"/>
+<text class="catlabel"><textPath href="#cp0" startOffset="50%" text-anchor="middle">Sales</textPath></text>
+<path class="catarc" d="M720.8,172.1A388.0,388.0 0 0 1 803.2,289.5" fill="none"/>
+<text class="catlabel"><textPath href="#cp1" startOffset="50%" text-anchor="middle">Finance</textPath></text>
+<path class="catarc" d="M821.0,336.3A388.0,388.0 0 0 1 748.0,698.5" fill="none"/>
+<text class="catlabel"><textPath href="#cp2" startOffset="50%" text-anchor="middle">Inventory &amp; Manufacturing</textPath></text>
+<path class="catarc" d="M713.5,734.8A388.0,388.0 0 0 1 592.1,811.1" fill="none"/>
+<text class="catlabel"><textPath href="#cp3" startOffset="50%" text-anchor="middle">Services</textPath></text>
+<path class="catarc" d="M544.4,826.3A388.0,388.0 0 0 1 250.6,782.8" fill="none"/>
+<text class="catlabel"><textPath href="#cp4" startOffset="50%" text-anchor="middle">Human Resources</textPath></text>
+<path class="catarc" d="M209.4,754.4A388.0,388.0 0 0 1 64.6,495.0" fill="none"/>
+<text class="catlabel"><textPath href="#cp5" startOffset="50%" text-anchor="middle">Marketing</textPath></text>
+<path class="catarc" d="M62.0,445.0A388.0,388.0 0 0 1 313.8,86.7" fill="none"/>
+<text class="catlabel"><textPath href="#cp6" startOffset="50%" text-anchor="middle">Website</textPath></text>
+<path class="catarc" d="M361.7,72.2A388.0,388.0 0 0 1 425.0,62.8" fill="none"/>
+<text class="catlabel"><textPath href="#cp7" startOffset="50%" text-anchor="middle">Productivity</textPath></text>
+</g>
+<g class="edges" fill="none">
+<path class="edge" data-a="CRM" data-b="Email Marketing" d="M489.0,186.9Q400.9,419.7 232.4,602.9" stroke-width="1.04" opacity="0.238"><title>CRM ↔ Email Marketing · 1 bridge module</title></path>
+<path class="edge" data-a="CRM" data-b="Events" d="M489.0,186.9Q410.8,431.1 268.4,644.4" stroke-width="1.04" opacity="0.238"><title>CRM ↔ Events · 1 bridge module</title></path>
+<path class="edge" data-a="CRM" data-b="SMS Marketing" d="M489.0,186.9Q393.5,406.5 205.6,555.0" stroke-width="1.04" opacity="0.238"><title>CRM ↔ SMS Marketing · 1 bridge module</title></path>
+<path class="edge" data-a="CRM" data-b="Survey" d="M489.0,186.9Q389.0,392.1 189.2,502.5" stroke-width="1.04" opacity="0.238"><title>CRM ↔ Survey · 1 bridge module</title></path>
+<path class="edge" data-a="Email Marketing" data-b="eCommerce" d="M232.4,602.9Q320.3,470.3 196.1,370.8" stroke-width="1.04" opacity="0.238"><title>Email Marketing ↔ eCommerce · 1 bridge module</title></path>
+<path class="edge" data-a="Email Marketing" data-b="eLearning" d="M232.4,602.9Q326.3,456.4 217.7,320.4" stroke-width="1.04" opacity="0.238"><title>Email Marketing ↔ eLearning · 1 bridge module</title></path>
+<path class="edge" data-a="Employees" data-b="Events" d="M493.2,712.5Q411.9,575.6 268.4,644.4" stroke-width="1.04" opacity="0.238"><title>Employees ↔ Events · 1 bridge module</title></path>
+<path class="edge" data-a="Employees" data-b="Fleet" d="M493.2,712.5Q429.6,587.8 332.5,688.7" stroke-width="1.04" opacity="0.238"><title>Employees ↔ Fleet · 1 bridge module</title></path>
+<path class="edge" data-a="Employees" data-b="Inventory" d="M493.2,712.5Q535.0,521.6 716.0,447.9" stroke-width="1.04" opacity="0.238"><title>Employees ↔ Inventory · 1 bridge module</title></path>
+<path class="edge" data-a="Employees" data-b="Live Chat" d="M493.2,712.5Q417.7,463.9 289.4,237.9" stroke-width="1.04" opacity="0.238"><title>Employees ↔ Live Chat · 1 bridge module</title></path>
+<path class="edge" data-a="Employees" data-b="Maintenance" d="M493.2,712.5Q521.7,564.2 667.6,602.9" stroke-width="1.04" opacity="0.238"><title>Employees ↔ Maintenance · 1 bridge module</title></path>
+<path class="edge" data-a="Employees" data-b="Point of Sale" d="M493.2,712.5Q500.8,460.2 591.5,224.7" stroke-width="1.04" opacity="0.238"><title>Employees ↔ Point of Sale · 1 bridge module</title></path>
+<path class="edge" data-a="Employees" data-b="Survey" d="M493.2,712.5Q390.2,536.6 189.2,502.5" stroke-width="1.04" opacity="0.238"><title>Employees ↔ Survey · 1 bridge module</title></path>
+<path class="edge" data-a="Employees" data-b="eLearning" d="M493.2,712.5Q398.0,486.5 217.7,320.4" stroke-width="1.04" opacity="0.238"><title>Employees ↔ eLearning · 1 bridge module</title></path>
+<path class="edge" data-a="Events" data-b="Inventory" d="M268.4,644.4Q473.2,502.9 716.0,447.9" stroke-width="1.04" opacity="0.238"><title>Events ↔ Inventory · 1 bridge module</title></path>
+<path class="edge" data-a="Events" data-b="Point of Sale" d="M268.4,644.4Q439.0,441.5 591.5,224.7" stroke-width="1.04" opacity="0.238"><title>Events ↔ Point of Sale · 1 bridge module</title></path>
+<path class="edge" data-a="Fleet" data-b="Invoicing" d="M332.5,688.7Q472.9,467.6 650.7,275.4" stroke-width="1.04" opacity="0.238"><title>Fleet ↔ Invoicing · 1 bridge module</title></path>
+<path class="edge" data-a="Forum" data-b="eLearning" d="M249.3,275.4Q330.9,366.3 217.7,320.4" stroke-width="1.04" opacity="0.238"><title>Forum ↔ eLearning · 1 bridge module</title></path>
+<path class="edge" data-a="Inventory" data-b="Maintenance" d="M716.0,447.9Q583.0,491.5 667.6,602.9" stroke-width="1.04" opacity="0.238"><title>Inventory ↔ Maintenance · 1 bridge module</title></path>
+<path class="edge" data-a="Invoicing" data-b="SMS Marketing" d="M650.7,275.4Q438.0,430.9 205.6,555.0" stroke-width="1.04" opacity="0.238"><title>Invoicing ↔ SMS Marketing · 1 bridge module</title></path>
+<path class="edge" data-a="Invoicing" data-b="Timesheet" d="M650.7,275.4Q537.5,467.6 567.5,688.7" stroke-width="1.04" opacity="0.238"><title>Invoicing ↔ Timesheet · 1 bridge module</title></path>
+<path class="edge" data-a="Live Chat" data-b="Website" d="M289.4,237.9Q333.0,384.7 185.2,424.7" stroke-width="1.04" opacity="0.238"><title>Live Chat ↔ Website · 1 bridge module</title></path>
+<path class="edge" data-a="Manufacturing" data-b="Point of Sale" d="M710.8,502.5Q560.6,402.5 591.5,224.7" stroke-width="1.04" opacity="0.238"><title>Manufacturing ↔ Point of Sale · 1 bridge module</title></path>
+<path class="edge" data-a="Manufacturing" data-b="Website" d="M710.8,502.5Q448.9,457.5 185.2,424.7" stroke-width="1.04" opacity="0.238"><title>Manufacturing ↔ Website · 1 bridge module</title></path>
+<path class="edge" data-a="Manufacturing" data-b="eCommerce" d="M710.8,502.5Q451.9,442.7 196.1,370.8" stroke-width="1.04" opacity="0.238"><title>Manufacturing ↔ eCommerce · 1 bridge module</title></path>
+<path class="edge" data-a="Point of Sale" data-b="Repair" d="M591.5,224.7Q556.1,416.9 694.4,555.0" stroke-width="1.04" opacity="0.238"><title>Point of Sale ↔ Repair · 1 bridge module</title></path>
+<path class="edge" data-a="Project" data-b="Time Off" d="M614.0,659.5Q477.0,578.5 384.1,707.7" stroke-width="1.04" opacity="0.238"><title>Project ↔ Time Off · 1 bridge module</title></path>
+<path class="edge" data-a="Purchase" data-b="Repair" d="M709.9,393.3Q588.7,463.3 694.4,555.0" stroke-width="1.04" opacity="0.238"><title>Purchase ↔ Repair · 1 bridge module</title></path>
+<path class="edge" data-a="Recruitment" data-b="Website" d="M438.4,715.7Q374.0,516.1 185.2,424.7" stroke-width="1.04" opacity="0.238"><title>Recruitment ↔ Website · 1 bridge module</title></path>
+<path class="edge" data-a="SMS Marketing" data-b="Sales" d="M205.6,555.0Q408.1,410.2 542.2,200.5" stroke-width="1.04" opacity="0.238"><title>SMS Marketing ↔ Sales · 1 bridge module</title></path>
+<path class="edge" data-a="Sales" data-b="Timesheet" d="M542.2,200.5Q507.7,447.0 567.5,688.7" stroke-width="1.04" opacity="0.238"><title>Sales ↔ Timesheet · 1 bridge module</title></path>
+<path class="edge" data-a="Survey" data-b="Website" d="M189.2,502.5Q305.5,457.5 185.2,424.7" stroke-width="1.04" opacity="0.238"><title>Survey ↔ Website · 1 bridge module</title></path>
+<path class="edge" data-a="Survey" data-b="eLearning" d="M189.2,502.5Q314.4,428.8 217.7,320.4" stroke-width="1.04" opacity="0.238"><title>Survey ↔ eLearning · 1 bridge module</title></path>
+<path class="edge" data-a="Time Off" data-b="Timesheet" d="M384.1,707.7Q464.2,586.5 567.5,688.7" stroke-width="1.04" opacity="0.238"><title>Time Off ↔ Timesheet · 1 bridge module</title></path>
+<path class="edge" data-a="Timesheet" data-b="Website" d="M567.5,688.7Q409.5,508.7 185.2,424.7" stroke-width="1.04" opacity="0.238"><title>Timesheet ↔ Website · 1 bridge module</title></path>
+<path class="edge" data-a="CRM" data-b="Invoicing" d="M489.0,186.9Q515.9,329.6 650.7,275.4" stroke-width="1.38" opacity="0.276"><title>CRM ↔ Invoicing · 2 bridge modules</title></path>
+<path class="edge" data-a="CRM" data-b="Live Chat" d="M489.0,186.9Q416.6,319.3 289.4,237.9" stroke-width="1.38" opacity="0.276"><title>CRM ↔ Live Chat · 2 bridge modules</title></path>
+<path class="edge" data-a="CRM" data-b="Sales" d="M489.0,186.9Q486.1,309.0 542.2,200.5" stroke-width="1.38" opacity="0.276"><title>CRM ↔ Sales · 2 bridge modules</title></path>
+<path class="edge" data-a="Email Marketing" data-b="Invoicing" d="M232.4,602.9Q445.3,444.0 650.7,275.4" stroke-width="1.38" opacity="0.276"><title>Email Marketing ↔ Invoicing · 2 bridge modules</title></path>
+<path class="edge" data-a="Email Marketing" data-b="Sales" d="M232.4,602.9Q415.5,423.4 542.2,200.5" stroke-width="1.38" opacity="0.276"><title>Email Marketing ↔ Sales · 2 bridge modules</title></path>
+<path class="edge" data-a="Employees" data-b="Invoicing" d="M493.2,712.5Q517.1,474.2 650.7,275.4" stroke-width="1.38" opacity="0.276"><title>Employees ↔ Invoicing · 2 bridge modules</title></path>
+<path class="edge" data-a="Events" data-b="SMS Marketing" d="M268.4,644.4Q332.8,532.3 205.6,555.0" stroke-width="1.38" opacity="0.276"><title>Events ↔ SMS Marketing · 2 bridge modules</title></path>
+<path class="edge" data-a="Events" data-b="Website" d="M268.4,644.4Q327.2,496.5 185.2,424.7" stroke-width="1.38" opacity="0.276"><title>Events ↔ Website · 2 bridge modules</title></path>
+<path class="edge" data-a="Events" data-b="eCommerce" d="M268.4,644.4Q330.2,481.7 196.1,370.8" stroke-width="1.38" opacity="0.276"><title>Events ↔ eCommerce · 2 bridge modules</title></path>
+<path class="edge" data-a="Expenses" data-b="Project" d="M682.3,320.4Q559.0,471.9 614.0,659.5" stroke-width="1.38" opacity="0.276"><title>Expenses ↔ Project · 2 bridge modules</title></path>
+<path class="edge" data-a="Expenses" data-b="Sales" d="M682.3,320.4Q539.2,345.7 542.2,200.5" stroke-width="1.38" opacity="0.276"><title>Expenses ↔ Sales · 2 bridge modules</title></path>
+<path class="edge" data-a="Inventory" data-b="Website" d="M716.0,447.9Q450.3,442.4 185.2,424.7" stroke-width="1.38" opacity="0.276"><title>Inventory ↔ Website · 2 bridge modules</title></path>
+<path class="edge" data-a="Inventory" data-b="eCommerce" d="M716.0,447.9Q453.3,427.6 196.1,370.8" stroke-width="1.38" opacity="0.276"><title>Inventory ↔ eCommerce · 2 bridge modules</title></path>
+<path class="edge" data-a="Manufacturing" data-b="Project" d="M710.8,502.5Q566.8,522.0 614.0,659.5" stroke-width="1.38" opacity="0.276"><title>Manufacturing ↔ Project · 2 bridge modules</title></path>
+<path class="edge" data-a="Manufacturing" data-b="Repair" d="M710.8,502.5Q588.9,493.3 694.4,555.0" stroke-width="1.38" opacity="0.276"><title>Manufacturing ↔ Repair · 2 bridge modules</title></path>
+<path class="edge" data-a="Point of Sale" data-b="Sales" d="M591.5,224.7Q514.3,319.4 542.2,200.5" stroke-width="1.38" opacity="0.276"><title>Point of Sale ↔ Sales · 2 bridge modules</title></path>
+<path class="edge" data-a="Project" data-b="Website" d="M614.0,659.5Q422.3,500.6 185.2,424.7" stroke-width="1.38" opacity="0.276"><title>Project ↔ Website · 2 bridge modules</title></path>
+<path class="edge" data-a="SMS Marketing" data-b="Website" d="M205.6,555.0Q310.0,471.9 185.2,424.7" stroke-width="1.38" opacity="0.276"><title>SMS Marketing ↔ Website · 2 bridge modules</title></path>
+<path class="edge" data-a="CRM" data-b="Website" d="M489.0,186.9Q387.9,370.7 185.2,424.7" stroke-width="1.72" opacity="0.314"><title>CRM ↔ Website · 3 bridge modules</title></path>
+<path class="edge" data-a="Employees" data-b="Project" d="M493.2,712.5Q507.0,579.8 614.0,659.5" stroke-width="1.72" opacity="0.314"><title>Employees ↔ Project · 3 bridge modules</title></path>
+<path class="edge" data-a="Employees" data-b="Sales" d="M493.2,712.5Q487.2,453.6 542.2,200.5" stroke-width="1.72" opacity="0.314"><title>Employees ↔ Sales · 3 bridge modules</title></path>
+<path class="edge" data-a="Employees" data-b="Website" d="M493.2,712.5Q389.1,515.2 185.2,424.7" stroke-width="1.72" opacity="0.314"><title>Employees ↔ Website · 3 bridge modules</title></path>
+<path class="edge" data-a="Events" data-b="Invoicing" d="M268.4,644.4Q455.3,455.4 650.7,275.4" stroke-width="1.72" opacity="0.314"><title>Events ↔ Invoicing · 3 bridge modules</title></path>
+<path class="edge" data-a="Inventory" data-b="Invoicing" d="M716.0,447.9Q578.3,401.4 650.7,275.4" stroke-width="1.72" opacity="0.314"><title>Inventory ↔ Invoicing · 3 bridge modules</title></path>
+<path class="edge" data-a="Inventory" data-b="Purchase" d="M716.0,447.9Q594.6,433.8 709.9,393.3" stroke-width="1.72" opacity="0.314"><title>Inventory ↔ Purchase · 3 bridge modules</title></path>
+<path class="edge" data-a="Sales" data-b="Website" d="M542.2,200.5Q402.5,374.4 185.2,424.7" stroke-width="1.72" opacity="0.314"><title>Sales ↔ Website · 3 bridge modules</title></path>
+<path class="edge" data-a="Email Marketing" data-b="Events" d="M232.4,602.9Q340.2,545.5 268.4,644.4" stroke-width="2.06" opacity="0.352"><title>Email Marketing ↔ Events · 4 bridge modules</title></path>
+<path class="edge" data-a="Email Marketing" data-b="Website" d="M232.4,602.9Q317.3,485.1 185.2,424.7" stroke-width="2.06" opacity="0.352"><title>Email Marketing ↔ Website · 4 bridge modules</title></path>
+<path class="edge" data-a="Events" data-b="Sales" d="M268.4,644.4Q425.4,434.8 542.2,200.5" stroke-width="2.06" opacity="0.352"><title>Events ↔ Sales · 4 bridge modules</title></path>
+<path class="edge" data-a="Inventory" data-b="Project" d="M716.0,447.9Q568.2,507.0 614.0,659.5" stroke-width="2.06" opacity="0.352"><title>Inventory ↔ Project · 4 bridge modules</title></path>
+<path class="edge" data-a="Invoicing" data-b="Project" d="M650.7,275.4Q550.3,459.6 614.0,659.5" stroke-width="2.06" opacity="0.352"><title>Invoicing ↔ Project · 4 bridge modules</title></path>
+<path class="edge" data-a="Invoicing" data-b="Website" d="M650.7,275.4Q432.4,395.0 185.2,424.7" stroke-width="2.06" opacity="0.352"><title>Invoicing ↔ Website · 4 bridge modules</title></path>
+<path class="edge" data-a="Manufacturing" data-b="Purchase" d="M710.8,502.5Q593.2,448.8 709.9,393.3" stroke-width="2.06" opacity="0.352"><title>Manufacturing ↔ Purchase · 4 bridge modules</title></path>
+<path class="edge" data-a="Project" data-b="Purchase" d="M614.0,659.5Q566.6,492.0 709.9,393.3" stroke-width="2.06" opacity="0.352"><title>Project ↔ Purchase · 4 bridge modules</title></path>
+<path class="edge" data-a="Purchase" data-b="Sales" d="M709.9,393.3Q546.8,365.8 542.2,200.5" stroke-width="2.06" opacity="0.352"><title>Purchase ↔ Sales · 4 bridge modules</title></path>
+<path class="edge" data-a="Manufacturing" data-b="Sales" d="M710.8,502.5Q547.1,395.8 542.2,200.5" stroke-width="2.4" opacity="0.39"><title>Manufacturing ↔ Sales · 5 bridge modules</title></path>
+<path class="edge" data-a="Project" data-b="Sales" d="M614.0,659.5Q520.4,439.0 542.2,200.5" stroke-width="2.4" opacity="0.39"><title>Project ↔ Sales · 5 bridge modules</title></path>
+<path class="edge" data-a="Inventory" data-b="Sales" d="M716.0,447.9Q548.5,380.8 542.2,200.5" stroke-width="2.74" opacity="0.428"><title>Inventory ↔ Sales · 6 bridge modules</title></path>
+<path class="edge" data-a="Invoicing" data-b="Manufacturing" d="M650.7,275.4Q576.9,416.4 710.8,502.5" stroke-width="4.1" opacity="0.58"><title>Invoicing ↔ Manufacturing · 10 bridge modules</title></path>
+</g>
+<g class="nodes">
+<g class="napp" data-app="CRM" tabindex="0"><circle class="node" cx="489.0" cy="186.9" r="5.35"/><text class="nlabel" transform="translate(450.0,450.0) rotate(-81.57) translate(284.0,0) rotate(0)" text-anchor="start" dy=".32em">CRM</text><title>CRM · 11 bridge modules</title></g>
+<g class="napp" data-app="Sales" tabindex="0"><circle class="node" cx="542.2" cy="200.5" r="7.23"/><text class="nlabel" transform="translate(450.0,450.0) rotate(-69.72) translate(284.0,0) rotate(0)" text-anchor="start" dy=".32em">Sales</text><title>Sales · 28 bridge modules</title></g>
+<g class="napp" data-app="Point of Sale" tabindex="0"><circle class="node" cx="591.5" cy="224.7" r="4.32"/><text class="nlabel" transform="translate(450.0,450.0) rotate(-57.87) translate(284.0,0) rotate(0)" text-anchor="start" dy=".32em">Point of Sale</text><title>Point of Sale · 5 bridge modules</title></g>
+<g class="napp" data-app="Invoicing" tabindex="0"><circle class="node" cx="650.7" cy="275.4" r="7.23"/><text class="nlabel" transform="translate(450.0,450.0) rotate(-41.02) translate(284.0,0) rotate(0)" text-anchor="start" dy=".32em">Invoicing</text><title>Invoicing · 28 bridge modules</title></g>
+<g class="napp" data-app="Expenses" tabindex="0"><circle class="node" cx="682.3" cy="320.4" r="3.85"/><text class="nlabel" transform="translate(450.0,450.0) rotate(-29.17) translate(284.0,0) rotate(0)" text-anchor="start" dy=".32em">Expenses</text><title>Expenses · 3 bridge modules</title></g>
+<g class="napp" data-app="Purchase" tabindex="0"><circle class="node" cx="709.9" cy="393.3" r="5.63"/><text class="nlabel" transform="translate(450.0,450.0) rotate(-12.31) translate(284.0,0) rotate(0)" text-anchor="start" dy=".32em">Purchase</text><title>Purchase · 13 bridge modules</title></g>
+<g class="napp" data-app="Inventory" tabindex="0"><circle class="node" cx="716.0" cy="447.9" r="6.0"/><text class="nlabel" transform="translate(450.0,450.0) rotate(-0.46) translate(284.0,0) rotate(0)" text-anchor="start" dy=".32em">Inventory</text><title>Inventory · 16 bridge modules</title></g>
+<g class="napp" data-app="Manufacturing" tabindex="0"><circle class="node" cx="710.8" cy="502.5" r="5.49"/><text class="nlabel" transform="translate(450.0,450.0) rotate(11.39) translate(284.0,0) rotate(0)" text-anchor="start" dy=".32em">Manufacturing</text><title>Manufacturing · 12 bridge modules</title></g>
+<g class="napp" data-app="Repair" tabindex="0"><circle class="node" cx="694.4" cy="555.0" r="4.1"/><text class="nlabel" transform="translate(450.0,450.0) rotate(23.24) translate(284.0,0) rotate(0)" text-anchor="start" dy=".32em">Repair</text><title>Repair · 4 bridge modules</title></g>
+<g class="napp" data-app="Maintenance" tabindex="0"><circle class="node" cx="667.6" cy="602.9" r="3.54"/><text class="nlabel" transform="translate(450.0,450.0) rotate(35.09) translate(284.0,0) rotate(0)" text-anchor="start" dy=".32em">Maintenance</text><title>Maintenance · 2 bridge modules</title></g>
+<g class="napp" data-app="Project" tabindex="0"><circle class="node" cx="614.0" cy="659.5" r="6.23"/><text class="nlabel" transform="translate(450.0,450.0) rotate(51.94) translate(284.0,0) rotate(0)" text-anchor="start" dy=".32em">Project</text><title>Project · 18 bridge modules</title></g>
+<g class="napp" data-app="Timesheet" tabindex="0"><circle class="node" cx="567.5" cy="688.7" r="3.85"/><text class="nlabel" transform="translate(450.0,450.0) rotate(63.80) translate(284.0,0) rotate(0)" text-anchor="start" dy=".32em">Timesheet</text><title>Timesheet · 3 bridge modules</title></g>
+<g class="napp" data-app="Employees" tabindex="0"><circle class="node" cx="493.2" cy="712.5" r="5.75"/><text class="nlabel" transform="translate(450.0,450.0) rotate(80.65) translate(284.0,0) rotate(0)" text-anchor="start" dy=".32em">Employees</text><title>Employees · 14 bridge modules</title></g>
+<g class="napp" data-app="Recruitment" tabindex="0"><circle class="node" cx="438.4" cy="715.7" r="3.15"/><text class="nlabel" transform="translate(450.0,450.0) rotate(272.50) translate(-284.0,0) rotate(180)" text-anchor="end" dy=".32em">Recruitment</text><title>Recruitment · 1 bridge module</title></g>
+<g class="napp" data-app="Time Off" tabindex="0"><circle class="node" cx="384.1" cy="707.7" r="3.15"/><text class="nlabel" transform="translate(450.0,450.0) rotate(284.35) translate(-284.0,0) rotate(180)" text-anchor="end" dy=".32em">Time Off</text><title>Time Off · 1 bridge module</title></g>
+<g class="napp" data-app="Fleet" tabindex="0"><circle class="node" cx="332.5" cy="688.7" r="3.54"/><text class="nlabel" transform="translate(450.0,450.0) rotate(296.20) translate(-284.0,0) rotate(180)" text-anchor="end" dy=".32em">Fleet</text><title>Fleet · 2 bridge modules</title></g>
+<g class="napp" data-app="Events" tabindex="0"><circle class="node" cx="268.4" cy="644.4" r="5.49"/><text class="nlabel" transform="translate(450.0,450.0) rotate(313.06) translate(-284.0,0) rotate(180)" text-anchor="end" dy=".32em">Events</text><title>Events · 12 bridge modules</title></g>
+<g class="napp" data-app="Email Marketing" tabindex="0"><circle class="node" cx="232.4" cy="602.9" r="5.05"/><text class="nlabel" transform="translate(450.0,450.0) rotate(324.91) translate(-284.0,0) rotate(180)" text-anchor="end" dy=".32em">Email Marketing</text><title>Email Marketing · 9 bridge modules</title></g>
+<g class="napp" data-app="SMS Marketing" tabindex="0"><circle class="node" cx="205.6" cy="555.0" r="4.32"/><text class="nlabel" transform="translate(450.0,450.0) rotate(336.76) translate(-284.0,0) rotate(180)" text-anchor="end" dy=".32em">SMS Marketing</text><title>SMS Marketing · 5 bridge modules</title></g>
+<g class="napp" data-app="Survey" tabindex="0"><circle class="node" cx="189.2" cy="502.5" r="3.85"/><text class="nlabel" transform="translate(450.0,450.0) rotate(348.61) translate(-284.0,0) rotate(180)" text-anchor="end" dy=".32em">Survey</text><title>Survey · 3 bridge modules</title></g>
+<g class="napp" data-app="Website" tabindex="0"><circle class="node" cx="185.2" cy="424.7" r="6.55"/><text class="nlabel" transform="translate(450.0,450.0) rotate(365.46) translate(-284.0,0) rotate(180)" text-anchor="end" dy=".32em">Website</text><title>Website · 21 bridge modules</title></g>
+<g class="napp" data-app="eCommerce" tabindex="0"><circle class="node" cx="196.1" cy="370.8" r="4.53"/><text class="nlabel" transform="translate(450.0,450.0) rotate(377.31) translate(-284.0,0) rotate(180)" text-anchor="end" dy=".32em">eCommerce</text><title>eCommerce · 6 bridge modules</title></g>
+<g class="napp" data-app="eLearning" tabindex="0"><circle class="node" cx="217.7" cy="320.4" r="4.1"/><text class="nlabel" transform="translate(450.0,450.0) rotate(389.17) translate(-284.0,0) rotate(180)" text-anchor="end" dy=".32em">eLearning</text><title>eLearning · 4 bridge modules</title></g>
+<g class="napp" data-app="Forum" tabindex="0"><circle class="node" cx="249.3" cy="275.4" r="3.15"/><text class="nlabel" transform="translate(450.0,450.0) rotate(401.02) translate(-284.0,0) rotate(180)" text-anchor="end" dy=".32em">Forum</text><title>Forum · 1 bridge module</title></g>
+<g class="napp" data-app="Live Chat" tabindex="0"><circle class="node" cx="289.4" cy="237.9" r="4.1"/><text class="nlabel" transform="translate(450.0,450.0) rotate(412.87) translate(-284.0,0) rotate(180)" text-anchor="end" dy=".32em">Live Chat</text><title>Live Chat · 4 bridge modules</title></g>
+<g class="napp iso" data-app="Blog" tabindex="0"><circle class="node iso" cx="336.4" cy="209.5" r="2.2"/><text class="nlabel" transform="translate(450.0,450.0) rotate(424.72) translate(-284.0,0) rotate(180)" text-anchor="end" dy=".32em">Blog</text><title>Blog · 0 bridge modules</title></g>
+<g class="napp iso" data-app="Discuss" tabindex="0"><circle class="node iso" cx="411.0" cy="186.9" r="2.2"/><text class="nlabel" transform="translate(450.0,450.0) rotate(441.57) translate(-284.0,0) rotate(180)" text-anchor="end" dy=".32em">Discuss</text><title>Discuss · 0 bridge modules</title></g>
+</g></svg>
+    <figcaption><b>Two apps sit on the ring with no curve at all:</b> Discuss, which everything depends on and which depends on nothing, and Blog. The dense knot between Sales, Invoicing, Inventory, Purchase and Manufacturing is Odoo's quote-to-cash core; Marketing, Website and HR attach at its edges by one or two threads each.</figcaption>
+  </figure>
+  <div class="figure">
+    <h3>Bridge modules per app</h3>
+    <p class="sub">Community modules only · a pair joined by several bridges counts each one</p>
+    <div class="bars" id="bars"></div>
+    <div class="axis"><div class="ticks"><span>0</span><span>7</span><span>14</span><span>21</span><span>28</span></div></div>
+  </div>
+</section>
+
+<section>
+  <p class="eyebrow">Reference</p>
+  <div class="col"><h2>Every app, module by module</h2>
+  <p>All 49 apps from odoo.com's catalogue, grouped as it groups them. <b>Requires</b> is a hard dependency; <b>uses</b> is shared master data owned by no app; <b>connects to</b> is optional bridges that install only when both apps are present. Counts in the corner are the full transitive dependency closure.</p></div>
+  <div class="controls">
+    <label for="q" class="chip" style="cursor:default;background:transparent;border:0;padding-left:0">filter</label>
+    <input id="q" type="search" placeholder="app or module name…" autocomplete="off">
+    <button class="chip" id="c-all" data-cat="*" aria-pressed="true">all</button>
+    <button class="chip" id="c-repo" data-cat="repo" aria-pressed="false">in this repo</button>
+    <button class="chip" id="c-ent" data-cat="ent" aria-pressed="false">enterprise only</button>
+  </div>
+  <div id="cards"></div>
+  <p class="empty" id="empty" hidden>No app matches that filter.</p>
+</section>
+<section>
+  <p class="eyebrow">The base</p>
+  <div class="col"><h2>The 32 models everything rests on</h2>
+  <p>Ranked by how many distinct modules point a relational field at them. These are what must exist as worksheets before any app functions — and the status column is the current Nocoly build measured against them.</p></div>
+
+  <h3 style="font-family:Archivo,sans-serif;font-size:16px;margin:30px 0 0">Tier 1 — Identity &amp; context <code>base</code></h3>
+  <div class="tw"><table>
+    <thead><tr><th>Model</th><th>What it is</th><th class="n">Refs</th><th>In Nocoly</th></tr></thead><tbody>
+    <tr><td class="m">res.partner</td><td>People, companies, addresses — customers, vendors, contacts, one table</td><td class="n">57</td><td><span class="pill have">Customers</span></td></tr>
+    <tr><td class="m">res.users</td><td>Actor on every record</td><td class="n">67</td><td><span class="pill have">Collaborator</span></td></tr>
+    <tr><td class="m">res.company</td><td>Multi-company scoping on nearly every record</td><td class="n">57</td><td><span class="pill gap">none</span></td></tr>
+    <tr><td class="m">res.currency</td><td>Money is never a bare number</td><td class="n">27</td><td><span class="pill cost">MYR hardcoded</span></td></tr>
+    <tr><td class="m">res.country</td><td>Drives taxes, fiscal positions, address format</td><td class="n">30</td><td><span class="pill cost">plain Text</span></td></tr>
+    <tr><td class="m">res.country.state</td><td></td><td class="n">12</td><td><span class="pill cost">plain Text</span></td></tr>
+    <tr><td class="m">res.partner.category</td><td>Partner tags</td><td class="n">—</td><td><span class="pill cost">MultipleSelect</span></td></tr>
+    <tr><td class="m">res.groups</td><td>Access control</td><td class="n">9</td><td><span class="pill have">roles</span></td></tr>
+  </tbody></table></div>
+
+  <h3 style="font-family:Archivo,sans-serif;font-size:16px;margin:30px 0 0">Tier 2 — Catalogue <code>product</code> <code>uom</code></h3>
+  <div class="tw"><table>
+    <thead><tr><th>Model</th><th>What it is</th><th>In Nocoly</th></tr></thead><tbody>
+    <tr><td class="m">product.template</td><td>The sellable thing</td><td><span class="pill have">Products</span></td></tr>
+    <tr><td class="m">product.product</td><td>The variant — what actually moves and is costed</td><td><span class="pill have">Product Variants</span></td></tr>
+    <tr><td class="m">product.category</td><td></td><td><span class="pill have">Categories</span></td></tr>
+    <tr><td class="m">uom.uom</td><td><b>One model in Odoo 19</b> — uom.category and product.packaging were merged into it, self-parenting via relative_factor</td><td><span class="pill have">Units &amp; Packagings</span></td></tr>
+    <tr><td class="m">product.pricelist / .item</td><td></td><td><span class="pill have">Pricelists · Price Rules</span></td></tr>
+    <tr><td class="m">product.attribute / .value</td><td></td><td><span class="pill have">Attributes · Attribute Values</span></td></tr>
+    <tr><td class="m">product.template.attribute.line / .value</td><td>Per-product attribute selection → variant generation</td><td><span class="pill cost">built, workflow paused</span></td></tr>
+    <tr><td class="m">product.combo / .item</td><td></td><td><span class="pill have">Combo Choices · Combo Items</span></td></tr>
+  </tbody></table></div>
+
+  <h3 style="font-family:Archivo,sans-serif;font-size:16px;margin:30px 0 0">Tier 3 — Money <code>account</code></h3>
+  <div class="tw"><table>
+    <thead><tr><th>Model</th><th>What it is</th><th>In Nocoly</th></tr></thead><tbody>
+    <tr><td class="m">account.move</td><td><b>Invoices, vendor bills, credit notes and journal entries are all this one model</b>, split by move_type</td><td><span class="pill cost">Invoices — customer only</span></td></tr>
+    <tr><td class="m">account.move.line</td><td></td><td><span class="pill have">Invoice Lines</span></td></tr>
+    <tr><td class="m">account.tax</td><td></td><td><span class="pill have">Taxes</span></td></tr>
+    <tr><td class="m">account.fiscal.position</td><td></td><td><span class="pill have">Fiscal Positions</span></td></tr>
+    <tr><td class="m">account.payment.term</td><td></td><td><span class="pill have">Payment Terms</span></td></tr>
+    <tr><td class="m">account.payment.method</td><td></td><td><span class="pill have">Payment Methods</span></td></tr>
+    <tr><td class="m">account.incoterms</td><td></td><td><span class="pill have">Incoterms</span></td></tr>
+    <tr><td class="m">account.account</td><td>Chart of accounts</td><td><span class="pill gap">none</span></td></tr>
+    <tr><td class="m">account.journal</td><td>Every move belongs to one</td><td><span class="pill gap">none</span></td></tr>
+    <tr><td class="m">account.payment</td><td>A payment is a record, not a field</td><td><span class="pill gap">fields on Invoices</span></td></tr>
+  </tbody></table></div>
+
+  <h3 style="font-family:Archivo,sans-serif;font-size:16px;margin:30px 0 0">Tier 4 — Cross-cutting</h3>
+  <div class="tw"><table>
+    <thead><tr><th>Model</th><th>Owner</th><th>In Nocoly</th></tr></thead><tbody>
+    <tr><td class="m">mail.activity.type / .plan / .plan.template</td><td class="m">mail</td><td><span class="pill have">Activity Types · Plans · Steps</span></td></tr>
+    <tr><td class="m">mail.activity</td><td class="m">mail</td><td><span class="pill gap">activity records absent</span></td></tr>
+    <tr><td class="m">mail.thread · mail.message · mail.followers</td><td class="m">mail</td><td><span class="pill have">record discussion</span></td></tr>
+    <tr><td class="m">mail.template</td><td class="m">mail</td><td><span class="pill cost">Word templates + MJML</span></td></tr>
+    <tr><td class="m">crm.team</td><td class="m">sales_team</td><td><span class="pill have">Sales Teams</span></td></tr>
+    <tr><td class="m">utm.campaign / .source / .medium</td><td class="m">utm</td><td><span class="pill have">Campaigns · Sources · Mediums</span></td></tr>
+    <tr><td class="m">account.analytic.account / .line</td><td class="m">analytic</td><td><span class="pill gap">none</span></td></tr>
+    <tr><td class="m">resource.calendar</td><td class="m">resource</td><td><span class="pill gap">none</span></td></tr>
+  </tbody></table></div>
+
+  <div class="note acc col">
+    <p><b>Don't build these — Nocoly already is them.</b> <code>res.users</code> → Collaborator · <code>res.groups</code> → roles · <code>mail.message</code> / <code>mail.thread</code> → record discussion · <code>ir.attachment</code> → the Attachment control · <code>ir.model</code> / <code>ir.model.fields</code> → worksheets and controls · <code>res.lang</code> → platform i18n. Odoo needs these as tables because it is building the platform; you are already standing on one.</p>
+  </div>
+
+  <div class="note col">
+    <p><b>Four gaps that will bite.</b> <code>account.analytic.account</code> and <code>.line</code> — Project, Timesheet and Expenses all post to analytic lines and none of them work without it. <code>account.journal</code> + <code>account.account</code> — fine while invoices are documents, required the moment Accounting is real. <code>res.country</code> as Text — fiscal positions are selected <em>by country</em> in Odoo, and a Text control can't filter reliably. And <code>account.move</code> being customer-only, which Phase 2 forces.</p>
+  </div>
+</section>
+<section>
+  <div class="col">
+    <p class="eyebrow">Finding five · the Nocoly side</p>
+    <h2>Most of what's built isn't Sales</h2>
+    <p>The live app has 40 worksheets across four sections. Read against Odoo's model ownership, the result decides the whole strategy: of the 36 data worksheets, <strong>29 belong to the shared backbone</strong> and only 7 are genuinely Sales-specific.</p>
+  </div>
+  <div class="cov col">
+    <div class="covbar"><span class="a">29 shared backbone</span><span class="b">7 Sales</span></div>
+    <div class="covkey">
+      <span class="ka"><i></i>Reusable by every future app, as-is</span>
+      <span class="kb"><i></i>Belongs to Sales alone</span>
+    </div>
+  </div>
+  <div class="col">
+    <p>Eighty-one percent of the build is a platform asset that happens to live in the Sales app. The expensive layer is already done.</p>
+  </div>
+  <div class="tw"><table>
+    <thead><tr><th>Nocoly worksheet</th><th>Odoo model</th><th>Owner</th><th>Reuse</th></tr></thead><tbody>
+      <tr><td>Customers</td><td class="m">res.partner</td><td class="m">base</td><td><span class="pill have">every app</span></td></tr>
+      <tr><td>Products · Product Variants · Categories</td><td class="m">product.template / .product / .category</td><td class="m">product</td><td><span class="pill have">every app</span></td></tr>
+      <tr><td>Units &amp; Packagings</td><td class="m">uom.uom</td><td class="m">uom</td><td><span class="pill have">every app</span></td></tr>
+      <tr><td>Taxes · Fiscal Positions · Payment Terms · Payment Methods · Incoterms</td><td class="m">account.tax / .fiscal.position / …</td><td class="m">account</td><td><span class="pill have">every app</span></td></tr>
+      <tr><td>Invoices · Invoice Lines</td><td class="m">account.move / .move.line</td><td class="m">account</td><td><span class="pill have">every app</span></td></tr>
+      <tr><td>Activity Types · Plans · Plan Steps</td><td class="m">mail.activity.*</td><td class="m">mail</td><td><span class="pill have">every app</span></td></tr>
+      <tr><td>Campaigns · Sources · Mediums</td><td class="m">utm.*</td><td class="m">utm</td><td><span class="pill have">CRM, Marketing</span></td></tr>
+      <tr><td>Pricelists · Price Rules · Attributes · Combos</td><td class="m">product.pricelist / .attribute / .combo</td><td class="m">product</td><td><span class="pill have">Sales, POS, eComm</span></td></tr>
+      <tr><td>Sales Teams</td><td class="m">crm.team</td><td class="m">sales_team</td><td><span class="pill have">Sales, CRM</span></td></tr>
+      <tr><td>Projects</td><td class="m">project.project</td><td class="m">project</td><td><span class="pill have">stub, ready</span></td></tr>
+      <tr><td>Orders · Order Lines</td><td class="m">sale.order / .order.line</td><td class="m">sale</td><td><span class="pill sales">Sales only</span></td></tr>
+      <tr><td>Templates · Template Lines · Headers/Footers</td><td class="m">sale.order.template / .line</td><td class="m">sale_management</td><td><span class="pill sales">Sales only</span></td></tr>
+      <tr><td>Settings · Services &amp; Material</td><td class="m">res.config.settings</td><td class="m">base_setup</td><td><span class="pill sales">Sales only</span></td></tr>
+  </tbody></table></div>
+
+  <div class="col" style="margin-top:30px">
+    <h3 style="font-family:Archivo,sans-serif;font-size:18px">The enabling fact</h3>
+    <p>Whether any of this works hinges on one platform question: can a worksheet in a new app relate to a worksheet living in the Sales app? Reading the live Orders worksheet through the v3 API answers it.</p>
+  </div>
+  <div class="proof">
+<pre><span class="cm">GET /api/v3/app/worksheets/6a9e38ccf363582dd3794504   → Orders, 86 fields, 18 relations</span>
+
+{ "name": "Customer",
+  "type": "Relation",
+  <span class="hi">"dataSource": "6a9e38961204328eb1adf458"</span>,   <span class="cm">← bare worksheetId</span>
+  "subType": 1 }                              <span class="cm">  no appId. no app scope.</span></pre>
+  </div>
+  <div class="note col">
+    <p><b>Verify once before Phase 1.</b> The stored shape permits cross-app relations; what this cannot confirm from the API alone is whether the form designer's relation picker will <em>offer</em> worksheets from another app, or whether roles need widening for a user to traverse the link. Test it on a throwaway worksheet in a throwaway app — one Relation control pointed at Products, set via <code>ws.add_controls</code>, read back, then opened in the UI. If the picker refuses but the API accepts, build relations through the API. If cross-app relations fail outright, the fallback in rule 02 applies.</p>
+  </div>
+</section>
+
+<section>
+  <p class="eyebrow">Translating</p>
+  <div class="col"><h2>Odoo's vocabulary in Nocoly's</h2>
+  <p>Every Odoo construct in this document has a Nocoly equivalent. This is the lookup the rest of the plan is written against — from here on the roadmap speaks in worksheets and controls, not models and fields.</p></div>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Odoo</th><th>Nocoly / HAP</th><th>Note</th></tr></thead>
+      <tbody>
+        <tr><td class="m">module (app)</td><td class="m"><b>app</b> + sections</td><td>One Odoo app → one Nocoly app</td></tr>
+        <tr><td class="m">model</td><td class="m"><b>worksheet</b></td><td>The table; addressed by worksheetId</td></tr>
+        <tr><td class="m">field</td><td class="m"><b>control</b></td><td>Added with <code>ws.add_controls</code></td></tr>
+        <tr><td class="m">Many2one</td><td class="m"><b>Relation</b> subType 1</td><td><code>dataSource</code> = target worksheetId — <strong>no appId, so it crosses apps</strong></td></tr>
+        <tr><td class="m">One2many / Many2many</td><td class="m"><b>Relation</b> subType 2</td><td>Mounted as a <b>subtable</b> on the form for line tables</td></tr>
+        <tr><td class="m">Selection</td><td class="m"><b>Dropdown</b> / Options</td><td><code>hide:true</code> hides a state until it's current</td></tr>
+        <tr><td class="m">Char / Text / Html</td><td class="m"><b>Text</b> / <b>RichText</b></td><td></td></tr>
+        <tr><td class="m">Integer / Float</td><td class="m"><b>Number</b></td><td></td></tr>
+        <tr><td class="m">Monetary</td><td class="m"><b>Currency</b></td><td>MYR set in <code>advanced_setting</code></td></tr>
+        <tr><td class="m">Date / Datetime</td><td class="m"><b>Date</b></td><td></td></tr>
+        <tr><td class="m">Boolean</td><td class="m"><b>Checkbox</b></td><td>Hidden flags drive button gating</td></tr>
+        <tr><td class="m">Binary / attachment</td><td class="m"><b>Attachment</b></td><td></td></tr>
+        <tr><td class="m">Many2one to res.users</td><td class="m"><b>Collaborator</b></td><td>Native — never build a Users worksheet</td></tr>
+        <tr><td class="m">compute + store</td><td class="m"><b>Formula</b> or <b>Rollup</b></td><td>Rollup aggregates a subtable; Formula computes in-row</td></tr>
+        <tr><td class="m">related=</td><td class="m"><b>Lookup</b></td><td>Reads through a Relation, e.g. line Taxes → Tax Amount</td></tr>
+        <tr><td class="m">sequence / name_get</td><td class="m"><b>AutoNumber</b></td><td>S000xx, INV/2026/xxxx</td></tr>
+        <tr><td class="m">@api.depends recompute</td><td class="m"><b>workflow</b> on the related worksheet</td><td>HAP has no dependency graph — recompute is an explicit trigger</td></tr>
+        <tr><td class="m">button / action method</td><td class="m"><b>custom action button</b> + workflow</td><td>Gated with <code>enableWhen</code></td></tr>
+        <tr><td class="m">ir.rule / record rule</td><td class="m"><b>business rule</b> + <b>role</b></td><td>"Locked orders are read-only"</td></tr>
+        <tr><td class="m">ir.ui.view</td><td class="m"><b>view</b> + form designer</td><td>Sheet views stand in for Odoo's menus</td></tr>
+        <tr><td class="m">_inherit + add field</td><td class="m"><b>append controls</b></td><td>The whole bridge pattern, in one row</td></tr>
+        <tr><td class="m">auto_install</td><td class="m">— <b>no equivalent</b></td><td>Must be a manual checklist; see rule 04</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+<section>
+  <p class="eyebrow">The discipline</p>
+  <div class="col"><h2>Five operating rules</h2>
+  <p>Each one is Odoo's own discipline, restated in Nocoly's terms.</p></div>
+  <div class="rules">
+    <div class="rule"><span class="num">01</span><div>
+      <h4>Master data stays in the worksheets it already lives in</h4>
+      <p>Do not migrate Products, Customers or Taxes into a new "Core" app. Moving them breaks every Relation, Lookup, Rollup, Formula and workflow in the Sales build — the restructuring this plan exists to avoid. Promote them <em>in name only</em>: record in <code>state/</code> that these 29 worksheets are platform-owned and Sales is merely their first tenant.</p></div></div>
+    <div class="rule"><span class="num">02</span><div>
+      <h4>One Odoo app, one Nocoly app</h4>
+      <p>Purchase gets its own app holding only the worksheets Odoo's <code>purchase</code> module defines. Everything shared is reached by a Relation control whose <code>dataSource</code> is the existing worksheetId. One Products table, many consumers.</p>
+      <p>If cross-app relations turn out to be blocked, fall back to adding a new <b>section</b> inside the existing app and renaming the app to something neutral. That is a section-level change, not a worksheet-level one — still no rerouting.</p></div></div>
+    <div class="rule"><span class="num">03</span><div>
+      <h4>Coupling ships as an append-only bridge pack</h4>
+      <p>The Nocoly equivalent of <code>sale_stock</code> is a named, documented set of controls appended to existing worksheets plus the workflows that maintain them. Applied with <code>ws.add_controls</code>, never a controls round-trip, and never through <code>direct.save</code> on Orders. This is already the house rule for Orders; rule 03 makes it the rule for every worksheet a bridge touches.</p></div></div>
+    <div class="rule"><span class="num">04</span><div>
+      <h4>Build the bridge only when both towers stand</h4>
+      <p>Nocoly has no <code>auto_install</code>, so the trigger has to be a checklist rather than the platform. Keep one file per pair — <code>state/bridge_sale_purchase.json</code> — listing the controls it appends, the workflows it owns and the invariants it must not break. A bridge pack is a deliverable in its own right, scheduled after both apps are standing, never smuggled into either app's build.</p></div></div>
+    <div class="rule"><span class="num">05</span><div>
+      <h4>Every phase ends on the same invariants</h4>
+      <p>The existing check stands unchanged after each phase: orders S00009–S00016 = 8 orders, 21 lines, RM 961,400.65, statuses unchanged; INV/2026/0003 and 0008 untouched. A new app that moves those numbers has reached into Sales and must be backed out. This is the tripwire that proves "no major changes" held.</p></div></div>
+  </div>
+</section>
+
+<section>
+  <p class="eyebrow">The order</p>
+  <div class="col"><h2>Build the foundation once, then add towers</h2>
+  <p>The foundation is already poured. Twenty-nine of the thirty-six worksheets in the Sales app are shared backbone — Products, Customers, Taxes, Units, Invoices — and every app above reuses them by Relation control rather than copying them. Each new app is a tower of its own worksheets standing on that slab, clipped to Sales by a handful of appended controls.</p></div>
+  <figure class="fig">
+    <p class="scrollnote">Wide diagram — scroll sideways on a narrow screen.</p>
+    <div class="bwrap"><svg viewBox="0 0 1120 730" role="img" class="brickssvg" aria-label="A build diagram: a foundation slab of 29 shared Nocoly worksheets already built, carrying six app towers — Sales already built, then CRM, Purchase, Inventory, Project and Manufacturing to be added one phase at a time, each attaching to Sales by a small number of appended controls.">
+<rect class="fslab" x="40" y="552" width="1040" height="159" rx="2"/>
+<text class="flabel" x="50" y="544">FOUNDATION — 29 shared worksheets, already built · reused by every app above</text>
+<g><rect class="brick found" x="50.0" y="559" width="165.0" height="25" rx="1.5"/><text class="btext found" x="132.5" y="574.9" text-anchor="middle">Customers</text></g>
+<g><rect class="brick found" x="221.0" y="559" width="165.0" height="25" rx="1.5"/><text class="btext found" x="303.5" y="574.9" text-anchor="middle">Products</text></g>
+<g><rect class="brick found" x="392.0" y="559" width="165.0" height="25" rx="1.5"/><text class="btext found" x="474.5" y="574.9" text-anchor="middle">Product Variants</text></g>
+<g><rect class="brick found" x="563.0" y="559" width="165.0" height="25" rx="1.5"/><text class="btext found" x="645.5" y="574.9" text-anchor="middle">Categories</text></g>
+<g><rect class="brick found" x="734.0" y="559" width="165.0" height="25" rx="1.5"/><text class="btext found" x="816.5" y="574.9" text-anchor="middle">Units &amp; Packagings</text></g>
+<g><rect class="brick found" x="905.0" y="559" width="165.0" height="25" rx="1.5"/><text class="btext found" x="987.5" y="574.9" text-anchor="middle">Sales Teams</text></g>
+<g><rect class="brick found" x="50.0" y="588" width="165.0" height="25" rx="1.5"/><text class="btext found" x="132.5" y="603.9" text-anchor="middle">Pricelists</text></g>
+<g><rect class="brick found" x="221.0" y="588" width="165.0" height="25" rx="1.5"/><text class="btext found" x="303.5" y="603.9" text-anchor="middle">Price Rules</text></g>
+<g><rect class="brick found" x="392.0" y="588" width="165.0" height="25" rx="1.5"/><text class="btext found" x="474.5" y="603.9" text-anchor="middle">Attributes</text></g>
+<g><rect class="brick found" x="563.0" y="588" width="165.0" height="25" rx="1.5"/><text class="btext found" x="645.5" y="603.9" text-anchor="middle">Attribute Values</text></g>
+<g><rect class="brick found" x="734.0" y="588" width="165.0" height="25" rx="1.5"/><text class="btext found" x="816.5" y="603.9" text-anchor="middle">Attr. Lines</text></g>
+<g><rect class="brick found" x="905.0" y="588" width="165.0" height="25" rx="1.5"/><text class="btext found" x="987.5" y="603.9" text-anchor="middle">Attr. Values (tpl)</text></g>
+<g><rect class="brick found" x="50.0" y="617" width="165.0" height="25" rx="1.5"/><text class="btext found" x="132.5" y="632.9" text-anchor="middle">Combo Choices</text></g>
+<g><rect class="brick found" x="221.0" y="617" width="165.0" height="25" rx="1.5"/><text class="btext found" x="303.5" y="632.9" text-anchor="middle">Combo Items</text></g>
+<g><rect class="brick found" x="392.0" y="617" width="165.0" height="25" rx="1.5"/><text class="btext found" x="474.5" y="632.9" text-anchor="middle">Taxes</text></g>
+<g><rect class="brick found" x="563.0" y="617" width="165.0" height="25" rx="1.5"/><text class="btext found" x="645.5" y="632.9" text-anchor="middle">Fiscal Positions</text></g>
+<g><rect class="brick found" x="734.0" y="617" width="165.0" height="25" rx="1.5"/><text class="btext found" x="816.5" y="632.9" text-anchor="middle">Payment Terms</text></g>
+<g><rect class="brick found" x="905.0" y="617" width="165.0" height="25" rx="1.5"/><text class="btext found" x="987.5" y="632.9" text-anchor="middle">Payment Methods</text></g>
+<g><rect class="brick found" x="50.0" y="646" width="165.0" height="25" rx="1.5"/><text class="btext found" x="132.5" y="661.9" text-anchor="middle">Incoterms</text></g>
+<g><rect class="brick found" x="221.0" y="646" width="165.0" height="25" rx="1.5"/><text class="btext found" x="303.5" y="661.9" text-anchor="middle">Invoices</text></g>
+<g><rect class="brick found" x="392.0" y="646" width="165.0" height="25" rx="1.5"/><text class="btext found" x="474.5" y="661.9" text-anchor="middle">Invoice Lines</text></g>
+<g><rect class="brick found" x="563.0" y="646" width="165.0" height="25" rx="1.5"/><text class="btext found" x="645.5" y="661.9" text-anchor="middle">Activity Types</text></g>
+<g><rect class="brick found" x="734.0" y="646" width="165.0" height="25" rx="1.5"/><text class="btext found" x="816.5" y="661.9" text-anchor="middle">Activity Plans</text></g>
+<g><rect class="brick found" x="905.0" y="646" width="165.0" height="25" rx="1.5"/><text class="btext found" x="987.5" y="661.9" text-anchor="middle">Plan Steps</text></g>
+<g><rect class="brick found" x="50.0" y="675" width="199.2" height="25" rx="1.5"/><text class="btext found" x="149.6" y="690.9" text-anchor="middle">Campaigns</text></g>
+<g><rect class="brick found" x="255.2" y="675" width="199.2" height="25" rx="1.5"/><text class="btext found" x="354.8" y="690.9" text-anchor="middle">Sources</text></g>
+<g><rect class="brick found" x="460.4" y="675" width="199.2" height="25" rx="1.5"/><text class="btext found" x="560.0" y="690.9" text-anchor="middle">Mediums</text></g>
+<g><rect class="brick found" x="665.6" y="675" width="199.2" height="25" rx="1.5"/><text class="btext found" x="765.2" y="690.9" text-anchor="middle">Projects</text></g>
+<g><rect class="brick found" x="870.8" y="675" width="199.2" height="25" rx="1.5"/><text class="btext found" x="970.4" y="690.9" text-anchor="middle">Sales Teams (cfg)</text></g>
+<rect class="nameband built" x="41.0" y="500" width="158" height="28" rx="2"/>
+<text class="nameapp built" x="51.0" y="519">Sales</text>
+<text class="badge built" x="190.0" y="518" text-anchor="end">BUILT</text>
+<text class="tagnone" x="120.0" y="485.5" text-anchor="middle">everything attaches here</text>
+<g><rect class="brick built" x="41.0" y="437" width="158" height="25" rx="1.5"/><text class="btext built" x="120.0" y="452.9" text-anchor="middle">Orders</text></g>
+<g><rect class="brick built" x="41.0" y="408" width="158" height="25" rx="1.5"/><text class="btext built" x="120.0" y="423.9" text-anchor="middle">Order Lines</text></g>
+<g><rect class="brick built" x="41.0" y="379" width="158" height="25" rx="1.5"/><text class="btext built" x="120.0" y="394.9" text-anchor="middle">Templates</text></g>
+<g><rect class="brick built" x="41.0" y="350" width="158" height="25" rx="1.5"/><text class="btext built" x="120.0" y="365.9" text-anchor="middle">Template Lines</text></g>
+<g><rect class="brick built" x="41.0" y="321" width="158" height="25" rx="1.5"/><text class="btext built" x="120.0" y="336.9" text-anchor="middle">Headers/Footers</text></g>
+<g><rect class="brick built" x="41.0" y="292" width="158" height="25" rx="1.5"/><text class="btext built" x="120.0" y="307.9" text-anchor="middle">Settings</text></g>
+<g><rect class="brick built" x="41.0" y="263" width="158" height="25" rx="1.5"/><text class="btext built" x="120.0" y="278.9" text-anchor="middle">Services &amp; Material</text></g>
+<text class="count" x="120.0" y="255" text-anchor="middle">7 worksheets</text>
+<rect class="nameband todo" x="217.0" y="500" width="158" height="28" rx="2"/>
+<text class="nameapp todo" x="227.0" y="519">CRM</text>
+<text class="badge todo" x="366.0" y="518" text-anchor="end">PHASE 1</text>
+<rect class="tagbrick" x="217.0" y="470" width="158" height="24" rx="1.5"/>
+<text class="tagtext" x="296.0" y="485.5" text-anchor="middle">+1 control on Orders</text>
+<g><rect class="brick todo" x="217.0" y="437" width="158" height="25" rx="1.5"/><text class="btext todo" x="296.0" y="452.9" text-anchor="middle">Leads</text></g>
+<g><rect class="brick todo" x="217.0" y="408" width="158" height="25" rx="1.5"/><text class="btext todo" x="296.0" y="423.9" text-anchor="middle">Stages</text></g>
+<g><rect class="brick todo" x="217.0" y="379" width="158" height="25" rx="1.5"/><text class="btext todo" x="296.0" y="394.9" text-anchor="middle">Lost Reasons</text></g>
+<g><rect class="brick todo" x="217.0" y="350" width="158" height="25" rx="1.5"/><text class="btext todo" x="296.0" y="365.9" text-anchor="middle">Recurring Plans</text></g>
+<text class="count" x="296.0" y="342" text-anchor="middle">4 worksheets</text>
+<rect class="nameband todo" x="393.0" y="500" width="158" height="28" rx="2"/>
+<text class="nameapp todo" x="403.0" y="519">Purchase</text>
+<text class="badge todo" x="542.0" y="518" text-anchor="end">PHASE 2</text>
+<rect class="tagbrick" x="393.0" y="470" width="158" height="24" rx="1.5"/>
+<text class="tagtext" x="472.0" y="485.5" text-anchor="middle">+3 Orders · +1 Invoices</text>
+<g><rect class="brick todo" x="393.0" y="437" width="158" height="25" rx="1.5"/><text class="btext todo" x="472.0" y="452.9" text-anchor="middle">Purchase Orders</text></g>
+<g><rect class="brick todo" x="393.0" y="408" width="158" height="25" rx="1.5"/><text class="btext todo" x="472.0" y="423.9" text-anchor="middle">PO Lines</text></g>
+<g><rect class="brick todo" x="393.0" y="379" width="158" height="25" rx="1.5"/><text class="btext todo" x="472.0" y="394.9" text-anchor="middle">Bill Matching</text></g>
+<text class="count" x="472.0" y="371" text-anchor="middle">3 worksheets</text>
+<rect class="nameband todo" x="569.0" y="500" width="158" height="28" rx="2"/>
+<text class="nameapp todo" x="579.0" y="519">Inventory</text>
+<text class="badge todo" x="718.0" y="518" text-anchor="end">PHASE 3</text>
+<rect class="tagbrick" x="569.0" y="470" width="158" height="24" rx="1.5"/>
+<text class="tagtext" x="648.0" y="485.5" text-anchor="middle">+27 Orders &amp; Lines</text>
+<g><rect class="brick todo" x="569.0" y="437" width="158" height="25" rx="1.5"/><text class="btext todo" x="648.0" y="452.9" text-anchor="middle">Transfers</text></g>
+<g><rect class="brick todo" x="569.0" y="408" width="158" height="25" rx="1.5"/><text class="btext todo" x="648.0" y="423.9" text-anchor="middle">Stock Moves</text></g>
+<g><rect class="brick todo" x="569.0" y="379" width="158" height="25" rx="1.5"/><text class="btext todo" x="648.0" y="394.9" text-anchor="middle">Move Lines</text></g>
+<g><rect class="brick todo" x="569.0" y="350" width="158" height="25" rx="1.5"/><text class="btext todo" x="648.0" y="365.9" text-anchor="middle">Locations</text></g>
+<g><rect class="brick todo" x="569.0" y="321" width="158" height="25" rx="1.5"/><text class="btext todo" x="648.0" y="336.9" text-anchor="middle">Warehouses</text></g>
+<g><rect class="brick todo" x="569.0" y="292" width="158" height="25" rx="1.5"/><text class="btext todo" x="648.0" y="307.9" text-anchor="middle">Operation Types</text></g>
+<g><rect class="brick todo" x="569.0" y="263" width="158" height="25" rx="1.5"/><text class="btext todo" x="648.0" y="278.9" text-anchor="middle">Lots / Serials</text></g>
+<g><rect class="brick todo" x="569.0" y="234" width="158" height="25" rx="1.5"/><text class="btext todo" x="648.0" y="249.9" text-anchor="middle">Routes</text></g>
+<g><rect class="brick todo" x="569.0" y="205" width="158" height="25" rx="1.5"/><text class="btext todo" x="648.0" y="220.9" text-anchor="middle">Rules</text></g>
+<g><rect class="brick todo" x="569.0" y="176" width="158" height="25" rx="1.5"/><text class="btext todo" x="648.0" y="191.9" text-anchor="middle">On Hand</text></g>
+<text class="count" x="648.0" y="168" text-anchor="middle">10 worksheets</text>
+<rect class="nameband todo" x="745.0" y="500" width="158" height="28" rx="2"/>
+<text class="nameapp todo" x="755.0" y="519">Project</text>
+<text class="badge todo" x="894.0" y="518" text-anchor="end">PHASE 4</text>
+<rect class="tagbrick" x="745.0" y="470" width="158" height="24" rx="1.5"/>
+<text class="tagtext" x="824.0" y="485.5" text-anchor="middle">+17 Orders &amp; Lines</text>
+<g><rect class="brick todo" x="745.0" y="437" width="158" height="25" rx="1.5"/><text class="btext todo" x="824.0" y="452.9" text-anchor="middle">Tasks</text></g>
+<g><rect class="brick todo" x="745.0" y="408" width="158" height="25" rx="1.5"/><text class="btext todo" x="824.0" y="423.9" text-anchor="middle">Task Stages</text></g>
+<g><rect class="brick todo" x="745.0" y="379" width="158" height="25" rx="1.5"/><text class="btext todo" x="824.0" y="394.9" text-anchor="middle">Milestones</text></g>
+<g><rect class="brick todo" x="745.0" y="350" width="158" height="25" rx="1.5"/><text class="btext todo" x="824.0" y="365.9" text-anchor="middle">Project Stages</text></g>
+<g><rect class="brick todo" x="745.0" y="321" width="158" height="25" rx="1.5"/><text class="btext todo" x="824.0" y="336.9" text-anchor="middle">Tags</text></g>
+<g><rect class="brick todo" x="745.0" y="292" width="158" height="25" rx="1.5"/><text class="btext todo" x="824.0" y="307.9" text-anchor="middle">Collaborators</text></g>
+<text class="count" x="824.0" y="284" text-anchor="middle">6 worksheets</text>
+<rect class="nameband todo" x="921.0" y="500" width="158" height="28" rx="2"/>
+<text class="nameapp todo" x="931.0" y="519">Manufacturing</text>
+<text class="badge todo" x="1070.0" y="518" text-anchor="end">PHASE 4</text>
+<rect class="tagbrick" x="921.0" y="470" width="158" height="24" rx="1.5"/>
+<text class="tagtext" x="1000.0" y="485.5" text-anchor="middle">+2 on Orders</text>
+<g><rect class="brick todo" x="921.0" y="437" width="158" height="25" rx="1.5"/><text class="btext todo" x="1000.0" y="452.9" text-anchor="middle">Mfg Orders</text></g>
+<g><rect class="brick todo" x="921.0" y="408" width="158" height="25" rx="1.5"/><text class="btext todo" x="1000.0" y="423.9" text-anchor="middle">Bills of Materials</text></g>
+<g><rect class="brick todo" x="921.0" y="379" width="158" height="25" rx="1.5"/><text class="btext todo" x="1000.0" y="394.9" text-anchor="middle">BoM Lines</text></g>
+<g><rect class="brick todo" x="921.0" y="350" width="158" height="25" rx="1.5"/><text class="btext todo" x="1000.0" y="365.9" text-anchor="middle">Work Centers</text></g>
+<g><rect class="brick todo" x="921.0" y="321" width="158" height="25" rx="1.5"/><text class="btext todo" x="1000.0" y="336.9" text-anchor="middle">Operations</text></g>
+<g><rect class="brick todo" x="921.0" y="292" width="158" height="25" rx="1.5"/><text class="btext todo" x="1000.0" y="307.9" text-anchor="middle">Unbuild Orders</text></g>
+<text class="count" x="1000.0" y="284" text-anchor="middle">6 worksheets</text>
+</svg></div>
+    <figcaption><b>Solid bricks exist today; dashed bricks are still to build.</b> The orange band at each tower's base is its bridge pack — the controls appended to the Sales worksheets when that app arrives. Nothing in the foundation or the Sales tower is rebuilt at any point; towers only ever get added beside it.</figcaption>
+  </figure>
+</section>
+
+<section>
+  <div class="col">
+    <p class="eyebrow">Phase by phase</p>
+    <h2>What each tower actually costs</h2>
+    <p>Ordered by bridge size, not by business value — each phase proves the method at a larger scale than the last. Worksheet IDs are the live ones a Relation control points at.</p>
+  </div>
+
+  <div class="phase">
+    <div class="phase-h"><span class="phase-n">Phase 1</span><h3>CRM</h3></div>
+    <p class="why">The one-control bridge, and so the lowest-risk possible test of the pattern. CRM also finally uses the Campaigns, Sources and Mediums worksheets seeded from Odoo months ago that nothing currently touches.</p>
+    <dl>
+      <dt>New app</dt><dd><span class="mono">CRM</span> — sections <span class="mono">Pipeline</span> · <span class="mono">Configuration</span></dd>
+      <dt>Worksheets</dt><dd><span class="mono">Leads</span> (crm.lead) · <span class="mono">Stages</span> (crm.stage) · <span class="mono">Lost Reasons</span> · <span class="mono">Recurring Plans</span></dd>
+      <dt>Relations out</dt><dd>Leads ▸ Customer → Customers <span class="wsid">6a9e3896…f458</span> · Sales Team → Sales Teams <span class="wsid">6a9e37ff…b55f</span> · Campaign / Source / Medium → the three UTM worksheets · Salesperson → <span class="mono">Collaborator</span></dd>
+      <dt>Bridge pack</dt><dd><span class="v-have">One Relation control "Opportunity" appended to Orders</span> <span class="wsid">6a9e38cc…4504</span> → Leads</dd>
+      <dt>Workflows</dt><dd>"Create quotation from opportunity" — button on Leads that writes an Orders record and links back</dd>
+      <dt>Views</dt><dd>Leads: My Pipeline · All Opportunities · Lost. Odoo's kanban is a sheet view grouped by Stage.</dd>
+    </dl>
+  </div>
+
+  <div class="phase">
+    <div class="phase-h"><span class="phase-n">Phase 2</span><h3>Purchase</h3></div>
+    <p class="why">Three worksheets, because Purchase reuses the Product, Tax, Unit, Payment Terms, Fiscal Position and Incoterm worksheets essentially wholesale. It closes a business loop — vendor bills land in the Invoices worksheet that already exists — which makes it the most visible win per unit of work.</p>
+    <dl>
+      <dt>New app</dt><dd><span class="mono">Purchase</span> — sections <span class="mono">Orders</span> · <span class="mono">Configuration</span></dd>
+      <dt>Worksheets</dt><dd><span class="mono">Purchase Orders</span> (purchase.order) · <span class="mono">PO Lines</span> (purchase.order.line, mounted as a subtable) · <span class="mono">Bill Matching</span> (optional)</dd>
+      <dt>Relations out</dt><dd>PO ▸ Vendor → Customers · Payment Terms · Fiscal Positions · Incoterms · Vendor Bill → Invoices <span class="wsid">6a9e38d1…b66d</span>. PO Lines ▸ Product → Products <span class="wsid">6a9e3899…f462</span> · Unit → Units &amp; Packagings · Taxes → Taxes <span class="wsid">6a9e37ec…b537</span></dd>
+      <dt>Bridge pack</dt><dd><span class="v-have">Invoices: one Dropdown "Move Type"</span> (Customer Invoice · Vendor Bill · Credit Note · Refund) — the decisive append, see below. <span class="v-have">Orders: one Relation "Purchase Orders"</span>; <span class="v-have">Order Lines: two controls</span> (linked PO lines, Rollup count) for made-to-order</dd>
+      <dt>Workflows</dt><dd>"Create vendor bill from PO" — mirrors the existing Create Invoice workflow, writing Invoices with Move Type = Vendor Bill</dd>
+      <dt>Reuses</dt><dd>Taxes drive Tax Amount by the same Lookup → Rollup chain already on Order Lines</dd>
+    </dl>
+  </div>
+
+  <div class="note col">
+    <p><b>Settle the Invoices question before Phase 2, not during it.</b> Odoo models customer invoices and vendor bills as one table, <code>account.move</code>, split by a Move Type field. Your Invoices worksheet is customer-only. Following Odoo means appending one Dropdown now — cheap, and it keeps every existing invoice workflow intact. Building a separate Bills worksheet instead means two numbering schemes, two posting workflows and two reporting paths forever.</p>
+  </div>
+
+  <div class="phase big">
+    <div class="phase-h"><span class="phase-n">Phase 3</span><h3>Inventory</h3></div>
+    <p class="why">The expensive one, and the reason to do it third rather than first. Ten worksheets and a 27-control bridge — but it is also the phase that retires real debt: Deliver, Delivered Qty and delivery-policy invoicing are currently hand-modelled in the Sales app, and Inventory replaces the stand-in with the real mechanism.</p>
+    <dl>
+      <dt>New app</dt><dd><span class="mono">Inventory</span> — sections <span class="mono">Operations</span> · <span class="mono">Products</span> · <span class="mono">Configuration</span></dd>
+      <dt>Worksheets</dt><dd><span class="mono">Transfers</span> · <span class="mono">Stock Moves</span> · <span class="mono">Move Lines</span> · <span class="mono">Locations</span> · <span class="mono">Warehouses</span> · <span class="mono">Operation Types</span> · <span class="mono">Lots / Serials</span> · <span class="mono">Routes</span> · <span class="mono">Rules</span> · <span class="mono">On Hand</span></dd>
+      <dt>Relations out</dt><dd>Moves ▸ Product → Product Variants <span class="wsid">6a9e38ab…cbd8</span> (variants, not templates — stock moves the variant) · Unit → Units &amp; Packagings · Transfers ▸ Partner → Customers</dd>
+      <dt>Bridge pack</dt><dd><span class="v-bri">Orders: 13 controls</span> — Shipping Policy (Dropdown), Warehouse (Relation), Transfers (Relation), Delivery Count (Rollup), Delivery Status (Formula), Expected / Effective Date. <span class="v-bri">Order Lines: 14 controls</span> — Route, Stock Moves, Qty to Deliver, Free Qty Today, Is Storable, Customer Lead. Incoterm already exists.</dd>
+      <dt>Replaces</dt><dd>The hand-built <b>Deliver</b> button and its Delivered Qty writes become move-driven; the Invoice Status workflow reads real delivered quantities instead of the button's</dd>
+      <dt>Watch for</dt><dd>Odoo routes this bridge through <code>stock_account</code>, so stock valuation arrives with it whether or not it's wanted — decide up front whether to model it</dd>
+    </dl>
+  </div>
+
+  <div class="phase">
+    <div class="phase-h"><span class="phase-n">Phase 4+</span><h3>Then by appetite</h3></div>
+    <p class="why">After Inventory the graph opens up and order becomes a business question rather than an architectural one. Costs below are what remains once Phases 1–3 are in.</p>
+    <dl>
+      <dt>Project</dt><dd>6 worksheets · bridge 17 controls · needs an <span class="mono">Analytic Accounts</span> + <span class="mono">Analytic Lines</span> pair first — see the gaps below</dd>
+      <dt>Manufacturing</dt><dd>6 worksheets · <span class="v-have">bridge 2 controls</span> — cheap to attach, but requires Inventory standing first</dd>
+      <dt>Employees</dt><dd>5 worksheets · <b>no Sales bridge at all</b> — fully independent, can be built in parallel with any phase</dd>
+      <dt>Point of Sale</dt><dd>10+ worksheets · heaviest in the plan; hard-requires both Inventory and Invoicing</dd>
+    </dl>
+  </div>
+</section>
+<section>
+  <div class="col">
+    <p class="eyebrow">Before Phase 1</p>
+    <h2>What to settle first</h2>
+    <ul class="checks">
+      <li><b>Prove the cross-app Relation.</b> Throwaway app, throwaway worksheet, one Relation control pointed at Products, read back and opened in the UI. Everything downstream assumes this works.</li>
+      <li><b>Check role traversal.</b> A CRM user who can open a Lead must be able to read the Customers row it relates to, which lives in another app. Confirm how roles behave across that boundary before designing permissions twice.</li>
+      <li><b>Write the backbone registry.</b> One file in <code>state/</code> listing the 29 shared worksheets, their IDs, and the rule that changes to them are now cross-app changes needing the invariant check.</li>
+      <li><b>Decide the Move Type append on Invoices.</b> Cheaper now than after Phase 2, and it decides whether vendor bills are one worksheet or two forever.</li>
+      <li><b>Close out or park the paused work.</b> Attributes &amp; Variants is half-built with a disabled generation workflow and leftover test records; the UI click-through has an open checklist and its own records to soft-delete. Both touch worksheets the new apps lean on, so finishing them keeps Phase 1 from inheriting ambiguity.</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <div class="col">
+    <p class="eyebrow">Caveats</p>
+    <h2>What the counts do and don't mean</h2>
+  </div>
+  <div class="note col">
+    <p><b>Enterprise apps are listed but not measured.</b> 23 of the 49 catalogue apps ship only in Odoo Enterprise and have no module in this repository, so their dependencies and bridges cannot be read from source. They appear in the catalogue above with their known module names and nothing else.</p>
+    <p><b>Two catalogue apps are thin wrappers.</b> The Sales app is <code>sale_management</code>, which is <code>sale</code> plus a dashboard — the substance is in <code>sale</code>, so that is what is measured. Events is <code>event</code> plus <code>website_event</code> for the public site.</p>
+    <p><b>Repair is included though it isn't on the catalogue page</b>, because it bridges to Sales, Purchase, Manufacturing and Point of Sale and leaving it out would make those counts look wrong.</p>
+    <p><b>Bridge counts are pair-level, not effort-level.</b> One bridge can be a single field (<code>sale_crm</code>) or twenty-seven (<code>sale_stock</code>). The ring and the bar chart show how many bridges join a pair, not how much work each carries — the phase cards do that.</p>
+  </div>
+</section>
+
+<footer class="col">
+  <p>App list fetched from odoo.com/page/all-apps. Dependency graph parsed from 662 <code>__manifest__.py</code> files at ca1phas/odoo 7bbce824 (19.0 Community); model ownership resolved by class scan excluding extension classes; reference counts are distinct modules pointing a relational field at each model. Nocoly structure read live from the v3 API, read-only, on 14 Sep 2026. No writes were made to either tenant.</p>
+</footer>
+
+</div>
+<script>
+const APPS={"Website":{"m":"website","c":"Website","cl":16,"req":["Discuss"],"md":["utm"],"cn":{"CRM":["website_crm","website_crm_sms","website_event_crm"],"Email Marketing":["mass_mailing_event_track","mass_mailing_event_track_sms","mass_mailing_slides","website_mass_mailing"],"Employees":["hr_skills_slides","website_hr_recruitment","website_timesheet"],"Events":["website_event_booth_sale","website_event_sale"],"Inventory":["website_sale_mondialrelay","website_sale_stock"],"Invoicing":["website_event_booth_sale","website_event_sale","website_payment","website_sale_loyalty"],"Live Chat":["website_livechat"],"Manufacturing":["website_sale_mrp"],"Project":["website_project","website_timesheet"],"Recruitment":["website_hr_recruitment"],"SMS Marketing":["mass_mailing_event_track_sms","website_mass_mailing_sms"],"Sales":["website_event_booth_sale","website_event_sale","website_sale_loyalty"],"Survey":["website_slides_survey"],"Timesheet":["website_timesheet"]},"bt":21},"eCommerce":{"m":"website_sale","c":"Website","cl":32,"req":["Discuss","Invoicing","Sales","Website"],"md":["account","analytic","delivery","payment","product","sales_team","uom","utm"],"cn":{"Email Marketing":["website_sale_mass_mailing"],"Events":["website_event_booth_sale","website_event_sale"],"Inventory":["website_sale_mondialrelay","website_sale_stock"],"Manufacturing":["website_sale_mrp"]},"bt":6},"Blog":{"m":"website_blog","c":"Website","cl":19,"req":["Discuss","Website"],"md":["utm"],"cn":{},"bt":0},"Forum":{"m":"website_forum","c":"Website","cl":21,"req":["Discuss","Website"],"md":["utm"],"cn":{"eLearning":["website_slides_forum"]},"bt":1},"eLearning":{"m":"website_slides","c":"Website","cl":23,"req":["Discuss","Website"],"md":["utm"],"cn":{"Email Marketing":["mass_mailing_slides"],"Employees":["hr_skills_slides"],"Forum":["website_slides_forum"],"Survey":["website_slides_survey"]},"bt":4},"Live Chat":{"m":"im_livechat","c":"Website","cl":14,"req":["Discuss"],"md":["utm"],"cn":{"CRM":["crm_livechat","website_crm_livechat"],"Employees":["hr_livechat"],"Website":["website_livechat"]},"bt":4},"CRM":{"m":"crm","c":"Sales","cl":17,"req":["Discuss"],"md":["sales_team","utm"],"cn":{"Email Marketing":["mass_mailing_crm"],"Events":["event_crm"],"Invoicing":["event_crm_sale","sale_crm"],"Live Chat":["crm_livechat","website_crm_livechat"],"SMS Marketing":["mass_mailing_crm_sms"],"Sales":["event_crm_sale","sale_crm"],"Survey":["survey_crm"],"Website":["website_crm","website_crm_sms","website_event_crm"]},"bt":11},"Sales":{"m":"sale","c":"Sales","cl":21,"req":["Discuss","Invoicing"],"md":["account","analytic","payment","product","sales_team","uom","utm"],"cn":{"CRM":["event_crm_sale","sale_crm"],"Email Marketing":["mass_mailing_sale","website_sale_mass_mailing"],"Employees":["project_sale_expense","sale_expense","sale_timesheet"],"Events":["event_sale","pos_event_sale","website_event_booth_sale","website_event_sale"],"Expenses":["project_sale_expense","sale_expense"],"Inventory":["pos_sale","project_mrp_sale","sale_project_stock","sale_project_stock_account","sale_purchase_stock","sale_stock"],"Manufacturing":["mrp_repair","mrp_subcontracting_dropshipping","mrp_subcontracting_repair","project_mrp_sale","sale_mrp"],"Point of Sale":["pos_repair","pos_sale"],"Project":["project_mrp_sale","project_sale_expense","sale_project","sale_project_stock","sale_purchase_project"],"Purchase":["purchase_repair","sale_purchase","sale_purchase_project","sale_purchase_stock"],"SMS Marketing":["mass_mailing_sale_sms"],"Timesheet":["sale_timesheet"],"Website":["website_event_booth_sale","website_event_sale","website_sale_loyalty"]},"bt":28},"Point of Sale":{"m":"point_of_sale","c":"Sales","cl":27,"req":["Discuss","Inventory","Invoicing"],"md":["account","analytic","product","stock_account","uom"],"cn":{"Employees":["pos_hr"],"Events":["pos_event"],"Manufacturing":["pos_mrp"],"Repair":["pos_repair"],"Sales":["pos_repair","pos_sale"]},"bt":5},"Invoicing":{"m":"account","c":"Finance","cl":16,"req":["Discuss"],"md":["analytic","product","uom"],"cn":{"CRM":["event_crm_sale","sale_crm"],"Email Marketing":["mass_mailing_sale","website_sale_mass_mailing"],"Employees":["pos_hr","sale_timesheet"],"Events":["event_product","website_event_booth_sale","website_event_sale"],"Fleet":["account_fleet"],"Inventory":["project_mrp_sale","project_purchase_stock","stock_account"],"Manufacturing":["mrp_account","mrp_landed_costs","mrp_repair","mrp_subcontracting_dropshipping","mrp_subcontracting_landed_costs","mrp_subcontracting_repair","pos_mrp","project_mrp_sale","purchase_mrp","sale_mrp"],"Project":["project_account","project_mrp_account","project_mrp_sale","project_stock_account"],"SMS Marketing":["mass_mailing_sale_sms"],"Timesheet":["sale_timesheet"],"Website":["website_event_booth_sale","website_event_sale","website_payment","website_sale_loyalty"]},"bt":28},"Expenses":{"m":"hr_expense","c":"Finance","cl":20,"req":["Discuss","Employees","Invoicing"],"md":["account","analytic","product","uom"],"cn":{"Project":["project_hr_expense","project_sale_expense"],"Sales":["project_sale_expense","sale_expense"]},"bt":3},"Inventory":{"m":"stock","c":"Inventory & Manufacturing","cl":16,"req":["Discuss"],"md":["product","uom"],"cn":{"Employees":["pos_hr"],"Events":["pos_event"],"Invoicing":["project_mrp_sale","project_purchase_stock","stock_account"],"Maintenance":["stock_maintenance"],"Project":["project_mrp","project_mrp_sale","project_stock","sale_project_stock"],"Purchase":["project_purchase_stock","purchase_stock","sale_purchase_stock"],"Sales":["pos_sale","project_mrp_sale","sale_project_stock","sale_project_stock_account","sale_purchase_stock","sale_stock"],"Website":["website_sale_mondialrelay","website_sale_stock"],"eCommerce":["website_sale_mondialrelay","website_sale_stock"]},"bt":16},"Manufacturing":{"m":"mrp","c":"Inventory & Manufacturing","cl":17,"req":["Discuss","Inventory"],"md":["product","uom"],"cn":{"Invoicing":["mrp_account","mrp_landed_costs","mrp_repair","mrp_subcontracting_dropshipping","mrp_subcontracting_landed_costs","mrp_subcontracting_repair","pos_mrp","project_mrp_sale","purchase_mrp","sale_mrp"],"Point of Sale":["pos_mrp"],"Project":["project_mrp","project_mrp_sale"],"Purchase":["mrp_landed_costs","mrp_subcontracting_dropshipping","mrp_subcontracting_landed_costs","purchase_mrp"],"Repair":["mrp_repair","mrp_subcontracting_repair"],"Sales":["mrp_repair","mrp_subcontracting_dropshipping","mrp_subcontracting_repair","project_mrp_sale","sale_mrp"],"Website":["website_sale_mrp"],"eCommerce":["website_sale_mrp"]},"bt":12},"Purchase":{"m":"purchase","c":"Inventory & Manufacturing","cl":17,"req":["Discuss","Invoicing"],"md":["account","analytic","product","uom"],"cn":{"Inventory":["project_purchase_stock","purchase_stock","sale_purchase_stock"],"Manufacturing":["mrp_landed_costs","mrp_subcontracting_dropshipping","mrp_subcontracting_landed_costs","purchase_mrp"],"Project":["project_mrp_stock_landed_costs","project_purchase","project_stock_landed_costs","sale_purchase_project"],"Repair":["purchase_repair"],"Sales":["purchase_repair","sale_purchase","sale_purchase_project","sale_purchase_stock"]},"bt":13},"Maintenance":{"m":"maintenance","c":"Inventory & Manufacturing","cl":7,"req":["Discuss"],"md":[],"cn":{"Employees":["hr_maintenance"],"Inventory":["stock_maintenance"]},"bt":2},"Employees":{"m":"hr","c":"Human Resources","cl":14,"req":["Discuss"],"md":[],"cn":{"Events":["hr_skills_event"],"Fleet":["hr_fleet"],"Inventory":["pos_hr"],"Invoicing":["pos_hr","sale_timesheet"],"Live Chat":["hr_livechat"],"Maintenance":["hr_maintenance"],"Point of Sale":["pos_hr"],"Project":["project_hr_expense","project_hr_skills","project_sale_expense"],"Sales":["project_sale_expense","sale_expense","sale_timesheet"],"Survey":["hr_skills_survey"],"Website":["hr_skills_slides","website_hr_recruitment","website_timesheet"],"eLearning":["hr_skills_slides"]},"bt":14},"Recruitment":{"m":"hr_recruitment","c":"Human Resources","cl":18,"req":["Discuss","Employees"],"md":["utm"],"cn":{"Website":["website_hr_recruitment"]},"bt":1},"Time Off":{"m":"hr_holidays","c":"Human Resources","cl":16,"req":["Discuss","Employees"],"md":[],"cn":{"Project":["project_timesheet_holidays"],"Timesheet":["project_timesheet_holidays"]},"bt":1},"Fleet":{"m":"fleet","c":"Human Resources","cl":7,"req":["Discuss"],"md":[],"cn":{"Employees":["hr_fleet"],"Invoicing":["account_fleet"]},"bt":2},"Email Marketing":{"m":"mass_mailing","c":"Marketing","cl":17,"req":["Discuss"],"md":["utm"],"cn":{"CRM":["mass_mailing_crm"],"Events":["mass_mailing_event","mass_mailing_event_sms","mass_mailing_event_track","mass_mailing_event_track_sms"],"Invoicing":["mass_mailing_sale","website_sale_mass_mailing"],"Sales":["mass_mailing_sale","website_sale_mass_mailing"],"Website":["mass_mailing_event_track","mass_mailing_event_track_sms","mass_mailing_slides","website_mass_mailing"],"eCommerce":["website_sale_mass_mailing"],"eLearning":["mass_mailing_slides"]},"bt":9},"SMS Marketing":{"m":"mass_mailing_sms","c":"Marketing","cl":22,"req":["Discuss","Email Marketing"],"md":["utm"],"cn":{"CRM":["mass_mailing_crm_sms"],"Events":["mass_mailing_event_sms","mass_mailing_event_track_sms"],"Invoicing":["mass_mailing_sale_sms"],"Sales":["mass_mailing_sale_sms"],"Website":["mass_mailing_event_track_sms","website_mass_mailing_sms"]},"bt":5},"Events":{"m":"event","c":"Marketing","cl":13,"req":["Discuss"],"md":["utm"],"cn":{"CRM":["event_crm"],"Email Marketing":["mass_mailing_event","mass_mailing_event_sms","mass_mailing_event_track","mass_mailing_event_track_sms"],"Employees":["hr_skills_event"],"Inventory":["pos_event"],"Invoicing":["event_product","website_event_booth_sale","website_event_sale"],"Point of Sale":["pos_event"],"SMS Marketing":["mass_mailing_event_sms","mass_mailing_event_track_sms"],"Sales":["event_sale","pos_event_sale","website_event_booth_sale","website_event_sale"],"Website":["website_event_booth_sale","website_event_sale"],"eCommerce":["website_event_booth_sale","website_event_sale"]},"bt":12},"Survey":{"m":"survey","c":"Marketing","cl":10,"req":["Discuss"],"md":[],"cn":{"CRM":["survey_crm"],"Employees":["hr_skills_survey"],"Website":["website_slides_survey"],"eLearning":["website_slides_survey"]},"bt":3},"Project":{"m":"project","c":"Services","cl":15,"req":["Discuss"],"md":["analytic","uom"],"cn":{"Employees":["project_hr_expense","project_hr_skills","project_sale_expense"],"Expenses":["project_hr_expense","project_sale_expense"],"Inventory":["project_mrp","project_mrp_sale","project_stock","sale_project_stock"],"Invoicing":["project_account","project_mrp_account","project_mrp_sale","project_stock_account"],"Manufacturing":["project_mrp","project_mrp_sale"],"Purchase":["project_mrp_stock_landed_costs","project_purchase","project_stock_landed_costs","sale_purchase_project"],"Sales":["project_mrp_sale","project_sale_expense","sale_project","sale_project_stock","sale_purchase_project"],"Time Off":["project_timesheet_holidays"],"Website":["website_project","website_timesheet"]},"bt":18},"Timesheet":{"m":"hr_timesheet","c":"Services","cl":20,"req":["Discuss","Employees","Project"],"md":["analytic","uom"],"cn":{"Invoicing":["sale_timesheet"],"Sales":["sale_timesheet"],"Time Off":["project_timesheet_holidays"],"Website":["website_timesheet"]},"bt":3},"Discuss":{"m":"mail","c":"Productivity","cl":6,"req":[],"md":[],"cn":{},"bt":0},"Repair":{"m":"repair","c":"Inventory & Manufacturing","cl":28,"req":["Discuss","Inventory","Invoicing","Sales"],"md":["account","analytic","payment","product","sales_team","stock_account","uom","utm"],"cn":{"Manufacturing":["mrp_repair","mrp_subcontracting_repair"],"Point of Sale":["pos_repair"],"Purchase":["purchase_repair"]},"bt":4}};
+const MATRIX={"order":["Sales","Invoicing","Inventory","Purchase","Manufacturing","Point of Sale","Repair","CRM","Project","Timesheet","Expenses","Employees","Events","Email Marketing","SMS Marketing","Survey","Website","eCommerce","eLearning","Live Chat","Maintenance","Fleet"],"cells":{"Sales|CRM":2,"Sales|Email Marketing":2,"Sales|Employees":3,"Sales|Events":4,"Sales|Expenses":2,"Sales|Inventory":6,"Sales|Manufacturing":5,"Sales|Point of Sale":2,"Sales|Project":5,"Sales|Purchase":4,"Sales|SMS Marketing":1,"Sales|Timesheet":1,"Sales|Website":3,"Invoicing|CRM":2,"Invoicing|Email Marketing":2,"Invoicing|Employees":2,"Invoicing|Events":3,"Invoicing|Fleet":1,"Invoicing|Inventory":3,"Invoicing|Manufacturing":10,"Invoicing|Project":4,"Invoicing|SMS Marketing":1,"Invoicing|Timesheet":1,"Invoicing|Website":4,"Inventory|Employees":1,"Inventory|Events":1,"Inventory|Invoicing":3,"Inventory|Maintenance":1,"Inventory|Project":4,"Inventory|Purchase":3,"Inventory|Sales":6,"Inventory|Website":2,"Inventory|eCommerce":2,"Purchase|Inventory":3,"Purchase|Manufacturing":4,"Purchase|Project":4,"Purchase|Repair":1,"Purchase|Sales":4,"Manufacturing|Invoicing":10,"Manufacturing|Point of Sale":1,"Manufacturing|Project":2,"Manufacturing|Purchase":4,"Manufacturing|Repair":2,"Manufacturing|Sales":5,"Manufacturing|Website":1,"Manufacturing|eCommerce":1,"Point of Sale|Employees":1,"Point of Sale|Events":1,"Point of Sale|Manufacturing":1,"Point of Sale|Repair":1,"Point of Sale|Sales":2,"Repair|Manufacturing":2,"Repair|Point of Sale":1,"Repair|Purchase":1,"CRM|Email Marketing":1,"CRM|Events":1,"CRM|Invoicing":2,"CRM|Live Chat":2,"CRM|SMS Marketing":1,"CRM|Sales":2,"CRM|Survey":1,"CRM|Website":3,"Project|Employees":3,"Project|Expenses":2,"Project|Inventory":4,"Project|Invoicing":4,"Project|Manufacturing":2,"Project|Purchase":4,"Project|Sales":5,"Project|Website":2,"Timesheet|Invoicing":1,"Timesheet|Sales":1,"Timesheet|Website":1,"Expenses|Project":2,"Expenses|Sales":2,"Employees|Events":1,"Employees|Fleet":1,"Employees|Inventory":1,"Employees|Invoicing":2,"Employees|Live Chat":1,"Employees|Maintenance":1,"Employees|Point of Sale":1,"Employees|Project":3,"Employees|Sales":3,"Employees|Survey":1,"Employees|Website":3,"Employees|eLearning":1,"Events|CRM":1,"Events|Email Marketing":4,"Events|Employees":1,"Events|Inventory":1,"Events|Invoicing":3,"Events|Point of Sale":1,"Events|SMS Marketing":2,"Events|Sales":4,"Events|Website":2,"Events|eCommerce":2,"Email Marketing|CRM":1,"Email Marketing|Events":4,"Email Marketing|Invoicing":2,"Email Marketing|Sales":2,"Email Marketing|Website":4,"Email Marketing|eCommerce":1,"Email Marketing|eLearning":1,"SMS Marketing|CRM":1,"SMS Marketing|Events":2,"SMS Marketing|Invoicing":1,"SMS Marketing|Sales":1,"SMS Marketing|Website":2,"Survey|CRM":1,"Survey|Employees":1,"Survey|Website":1,"Survey|eLearning":1,"Website|CRM":3,"Website|Email Marketing":4,"Website|Employees":3,"Website|Events":2,"Website|Inventory":2,"Website|Invoicing":4,"Website|Live Chat":1,"Website|Manufacturing":1,"Website|Project":2,"Website|SMS Marketing":2,"Website|Sales":3,"Website|Survey":1,"Website|Timesheet":1,"eCommerce|Email Marketing":1,"eCommerce|Events":2,"eCommerce|Inventory":2,"eCommerce|Manufacturing":1,"eLearning|Email Marketing":1,"eLearning|Employees":1,"eLearning|Survey":1,"Live Chat|CRM":2,"Live Chat|Employees":1,"Live Chat|Website":1,"Maintenance|Employees":1,"Maintenance|Inventory":1,"Fleet|Employees":1,"Fleet|Invoicing":1}};
+const ENT=[
+ ["Sales",[["Subscriptions","sale_subscription"],["Rental","sale_renting"]]],
+ ["Finance",[["Accounting","account_accountant"],["Documents","documents"],
+   ["Spreadsheets","documents_spreadsheet"],["Sign","sign"],["ESG","esg"]]],
+ ["Inventory & Manufacturing",[["PLM","mrp_plm"],["Quality","quality_control"]]],
+ ["Human Resources",[["Appraisals","hr_appraisal"],["Referral","hr_referral"]]],
+ ["Marketing",[["Marketing Automation","marketing_automation"],["Social Marketing","social"]]],
+ ["Services",[["Field Service","industry_fsm"],["Helpdesk","helpdesk"],
+   ["Planning","planning"],["Appointments","appointment"]]],
+ ["Productivity",[["Approvals","approvals"],["Internet of Things","iot"],["VOIP","voip"],
+   ["Knowledge","knowledge"],["AI","ai"]]],
+ ["Customization",[["Studio","web_studio"]]],
+];
+const CATS=["Website","Sales","Finance","Inventory & Manufacturing","Human Resources",
+            "Marketing","Services","Productivity","Customization"];
+const NOTE={ "Sales":"measured as <code>sale</code>; the catalogue app is <code>sale_management</code>",
+             "Events":"public site adds <code>website_event</code>",
+             "Repair":"not on the catalogue page — included because other apps bridge to it" };
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const bucket=n=>n>=7?6:n>=5?5:n;
+
+/* ---------- bars ---------- */
+(function(){
+  const rows=Object.entries(APPS).map(([n,d])=>{
+    const top=Object.entries(d.cn).sort((a,b)=>b[1].length-a[1].length).slice(0,3)
+      .map(([k,v])=>`${k} (${v.length})`).join(', ');
+    return {n,v:d.bt,top};
+  }).sort((a,b)=>b.v-a.v||a.n.localeCompare(b.n));
+  const max=Math.max(...rows.map(r=>r.v))||1;
+  document.getElementById('bars').innerHTML=rows.map(r=>
+    `<div class="bar" title="${esc(r.n)} — ${r.v} bridge module${r.v===1?'':'s'}${r.top?'. Biggest partners: '+esc(r.top):''}">
+      <span class="bl">${esc(r.n)}</span>
+      <span class="bt">${r.v?`<i style="width:${Math.max(1.2,r.v/max*100)}%"></i>`:''}</span>
+      <span class="bv">${r.v}</span>
+    </div>`).join('');
+})();
+
+/* ---------- cards ---------- */
+function card(name,d){
+  const req=d.req.filter(x=>x!==name);
+  const cn=Object.entries(d.cn);
+  const note=NOTE[name]?`<div class="blk"><span class="none">${NOTE[name]}</span></div>`:'';
+  return `<article class="card" data-name="${esc(name.toLowerCase())}" data-mod="${esc(d.m)}"
+    data-cat="${esc(d.c)}" data-kind="repo">
+    <div class="ch"><h4>${esc(name)}</h4><span class="md">${esc(d.m)}</span>
+      <span class="cl">${d.cl} modules deep</span></div>
+    <div class="blk"><span class="lbl">Requires</span><div class="pills">${
+      req.length?req.map(r=>`<span class="pill r">${esc(r)}</span>`).join(''):'<span class="none">nothing but the framework</span>'
+    }</div></div>
+    <div class="blk"><span class="lbl">Shared data it uses</span><div class="pills">${
+      d.md.length?d.md.map(m=>`<span class="pill m">${esc(m)}</span>`).join(''):'<span class="none">none</span>'
+    }</div></div>
+    <div class="blk"><span class="lbl">Connects to — ${d.bt} bridge module${d.bt===1?'':'s'}</span>${
+      cn.length?`<div class="conn">${cn.map(([k,v])=>
+        `<div class="cline"><b>${esc(k)}</b><span>${v.map(esc).join(' · ')}</span></div>`).join('')}</div>`
+      :'<span class="none">nothing — fully standalone</span>'
+    }</div>${note}</article>`;
+}
+function entCard(name,mod,cat){
+  return `<article class="card absent" data-name="${esc(name.toLowerCase())}" data-mod="${esc(mod)}"
+    data-cat="${esc(cat)}" data-kind="ent">
+    <div class="ch"><h4>${esc(name)}</h4><span class="md">${esc(mod)}</span>
+      <span class="cl">enterprise</span></div>
+    <div class="blk"><span class="none">Not in this repository — dependencies and bridges can't be read from source.${
+      mod==='documents_spreadsheet'?' The <code>spreadsheet</code> engine does ship in Community.':''
+    }</span></div></article>`;
+}
+(function(){
+  const byCat={}; CATS.forEach(c=>byCat[c]=[]);
+  Object.entries(APPS).forEach(([n,d])=>{(byCat[d.c]=byCat[d.c]||[]).push(card(n,d));});
+  ENT.forEach(([c,list])=>list.forEach(([n,m])=>{(byCat[c]=byCat[c]||[]).push(entCard(n,m,c));}));
+  document.getElementById('cards').innerHTML=CATS.map(c=>{
+    const items=byCat[c]||[]; if(!items.length) return '';
+    return `<div class="catgrp" data-cat="${esc(c)}"><div class="cathead"><h3>${esc(c)}</h3>
+      <span>${items.length} app${items.length===1?'':'s'}</span></div>
+      <div class="grid">${items.join('')}</div></div>`;
+  }).join('');
+})();
+
+/* ---------- filter ---------- */
+(function(){
+  const q=document.getElementById('q'), chips=[...document.querySelectorAll('.chip[data-cat]')];
+  let kind='*';
+  function apply(){
+    const t=q.value.trim().toLowerCase();
+    let shown=0;
+    document.querySelectorAll('.catgrp').forEach(g=>{
+      let vis=0;
+      g.querySelectorAll('.card').forEach(c=>{
+        const okKind = kind==='*' || c.dataset.kind===kind;
+        const okText = !t || c.dataset.name.includes(t) || c.dataset.mod.includes(t)
+                       || c.textContent.toLowerCase().includes(t);
+        const on = okKind && okText;
+        c.hidden = !on; if(on){vis++;shown++;}
+      });
+      g.hidden = vis===0;
+    });
+    document.getElementById('empty').hidden = shown>0;
+  }
+  chips.forEach(b=>b.addEventListener('click',()=>{
+    chips.forEach(x=>x.setAttribute('aria-pressed', x===b?'true':'false'));
+    kind=b.dataset.cat; apply();
+  }));
+  q.addEventListener('input',apply);
+})();
+
+/* ---------- network highlight ---------- */
+(function(){
+  const svg=document.querySelector('.netsvg'); if(!svg)return;
+  const edges=[...svg.querySelectorAll('.edge')], apps=[...svg.querySelectorAll('.napp')];
+  function sel(name){
+    if(!name){svg.classList.remove('sel');
+      edges.forEach(e=>e.classList.remove('on')); apps.forEach(a=>a.classList.remove('on')); return;}
+    svg.classList.add('sel');
+    const near=new Set([name]);
+    edges.forEach(e=>{const on=e.dataset.a===name||e.dataset.b===name;
+      e.classList.toggle('on',on); if(on){near.add(e.dataset.a);near.add(e.dataset.b);}});
+    apps.forEach(a=>a.classList.toggle('on',near.has(a.dataset.app)));
+  }
+  apps.forEach(g=>{
+    g.addEventListener('mouseenter',()=>sel(g.dataset.app));
+    g.addEventListener('focus',()=>sel(g.dataset.app));
+  });
+  svg.addEventListener('mouseleave',()=>sel(null));
+  svg.addEventListener('focusout',e=>{if(!svg.contains(e.relatedTarget))sel(null);});
+})();
+</script>
