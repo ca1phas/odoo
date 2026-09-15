@@ -6,13 +6,14 @@
 | Worksheet | Journals |
 | Odoo model | `account.journal` |
 | Phase | 1 — core worksheet 5 of 7 |
-| Status | **CLI-built — Web form validation pending manual CAPTCHA** |
+| Status | **CLI-built and HAP UI-validated — live Odoo source login pending** |
 | Owner | **Teh Li Wei** (reviewing colleague) |
 | Reference | User-approved `account.journal` core plan; live `casimir.odoo.com` source and HAP form validation are pending |
 
 This document is the Journals handoff and current build record for the ERP Master app. The approved core slice
-was built through hap-cli on 15 September 2026; the browser form check remains pending because Nocoly presented
-a Tencent drag CAPTCHA that the reviewer cannot solve or bypass.
+was built through hap-cli on 15 September 2026. After the user manually completed Nocoly's Tencent CAPTCHA, the
+HAP field editor, list, Archived view and unsaved New form were validated. The live Odoo tenant comparison still
+requires a manual `casimir.odoo.com` login.
 
 ## 1 · Scope and ownership
 
@@ -113,8 +114,8 @@ The build was executed after the Products handoff and correct Nocoly profile bec
    used to save HAP changes.
 6. [x] CLI post-check confirmed field types, defaults, required/hidden settings, view columns and
    record count.
-7. [ ] Web validation of New, Edit, defaults and Archived is pending manual CAPTCHA. The page already shows
-   `ERP Master > Invoicing > Journals`, both view links and `Total 0 row(s)`.
+7. [x] Web validation confirmed Field Editor, New form, defaults, hidden technical fields, Journals/Archived views,
+   English labels, all six Type options and `Total 0 row(s)`; no record was saved.
 8. [x] Every CLI/MCP/UI difference and workaround found so far was added to the limitation register before the worksheet is called
    complete.
 
@@ -135,7 +136,8 @@ is therefore resolved as a wrong-profile/authentication-context issue, not an op
 - List columns: Journal Name, Type, Sequence Prefix; sort: Sequence then Journal Name, ascending.
 - Deferred relation-dependent fields were not created and there are no Phase 1 Relation controls.
 - `Sequence Prefix` carries the English hint `Enter up to 5 characters`, but the installed CLI schema exposes no
-  confirmed text maximum-length parameter. Hard enforcement remains a recorded CLI capability gap.
+  confirmed text maximum-length parameter. The HAP UI accepted `ABCDEF`, so hard enforcement is a confirmed gap.
+- HAP Web validation: passed for the built scope. Live Odoo source validation remains pending manual login.
 
 ### Evidence to retain after the build
 
