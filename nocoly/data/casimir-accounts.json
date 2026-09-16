@@ -1,0 +1,995 @@
+{
+ "_note": "Extracted read-only from casimir.odoo.com (Odoo saas~19.4+e) on 16 Sep 2026 by JSON-RPC in the logged-in browser session. Accounts in code order; `type` is Odoo's account_type key and `type_label` its label. Account references are by code.",
+ "account_types": [
+  {
+   "key": "asset_receivable",
+   "label": "Receivable"
+  },
+  {
+   "key": "asset_cash",
+   "label": "Bank and Cash"
+  },
+  {
+   "key": "asset_current",
+   "label": "Current Assets"
+  },
+  {
+   "key": "asset_non_current",
+   "label": "Non-current Assets"
+  },
+  {
+   "key": "asset_prepayments",
+   "label": "Prepayments"
+  },
+  {
+   "key": "asset_fixed",
+   "label": "Fixed Assets"
+  },
+  {
+   "key": "liability_payable",
+   "label": "Payable"
+  },
+  {
+   "key": "liability_credit_card",
+   "label": "Credit Card"
+  },
+  {
+   "key": "liability_current",
+   "label": "Current Liabilities"
+  },
+  {
+   "key": "liability_non_current",
+   "label": "Non-current Liabilities"
+  },
+  {
+   "key": "equity",
+   "label": "Equity"
+  },
+  {
+   "key": "equity_unaffected",
+   "label": "Current Year Earnings"
+  },
+  {
+   "key": "income",
+   "label": "Income"
+  },
+  {
+   "key": "income_other",
+   "label": "Other Income"
+  },
+  {
+   "key": "expense",
+   "label": "Expenses"
+  },
+  {
+   "key": "expense_other",
+   "label": "Other Expenses"
+  },
+  {
+   "key": "expense_depreciation",
+   "label": "Depreciation"
+  },
+  {
+   "key": "expense_direct_cost",
+   "label": "Cost of Revenue"
+  },
+  {
+   "key": "off_balance",
+   "label": "Off-Balance Sheet"
+  }
+ ],
+ "accounts": [
+  {
+   "code": "110000",
+   "name": "Fixed Assets",
+   "type": "asset_fixed",
+   "type_label": "Fixed Assets",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": ""
+  },
+  {
+   "code": "111000",
+   "name": "Furniture and Fixtures",
+   "type": "asset_non_current",
+   "type_label": "Non-current Assets",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": ""
+  },
+  {
+   "code": "111220",
+   "name": "Funds in Transit",
+   "type": "asset_current",
+   "type_label": "Current Assets",
+   "reconcile": true,
+   "non_trade": false,
+   "active": true,
+   "tags": ""
+  },
+  {
+   "code": "113000",
+   "name": "Equipment",
+   "type": "asset_non_current",
+   "type_label": "Non-current Assets",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": ""
+  },
+  {
+   "code": "114000",
+   "name": "Decoration",
+   "type": "asset_non_current",
+   "type_label": "Non-current Assets",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": ""
+  },
+  {
+   "code": "116000",
+   "name": "Investments",
+   "type": "asset_non_current",
+   "type_label": "Non-current Assets",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": ""
+  },
+  {
+   "code": "120000",
+   "name": "Current Assets",
+   "type": "asset_current",
+   "type_label": "Current Assets",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": ""
+  },
+  {
+   "code": "120001",
+   "name": "Bank",
+   "type": "asset_cash",
+   "type_label": "Bank and Cash",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": ""
+  },
+  {
+   "code": "120002",
+   "name": "Bank Suspense Account",
+   "type": "asset_current",
+   "type_label": "Current Assets",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": ""
+  },
+  {
+   "code": "120003",
+   "name": "Outstanding Receipts",
+   "type": "asset_current",
+   "type_label": "Current Assets",
+   "reconcile": true,
+   "non_trade": false,
+   "active": true,
+   "tags": ""
+  },
+  {
+   "code": "120004",
+   "name": "Outstanding Payments",
+   "type": "asset_current",
+   "type_label": "Current Assets",
+   "reconcile": true,
+   "non_trade": false,
+   "active": true,
+   "tags": ""
+  },
+  {
+   "code": "124000",
+   "name": "Account Receivable",
+   "type": "asset_receivable",
+   "type_label": "Receivable",
+   "reconcile": true,
+   "non_trade": false,
+   "active": true,
+   "tags": ""
+  },
+  {
+   "code": "124100",
+   "name": "Utility & Rental Deposit",
+   "type": "asset_current",
+   "type_label": "Current Assets",
+   "reconcile": true,
+   "non_trade": false,
+   "active": true,
+   "tags": ""
+  },
+  {
+   "code": "124200",
+   "name": "Supplier Prepayments",
+   "type": "asset_current",
+   "type_label": "Current Assets",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": ""
+  },
+  {
+   "code": "124300",
+   "name": "Account Receivable (PoS)",
+   "type": "asset_receivable",
+   "type_label": "Receivable",
+   "reconcile": true,
+   "non_trade": false,
+   "active": true,
+   "tags": ""
+  },
+  {
+   "code": "124500",
+   "name": "Sundry Deposits",
+   "type": "asset_current",
+   "type_label": "Current Assets",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": ""
+  },
+  {
+   "code": "124600",
+   "name": "Other Receivable",
+   "type": "asset_receivable",
+   "type_label": "Receivable",
+   "reconcile": true,
+   "non_trade": false,
+   "active": true,
+   "tags": ""
+  },
+  {
+   "code": "124700",
+   "name": "SST Receivable",
+   "type": "asset_receivable",
+   "type_label": "Receivable",
+   "reconcile": true,
+   "non_trade": true,
+   "active": true,
+   "tags": ""
+  },
+  {
+   "code": "125000",
+   "name": "Stock Interim Account (Received)",
+   "type": "asset_current",
+   "type_label": "Current Assets",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": ""
+  },
+  {
+   "code": "126000",
+   "name": "Stock Interim Account (Delivered)",
+   "type": "asset_current",
+   "type_label": "Current Assets",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": ""
+  },
+  {
+   "code": "127000",
+   "name": "Stock Valuation Account",
+   "type": "asset_current",
+   "type_label": "Current Assets",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": ""
+  },
+  {
+   "code": "210000",
+   "name": "Non-current Liabilities",
+   "type": "liability_non_current",
+   "type_label": "Non-current Liabilities",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": ""
+  },
+  {
+   "code": "220000",
+   "name": "Current Liabilities",
+   "type": "liability_current",
+   "type_label": "Current Liabilities",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": ""
+  },
+  {
+   "code": "221000",
+   "name": "Accruals",
+   "type": "liability_current",
+   "type_label": "Current Liabilities",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": ""
+  },
+  {
+   "code": "221010",
+   "name": "Accruals - KWSP",
+   "type": "liability_current",
+   "type_label": "Current Liabilities",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": ""
+  },
+  {
+   "code": "221020",
+   "name": "Accruals - PCB",
+   "type": "liability_current",
+   "type_label": "Current Liabilities",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": ""
+  },
+  {
+   "code": "221030",
+   "name": "Accruals - SOCSO",
+   "type": "liability_current",
+   "type_label": "Current Liabilities",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": ""
+  },
+  {
+   "code": "221040",
+   "name": "Accruals - EIS",
+   "type": "liability_current",
+   "type_label": "Current Liabilities",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": ""
+  },
+  {
+   "code": "221100",
+   "name": "Account Payable",
+   "type": "liability_payable",
+   "type_label": "Payable",
+   "reconcile": true,
+   "non_trade": false,
+   "active": true,
+   "tags": ""
+  },
+  {
+   "code": "221200",
+   "name": "Receipt in Advance (Customer Prepayments)",
+   "type": "liability_current",
+   "type_label": "Current Liabilities",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": ""
+  },
+  {
+   "code": "221300",
+   "name": "SST Control Account",
+   "type": "liability_current",
+   "type_label": "Current Liabilities",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": ""
+  },
+  {
+   "code": "221400",
+   "name": "Provision for Taxation",
+   "type": "liability_current",
+   "type_label": "Current Liabilities",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": ""
+  },
+  {
+   "code": "221500",
+   "name": "Proposed Dividend",
+   "type": "liability_current",
+   "type_label": "Current Liabilities",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": ""
+  },
+  {
+   "code": "221600",
+   "name": "Other Payable",
+   "type": "liability_payable",
+   "type_label": "Payable",
+   "reconcile": true,
+   "non_trade": false,
+   "active": true,
+   "tags": ""
+  },
+  {
+   "code": "221700",
+   "name": "SST Payable",
+   "type": "liability_payable",
+   "type_label": "Payable",
+   "reconcile": true,
+   "non_trade": true,
+   "active": true,
+   "tags": ""
+  },
+  {
+   "code": "310000",
+   "name": "Paid Capital",
+   "type": "liability_current",
+   "type_label": "Current Liabilities",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": ""
+  },
+  {
+   "code": "320000",
+   "name": "Accumulated Profit & Loss",
+   "type": "liability_current",
+   "type_label": "Current Liabilities",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": ""
+  },
+  {
+   "code": "330000",
+   "name": "Profit & Loss Account",
+   "type": "liability_current",
+   "type_label": "Current Liabilities",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": ""
+  },
+  {
+   "code": "340000",
+   "name": "Short-term Borrowing",
+   "type": "liability_current",
+   "type_label": "Current Liabilities",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": ""
+  },
+  {
+   "code": "410000",
+   "name": "Trade Income",
+   "type": "income",
+   "type_label": "Income",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": "Operating Activities"
+  },
+  {
+   "code": "420000",
+   "name": "Other Income and Gains",
+   "type": "income",
+   "type_label": "Income",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": "Operating Activities"
+  },
+  {
+   "code": "421000",
+   "name": "Sundry Income",
+   "type": "income",
+   "type_label": "Income",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": "Operating Activities"
+  },
+  {
+   "code": "422000",
+   "name": "Exchange Adjustment",
+   "type": "income",
+   "type_label": "Income",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": "Operating Activities"
+  },
+  {
+   "code": "423000",
+   "name": "Bank Interest Income",
+   "type": "income",
+   "type_label": "Income",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": "Operating Activities"
+  },
+  {
+   "code": "424000",
+   "name": "Foreign Exchange Gain",
+   "type": "income",
+   "type_label": "Income",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": "Operating Activities"
+  },
+  {
+   "code": "510000",
+   "name": "Costs",
+   "type": "expense",
+   "type_label": "Expenses",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": "Operating Activities"
+  },
+  {
+   "code": "510100",
+   "name": "Trade Costs",
+   "type": "expense",
+   "type_label": "Expenses",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": "Operating Activities"
+  },
+  {
+   "code": "510500",
+   "name": "Misc. Costs",
+   "type": "expense",
+   "type_label": "Expenses",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": "Operating Activities"
+  },
+  {
+   "code": "510600",
+   "name": "Costs of Transportation",
+   "type": "expense",
+   "type_label": "Expenses",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": "Operating Activities"
+  },
+  {
+   "code": "511100",
+   "name": "Declaration Fees",
+   "type": "expense",
+   "type_label": "Expenses",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": "Operating Activities"
+  },
+  {
+   "code": "511200",
+   "name": "Packing Fees",
+   "type": "expense",
+   "type_label": "Expenses",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": "Operating Activities"
+  },
+  {
+   "code": "520000",
+   "name": "Expenses",
+   "type": "expense",
+   "type_label": "Expenses",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": "Operating Activities"
+  },
+  {
+   "code": "520100",
+   "name": "Bank Charges",
+   "type": "expense",
+   "type_label": "Expenses",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": "Operating Activities"
+  },
+  {
+   "code": "520200",
+   "name": "Entertainment",
+   "type": "expense",
+   "type_label": "Expenses",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": "Operating Activities"
+  },
+  {
+   "code": "520300",
+   "name": "Electricity & Water Fees",
+   "type": "expense",
+   "type_label": "Expenses",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": "Operating Activities"
+  },
+  {
+   "code": "520500",
+   "name": "Postage & Stamps",
+   "type": "expense",
+   "type_label": "Expenses",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": "Operating Activities"
+  },
+  {
+   "code": "520600",
+   "name": "Printing & Stationery",
+   "type": "expense",
+   "type_label": "Expenses",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": "Operating Activities"
+  },
+  {
+   "code": "520700",
+   "name": "Rent & Rates",
+   "type": "expense",
+   "type_label": "Expenses",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": "Operating Activities"
+  },
+  {
+   "code": "520800",
+   "name": "Sundry Expenses",
+   "type": "expense",
+   "type_label": "Expenses",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": "Operating Activities"
+  },
+  {
+   "code": "520900",
+   "name": "Telecommunication Expenses",
+   "type": "expense",
+   "type_label": "Expenses",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": "Operating Activities"
+  },
+  {
+   "code": "521000",
+   "name": "Traffic Fees",
+   "type": "expense",
+   "type_label": "Expenses",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": "Operating Activities"
+  },
+  {
+   "code": "521100",
+   "name": "IT Expenses",
+   "type": "expense",
+   "type_label": "Expenses",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": "Operating Activities"
+  },
+  {
+   "code": "521400",
+   "name": "Insurance",
+   "type": "expense",
+   "type_label": "Expenses",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": "Operating Activities"
+  },
+  {
+   "code": "521500",
+   "name": "Sales Commission",
+   "type": "expense",
+   "type_label": "Expenses",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": "Operating Activities"
+  },
+  {
+   "code": "521600",
+   "name": "Overseas Traveling",
+   "type": "expense",
+   "type_label": "Expenses",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": "Operating Activities"
+  },
+  {
+   "code": "521800",
+   "name": "Wages & Salaries",
+   "type": "expense",
+   "type_label": "Expenses",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": "Operating Activities"
+  },
+  {
+   "code": "521810",
+   "name": "KWSP Contribution",
+   "type": "expense",
+   "type_label": "Expenses",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": "Operating Activities"
+  },
+  {
+   "code": "521820",
+   "name": "PCB Contribution",
+   "type": "expense",
+   "type_label": "Expenses",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": "Operating Activities"
+  },
+  {
+   "code": "521830",
+   "name": "EIS Contribution",
+   "type": "expense",
+   "type_label": "Expenses",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": "Operating Activities"
+  },
+  {
+   "code": "521900",
+   "name": "Bonus Payment",
+   "type": "expense",
+   "type_label": "Expenses",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": "Operating Activities"
+  },
+  {
+   "code": "522100",
+   "name": "SST",
+   "type": "expense",
+   "type_label": "Expenses",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": "Operating Activities"
+  },
+  {
+   "code": "522200",
+   "name": "Local Delivery",
+   "type": "expense",
+   "type_label": "Expenses",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": "Operating Activities"
+  },
+  {
+   "code": "522300",
+   "name": "Management Fees",
+   "type": "expense",
+   "type_label": "Expenses",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": "Operating Activities"
+  },
+  {
+   "code": "522400",
+   "name": "Depreciation",
+   "type": "expense",
+   "type_label": "Expenses",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": "Operating Activities"
+  },
+  {
+   "code": "522500",
+   "name": "Audit Fees",
+   "type": "expense",
+   "type_label": "Expenses",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": "Operating Activities"
+  },
+  {
+   "code": "522600",
+   "name": "Bad Debts",
+   "type": "expense",
+   "type_label": "Expenses",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": "Operating Activities"
+  },
+  {
+   "code": "522800",
+   "name": "Legal & Professional Fees",
+   "type": "expense",
+   "type_label": "Expenses",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": "Operating Activities"
+  },
+  {
+   "code": "522900",
+   "name": "Dividend",
+   "type": "expense",
+   "type_label": "Expenses",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": "Operating Activities"
+  },
+  {
+   "code": "523100",
+   "name": "Disposal",
+   "type": "expense",
+   "type_label": "Expenses",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": "Operating Activities"
+  },
+  {
+   "code": "523400",
+   "name": "Repair and Maintenance",
+   "type": "expense",
+   "type_label": "Expenses",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": "Operating Activities"
+  },
+  {
+   "code": "523500",
+   "name": "Advertising",
+   "type": "expense",
+   "type_label": "Expenses",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": "Operating Activities"
+  },
+  {
+   "code": "524000",
+   "name": "Foreign Exchange Loss",
+   "type": "expense",
+   "type_label": "Expenses",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": "Operating Activities"
+  },
+  {
+   "code": "999001",
+   "name": "Cash Difference Gain",
+   "type": "income_other",
+   "type_label": "Other Income",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": "Investing & Extraordinary Activities"
+  },
+  {
+   "code": "999002",
+   "name": "Cash Difference Loss",
+   "type": "expense",
+   "type_label": "Expenses",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": "Investing & Extraordinary Activities"
+  },
+  {
+   "code": "999997",
+   "name": "Cash Discount Gain",
+   "type": "income_other",
+   "type_label": "Other Income",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": "Operating Activities"
+  },
+  {
+   "code": "999998",
+   "name": "Cash Discount Loss",
+   "type": "expense",
+   "type_label": "Expenses",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": "Operating Activities"
+  },
+  {
+   "code": "999999",
+   "name": "Profit or Loss Appropriation",
+   "type": "equity_unaffected",
+   "type_label": "Current Year Earnings",
+   "reconcile": false,
+   "non_trade": false,
+   "active": true,
+   "tags": "Operating Activities"
+  }
+ ],
+ "company_defaults": {
+  "_note": "ir.default for company casimir. No category or contact on the tenant carries its own value: every one reads these.",
+  "product.category.property_account_income_categ_id": "410000",
+  "product.category.property_account_expense_categ_id": "510000",
+  "res.partner.property_account_receivable_id": "124000",
+  "res.partner.property_account_payable_id": "221100"
+ },
+ "journals": {
+  "_note": "account.journal account fields by Sequence Prefix (code). Journals not listed carry none.",
+  "INV": {
+   "default_account_id": "410000"
+  },
+  "BILL": {
+   "default_account_id": "510000"
+  },
+  "BNK1": {
+   "default_account_id": "120001",
+   "suspense_account_id": "120002",
+   "profit_account_id": "999001",
+   "loss_account_id": "999002"
+  }
+ },
+ "products": {
+  "_note": "product.template property_account_income_id / property_account_expense_id are empty on all 14 products (they fall back to the category)."
+ },
+ "invoice_lines": {
+  "_note": "account.move.line account_id on the three seeded documents, product lines only; tax lines post to 221300 SST Control Account and payment-term lines to 124000 Account Receivable (neither is built).",
+  "SCG-PO-88213": [
+   "410000",
+   "410000",
+   "410000"
+  ],
+  "KKD-2026-009": [
+   "410000",
+   "410000",
+   "410000"
+  ],
+  "STL-2026-0042": [
+   "410000",
+   "410000"
+  ]
+ }
+}
