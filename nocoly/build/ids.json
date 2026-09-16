@@ -13,7 +13,8 @@
   "Journals": "6aa8f5191204328eb1af162a",
   "Product Variants": "6aa90c161204328eb1af1b82",
   "Invoices": "6aa90facf363582dd37a62f7",
-  "Invoice Lines": "6aaa2b50e54d2a34fa4e0221"
+  "Invoice Lines": "6aaa2b50e54d2a34fa4e0221",
+  "Product Categories": "6aaa60e17d58b0f44930f052"
  },
  "workflows": {
   "Archive": "6aa8a565e589b8933dd4cc6d",
@@ -65,7 +66,8 @@
   "Invoices: Invoices": "6aa90facf363582dd37a62fb",
   "Invoices: Bills": "6aa9f87d7d58b0f44930e8b5",
   "Invoices: Journal Entries": "6aa9f87e7d58b0f44930e8b7",
-  "Invoice Lines: Lines": "6aaa2b50e54d2a34fa4e0225"
+  "Invoice Lines: Lines": "6aaa2b50e54d2a34fa4e0225",
+  "Product Categories: Categories": "6aaa60e17d58b0f44930f056"
  },
  "controls": {
   "Journals: Journal Name": "6aa8f6c81204328eb1af1676",
@@ -128,7 +130,15 @@
   "Invoice Lines: Subtotal": "6aaa2c18e43d174ab3749df1",
   "Invoice Lines: Number": "6aaa2c18e43d174ab3749df2",
   "Invoice Lines: Accounting Date": "6aaa2c18e43d174ab3749df3",
-  "Invoice Lines: Status": "6aaa2c18e43d174ab3749df4"
+  "Invoice Lines: Status": "6aaa2c18e43d174ab3749df4",
+  "Products: Category": "6aaa612ee43d174ab374a1e5",
+  "Product Categories: Name": "6aaa60e17d58b0f44930f053",
+  "Product Categories: Parent Category": "6aaa62f67d58b0f44930f094",
+  "Product Categories: Complete Name": "6aaa6336805aef7032866545",
+  "Product Categories: Child Categories": "6aaa62f67d58b0f44930f095",
+  "Product Categories: # Products": "6aaa6340805aef7032866556",
+  "Product Categories: Products": "6aaa612ee43d174ab374a1e6",
+  "Product Categories: Parent Complete Name": "6aaa633b805aef703286654d"
  },
  "rules": {
   "Journals: Payment Communications only for Sales": "6aa9dae5e54d2a34fa4dfde2",
@@ -167,7 +177,15 @@
   "Invoice Lines: STL-2026-0042 line 1": "7c9baf82-9397-4d51-8a8c-4b9abaddda3e",
   "Invoice Lines: TEST roll-up line": "92b135c5-becc-4f73-906d-2f8672d746aa",
   "Journals: TEST draft guard": "e3c801f7-7574-4b5e-995d-167ea3f0bb72",
-  "Journals: draft entry TEST draft guard": "7f549cdb-21b6-4074-b999-ca984a997717"
+  "Journals: draft entry TEST draft guard": "7f549cdb-21b6-4074-b999-ca984a997717",
+  "Product Categories: Expenses": "5fec05f3-1568-4556-ad67-3af61c67e363",
+  "Product Categories: Goods": "891b14a6-5474-4698-aee8-cc804006a115",
+  "Product Categories: Consumables": "7c1c05a9-6bdb-4e0b-893a-765211bd2164",
+  "Product Categories: IT Equipment": "a14a0fc5-d0be-493d-923f-66ccc05a9461",
+  "Product Categories: Office Furniture": "61fb391f-1f56-49b5-9c0b-23f8b11d214a",
+  "Product Categories: Software": "2719ed80-26ac-4674-b104-48a465aea424",
+  "Product Categories: Services": "f762ae70-04c2-410e-aa18-a9f5abbbf5ae",
+  "Product Categories: TEST Category": "3b488fe2-1945-496f-a443-a8943a71d833"
  },
  "roles": {
   "Administrator": "25ef76ef-5538-4779-a5e6-ab1fbce9dcfe",

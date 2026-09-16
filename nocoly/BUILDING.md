@@ -64,11 +64,36 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
 
 - `hap app create --sections` also creates an empty, unnamed section ("Unnamed Group").
 - `hap worksheet create` builds the icon URL on a Mingdao host; on Nocoly pass
-  `--icon-url https://www.nocoly.com/file/mdpub/customIcon/<icon>.svg`.
-- A new two-way Relation's reverse control comes back at row 9999, width 0, with no alias. Place it in a second save.
-  A **single Relation to its own worksheet always comes back two-way**, with a reverse control named "Child".
+  `--icon-url https://www.nocoly.com/file/mdpub/customIcon/<icon>.svg`. **`hap icon list` and `hap icon search
+  <keyword>` are the catalogue** — 426 names, searchable in Chinese or English. A name outside it is refused
+  nowhere: the worksheet is created and its icon URL answers HTTP 400 for ever. `hap worksheet update <ws>
+  -a <app> --icon <name>` re-icons an existing worksheet and builds the Nocoly URL correctly.
+- **`add-fields` parks everything it adds at row 9999, col 0**, whatever `row` and `col` the payload carries
+  (`size`, `sectionId` and the rest are kept). A new two-way Relation's reverse arrives there too, width 0 and
+  with no alias — that is the general rule, not a quirk of reverses. **Only a full `update-fields` save places a
+  control**: there is no per-field endpoint, and hap-cli's own editor ops `field update` and `field reorder` both
+  go through `save_controls`.
+- **`add-fields` given a control that already exists appends a second entry with the same `controlId`** instead of
+  updating it (`{"code": 1}`, and the worksheet then lists it twice). A full save that sends that id once updates
+  **both** copies; a full save that omits it deletes **both**. A duplicate can only be cleared by deleting the
+  control and re-creating it.
+- A **single Relation to its own worksheet always comes back two-way**, with a reverse control named "Child" that
+  **the server creates itself**, in the same `update-fields` save. Writing that reverse by hand — same reserved id —
+  makes the server mint its own as well and leaves two controls sharing a controlId. A re-save of the relation does
+  not bring a deleted reverse back either: the relation has to be re-created.
+- A **two-way Relation added to another worksheet with `add-fields` gets no reverse at all** — the server only
+  reserves the id in `sourceControlId` (below). Save the reverse on the target yourself, carrying **that reserved
+  controlId**, with `sourceControlId` = the forward control, `sourceControlType` **6** and `enumDefault` 2: the same
+  handshake `mount-subtable` performs for a 子表's back-relation. It pairs properly — the forward write shows up in
+  the reverse list and a 汇总 over it counts (Products' Category ↔ Product Categories' Products).
 - A **one-way Relation** to another worksheet: add it with `add-fields`, without a controlId, and
   `advancedSetting.bidirectional` "0". The target worksheet gets no reverse field.
+- A **汇总 (roll-up, control type 37)** has a hap-cli builder:
+  `hap_cli.core.app_creator.fields.rollup_control(name, via_control_id=…, source_control_id=…, aggregate=…)`.
+  `aggregate` maps to `enumDefault` **1 avg · 2 max · 3 min · 5 sum · 6 count · 21 distinct count**, `dataSource` is
+  `$<the bridge 子表 or multi-Relation>$`, and **a count still needs a column named** on the target worksheet in
+  `sourceControlId` (the title serves). Added with `add-fields` and re-saved (as a formula must be) it computes at
+  once and follows a record moving in or out of the relation (Product Categories' # Products).
 - A **static Relation default** is `defsource: [{"staticValue": "[\"<rowid>\"]"}]`; the server stores the whole record
   in place of the id. The API applies no defaults — only the form does.
 - A **Date field's default is a sentinel, not a value**: `defsource` `staticValue` **"2"** with `time` "current" is
@@ -81,6 +106,15 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   tables, make it read-only and hidden on create: `fieldPermission` "100" (the three places are hidden · read-only ·
   hidden on create, and `0` switches each one on). The list calls behind views blank other hidden fields.
 - A single select's `advancedSetting.direction`: 2 horizontal · 1 vertical · 0 matrix.
+- A field's **Required holds in the form only**. `record create` through the API writes a record with the
+  required field empty and returns success — Product Categories accepted a category with no Name, and its title
+  formula then computed an empty string. It joins a text field's maximum length: a form check, not a constraint,
+  so seed and import scripts have to check it themselves. (A field's **No duplicates** is the opposite — that one
+  is enforced on API writes.)
+- A **list-style Relation (`showtype` "2") renders as a tab at the foot of the record**, not as a field in the
+  form grid, whatever row the layout gives it. And a list with no `showControls` shows its row count over the
+  words ***No visible fields*** — the columns have to be named, by controlId, from the *target* worksheet
+  (Product Categories' Child Categories and Products lists).
 - `worksheet add-fields` keeps a control's client-side 32-hex id, and a formula or text combination added that way
   computes nothing until an `update-fields` save re-mints the id. Inside one `update-fields` save, references to
   not-yet-minted ids (formula expressions, a lookup's source) are rewritten to the minted ids.
@@ -149,6 +183,12 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
 - A text combination can use the record id, `$rowid$`.
 - Stored lookups chain: saving a record updates the lookups pointing at it and the formulas built on them, level
   after level — so a self-referencing chain (Absolute Quantity down a unit chain) works without workflows.
+- **A stored lookup (`strDefault` "00") may read a function formula on its own worksheet**, which is how a
+  recursive text field is built: Product Categories' Complete Name reads Parent Complete Name, a lookup of the
+  *parent's* Complete Name. Proved three levels deep, recomputing in both directions on a record save, with no
+  workflow and no `refresh` pass. **HAP has no recursion constraint**, so a record can be made its own parent: the
+  lookup then reads the record's own last value once — "Goods / Consumables / X / X" — and stops. It is not a loop
+  and not an error, and putting the parent back restores the value in one save.
 - But the recompute HAP runs **after a formula or lookup definition changes** treats each record on its own and can
   leave rows stale. Re-saving a record's unchanged relation brings its lookups up to date (`units.py refresh`).
 - A **lookup of a Relation stores the related record's title as text** (`sourceControlType` 2): it shows and sorts,
@@ -163,8 +203,21 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   `common.sort_views`, which makes the same call with the app id.
 - `sortType` 1 is descending, 2 ascending. `record list --view-id` applies the view's filter and sort but returns only
   that view's columns — a field the view sorts on but does not show comes back empty.
+- A **record just created sits at the top of the table** until the view is reloaded, whatever the sort — HAP puts
+  it where the user can see it. It takes its sorted place on the next load, which is worth knowing before
+  reporting a sort as broken.
+- **A user clicking a table's column header sorts client-side and does not touch the saved view**: `sortCid` and
+  `sortType` read back unchanged afterwards.
 - An ascending sort puts **empty values first**. `moreSort[].emptyRule` is stored (1, 2 and 3 tried) and changes
   nothing, so Odoo's NULLS LAST cannot be matched.
+- A table **sorts on a function formula** (type 53) like any other column — `sortCid` the formula, `sortType` 2 —
+  and the rows come back in the formula's own alphabetical order (Product Categories' Complete Name, which reads
+  as an indented tree).
+- A **quick filter can be added to a live view without rewriting it**:
+  `view update --view-json '{"fastFilters": [ …the ones already there…, {"controlId": …, "advancedSetting":
+  {"allowitem": "2", "direction": "2"}} ]}' --edit-attrs fastFilters`. `allowitem` is "1" single · "2" any of;
+  `direction` "2" a dropdown · "1" tiles. Sending only `fastFilters` leaves the view's filter, sort and columns
+  alone (Products' Category quick filter, added beside the four that were already there).
 - **Deleting a field leaves every view sorting on its id.** `sortCid` and `moreSort` keep the dead control id and
   nothing cleans them up (Journals' two views still pointed at a Sequence field removed on 15 Sep). Re-write the sort
   after a field goes.
@@ -364,8 +417,16 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   `hap worksheet record delete <ws> --row-ids <rowid> -a <app> --trigger-workflow -y`. (Invoice Lines' delete
   roll-up looked broken for exactly this reason; the workflow was right all along.) The two record-delete tools
   are the only v3 schemas in the CLI carrying a boolean that defaults to `true`.
-- `hap worksheet record list` can return hidden fields as empty strings (seen on Units, not always on Contacts or
-  Products); `record get` always returns their values.
+- **`hap worksheet record list` returns only the default view's columns** — every other field comes back as an
+  empty string, hidden or not (Product Categories' Name came back empty from every row because the Categories view
+  shows Complete Name, Parent Category and # Products; Units looked like "hidden fields are blanked" for the same
+  reason). `record get` always returns everything.
+- **The reverse half of a two-way Relation reads back from `record get` as a row count** — an integer, not the
+  rows — exactly as a 子表 does; the forward half returns the usual `[{"sid": …, "name": …}]` (Goods' Child
+  Categories is `4`).
+- A **Relation cell carries the related record's title**, so a seeded value is compared with the target's *title
+  field*, not its name: a product's Category reads back "Goods / IT Equipment" (the Complete Name), never
+  "IT Equipment".
 - `record get` returns a record's creation time as `_createdAt`; `record list` returns `ctime` empty.
 - Value formats differ by field type and a wrong one is accepted silently — see `hap guide record` before writing.
 
@@ -408,6 +469,16 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   names the same switches differently: V3's per-worksheet `worksheetActions.export` is
   `sheets[].worksheetExport.enable` there, and V3's `recordDataScope` `{read, edit, delete}` is
   `readLevel` / `editLevel` / `removeLevel`. A write through either shows up in both.
+- **A worksheet created after a role joins that role by itself**, and at HAP's own defaults, not hap-cli's and not
+  the role's: `readLevel` / `editLevel` / `removeLevel` **20** (own records only), `canAdd` false, and **every action
+  switch on** — share view, import, **export**, batch operation, record share, printing, logging, payment. So a
+  fine-grained role silently gains the most permissive entry it has, and every new bundle has to bring its worksheet
+  back to the owner's table (`roles.reconcile`, which now takes the role's matrix as well as its description).
+- **A role's sheet entry whose views are all unreadable is dropped on save, silently.** `AppManagement/EditAppRole`
+  answers `1` and stores nothing — levels, `canAdd` and switches all read back unchanged — until
+  `views[].canRead` / `canEdit` / `canRemove` are set true in the same post, which is what every sheet an existing
+  role carries has. (The auto-added entry above arrives with all three false.) The record scope is still the gate;
+  the view flags are what make the entry real.
 - `hap app role list` takes `-a/--app-id`; the app id as a positional argument is refused (the V3 command shadows
   the one in `commands/role_cmd.py`, which takes it positionally).
 

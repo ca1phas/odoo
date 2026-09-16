@@ -1,0 +1,184 @@
+<title>ERP Master Product Categories</title>
+<meta name="description" content="Review pack for worksheet 08 of the Odoo-to-Nocoly build, the first feature bundle: requirements, build ids and UI test results.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<link rel="stylesheet" href="review.css">
+<style>
+  pre.rule-code { margin: 0; padding: 14px 16px; overflow-x: auto; border: 1px solid var(--rule);
+    border-radius: 6px; background: var(--accent-soft); color: var(--code);
+    font: 400 12.5px/1.7 var(--mono); max-width: 86ch; }
+  .tree { margin: 0; padding: 14px 16px; border: 1px solid var(--rule); border-radius: 6px;
+    background: var(--accent-soft); color: var(--code); font: 400 12.5px/1.8 var(--mono); }
+</style>
+
+<main class="page">
+
+  <header class="identity">
+    <div class="eyebrow"><span>ERP Master</span><span>Phase 1</span><span>Bundle 1 of 6</span></div>
+    <h1>Product Categories <span class="model">product.category</span></h1>
+    <p class="lede">The tree a catalogue hangs on: every product belongs to one category, and a category may sit under another. This is the <strong>first of the six feature bundles</strong> the owner added to Phase 1 on 16 September, and the simplest kind — it adds a worksheet and gives <strong>Products the Category field it never had</strong>. Nothing is replaced and nothing is deleted.</p>
+    <dl class="meta">
+      <div><dt>Reference</dt><dd>casimir.odoo.com — Odoo saas~19.4+e</dd></div>
+      <div><dt>Behaviour read from</dt><dd>Odoo 19.0 source, <code>product_category.py</code></dd></div>
+      <div><dt>Nocoly</dt><dd>App ERP Master · menu group Products</dd></div>
+      <div><dt>Built and tested</dt><dd>16 September 2026</dd></div>
+    </dl>
+    <div class="scoreline">
+      <span class="chip pass">16 of 18 tests pass</span>
+      <span class="chip note">1 partly · 1 caveat</span>
+      <span class="chip note">8 differences</span>
+      <span class="chip note">7 categories · all 14 products</span>
+    </div>
+  </header>
+
+  <aside class="callout" aria-labelledby="note-title">
+    <span class="chip note small" style="justify-self:start">Worth knowing before you review</span>
+    <h2 id="note-title">Goods shows 0 products, and that is on purpose</h2>
+    <p>Odoo's stat button on <strong>Goods</strong> reads <strong>11</strong>; ours reads <strong>0</strong>. Goods holds no product of its own — all eleven sit in its four children — and Odoo's help for that field says, in its own words, that it <em>“Does not consider the children categories”</em>. Its code does the opposite and counts the whole subtree. A HAP roll-up aggregates one relation, not a subtree, so <strong>we built what the help promises</strong> and put the children right beside it: open Goods and its Child Categories tab lists 2 · 2 · 4 · 3, which is the 11. If you would rather match the number Odoo actually shows, say so and it becomes a small workflow.</p>
+  </aside>
+
+  <nav class="toc" aria-label="Sections">
+    <a href="#requirements"><span>1</span>Requirements</a>
+    <a href="#build"><span>2</span>Build</a>
+    <a href="#tests"><span>3</span>Tests and differences</a>
+  </nav>
+
+  <section id="requirements" aria-labelledby="req-title">
+    <div class="section-head"><span class="n">1</span><h2 class="section" id="req-title">Requirements</h2></div>
+
+    <div class="block">
+      <h3>Fields</h3>
+      <p class="aside">Labels are Odoo 19.4's; aliases are Odoo's field names on <code>product.category</code>.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th class="num">#</th><th>Field</th><th>Odoo field</th><th>Nocoly type</th><th>Required</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td class="num">1</td><td class="label">Name</td><td><code>name</code></td><td>Text</td><td>yes</td><td>Odoo's placeholder “e.g. Lamps”. Its form heads this <em>Category</em>; the field is Name everywhere else</td></tr>
+            <tr><td class="num">2</td><td class="label">Complete Name</td><td><code>complete_name</code></td><td>Function formula · <strong>title</strong></td><td class="muted">—</td><td>“Goods / Consumables”. Read-only, and off the create form. Odoo's <code>_rec_name</code>, and what its list and every picker show</td></tr>
+            <tr><td class="num">3</td><td class="label">Parent Category</td><td><code>parent_id</code></td><td>Relation → itself (single, two-way)</td><td class="muted">—</td><td>Odoo labels it <em>Parent</em>. The picker lists every category by Complete Name and lets you add one from inside it</td></tr>
+            <tr><td class="num">4</td><td class="label">Child Categories</td><td><code>child_id</code></td><td>Relation list · read-only</td><td class="muted">—</td><td>The reverse of 3 — the tree itself. Odoo has the field and puts it on no view</td></tr>
+            <tr><td class="num">5</td><td class="label">Products</td><td class="muted">— (reverse of <code>categ_id</code>)</td><td>Relation list → Products · read-only</td><td class="muted">—</td><td>Odoo's <em>Products</em> stat button, as a list rather than a count-and-jump</td></tr>
+            <tr><td class="num">6</td><td class="label"># Products</td><td><code>product_count</code></td><td>汇总 roll-up · read-only</td><td class="muted">—</td><td>The number on that button — counting <strong>this</strong> category's products; see the note above</td></tr>
+            <tr><td class="num">—</td><td class="label">Parent Complete Name</td><td class="muted">— (helper)</td><td>Lookup, hidden</td><td class="muted">—</td><td>What field 2 is built on. Odoo computes its complete name recursively in Python; HAP does it with a lookup that chains</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="aside"><code>product.category</code> has <strong>no <code>active</code> field</strong> — so this is the first worksheet in the app with <strong>no Archive, no Unarchive and no Archived view</strong>. Odoo's only way to remove a category is to delete it. That absence is deliberate, not an omission.</p>
+    </div>
+
+    <div class="block">
+      <h3>What it changes on Products</h3>
+      <p class="prose">One control and two quick filters, and nothing else. <strong>Products never carried a stand-in</strong> for the category, so unlike the bundles that follow, this one deletes nothing.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Change</th><th>Detail</th></tr></thead>
+          <tbody>
+            <tr><td class="label">New field <strong>Category</strong></td><td>A two-way relation, not required, no default, on the <em>General Information</em> tab between <strong>Cost</strong> and <strong>Internal Reference</strong> — Odoo's own order</td></tr>
+            <tr><td class="label">A Category quick filter</td><td>On the <em>Products</em> and <em>List</em> views</td></tr>
+            <tr><td class="label">No new column</td><td>Odoo's list carries the category as a column you switch on, hidden by default</td></tr>
+            <tr><td class="label">Every product categorised</td><td>All fourteen, from the tenant</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="block">
+      <h3>Rules, buttons, automations</h3>
+      <p class="prose"><strong>None of the three.</strong> Name is required on the field itself; Complete Name, its helper lookup and # Products are a formula, a lookup and a roll-up, and the platform keeps all three current with no workflow. Odoo's one constraint — <em>“You cannot create recursive categories.”</em> — is not built, because a HAP rule cannot ask whether a record is its own ancestor. Tests 12 and 13 record exactly what happens instead, and difference 2 is where your decision goes.</p>
+    </div>
+
+    <div class="block">
+      <h3>The seed — the tenant's seven, two levels deep</h3>
+      <pre class="tree">Expenses                        0 products
+Goods                           0     (11 across its children)
+  Goods / Consumables           2     A4 Copy Paper · Whiteboard Marker Set
+  Goods / IT Equipment          4     27" 4K Monitor · Business Laptop · Docking Station · Keyboard &amp; Mouse
+  Goods / Office Furniture      3     Office Chair · Height-Adjustable Desk · Filing Cabinet
+  Goods / Software              2     Nocoly HAP Licence — Pro · Standard
+Services                        3     Annual Support Retainer · Implementation Consulting · Onsite Training</pre>
+      <p class="aside">Only Goods has children, and the tenant leaves no product uncategorised.</p>
+    </div>
+  </section>
+
+  <section id="build" aria-labelledby="build-title">
+    <div class="section-head"><span class="n">2</span><h2 class="section" id="build-title">Build</h2></div>
+    <p class="prose">Built by <code>nocoly/build/prodcat.py</code> — steps create, fields, products, computed, layout, views, roles, seed, each safe to re-run: a second full run created nothing, wrote no record and changed no role. Ids are in <code>nocoly/build/ids.json</code> under “Product Categories: …”.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Element</th><th>Built</th><th>Id</th></tr></thead>
+        <tbody>
+          <tr><td class="label">Worksheet</td><td>Product Categories, alias <code>product_category</code>, in Products</td><td class="id">6aaa60e17d58b0f44930f052</td></tr>
+          <tr><td class="label">Fields</td><td>The 7 above — one function formula, one lookup, one roll-up, two relation lists</td><td class="muted">in ids.json</td></tr>
+          <tr><td class="label">View</td><td>Categories — Complete Name · Parent Category · # Products, sorted as a tree, with a Parent Category filter</td><td class="id">6aaa60e17d58b0f44930f056</td></tr>
+          <tr><td class="label">On Products</td><td>The Category control, plus a quick filter on both its views</td><td class="id">6aaa612ee43d174ab374a1e5</td></tr>
+          <tr><td class="label">Rules · Buttons · Workflows</td><td><strong>none</strong></td><td class="muted">—</td></tr>
+          <tr><td class="label">Roles</td><td>Product Categories joined all four business roles with the rule Products has</td><td class="muted">roles.py</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="block">
+      <h3>The recursion is real</h3>
+      <p class="prose">Complete Name is a function formula reading a <strong>stored lookup of the parent's own Complete Name</strong> — a chain that refers to the same worksheet, which the requirements warned HAP might refuse. It does not refuse, so no fallback was needed and the expression is the one §1 asked for:</p>
+      <pre class="rule-code">IF(ISBLANK(Parent Complete Name), TRIM(Name), CONCAT(Parent Complete Name, " / ", TRIM(Name)))</pre>
+      <p class="prose">It was proved <strong>four levels deep</strong>, two deeper than the tenant goes, and a rename at the top carries all the way down in one save with no workflow behind it. <strong># Products is HAP's own 汇总 control</strong>, the first in this app, counting the Products list beside it; it follows a product moving in or out within seconds.</p>
+    </div>
+
+    <p class="prose">CLI self-checks: every control, permission, the formula, the lookup, the roll-up, the view and Products' Category read back as specified; the seven categories and all fourteen products' categories match the extract exactly; the other six worksheets were compared control by control before and after every save and are unchanged, as are <code>products.py verify</code> and <code>variants.py verify</code>.</p>
+  </section>
+
+  <section id="tests" aria-labelledby="tests-title">
+    <div class="section-head"><span class="n">3</span><h2 class="section" id="tests-title">Tests and differences</h2></div>
+    <p class="prose">Run on 16 September 2026 — in the Nocoly UI in Chrome where the UI is the point, and through the CLI where the question is whether HAP recomputes. Every value was read back with <code>record get</code>.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th class="num">#</th><th>Check</th><th>Expected</th><th>Result</th></tr></thead>
+        <tbody>
+          <tr><td class="num">1</td><td class="label">Create a category with no parent</td><td>Complete Name is the bare name</td><td><div class="result"><span class="chip pass small">Pass</span>Made from the UI's own create form</div></td></tr>
+          <tr><td class="num">2</td><td class="label">Give it a parent — three levels</td><td>“Goods / IT Equipment / TEST UI root”</td><td><div class="result"><span class="chip pass small">Pass</span>The one-level fallback §1 allowed was never needed</div></td></tr>
+          <tr><td class="num">3</td><td class="label">A child under that — four levels</td><td>The full path</td><td><div class="result"><span class="chip pass small">Pass</span>Two levels deeper than the tenant goes</div></td></tr>
+          <tr><td class="num">4</td><td class="label">Rename a category in the middle</td><td>Its children follow</td><td><div class="result"><span class="chip pass small">Pass</span>Both levels below, in one save</div></td></tr>
+          <tr><td class="num">5</td><td class="label">Clear a parent</td><td>The path shortens</td><td><div class="result"><span class="chip pass small">Pass</span></div></td></tr>
+          <tr><td class="num">6</td><td class="label">Complete Name on the create form</td><td>Absent there, read-only when saved</td><td><div class="result"><span class="chip pass small">Pass</span></div></td></tr>
+          <tr><td class="num">7</td><td class="label">The Categories view order</td><td>An indented tree</td><td><div class="result"><span class="chip pass small">Pass</span>A record just created sits at the top until the view reloads, whatever the sort</div></td></tr>
+          <tr><td class="num">8</td><td class="label">The Parent Category quick filter</td><td>Narrows to one parent's children</td><td><div class="result"><span class="chip note small">Partly</span>It is there and lists every category by Complete Name; <strong>applying</strong> it would not stick through automation — one click for you</div></td></tr>
+          <tr><td class="num">9</td><td class="label">The Parent Category picker</td><td>Lists by Complete Name; can create one</td><td><div class="result"><span class="chip pass small">Pass</span><strong>+ Record</strong> at the foot — Odoo's quick-create, matched</div></td></tr>
+          <tr><td class="num">10</td><td class="label">Child Categories on Goods</td><td>Its four children, read-only</td><td><div class="result"><span class="chip pass small">Pass</span>With their own counts — 2 · 2 · 4 · 3</div></td></tr>
+          <tr><td class="num">11</td><td class="label">The Products list and # Products</td><td>The tenant's numbers</td><td><div class="result"><span class="chip pass small">Pass</span>Services 3 · IT Equipment 4 · Office Furniture 3 · Consumables 2 · Software 2 · Goods and Expenses 0</div></td></tr>
+          <tr><td class="num">12</td><td class="label">A category as its own parent</td><td>§1 expected no guard</td><td><div class="result"><span class="chip note small">Accepted</span>Complete Name doubles the name. No loop, nothing else affected, and one edit undoes it</div></td></tr>
+          <tr><td class="num">13</td><td class="label">Two categories each other's parent</td><td>The cycle Odoo refuses</td><td><div class="result"><span class="chip note small">Accepted</span>The path repeats and grows by a level on each save of a record in the cycle. One edit undoes it</div></td></tr>
+          <tr><td class="num">14</td><td class="label">Category on the Products form</td><td>Between Cost and Internal Reference</td><td><div class="result"><span class="chip pass small">Pass</span>Odoo's own order, showing the Complete Name</div></td></tr>
+          <tr><td class="num">15</td><td class="label">Set a product's Category</td><td>The category's list and count move</td><td><div class="result"><span class="chip pass small">Pass</span>0 → 1 on both, within seconds</div></td></tr>
+          <tr><td class="num">16</td><td class="label">The Products and List views</td><td>A filter, not a column</td><td><div class="result"><span class="chip pass small">Pass</span></div></td></tr>
+          <tr><td class="num">17</td><td class="label">Name is required</td><td>No category without one</td><td><div class="result"><span class="chip note small">Caveat</span>The form refuses it; <strong>the API does not</strong> — see difference 3</div></td></tr>
+          <tr><td class="num">18</td><td class="label">No Archive, no Unarchive, no Archived view</td><td>None anywhere</td><td><div class="result"><span class="chip pass small">Pass</span>0 buttons, one view; a category's form carries no button at all</div></td></tr>
+          <tr><td class="num">—</td><td class="label">Delete a parent that has children</td><td>Odoo cascades</td><td><div class="result"><span class="chip note small">Not run</span>Nothing is deleted in this app without your approval</div></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="block">
+      <h3>Differences from Odoo</h3>
+      <ol class="differences">
+        <li><span class="n">1</span><div class="head"><strong># Products counts this category only</strong><span class="chip note small">Your call</span></div><p>Goods reads 0 here and 11 on the tenant. Deliberate, and it is what Odoo's own help text promises while its code counts the subtree. The Child Categories tab shows the missing 11 one glance away. A workflow could match Odoo's number if you prefer it.</p></li>
+        <li><span class="n">2</span><div class="head"><strong>A cycle is accepted</strong><span class="chip note small">Your call</span></div><p>Odoo raises <em>“You cannot create recursive categories.”</em>; HAP has no rule that can ask whether a record is its own ancestor. What happens instead is cosmetic and reversible — the Complete Name repeats the path, and a two-record cycle lengthens it a level on each save. Nothing hangs and one edit puts it right. A workflow could refuse a parent whose Complete Name already contains this category's, which would catch every cycle the chain can see.</p></li>
+        <li><span class="n">3</span><div class="head"><strong>Name is required in the form only</strong><span class="chip note small">HAP behaviour</span></div><p>Odoo's is a NOT NULL column. HAP's is a form check, so the API wrote a nameless category without complaint — the same class of thing as a text field's maximum length. Seed and import scripts have to check it themselves.</p></li>
+        <li><span class="n">4</span><div class="head"><strong>The two lists are tabs, not fields</strong><span class="chip note small">HAP behaviour</span></div><p>HAP renders a list-style relation as a tab at the foot of the record, so Child Categories and Products sit under # Products rather than in the form grid. Odoo puts neither on a view at all.</p></li>
+        <li><span class="n">5</span><div class="head"><strong>The stat button is a list, not a jump</strong><span class="chip note small">Note</span></div><p>Odoo's button carries a number and opens a filtered product list; here the products themselves are on the record, with the number above them.</p></li>
+        <li><span class="n">6</span><div class="head"><strong>The tenant cannot sort its own category list</strong><span class="chip note small">Odoo 19.4</span></div><p>19.4 stopped storing <code>complete_name</code>, so ordering on it is refused outright and the tenant returns roots first, then each parent's children by name. HAP stores its formula, so our view is sorted the way Odoo's source asks and reads as the tree.</p></li>
+        <li><span class="n">7</span><div class="head"><strong>A record just created sits at the top</strong><span class="chip note small">HAP behaviour</span></div><p>Whatever the sort, until the view is reloaded — worth knowing before reporting a sort as broken.</p></li>
+        <li><span class="n">8</span><div class="head"><strong>Deleting a parent does not take its children</strong><span class="chip note small">Note</span></div><p>Odoo's <code>parent_id</code> is <code>ondelete='cascade'</code>. HAP does not cascade, so the children would survive pointing at nothing. Not tested — nothing is deleted here without your approval.</p></li>
+      </ol>
+    </div>
+
+    <div class="block">
+      <h3>Test records left for you</h3>
+      <p class="prose"><strong>TEST Category</strong>, under Goods / Consumables, is the build's own three-level proof. <strong>TEST UI renamed</strong> is the category created from the browser in test 1, renamed by test 4 and emptied of its parent by test 5; <strong>TEST UI child</strong> under it is test 3's fourth level; and <strong>TEST created with no Name</strong> is the record the API accepted without one — it was given that name afterwards so the view does not show a blank row. <code>TEST Product</code>, worksheet 03's own test record, now carries a category: that is test 15's evidence. All four go after sign-off, with your approval. <strong>The tenant's seven categories and all fourteen real products are untouched</strong>.</p>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <p>Bundle 1 of 6 · <code>nocoly/worksheets/08-product-categories.md</code> · reference <code>nocoly/reference/odoo-19.4/product.category.md</code> · build <code>nocoly/build/prodcat.py</code>. Next is <strong>Chart of Accounts</strong>, which has to come back to this worksheet: Odoo hangs an <em>Income Account</em> and an <em>Expense Account</em> on every category, and both point at <code>account.account</code>.</p>
+  </footer>
+</main>

@@ -48,6 +48,7 @@ record was seeded from the Odoo tenant.
 | 05 | Journals | `account.journal` | First build by Teh Li Wei; gaps closed against casimir, seeded (7 journals), UI-tested 18/18, plus the archive guard at the end of Phase 1 — 20/21 — ready for review | [md](worksheets/05-journals.md) · [page](https://claude.ai/artifact/BckMvdNdP9bQhj66UyCdcr) |
 | 06 | Invoices | `account.move` | Skeleton by Teh Li Wei; completed against casimir, seeded (3 tenant invoices and their 3 customers), UI-tested 25/25 — ready for review | [md](worksheets/06-invoices.md) · [page](https://claude.ai/artifact/DjdgDLdRmYC44dWoQTvG7T) |
 | 07 | Invoice Lines | `account.move.line` | Built, mounted inside Invoices, seeded (the 8 lines of the 3 seeded documents), UI-tested 18/20 + 1 partly + 1 not run; its one open question is now resolved — ready for review | [md](worksheets/07-invoice-lines.md) · [page](https://claude.ai/artifact/7HsZ8L7Ecsp6mDbqGyocCh) |
+| 08 | Product Categories | `product.category` | **Bundle 1 of 6.** Built, seeded (7 categories, all 14 products categorised), UI-tested 16/18 + 1 partly + 1 caveat; Products gained the Category it never had, between Cost and Internal Reference — ready for review | [md](worksheets/08-product-categories.md) · [page](https://claude.ai/artifact/5RbMmEJKXzV2Vf3QEdmz99) |
 
 ## Phase 1 · Roles
 
@@ -71,12 +72,12 @@ group it stands for is written in its description, checked against
 `addons/account/security/account_security.xml` in this checkout. **None of them has a member** — who belongs in
 which role is the owner's call, and the two people above stay app administrators as they were.
 
-| Role | Odoo group (and Odoo's own name for it) | Contacts | Units & Packagings | Products | Product Variants | Journals | Invoices | Invoice Lines |
-|---|---|---|---|---|---|---|---|---|
-| Accounting Administrator | `account.group_account_manager` — *Administrator*, plus `base.group_allow_export` | full | full | full | full | full | full | full |
-| Accountant | `account.group_account_user` — *Show Full Accounting Features* | view · add · edit | view | view | view | view · add · edit | view · add · edit | view · add · edit |
-| Invoicing | `account.group_account_invoice` — *Invoicing* | view · add · edit | view | view | view | **view** | view · add · edit | view · add · edit |
-| Accounting Read-only | `account.group_account_readonly` — *Show Accounting Features - Readonly* | view | view | view | view | view | view | view |
+| Role | Odoo group (and Odoo's own name for it) | Contacts | Units & Packagings | Products | Product Variants | Product Categories | Journals | Invoices | Invoice Lines |
+|---|---|---|---|---|---|---|---|---|---|
+| Accounting Administrator | `account.group_account_manager` — *Administrator*, plus `base.group_allow_export` | full | full | full | full | full | full | full | full |
+| Accountant | `account.group_account_user` — *Show Full Accounting Features* | view · add · edit | view | view | view | view | view · add · edit | view · add · edit | view · add · edit |
+| Invoicing | `account.group_account_invoice` — *Invoicing* | view · add · edit | view | view | view | view | **view** | view · add · edit | view · add · edit |
+| Accounting Read-only | `account.group_account_readonly` — *Show Accounting Features - Readonly* | view | view | view | view | view | view | view | view |
 
 Read the three words as HAP stores them, per worksheet:
 

@@ -45,7 +45,11 @@ PLACE = {  # field name -> (row, col, size, tab)
     'Image': (2, 0, 12, None),
     'Product Type': (4, 0, 6, GENERAL), 'Sales Price': (4, 1, 6, GENERAL),       # group_general | group_standard_price
     'Unit': (5, 0, 6, GENERAL), 'Cost': (5, 1, 6, GENERAL),
-    'Internal Reference': (6, 0, 6, GENERAL),
+    # Category (categ_id) belongs to the Product Categories bundle (nocoly/worksheets/08-product-categories.md,
+    # built by prodcat.py), which added it with `add-fields` — that parks a new control at row 9999, and only a
+    # full save moves it. This step is that save: it reads the live controls and sends the same list back, so
+    # Category lands where Odoo's form has it, between Cost and Internal Reference.
+    'Category': (6, 0, 6, GENERAL), 'Internal Reference': (6, 1, 6, GENERAL),
     'Internal Notes': (7, 0, 12, GENERAL),
     'Packagings': (9, 0, 12, SALES), 'Sales Description': (10, 0, 12, SALES),
     'Weight': (12, 0, 6, INVENTORY), 'Volume': (12, 1, 6, INVENTORY),

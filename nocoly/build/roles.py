@@ -14,7 +14,9 @@ Run from the repo root with the CLI's interpreter:
 
     ~/.hap-venv/bin/python nocoly/build/roles.py rename    # 1. the five stock roles, Chinese -> English
     ~/.hap-venv/bin/python nocoly/build/roles.py create    # 2. the four business roles (upsert by name), then each
-                                                           #    one's description and its export right
+                                                           #    one's description, per-worksheet scopes and export
+                                                           #    right — which is also how a worksheet built after
+                                                           #    the roles (a bundle) joins them
     ~/.hap-venv/bin/python nocoly/build/roles.py all       # both, then check
     ~/.hap-venv/bin/python nocoly/build/roles.py check     # read every role back against this spec
     ~/.hap-venv/bin/python nocoly/build/roles.py show      # the live roles, with their per-worksheet scopes
@@ -56,8 +58,8 @@ STOCK = [  # (English name, the Chinese name HAP ships, roleType)
 
 FULL, EDIT, VIEW = 'full', 'view · add · edit', 'view'
 
-ORDER = ['Contacts', 'Units & Packagings', 'Products', 'Product Variants', 'Journals', 'Invoices',
-         'Invoice Lines']
+ORDER = ['Contacts', 'Units & Packagings', 'Products', 'Product Variants', 'Product Categories', 'Journals',
+         'Invoices', 'Invoice Lines']
 
 ROLES = {
     'Accounting Administrator': (
@@ -71,13 +73,13 @@ ROLES = {
         'Odoo group account.group_account_user — "Show Full Accounting Features". The accountant: can do '
         'everything except advanced configuration.',
         {'Contacts': EDIT, 'Units & Packagings': VIEW, 'Products': VIEW, 'Product Variants': VIEW,
-         'Journals': EDIT, 'Invoices': EDIT, 'Invoice Lines': EDIT},
+         'Product Categories': VIEW, 'Journals': EDIT, 'Invoices': EDIT, 'Invoice Lines': EDIT},
     ),
     'Invoicing': (
         'Odoo group account.group_account_invoice — "Invoicing". Invoices, payments and basic invoice '
         'reporting; cannot see accounting configuration, so Journals is read-only.',
         {'Contacts': EDIT, 'Units & Packagings': VIEW, 'Products': VIEW, 'Product Variants': VIEW,
-         'Journals': VIEW, 'Invoices': EDIT, 'Invoice Lines': EDIT},
+         'Product Categories': VIEW, 'Journals': VIEW, 'Invoices': EDIT, 'Invoice Lines': EDIT},
     ),
     'Accounting Read-only': (
         'Odoo group account.group_account_readonly — "Show Accounting Features - Readonly". Can see (and '
@@ -104,7 +106,8 @@ EXPORTERS = {'Accounting Administrator'}
 # Everything else a role can be given — sharing a view, import, batch operations, record sharing, printing,
 # the record log — is left at hap-cli's own defaults, the same for all four roles. The owner's table speaks to
 # read, add, edit and delete only, and guessing at the rest would put settings in front of a reviewer that
-# nobody asked for. They read back as:
+# nobody asked for. They read back as (SHEET_SWITCHES below is the same list in the main site's own names,
+# which is what a worksheet HAP added to a role by itself has to be brought back to):
 DEFAULT_WORKSHEET_ACTIONS = {'shareView': False, 'import': False, 'export': False, 'discuss': True,
                              'batchOperation': False}
 DEFAULT_RECORD_ACTIONS = {'share': False, 'discuss': True, 'systemPrint': False,
@@ -146,14 +149,14 @@ def members(r):
 
 
 def guard():
-    """Stop unless the profile reaches ERP Master and the app holds exactly the seven Phase 1 worksheets."""
+    """Stop unless the profile reaches ERP Master and the app holds exactly the worksheets in ORDER."""
     who = hap.run('auth', 'whoami')
     app = hap.run('app', 'info', '-a', APP).get('data', {})
     if app.get('name') != 'ERP Master':
         sys.exit(f"profile {who.get('profile')!r} does not reach ERP Master (found {app.get('name')!r})")
     live = {i['name'] for s in app.get('sections', []) for i in s['items'] if i['type'] == 0}
     if live != set(ORDER):
-        sys.exit(f'ERP Master holds {sorted(live)}, not the seven Phase 1 worksheets')
+        sys.exit(f'ERP Master holds {sorted(live)}, not the worksheets in ORDER ({sorted(ORDER)})')
     stock = {r['name'] for r in roles()}
     unknown = stock - {n for n, _, _ in STOCK} - {c for _, c, _ in STOCK} - set(ROLES)
     if unknown:
@@ -206,6 +209,22 @@ def worksheet_permissions(role, matrix):
 # is changed the way the Roles page itself does it and the way `role rename` already does: read the whole
 # appRoleModel with GetRoleDetail, change what must change, post it back with EditAppRole.
 EXPORT_KEY = 'worksheetExport'
+ADD_KEY = 'worksheetAddRecord'
+# V3's per-worksheet `recordDataScope` {read, edit, delete} is `readLevel` / `editLevel` / `removeLevel` in the
+# model the Roles page edits, and `recordActions.add` is `canAdd`. A write through either shows up in both.
+LEVEL_KEY = {'read': 'readLevel', 'edit': 'editLevel', 'delete': 'removeLevel'}
+# The action switches every worksheet of a business role carries, read off the seven sheets the roles were
+# created with — they are
+# identical in all four roles apart from the two the owner's table decides (`worksheetAddRecord` follows the
+# create right, `worksheetExport` the exporter list). A worksheet created **after** a role is added to that role
+# by HAP itself, with every switch on; this is the shape it is brought back to — "the same rule Products has".
+SHEET_SWITCHES = {
+    'worksheetShareView': False, 'worksheetImport': False, 'worksheetDiscuss': True, 'worksheetLogging': True,
+    'worksheetBatchOperation': False, 'worksheetFilter': True, 'worksheetStats': True,
+    'recordShare': False, 'recordDiscussion': True, 'recordSystemPrinting': False,
+    'recordAttachmentDownload': True, 'recordLogging': False, 'payment': False,
+}
+VIEW_RIGHTS = ('canRead', 'canEdit', 'canRemove')
 
 
 def role_model(role_id):
@@ -220,33 +239,69 @@ def save_role_model(role_id, model):
                                        {'appId': APP, 'roleId': role_id, 'appRoleModel': model})
 
 
-def reconcile(name, role_id, description):
-    """Bring an existing business role's description and export right up to this spec, and nothing else.
+def reconcile(name, role_id, description, matrix):
+    """Bring an existing business role's description, export right and per-worksheet scopes up to this spec,
+    and nothing else.
 
-    Everything not named here is posted back exactly as it was read, so the scopes, the members, the field and
-    view permissions and every other action switch cannot move. Returns True when something was written."""
+    Everything not named here is posted back exactly as it was read, so the members, the field and view
+    permissions and every other action switch cannot move. The scopes are in the call because **HAP adds a
+    worksheet created after the role to every fine-grained role on its own**, at its own defaults — own records
+    only (20 / 20 / 20), no create, and **export on** — which is neither the owner's table nor hap-cli's
+    defaults. Product Categories arrived that way. Returns True when something was written."""
     model = role_model(role_id)
     want_export = name in EXPORTERS
-    changed = (model.get('description') or '') != description
+    changed = [] if (model.get('description') or '') == description else ['description']
     model['description'] = description
-    for sheet in model.get('sheets') or []:
-        if bool((sheet.get(EXPORT_KEY) or {}).get('enable')) != want_export:
-            sheet.setdefault(EXPORT_KEY, {'enable': False, 'range': 1, 'allowExport': False})
-            sheet[EXPORT_KEY]['enable'] = want_export
-            changed = True
+    sheets = {s['sheetId']: s for s in model.get('sheets') or []}
+    for worksheet, cell in matrix.items():
+        sheet = sheets.get(WORKSHEETS[worksheet])
+        if not sheet:
+            sys.exit(f'{name}: the role has no entry for {worksheet}')
+        scope, add = SCOPE[cell]
+        for right, key in LEVEL_KEY.items():
+            if sheet.get(key) != scope[right]:
+                sheet[key] = scope[right]
+                changed.append(f'{worksheet}.{key}')
+        if bool(sheet.get('canAdd')) != add:
+            sheet['canAdd'] = add
+            changed.append(f'{worksheet}.canAdd')
+        for key, value in {**SHEET_SWITCHES, ADD_KEY: add, EXPORT_KEY: want_export}.items():
+            if bool((sheet.get(key) or {}).get('enable')) != value:
+                sheet.setdefault(key, {'enable': False, 'range': 1, 'allowExport': False})
+                sheet[key]['enable'] = value
+                changed.append(f'{worksheet}.{key}')
+        # A sheet HAP added on its own arrives with its views unreadable — and a sheet whose views are all
+        # unreadable is **dropped on save, with EditAppRole still answering 1**, so the levels above would
+        # never stick. Every other sheet's views are fully allowed: the record scope is the gate.
+        for view in sheet.get('views') or []:
+            for key in VIEW_RIGHTS:
+                if not view.get(key):
+                    view[key] = True
+                    changed.append(f'{worksheet}.{view["viewName"]}.{key}')
     if not changed:
         return False
     save_role_model(role_id, model)
-    back = role_model(role_id)
-    stored = {bool((s.get(EXPORT_KEY) or {}).get('enable')) for s in back.get('sheets') or []}
-    if (back.get('description') or '') != description or stored != {want_export}:
-        sys.exit(f'{name}: read back description {back.get("description")!r}, export {stored}')
+    back = {s['sheetId']: s for s in role_model(role_id).get('sheets') or []}
+    wrong = {}
+    for worksheet, cell in matrix.items():
+        scope, add = SCOPE[cell]
+        sheet = back.get(WORKSHEETS[worksheet], {})
+        got = (tuple(sheet.get(LEVEL_KEY[r]) for r in ('read', 'edit', 'delete')), bool(sheet.get('canAdd')),
+               {k: bool((sheet.get(k) or {}).get('enable')) for k in (*SHEET_SWITCHES, ADD_KEY, EXPORT_KEY)},
+               all(v.get(k) for v in sheet.get('views') or [] for k in VIEW_RIGHTS))
+        want = (tuple(scope[r] for r in ('read', 'edit', 'delete')), add,
+                {**SHEET_SWITCHES, ADD_KEY: add, EXPORT_KEY: want_export}, True)
+        if got != want:
+            wrong[worksheet] = (got, want)
+    if wrong:
+        sys.exit(f'{name}: read back {json.dumps(wrong, ensure_ascii=False)}')
+    print(f'  {name}: wrote {sorted(set(changed))}')
     return True
 
 
 def step_create():
-    """Create the four business roles, matched by name, then bring each one's description and export right up
-    to this spec. No member is added to any of them."""
+    """Create the four business roles, matched by name, then bring each one's description, export right and
+    per-worksheet scopes up to this spec. No member is added to any of them."""
     guard()
     live = by_name()
     for name, (description, matrix) in ROLES.items():
@@ -261,8 +316,8 @@ def step_create():
             print(f'  {name}: created {by_name()[name]["roleId"]}')
         role_id = by_name()[name]['roleId']
         C.remember('roles', name, role_id)
-        if reconcile(name, role_id, description):
-            print(f"  {name}: description and export set (export "
+        if reconcile(name, role_id, description, matrix):
+            print(f"  {name}: description, scopes and export set (export "
                   f"{'on' if name in EXPORTERS else 'off'})")
     step_show()
 
