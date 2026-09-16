@@ -3,12 +3,14 @@
  "app": "6cb4d051-a33c-4bf9-b56f-5f47f0e85dc9",
  "sections": {
   "Contacts": "6aa8a3a93e5e4ad5b852a6d3",
-  "Products": "6aa8d12ddb26b712423d345d"
+  "Products": "6aa8d12ddb26b712423d345d",
+  "Invoicing": "6aa8f3ecbf00c316381dbbe8"
  },
  "worksheets": {
   "Contacts": "6aa8a3b34a22ad87b728c4fe",
   "Units & Packagings": "6aa8d14d4a73a3142152d3f6",
   "Products": "6aa8ea0c4a22ad87b728cf0b",
+  "Journals": "6aa8f5191204328eb1af162a",
   "Product Variants": "6aa90c161204328eb1af1b82"
  },
  "workflows": {
@@ -24,7 +26,9 @@
   "Product Variants: Unarchive": "6aa90fc38475f61d4ccd0faf",
   "Product Variants: create a new product's variant": "6aa9117ce589b8933dd933da",
   "Product Variants: copy a product's Internal Reference, Cost, Weight and Volume to its active variant": "6aa91186e589b8933dd9367a",
-  "Product Variants: archive and unarchive a product's variant with it": "6aa9118ce589b8933dd93748"
+  "Product Variants: archive and unarchive a product's variant with it": "6aa9118ce589b8933dd93748",
+  "Journals: Archive": "6aa9db3116473257ad4c471e",
+  "Journals: Unarchive": "6aa9db348e75db182e77e1e2"
  },
  "buttons": {
   "Archive": "6aa8a5654720c515252bda3d",
@@ -34,7 +38,9 @@
   "Products: Archive": "6aa8eb444720c515252be61c",
   "Products: Unarchive": "6aa8eb484720c515252be61e",
   "Product Variants: Archive": "6aa90fc04a22ad87b728ea89",
-  "Product Variants: Unarchive": "6aa90fc34720c515252bf9b8"
+  "Product Variants: Unarchive": "6aa90fc34720c515252bf9b8",
+  "Journals: Archive": "6aa9db31805aef7032865005",
+  "Journals: Unarchive": "6aa9db34e43d174ab37498ec"
  },
  "views": {
   "Units & Packagings: Units & Packagings": "6aa8d14d4a73a3142152d3fa",
@@ -42,7 +48,26 @@
   "Products: Products": "6aa8eadd1204328eb1af105b",
   "Products: List": "6aa8ea0c4a22ad87b728cf0f",
   "Products: Archived": "6aa8eadf1204328eb1af105d",
+  "Journals: Journals": "6aa8f5191204328eb1af162e",
+  "Journals: Archived": "6aa8f7074720c515252bf2c8",
   "Product Variants: Product Variants": "6aa90c161204328eb1af1b86",
   "Product Variants: Archived": "6aa90f171204328eb1af1bbf"
+ },
+ "controls": {
+  "Journals: Journal Name": "6aa8f6c81204328eb1af1676",
+  "Journals: Type": "6aa8f6c81204328eb1af1678",
+  "Journals: Sequence Prefix": "6aa8f6c81204328eb1af1677",
+  "Journals: Sequence": "6aa9dabcbd43f55762c6f430",
+  "Journals: Dedicated Credit Note Sequence": "6aa9dabcbd43f55762c6f431",
+  "Journals: Dedicated Payment Sequence": "6aa9dabcbd43f55762c6f432",
+  "Journals: Communication Type": "6aa8f6c81204328eb1af1679",
+  "Journals: Communication Standard": "6aa8f6c81204328eb1af167a",
+  "Journals: Active": "6aa8f6c81204328eb1af167b"
+ },
+ "rules": {
+  "Journals: Payment Communications only for Sales": "6aa9dae5e54d2a34fa4dfde2",
+  "Journals: Payment Communications are required for Sales": "6aa9dae67d58b0f44930e6ce",
+  "Journals: Dedicated Credit Note Sequence only for Sales and Purchase": "6aa9dae67d58b0f44930e6d0",
+  "Journals: Dedicated Payment Sequence only for Bank, Cash and Credit Card": "6aa9dae7e43d174ab37498e9"
  }
 }

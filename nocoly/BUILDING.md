@@ -84,6 +84,10 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   controls (`common.fields`).
 - A field's **No duplicates** (`unique`) holds on API writes too: the write is refused with `resultCode 11` naming the
   field. Empty values are never compared.
+- A text field's **maximum length does not**. `advancedSetting` `checkrange` "1" with `min` / `max` is a form-side
+  check: `record create` and `record update` store a longer value without complaint (a 6-character value on Journals'
+  Sequence Prefix, limited to 5). No filter operator measures length either, so a validation rule cannot stand in —
+  seed and import scripts have to check the length themselves.
 - Worksheet switches 10 (show create button), 26 and 36 (duplicate) and 37 (re-create) remove UI paths only:
   `record create` through the API and workflows still create records.
 - The Phone control validates numbers (libphonenumber): an unallocated number such as 03-1234 5678, or a placeholder
@@ -116,6 +120,9 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   that view's columns.
 - An ascending sort puts **empty values first**. `moreSort[].emptyRule` is stored (1, 2 and 3 tried) and changes
   nothing, so Odoo's NULLS LAST cannot be matched.
+- **Deleting a field leaves every view sorting on its id.** `sortCid` and `moreSort` keep the dead control id and
+  nothing cleans them up (Journals' two views still pointed at a Sequence field removed on 15 Sep). Re-write the sort
+  after a field goes.
 - `--view-spec` `tableFields` sets only `displayControls`, and the table then shows every field. A table's columns are
   `showControls` plus `advancedSetting.customShowControls`:
   `view update --view-json '{"showControls":[…],"advancedSetting":{"customdisplay":"1","customShowControls":"[…]"}}'
@@ -129,6 +136,14 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   of its condition fields is in the write**. A rule that tests only a lookup or formula never fires on the API; add
   the field being edited as a condition. A refused write returns `resultCode 32` naming `<ruleId>:<rowid>`.
 - A rule condition can compare with the record id (`dynamicSource: [{cid: "rowid"}]`).
+- A rule **applies its action while its condition holds and the opposite when it does not**, so show and hide are two
+  ways of writing the same toggle — except on an empty field. "Show when Type is Sales" keeps the field hidden on a
+  new record whose Type is still empty, while "hide when Type is not Sales" depends on how the server compares an
+  empty option. Write the positive form (show · equals) whenever the field must stay hidden until the driver is set.
+- A dropdown condition takes **several option keys in one `values` list**, meaning "is any of" (Journals' Type). It
+  reads back in the options' own order, not the order it was written in, so compare unordered.
+- A field a rule hides can never be filled, so **a field a rule hides must not be required on the field itself**:
+  require it with a second rule carrying the same condition (Journals' two Payment Communications).
 - A show/hide rule can target a **whole tab** (the tab's section control).
 - **Relation picker filters run in the browser only**: the picker query through the API ignores them, so prove a
   picker filter in the UI. A picker filter can compare a candidate with a Relation field on the form being edited.

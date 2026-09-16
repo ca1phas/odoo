@@ -7,8 +7,8 @@ everything a reviewer needs.
 ## What you need
 
 - **Access to ERP Master** in the Nocoly organisation — https://www.nocoly.com/app/6cb4d051-a33c-4bf9-b56f-5f47f0e85dc9
-- **Access to the reference Odoo**, casimir.odoo.com (Odoo saas~19.4). Treat it as read-only: don't create or change
-  records there while reviewing.
+- **Access to the reference Odoo**, casimir.odoo.com (Odoo saas~19.4) — the reference for every worksheet, Journals
+  included. Treat it as read-only: don't create or change records there while reviewing.
 - **This folder** of the repository (`nocoly/`, branch `19.0`). Ask Casimir for either account.
 
 ## Where things are
@@ -45,8 +45,8 @@ record was seeded from the Odoo tenant.
 | 02 | Units & Packagings | `uom.uom` | Built, seeded (30 units), UI-tested 18/19 + 1 partly — ready for review | [md](worksheets/02-units-and-packagings.md) · [page](https://claude.ai/artifact/LDoy447FXWYd5gkdDUNDJo) |
 | 03 | Products | `product.template` | Built, seeded (14 products), UI-tested 15/17 + 2 partly — ready for review | [md](worksheets/03-products.md) · [page](https://claude.ai/artifact/4fKn4CsuYPTT6zSAMVZFSv) |
 | 04 | Product Variants | `product.product` | Built, seeded (one variant per product), UI-tested 16/16 — ready for review | [md](worksheets/04-product-variants.md) · [page](https://claude.ai/artifact/1xo4yDavxjPNwHsUMHFYGV) |
-| 05 | Journals | `account.journal` | Being built by Teh Li Wei (branch `codex/journals-phase1-handoff`); our re-check against casimir follows when he is done | — |
-| 06 | Invoices | `account.move` | Being built by Teh Li Wei after Journals; our re-check follows | — |
+| 05 | Journals | `account.journal` | First build by Teh Li Wei; gaps closed against casimir, seeded (7 journals), UI-tested 18/18 — ready for review | [md](worksheets/05-journals.md) · [page](https://claude.ai/artifact/BckMvdNdP9bQhj66UyCdcr) |
+| 06 | Invoices | `account.move` | Being built by Teh Li Wei; our re-check against casimir follows when he is done | — |
 | 07 | Invoice Lines | `account.move.line` | Not started | — |
 
 ## Odoo words and HAP words

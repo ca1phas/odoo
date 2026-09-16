@@ -1,0 +1,41 @@
+{
+  "app": "6cb4d051-a33c-4bf9-b56f-5f47f0e85dc9",
+  "ops": [
+    {
+      "type": "field.update",
+      "worksheet": "6aa8f5191204328eb1af162a",
+      "field": "6aa8f6c81204328eb1af167a",
+      "set": {
+        "options": [
+          {
+            "key": "09f530e3-f017-46fe-8a4f-2ba6fb5e6cb8",
+            "value": "Full Reference (INV/2024/00001)",
+            "index": 1,
+            "isDeleted": false,
+            "color": "#C9E6FC",
+            "score": 0.0,
+            "hide": false
+          },
+          {
+            "key": "b7cc8520-1f95-455b-a0b7-1be84a127c27",
+            "value": "European (RF83INV202400001)",
+            "index": 2,
+            "isDeleted": false,
+            "color": "#C3F2F2",
+            "score": 0.0,
+            "hide": false
+          },
+          {
+            "key": "8ca4b321-5330-4f8f-be61-a4012450214b",
+            "value": "Numbers only (202400001)",
+            "index": 3,
+            "isDeleted": false,
+            "color": "#C2F1D2",
+            "score": 0.0,
+            "hide": false
+          }
+        ]
+      }
+    }
+  ]
+}

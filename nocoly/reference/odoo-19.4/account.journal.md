@@ -7,7 +7,8 @@ absent from the form, notably the Default / Suspense / Profit / Loss account fie
 tenant cannot show comes from the Odoo 19.0 source, `addons/account/models/account_journal.py`.
 
 Teh Li Wei's first Journals hand-off (branch `codex/journals-phase1-handoff`) was read from his own tenant,
-ohyes.odoo.com. **This file, from casimir.odoo.com, is the reference** (owner, 15 Sep 2026).
+ohyes.odoo.com; those notes are kept in `reference/ohyes/account.journal.md`. **This file, from casimir.odoo.com,
+is the reference** (owner, 15 Sep 2026).
 
 Menu: Invoicing › Configuration › Accounting › **Journals** — action *Journals*, `list,kanban,form`, no default filter.
 The Invoicing dashboard is a second action on the model (*Dashboard*, `kanban,form`, default filter Favorites).
