@@ -12,7 +12,8 @@
   "Products": "6aa8ea0c4a22ad87b728cf0b",
   "Journals": "6aa8f5191204328eb1af162a",
   "Product Variants": "6aa90c161204328eb1af1b82",
-  "Invoices": "6aa90facf363582dd37a62f7"
+  "Invoices": "6aa90facf363582dd37a62f7",
+  "Invoice Lines": "6aaa2b50e54d2a34fa4e0221"
  },
  "workflows": {
   "Archive": "6aa8a565e589b8933dd4cc6d",
@@ -32,7 +33,9 @@
   "Journals: Unarchive": "6aa9db348e75db182e77e1e2",
   "Invoices: Confirm": "6aa9f89b4f2a99acac043704",
   "Invoices: Cancel": "6aa9f99016473257ad4d3bc6",
-  "Invoices: Reset to Draft": "6aa9f9938e75db182e78a8b3"
+  "Invoices: Reset to Draft": "6aa9f9938e75db182e78a8b3",
+  "Invoice Lines: Roll the lines up into the invoice": "6aaa2d6aa1c923a16efc81a7",
+  "Invoice Lines: Roll the lines up when a line is deleted": "6aaa2ebba1c923a16efc8ecf"
  },
  "buttons": {
   "Archive": "6aa8a5654720c515252bda3d",
@@ -61,7 +64,8 @@
   "Product Variants: Archived": "6aa90f171204328eb1af1bbf",
   "Invoices: Invoices": "6aa90facf363582dd37a62fb",
   "Invoices: Bills": "6aa9f87d7d58b0f44930e8b5",
-  "Invoices: Journal Entries": "6aa9f87e7d58b0f44930e8b7"
+  "Invoices: Journal Entries": "6aa9f87e7d58b0f44930e8b7",
+  "Invoice Lines: Lines": "6aaa2b50e54d2a34fa4e0225"
  },
  "controls": {
   "Journals: Journal Name": "6aa8f6c81204328eb1af1676",
@@ -110,7 +114,21 @@
   "Invoices: Auto-post": "6aa9f847e54d2a34fa4dfef8",
   "Invoices: Auto-post until": "6aa9f847e54d2a34fa4dfef9",
   "Invoices: MyInvois": "6aa920d74a73a3142152e698",
-  "Invoices: MyInvois note": "6aa9f846e54d2a34fa4dfedd"
+  "Invoices: MyInvois note": "6aa9f846e54d2a34fa4dfedd",
+  "Invoices: Lines": "6aaa2baae43d174ab3749de9",
+  "Invoice Lines: Invoice": "6aaa2baae43d174ab3749dea",
+  "Invoice Lines: Sequence": "6aaa2b81e54d2a34fa4e022b",
+  "Invoice Lines: Display Type": "6aaa2b81e54d2a34fa4e022c",
+  "Invoice Lines: Product": "6aaa2b81e54d2a34fa4e022d",
+  "Invoice Lines: Label": "6aaa2b50e54d2a34fa4e0222",
+  "Invoice Lines: Quantity": "6aaa2b81e54d2a34fa4e022f",
+  "Invoice Lines: Unit": "6aaa2b81e54d2a34fa4e0230",
+  "Invoice Lines: Unit Price": "6aaa2b81e54d2a34fa4e0232",
+  "Invoice Lines: Discount (%)": "6aaa2b81e54d2a34fa4e0233",
+  "Invoice Lines: Subtotal": "6aaa2c18e43d174ab3749df1",
+  "Invoice Lines: Number": "6aaa2c18e43d174ab3749df2",
+  "Invoice Lines: Accounting Date": "6aaa2c18e43d174ab3749df3",
+  "Invoice Lines: Status": "6aaa2c18e43d174ab3749df4"
  },
  "rules": {
   "Journals: Payment Communications only for Sales": "6aa9dae5e54d2a34fa4dfde2",
@@ -122,7 +140,8 @@
   "Invoices: A vendor document must carry its date": "6aa9f86d805aef7032865182",
   "Invoices: Every document but an entry has a tax mode": "6aa9f86e7d58b0f44930e8b1",
   "Invoices: Auto-post until follows Auto-post": "6aa9f86fe54d2a34fa4dff25",
-  "Invoices: A posted or cancelled document is closed for editing": "6aa9f86f805aef7032865184"
+  "Invoices: A posted or cancelled document is closed for editing": "6aa9f86f805aef7032865184",
+  "Invoice Lines: A section or a note carries no figures": "6aaa2d3c7d58b0f44930eb72"
  },
  "records": {
   "Invoices: customer Sunway Construction Group": "a4935a3f-0262-4d68-9b3b-6049d32e390b",
@@ -137,6 +156,15 @@
   "Invoices: TEST-SEQ-4": "35b2e477-53c2-4d3c-a88d-e1d108975578",
   "Invoices: TEST-SEQ-5": "139ebcae-04ea-46dc-8462-ee02bff598c7",
   "Invoices: TEST-SEQ-6": "f16036f4-8188-4886-8bf1-3c3a7a7cd103",
-  "Invoices: TEST-SEQ-7": "c70beecb-8497-4114-ac75-f3a7475bbca0"
+  "Invoices: TEST-SEQ-7": "c70beecb-8497-4114-ac75-f3a7475bbca0",
+  "Invoice Lines: SCG-PO-88213 line 0": "744f8cb7-ae19-4625-92c5-4c9ce06d8205",
+  "Invoice Lines: SCG-PO-88213 line 1": "f3b550b6-1d1d-43f7-9248-9acbaaf8b592",
+  "Invoice Lines: SCG-PO-88213 line 2": "7722c0a4-cc62-4186-8389-1c0e54739eca",
+  "Invoice Lines: KKD-2026-009 line 0": "b8aeae1c-c6e9-42e2-b0ce-71cf7c00adf1",
+  "Invoice Lines: KKD-2026-009 line 1": "baab8017-e82c-489e-b461-33354e2d0b5f",
+  "Invoice Lines: KKD-2026-009 line 2": "9c9e8550-93d6-4764-84ad-9106f9fb68ac",
+  "Invoice Lines: STL-2026-0042 line 0": "b591346e-01ff-45cb-8e57-ac97c074fd52",
+  "Invoice Lines: STL-2026-0042 line 1": "7c9baf82-9397-4d51-8a8c-4b9abaddda3e",
+  "Invoice Lines: TEST roll-up line": "92b135c5-becc-4f73-906d-2f8672d746aa"
  }
 }

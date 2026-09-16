@@ -1,0 +1,213 @@
+<title>ERP Master Invoice Lines</title>
+<meta name="description" content="Review pack for worksheet 07 of the Odoo-to-Nocoly build: requirements, build ids and UI test results.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<link rel="stylesheet" href="review.css">
+<style>
+  pre.rule-code { margin: 0; padding: 14px 16px; overflow-x: auto; border: 1px solid var(--rule);
+    border-radius: 6px; background: var(--accent-soft); color: var(--code);
+    font: 400 12.5px/1.7 var(--mono); max-width: 86ch; }
+</style>
+
+<main class="page">
+
+  <header class="identity">
+    <div class="eyebrow"><span>ERP Master</span><span>Phase 1</span><span>Worksheet 07 of 7 — the last</span></div>
+    <h1>Invoice Lines <span class="model">account.move.line</span></h1>
+    <p class="lede">A journal item is one line of an invoice. The lines a person edits are the <strong>product, section and note</strong> lines — Odoo writes the tax and payment-term lines itself, and those belong with the bundles. This worksheet is mounted inside 06's Invoice Lines tab, and it is what makes 06's four amounts real: <strong>Untaxed Amount stops being a seeded figure and becomes the sum of its lines</strong>.</p>
+    <dl class="meta">
+      <div><dt>Reference</dt><dd>casimir.odoo.com — Odoo saas~19.4+e</dd></div>
+      <div><dt>Behaviour read from</dt><dd>Odoo 19.0 source, <code>account_move_line.py</code></dd></div>
+      <div><dt>Nocoly</dt><dd>App ERP Master · menu group Invoicing · mounted in Invoices</dd></div>
+      <div><dt>Built and tested</dt><dd>16 September 2026</dd></div>
+    </dl>
+    <div class="scoreline">
+      <span class="chip pass">18 of 20 tests pass</span>
+      <span class="chip note">1 partly · 1 not run</span>
+      <span class="chip note">12 differences from Odoo</span>
+      <span class="chip note">8 tenant lines seeded</span>
+    </div>
+  </header>
+
+  <aside class="callout" aria-labelledby="note-title">
+    <span class="chip note small" style="justify-self:start">Worth knowing before you review</span>
+    <h2 id="note-title">The sum of the lines is the point</h2>
+    <p>Open INV/2026/00001 and its three lines add to <strong>11,432.00</strong>, which plus the seeded tax of 1,143.20 is the <strong>12,575.20</strong> the tenant shows. Two workflows keep that true: one when a line is added or changed, one when a line is removed. <strong>Tax is deliberately not computed</strong> — that needs the Taxes bundle, which the owner's direction of 16 September keeps out, so a line has a quantity, a price, a discount and a subtotal, and stops there. One trap to know before you test a deletion: <code>hap worksheet record delete</code> silently suppresses workflows unless <code>--trigger-workflow</code> is passed, so a line removed from the command line without it leaves the invoice stale. Removing one from the browser is the single check this hand-off could not drive from automation, and it is worth your one click.</p>
+  </aside>
+
+  <nav class="toc" aria-label="Sections">
+    <a href="#requirements"><span>1</span>Requirements</a>
+    <a href="#build"><span>2</span>Build</a>
+    <a href="#tests"><span>3</span>Tests and differences</a>
+  </nav>
+
+  <section id="requirements" aria-labelledby="req-title">
+    <div class="section-head"><span class="n">1</span><h2 class="section" id="req-title">Requirements</h2></div>
+
+    <div class="block">
+      <h3>Fields</h3>
+      <p class="aside">Labels are Odoo 19.4's, taken from the invoice form's line columns; aliases are Odoo's field names.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th class="num">#</th><th>Field</th><th>Odoo field</th><th>Nocoly type</th><th>Required</th><th>Default</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td class="num">1</td><td class="label">Invoice</td><td><code>move_id</code></td><td>Relation → Invoices</td><td>yes</td><td class="muted">—</td><td>The subtable's own parent link; Odoo labels it Journal Entry</td></tr>
+            <tr><td class="num">2</td><td class="label">Sequence</td><td><code>sequence</code></td><td>Number</td><td class="muted">—</td><td>10</td><td>Orders the lines. Odoo drags them; a HAP subtable has no handle</td></tr>
+            <tr><td class="num">3</td><td class="label">Display Type</td><td><code>display_type</code></td><td>Dropdown</td><td>yes</td><td>Product</td><td>Product · Section · Subsection · Note — Odoo's <em>Add a line / section / note</em>. The types Odoo writes itself (tax, payment term, rounding…) are not built</td></tr>
+            <tr><td class="num">4</td><td class="label">Product</td><td><code>product_id</code></td><td>Relation → Product Variants</td><td class="muted">—</td><td class="muted">—</td><td>The <strong>variant</strong>, never the template — every Odoo order line, stock move and invoice line does the same</td></tr>
+            <tr><td class="num">5</td><td class="label">Label</td><td><code>name</code></td><td>Text · title field</td><td class="muted">—</td><td class="muted">—</td><td>On a section or a note it <em>is</em> the text</td></tr>
+            <tr><td class="num">6</td><td class="label">Quantity</td><td><code>quantity</code></td><td>Number, 2 decimals</td><td class="muted">—</td><td>1</td><td>Odoo's help: “The optional quantity expressed by this line, eg: number of product sold.”</td></tr>
+            <tr><td class="num">7</td><td class="label">Unit</td><td><code>product_uom_id</code></td><td>Relation → Units &amp; Packagings</td><td class="muted">—</td><td class="muted">—</td><td>Odoo offers only the product's own unit and packagings; here every unit is offered</td></tr>
+            <tr><td class="num">8</td><td class="label">Unit Price</td><td><code>price_unit</code></td><td>Number, 2 decimals</td><td class="muted">—</td><td>0</td><td class="muted">—</td></tr>
+            <tr><td class="num">9</td><td class="label">Discount (%)</td><td><code>discount</code></td><td>Number, 2 decimals</td><td class="muted">—</td><td>0</td><td>Odoo's optional <em>Disc.%</em> column; five of the tenant's lines use it</td></tr>
+            <tr><td class="num">10</td><td class="label">Subtotal</td><td><code>price_subtotal</code></td><td>Formula · read-only</td><td class="muted">—</td><td class="muted">—</td><td>Quantity × Unit Price × (1 − Discount ÷ 100). Odoo's <em>Amount</em> column while the document is Tax Excluded</td></tr>
+            <tr><td class="num">11–13</td><td class="label">Number · Accounting Date · Status</td><td><code>move_name</code> · <code>date</code> · <code>parent_state</code></td><td>Lookups of Invoice · read-only</td><td class="muted">—</td><td class="muted">—</td><td>So the standalone list can show which document a line belongs to, and sort the way Odoo sorts</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="aside"><code>account.move.line</code> has <strong>no <code>active</code> field</strong> either, so — as on Invoices — there is no Active checkbox, no Archived view and no Archive / Unarchive buttons.</p>
+    </div>
+
+    <div class="block">
+      <h3>The subtable, and what it does to 06</h3>
+      <p class="prose">The worksheet is mounted into the Invoices tab <em>Invoice Lines</em>, under the remark block 06 left there, so an invoice shows its lines where Odoo shows them — and it stays an ordinary worksheet with its own list, which is Odoo's standalone <em>Journal Items</em>. Two workflows keep the parent in step; none of 06's controls was replaced.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>06 field</th><th>Becomes</th></tr></thead>
+          <tbody>
+            <tr><td class="label">Untaxed Amount</td><td>the <strong>sum of its lines' Subtotal</strong>, counting only Product lines</td></tr>
+            <tr><td class="label">Tax</td><td><strong>unchanged</strong> — the tenant's seeded figure, until the Taxes bundle</td></tr>
+            <tr><td class="label">Total</td><td>Untaxed Amount + Tax</td></tr>
+            <tr><td class="label">Amount Due</td><td>Total, until the Payments bundle can settle a document</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="block">
+      <h3>Rule</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Rule</th><th>When</th><th>Effect</th><th>Odoo source</th></tr></thead>
+          <tbody>
+            <tr><td class="label">A section or a note carries no figures</td><td>Display Type is Section, Subsection or Note</td><td>hide Product, Quantity, Unit, Unit Price, Discount (%) and Subtotal</td><td>SQL <code>check_non_accountable_fields_null</code> — “Forbidden balance or account on non-accountable line”</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="aside">Odoo's other three constraints are accounting-side and need the Chart of Accounts.</p>
+    </div>
+
+    <div class="block">
+      <h3>Views</h3>
+      <p class="prose"><strong>Lines</strong>, the only view: every line, columns <strong>Number · Label · Product · Quantity · Unit · Unit Price · Discount (%) · Subtotal</strong>, sorted Accounting Date descending, then Number descending, then Sequence ascending — Odoo's <code>date desc, move_name desc, id</code>. Quick filter on Display Type. Inside an invoice the subtable shows Odoo's own column order: <strong>Sequence · Display Type · Product · Label · Quantity · Unit · Unit Price · Discount (%) · Subtotal</strong>.</p>
+    </div>
+
+    <div class="block">
+      <h3>Not built now, and why</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Odoo 19.4 field or feature</th><th>Why not now</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Taxes</strong> (<code>tax_ids</code>) and the tax-inclusive Amount (<code>price_total</code>)</td><td>The <strong>Taxes</strong> bundle. Bundles are recorded and ignored — nothing they bring gets a stand-in (owner, 16 Sep)</td></tr>
+            <tr><td><strong>Account</strong> and everything double-entry — debit, credit, balance, residual</td><td>The <strong>Chart of Accounts</strong> bundle</td></tr>
+            <tr><td>The tax lines and the payment-term line Odoo writes itself, and the due date on them</td><td>Computed from taxes and payment terms; neither is a line a person edits</td></tr>
+            <tr><td>Reconciliation, payments, statement lines</td><td>The <strong>Payments</strong> bundle</td></tr>
+            <tr><td>Analytic distribution, early-payment discount, deferred dates, follow-up, consolidation, storno</td><td>Each its own bundle or module</td></tr>
+            <tr><td>Down-payment lines and the product <strong>Catalog</strong></td><td>The <strong>Sales</strong> app; the tenant's down-payment lines belong to documents 06 did not seed</td></tr>
+            <tr><td>Malaysian classification code, deductible percentage</td><td>e-invoicing and vendor-bill bundles</td></tr>
+            <tr><td>Hide Composition / Hide Prices, Parent Section Line</td><td>They only change how a printed report groups the lines</td></tr>
+            <tr><td>Odoo restricting Unit to the product's units, and filling Label, Unit and Price from the product</td><td>Onchange-time computes; the first also needs a lookup of a relation, which HAP stores as a title</td></tr>
+            <tr><td>Roles</td><td>Set once for the app at the end of Phase 1</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="block">
+      <h3>Records</h3>
+      <p class="prose">The lines of the three seeded documents — eight of the tenant's 33; the rest belong to documents 06 did not seed, or are lines Odoo writes itself. Each document's lines add to exactly the Untaxed Amount it already carried: <strong>104,603.20 · 11,432.00 · 180,000.00</strong>.</p>
+      <p class="prose"><strong>Two lines point at a variant the tenant does not use.</strong> <code>[FURN-0001] Ergonomic Office Chair</code> and <code>[FURN-0002] Height-Adjustable Desk 140cm</code> are archived <em>original</em> variants on the tenant, and Phase 1 holds one active variant per product. Those lines point at <em>Ergonomic Office Chair</em> and <em>Height-Adjustable Desk 140cm</em> and keep the tenant's Label, which is where the reference survives. Creating the archived originals belongs with the Product Variants bundle.</p>
+    </div>
+  </section>
+
+  <section id="build" aria-labelledby="build-title">
+    <div class="section-head"><span class="n">2</span><h2 class="section" id="build-title">Build</h2></div>
+    <p class="prose">Built by <code>nocoly/build/invlines.py</code> — steps create, fields, mount, computed, layout, rules, views, rollup, seed, amounts, each safe to re-run: a second and third full run created, saved and published nothing. Ids are in <code>nocoly/build/ids.json</code> under “Invoice Lines: …”.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Element</th><th>Built</th><th>Id</th></tr></thead>
+        <tbody>
+          <tr><td class="label">Worksheet</td><td>Invoice Lines, alias <code>account_move_line</code>, in Invoicing after Invoices</td><td class="id">6aaa2b50e54d2a34fa4e0221</td></tr>
+          <tr><td class="label">Fields</td><td>The 13 above — one formula (Subtotal) and three lookups of the invoice</td><td class="muted">in ids.json</td></tr>
+          <tr><td class="label">Rule</td><td>A section or a note carries no figures</td><td class="id">6aaa2d3c7d58b0f44930eb72</td></tr>
+          <tr><td class="label">View</td><td>Lines — eight columns, three-level sort, Display Type quick filter</td><td class="id">6aaa2b50e54d2a34fa4e0225</td></tr>
+          <tr><td class="label">The mount</td><td>The subtable inside the Invoices tab, row 8, under the remark block</td><td class="id">6aaa2baae43d174ab3749de9</td></tr>
+          <tr><td class="label">Roll-up workflows</td><td>On a line added or changed · on a line deleted — both published</td><td class="id">6aaa2d6aa1c923a16efc81a7 · 6aaa2ebba1c923a16efc8ecf</td></tr>
+          <tr><td class="label">Records</td><td>The 8 tenant lines, plus the TEST lines of §3</td><td class="muted">—</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose">Nothing in 06 was replaced: its four amounts are the same Number controls, with the same ids and their seeded values, written into by the workflows. HAP does have a native roll-up (the 汇总 control), but using it would have meant swapping one of those controls for a different type — a deletion — so it was left alone and reported instead.</p>
+    <p class="prose">CLI self-checks: every control, option, default, the rule, the view, the mount and both workflows read back as specified; the eight seeded lines match the extract exactly; the three tenant documents still carry the tenant's figures, now as the sum of their lines. The other five worksheets were compared by control digest before and after every save and are unchanged.</p>
+  </section>
+
+  <section id="tests" aria-labelledby="tests-title">
+    <div class="section-head"><span class="n">3</span><h2 class="section" id="tests-title">Tests and differences</h2></div>
+    <p class="prose">Run in the Nocoly UI in Chrome on 16 Sep 2026, reading stored values back with <code>invlines.py lines</code>, <code>verify</code>, <code>check</code> and <code>untouched</code>, and <code>invoices.py document</code>.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th class="num">#</th><th>Check</th><th>Expected</th><th>Result</th></tr></thead>
+        <tbody>
+          <tr><td class="num">1</td><td class="label">Menu and the sidebar</td><td>Journals · Invoices · Invoice Lines; the mounted worksheet still its own entry</td><td><div class="result"><span class="chip pass small">Pass</span></div></td></tr>
+          <tr><td class="num">2</td><td class="label">The Lines table</td><td>Eight columns in order, three-level sort</td><td><div class="result"><span class="chip pass small">Pass</span></div></td></tr>
+          <tr><td class="num">3</td><td class="label">Quick filter · Display Type</td><td>Product, then Section, then cleared</td><td><div class="result"><span class="chip note small">Partly</span>The filter and its four options are there, but no selection would stick through automation. The same control narrows the table on 06 — worth one click from you</div></td></tr>
+          <tr><td class="num">4</td><td class="label">A seeded line, field by field</td><td>All 13 fields with the tenant's values</td><td><div class="result"><span class="chip pass small">Pass</span>Read on INV/2026/00001's chair line</div></td></tr>
+          <tr><td class="num">5</td><td class="label">Read-only fields</td><td>Subtotal, Number, Accounting Date, Status refuse input</td><td><div class="result"><span class="chip pass small">Pass</span>Subtotal renders as a formula with a recompute icon</div></td></tr>
+          <tr><td class="num">6</td><td class="label">The chair and desk lines point at the single variant</td><td>Product is the single variant; the Label keeps <code>[FURN-000x]</code></td><td><div class="result"><span class="chip pass small">Pass</span></div></td></tr>
+          <tr><td class="num">7</td><td class="label">A new line and the defaults</td><td>Product · 10 · 1.00 · 0.00 · 0.00 % · 0.00</td><td><div class="result"><span class="chip pass small">Pass</span>Invoice and Display Type marked required</div></td></tr>
+          <tr><td class="num">8</td><td class="label">Invoice is required</td><td>Refused without one; saves with one</td><td><div class="result"><span class="chip pass small">Pass</span>“Please fill in Invoice” — a required parent link does block a row made from the standalone worksheet</div></td></tr>
+          <tr><td class="num">9</td><td class="label">Rule · a section or a note carries no figures</td><td>Six fields hidden for Section, Subsection and Note</td><td><div class="result"><span class="chip pass small">Pass</span>The typed figures stay on the record — which is why the roll-up filters on Display Type</div></td></tr>
+          <tr><td class="num">10</td><td class="label">The subtable inside an invoice</td><td>The rows under the remark block, in Odoo's column order</td><td><div class="result"><span class="chip pass small">Pass</span>With <em>Add a row</em> and <em>Batch Operation</em> above them</div></td></tr>
+          <tr><td class="num">11</td><td class="label">A line added from inside the invoice</td><td>Saves without asking for the Invoice</td><td><div class="result"><span class="chip pass small">Pass</span>The row appears inline carrying the defaults</div></td></tr>
+          <tr><td class="num">12</td><td class="label">A line changed</td><td>The invoice's amounts follow</td><td><div class="result"><span class="chip pass small">Pass</span>Turning a line into a Section took the invoice 650.00 → 450.00; creating it had taken 450.00 → 650.00</div></td></tr>
+          <tr><td class="num">13</td><td class="label">A line deleted</td><td>The invoice's amounts fall with it</td><td><div class="result"><span class="chip pass small">Pass</span>570.00 → 450.00, with the workflow recording its run. The browser's own delete control could not be driven from automation — <strong>deleting one line by hand is the one check left for you</strong></div></td></tr>
+          <tr><td class="num">14</td><td class="label">The last line removed</td><td>The invoice falls to its remaining line</td><td><div class="result"><span class="chip note small">Not run</span>It would have emptied the document, and test 13 proves the same path</div></td></tr>
+          <tr><td class="num">15</td><td class="label">A section line inside an invoice</td><td>No figures in the table, and it does not join the total</td><td><div class="result"><span class="chip pass small">Pass</span></div></td></tr>
+          <tr><td class="num">16</td><td class="label">The three tenant documents</td><td>3, 3 and 2 lines, and the tenant's own amounts</td><td><div class="result"><span class="chip pass small">Pass</span>11,432.00 + 1,143.20 = 12,575.20 · 104,603.20 → 115,063.52 · 180,000.00 → 194,400.00</div></td></tr>
+          <tr><td class="num">17</td><td class="label">06's read-only rule over the table</td><td>Whether a posted document's lines are locked</td><td><div class="result"><span class="chip note small">Answered</span>They are <strong>not</strong>: the subtable stays editable on a posted document, where Odoo locks it. Difference 11</div></td></tr>
+          <tr><td class="num">18</td><td class="label">The standalone list after the mount</td><td>Still lists every line; the Invoice picker works</td><td><div class="result"><span class="chip pass small">Pass</span></div></td></tr>
+          <tr><td class="num">19</td><td class="label">Odoo side by side</td><td>The same lines, quantities, prices and subtotals</td><td><div class="result"><span class="chip pass small">Pass</span>All eight match one for one</div></td></tr>
+          <tr><td class="num">20</td><td class="label">Everything reads back</td><td><code>verify</code>, <code>check</code>, <code>untouched</code> on both worksheets</td><td><div class="result"><span class="chip pass small">Pass</span></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="block">
+      <h3>Differences from Odoo</h3>
+      <ol class="differences">
+        <li><span class="n">1</span><div class="head"><strong>No drag handle</strong><span class="chip note small">HAP behaviour</span></div><p>Odoo reorders lines by dragging; a HAP subtable has none, so <strong>Sequence</strong> is an editable number and the first column — the same decision as Journals' Sequence.</p></li>
+        <li><span class="n">2</span><div class="head"><strong>No Taxes column, and no tax-inclusive Amount</strong><span class="chip note small">Bundle</span></div><p>A line has a subtotal and no tax, and the invoice's Tax stays the tenant's seeded figure. Nothing here stands in for either.</p></li>
+        <li><span class="n">3</span><div class="head"><strong>No Account column</strong><span class="chip note small">Bundle</span></div><p>Nothing double-entry — the Chart of Accounts. Odoo's “Missing required account on accountable line” cannot be built without it.</p></li>
+        <li><span class="n">4</span><div class="head"><strong>Odoo nulls a section's figures; here a rule hides them</strong><span class="chip note small">Note</span></div><p>A value typed before the Display Type changed stays on the record, which is why the roll-up filters on Display Type as well as hiding.</p></li>
+        <li><span class="n">5</span><div class="head"><strong>Every unit is offered</strong><span class="chip note small">HAP behaviour</span></div><p>Odoo restricts Unit to the product's own unit and packagings; that domain needs a lookup of a relation, which HAP stores as a title.</p></li>
+        <li><span class="n">6</span><div class="head"><strong>Picking a product fills nothing in</strong><span class="chip note small">Note</span></div><p>Odoo's onchange writes the Label, the Unit and the Price; here all three are typed or seeded.</p></li>
+        <li><span class="n">7</span><div class="head"><strong>Two lines point at a variant the tenant does not use</strong><span class="chip note small">Decision</span></div><p>The archived original variants are not created; those lines point at each product's single variant and keep the tenant's Label.</p></li>
+        <li><span class="n">8</span><div class="head"><strong>The roll-up follows a change, it does not guarantee it</strong><span class="chip note small">HAP behaviour</span></div><p>Moving a line to another invoice leaves the old one stale, and two people saving lines of the same invoice in the same second can both read the same sum. Odoo recomputes inside the write.</p></li>
+        <li><span class="n">9</span><div class="head"><strong>A line is added with + Record, not with three buttons</strong><span class="chip note small">Note</span></div><p>Odoo's <em>Add a line</em>, <em>Add a section</em> and <em>Add a note</em> are one row plus the Display Type dropdown here; the product Catalog is the Sales app.</p></li>
+        <li><span class="n">10</span><div class="head"><strong>The other 25 tenant journal items are not here</strong><span class="chip note small">Note</span></div><p>They belong to documents 06 did not seed, or are the tax and payment-term lines Odoo writes itself.</p></li>
+        <li><span class="n">11</span><div class="head"><strong>A posted document's lines are still editable</strong><span class="chip note small">Open</span></div><p>06's rule locks eight named controls and the subtable is not one of them, so a posted invoice still offers <em>Add a row</em>. Odoo locks the lines of a posted move. Closing it means editing 06's rule, which is out for review — left for the owner.</p></li>
+        <li><span class="n">12</span><div class="head"><strong>A tooling trap, not a difference</strong><span class="chip note small">Read before testing</span></div><p>The delete roll-up does fire — 570.00 → 450.00 with the run recorded. But <code>hap worksheet record delete</code> sends <code>triggerWorkflow: false</code> unless <code>--trigger-workflow</code> is passed, so a deletion made from the command line without it removes the line and leaves the invoice stale.</p></li>
+      </ol>
+    </div>
+
+    <div class="block">
+      <h3>Test records left for you</h3>
+      <p class="prose"><strong>TEST roll-up line</strong> on MISC/2026/00001 is the CLI self-check's evidence — a line added and its quantity changed, with the invoice following each time. <strong>TEST UI line</strong>, on the same document, is the browser test's: created from the standalone worksheet, then turned into a <em>Section</em>, which is why that document counts only 450.00. Both are removed after sign-off, with the owner's approval. The eight tenant lines and the three documents they belong to are real records and stay.</p>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <p>Worksheet 07 of 7 — the last of Phase 1 · <code>nocoly/worksheets/07-invoice-lines.md</code> · reference <code>nocoly/reference/odoo-19.4/account.move.line.md</code> · build <code>nocoly/build/invlines.py</code>. What remains of Phase 1: roles, sign-off, removing the TEST records, and the Journals archive check that was waiting for invoices to exist.</p>
+  </footer>
+</main>

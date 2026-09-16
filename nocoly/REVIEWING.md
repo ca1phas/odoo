@@ -47,7 +47,7 @@ record was seeded from the Odoo tenant.
 | 04 | Product Variants | `product.product` | Built, seeded (one variant per product), UI-tested 16/16 — ready for review | [md](worksheets/04-product-variants.md) · [page](https://claude.ai/artifact/1xo4yDavxjPNwHsUMHFYGV) |
 | 05 | Journals | `account.journal` | First build by Teh Li Wei; gaps closed against casimir, seeded (7 journals), UI-tested 18/18 — ready for review | [md](worksheets/05-journals.md) · [page](https://claude.ai/artifact/BckMvdNdP9bQhj66UyCdcr) |
 | 06 | Invoices | `account.move` | Skeleton by Teh Li Wei; completed against casimir, seeded (3 tenant invoices and their 3 customers), UI-tested 24/24 — ready for review | [md](worksheets/06-invoices.md) · [page](https://claude.ai/artifact/DjdgDLdRmYC44dWoQTvG7T) |
-| 07 | Invoice Lines | `account.move.line` | Not started | — |
+| 07 | Invoice Lines | `account.move.line` | Built, mounted inside Invoices, seeded (the 8 lines of the 3 seeded documents), UI-tested 18/20 + 1 partly + 1 not run — ready for review | [md](worksheets/07-invoice-lines.md) · [page](https://claude.ai/artifact/7HsZ8L7Ecsp6mDbqGyocCh) |
 
 ## Odoo words and HAP words
 

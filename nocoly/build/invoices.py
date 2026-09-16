@@ -65,6 +65,7 @@ SEED = HERE.parent / 'data' / 'casimir-invoice-seed.json'
 OTHERS = ('Contacts', 'Units & Packagings', 'Products', 'Product Variants', 'Journals')   # must stay untouched
 
 DIVIDER = 22                                       # HAP's 分段 divider: a heading; its `desc` renders nowhere
+SUBLIST = 34                                       # the Invoice Lines worksheet, mounted by 07 (invlines.py)
 NOTE = 10010                                       # HAP's remark block: HTML in `dataSource`, hidetitle "1"
 RELATION = 29
 DROPDOWN = 11
@@ -143,6 +144,7 @@ RENAME = {                                         # control id -> the name this
 # ── 1 · the form ────────────────────────────────────────────────────────────
 
 INVOICE_LINES, OTHER_INFO, MYINVOIS = 'Invoice Lines', 'Other Info', 'MyInvois'
+LINES = 'Lines'                                    # 07's mounted subtable, inside the Invoice Lines tab
 NOTE_LINES, NOTE_OTHER, NOTE_MYINVOIS = 'Invoice Lines note', 'Invoice note', 'MyInvois note'
 TABS = (INVOICE_LINES, OTHER_INFO, MYINVOIS)
 
@@ -158,20 +160,23 @@ PLACE = {  # name -> (row, col, size, tab)
     'Journal': (5, 0, 6, None),                  'Tax mode': (5, 1, 6, None),
     INVOICE_LINES: (6, 0, 12, None),
     NOTE_LINES: (7, 0, 12, INVOICE_LINES),
-    'Terms and Conditions': (8, 0, 12, INVOICE_LINES),
-    'Untaxed Amount': (9, 0, 6, INVOICE_LINES),  'Tax': (9, 1, 6, INVOICE_LINES),
-    'Total': (10, 0, 6, INVOICE_LINES),          'Amount Due': (10, 1, 6, INVOICE_LINES),
-    OTHER_INFO: (11, 0, 12, None),
-    'Invoice': (12, 0, 12, OTHER_INFO),          # Odoo's <group name="invoice"> heading (divider, type 22)
-    NOTE_OTHER: (13, 0, 12, OTHER_INFO),
-    'Customer Reference': (14, 0, 6, OTHER_INFO), 'Salesperson': (14, 1, 6, OTHER_INFO),
-    'Recipient Bank': (15, 0, 6, OTHER_INFO),     'Payment Reference': (15, 1, 6, OTHER_INFO),
-    'Delivery Date': (16, 0, 6, OTHER_INFO),
-    'Accounting': (17, 0, 12, OTHER_INFO),       # Odoo's <group name="accounting_info_group"> heading
-    'Source Document': (18, 0, 6, OTHER_INFO),   'Auto-post': (18, 1, 6, OTHER_INFO),
-    'Auto-post until': (19, 0, 6, OTHER_INFO),
-    MYINVOIS: (20, 0, 12, None),
-    NOTE_MYINVOIS: (21, 0, 12, MYINVOIS),
+    # 07 Invoice Lines mounts its worksheet here as a 子表 (type 34), right under the remark block; everything
+    # below it moved down one row to make room. `invlines.py place_subtable` owns the control itself.
+    LINES: (8, 0, 12, INVOICE_LINES),
+    'Terms and Conditions': (9, 0, 12, INVOICE_LINES),
+    'Untaxed Amount': (10, 0, 6, INVOICE_LINES), 'Tax': (10, 1, 6, INVOICE_LINES),
+    'Total': (11, 0, 6, INVOICE_LINES),          'Amount Due': (11, 1, 6, INVOICE_LINES),
+    OTHER_INFO: (12, 0, 12, None),
+    'Invoice': (13, 0, 12, OTHER_INFO),          # Odoo's <group name="invoice"> heading (divider, type 22)
+    NOTE_OTHER: (14, 0, 12, OTHER_INFO),
+    'Customer Reference': (15, 0, 6, OTHER_INFO), 'Salesperson': (15, 1, 6, OTHER_INFO),
+    'Recipient Bank': (16, 0, 6, OTHER_INFO),     'Payment Reference': (16, 1, 6, OTHER_INFO),
+    'Delivery Date': (17, 0, 6, OTHER_INFO),
+    'Accounting': (18, 0, 12, OTHER_INFO),       # Odoo's <group name="accounting_info_group"> heading
+    'Source Document': (19, 0, 6, OTHER_INFO),   'Auto-post': (19, 1, 6, OTHER_INFO),
+    'Auto-post until': (20, 0, 6, OTHER_INFO),
+    MYINVOIS: (21, 0, 12, None),
+    NOTE_MYINVOIS: (22, 0, 12, MYINVOIS),
 }
 
 # What each remark block says, as the HTML the block stores (worksheets/06-invoices.md §1).
@@ -324,7 +329,7 @@ def desired(c, tab_ids):
     name = c['controlName']
     row, col, size, tab = PLACE[name]
     want = {'row': row, 'col': col, 'size': size, 'sectionId': tab_ids.get(tab, '') if tab else ''}
-    if c['type'] == C.TAB:
+    if c['type'] in (C.TAB, SUBLIST):              # a 子表's columns, name and help belong to invlines.py
         return want
     if c['type'] == NOTE:
         want['dataSource'] = HTML[name]
@@ -385,9 +390,15 @@ def step_untouched():
 
 
 def save_controls(ctrls):
-    """A full update-fields save, proving the other worksheets' controls unchanged."""
+    """A full SaveWorksheetControls save, proving the other worksheets' controls unchanged.
+
+    Through the CLI's own session, not `worksheet update-fields --controls`: since 07 mounted Invoice Lines
+    here, the 子表's `relationControls` snapshot pushes the control list past the kernel's command-line limit
+    (`OSError: [Errno 7] Argument list too long`). Same call, same optimistic-lock retry."""
+    from hap_cli.core.session import Session
+    from hap_cli.core import worksheet as ws_mod
     before = signatures()
-    hap.run('worksheet', 'update-fields', WORKSHEET, '--controls', json.dumps(ctrls, ensure_ascii=False))
+    ws_mod.save_controls(Session.load(None), WORKSHEET, ctrls)
     check_untouched(before)
 
 

@@ -113,6 +113,27 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
 - A Relation's `sourceControlId` can name a **control that does not exist**: the server reserves the id for a reverse
   field, and if none is ever saved on the target the id just dangles. Re-sending such a control in a full save does
   not create the reverse field either (Invoices' Customer / Vendor, whose placeholder on Contacts was never used).
+- **A worksheet mounted as a 子表 (type 34) keeps everything it had.** `hap worksheet mount-subtable <parent>
+  <child> --name … --back-relate-name …` does both halves of HAP's 已有关联 handshake: the 子表 on the parent
+  (with the child's controls as its `relationControls` snapshot), then the **back-relation on the child carrying
+  the placeholder controlId the server reserved** for it — which is what makes rows show under the right parent.
+  The child keeps its sidebar entry, its views, its rules and its records; only the `child_fields` kind of 子表
+  creates a hidden child table. The back-relation is created *by the mount*, at row 0 col 0 width 12, dropdown,
+  with no alias — place and alias it in a later save, sending its `sourceControlId` back untouched. Column order
+  is `showControls` (an ordered list) **plus** `advancedSetting.controlssorts` (the same list as a JSON string);
+  `advancedSetting.hidetitle` "1" drops the heading above the table. `record get` on the parent returns a 子表
+  as a **row count**, an integer, not as the rows (Invoice Lines under Invoices).
+- **`worksheet update-fields --controls` stops working once a worksheet carries a 子表.** The whole control list
+  goes on the command line and the `relationControls` snapshot pushes it past the kernel's argument limit —
+  `OSError: [Errno 7] Argument list too long`. Make the same call through the CLI's own session:
+  `hap_cli.core.worksheet.save_controls(Session.load(None), ws, controls)`, which is what the command does anyway
+  (`invlines.save_worksheet_controls`; `invoices.py` uses it too since Invoice Lines was mounted).
+- **A control-set digest is not a reliable "untouched" signal when a static Relation default is in play.** The
+  default stores the whole related record, `utime` included, so saving *any* record that the default points at
+  changes the holding worksheet's control payload without the worksheet being written to at all — no
+  `Modified worksheet` entry in `hap app logs`, and the control-set `version` does not move. Products' digest
+  shifted when Invoice Lines was seeded with eight lines pointing at the `Units` unit. Compare a worksheet
+  control by control, by id, as the build scripts do.
 
 ### Formulas and lookups
 
@@ -252,17 +273,51 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
 - A formula node's own result is `string_fx_id` (text) or `number_fx_id` (number). **Counting records** is a formula
   node with actionId **107** (worksheet total), `reportControlId` empty and `reportType` 0, plus its own `filters` —
   and that filter can compare a field with an earlier formula node's result (`kind: "field"`, `fieldId:
-  string_fx_id`). There is **no code node** through the CLI: `batch-add` refuses `nodeType: "code"` outright.
+  string_fx_id`). **Summing a column** is the same node with `reportControlId` = the column and `reportType` **3**
+  (4 avg · 5 max · 6 min), and its filter can compare a Relation with another node's record: `op` "33",
+  `conditionValues: [{nodeId, controlId: "rowid"}]`. `batch-add` writes a 107 node's filter correctly (it sends
+  `filters`), unlike a search node's (type 7). There is **no code node** through the CLI: `batch-add` refuses
+  `nodeType: "code"` outright.
+- **A formula node's result can only be bound as `nodeId` + `fieldValueId` when the node is a worksheet total
+  (107) or a number formula (100).** A **function** formula (106) reports `appType` **11**, its `number_fx_id`
+  comes back with an empty `type` and `name` in the consuming node's `formulaMap`, that node goes
+  `isException: true` and `workflow publish` fails with **warningType 200** and nothing else to go on. A 100 or
+  107 result binds with `nodeAppType` **1**, `nodeTypeId` 9 and `nodeActionId` "100"/"107" (Invoice Lines'
+  roll-up). A 106 node's **text** result is still reachable as the template `$<nodeId>-string_fx_id$` in a text
+  field's `fieldValue` (Invoices' Confirm) — the limit is on the numeric binding, not on function formulas.
+- **A workflow number formula (100) rounds to whole numbers and computes empty on an empty input.** `number` on
+  the node is its **decimal places**, default **0** — the first roll-up stored 104,603.20 as 104,603 and
+  115,063.52 as 115,064 with no error anywhere. `nullZero` is "treat an empty input as 0", default **false** —
+  `sum + Tax` on a document whose Tax was never filled produced 0.00. Send `number: 2, nullZero: true`.
+- **A worksheet-event trigger takes one event.** 新增 '1' · 新增或更新 '2' · 删除 '3' · 仅更新 '4'; 2 and 3 cannot
+  share a trigger, so a roll-up that must survive a deletion is two workflows with the same body.
+  `node batch-add --trigger-worksheet … --trigger-event …` configures a `--type worksheet` workflow's trigger in
+  the same call; without it the trigger stays unconfigured and the workflow cannot publish.
+- **A `record update` that changes nothing fires no worksheet-event workflow** — so a check that writes back the
+  value a record already holds and then re-reads is testing nothing.
+- `hap workflow list` takes the **app id as an argument**, not as `-a`.
 - `batch-add` in a **second** call drops a branch path's name as well as its condition. `node save --type 2` with
   `operateCondition` sets the condition but not the name even with `-n`; the name needs `workflow node rename`.
 - **A record written by a workflow starts that worksheet's event workflows** (a variant's Unarchive button writing its
   product started the product's archive workflow). Design cascades so the second run finds nothing to change.
 - Give a worksheet-event trigger a condition when most records cannot need the run — every run counts against the
   organisation's workflow quota.
+- **A workflow's run history is `hap approval history --process-id <pid>`** — `workflow history` is the *version*
+  history, not the runs. An empty run list is the quickest way to tell "the trigger never fired" apart from
+  "the steps are wrong", and it is what proved that Invoice Lines' delete roll-up had never once been reached.
 
 ### Records
 
 - `hap worksheet record delete` needs the rowId UUID; given `_id` it reports success and deletes nothing.
+- **`hap worksheet record delete` suppresses workflows unless `--trigger-workflow` is passed**, and **prompts
+  unless `-y` is passed** (so it hangs when a script runs it). It is a v3 open-API command; `triggerWorkflow`
+  defaults to `true` in the API schema *and* in the command's own `--help`, but the v3 dispatcher renders a
+  boolean as a Click flag, an absent flag is `False` rather than `None`, and only `None` / `()` / `""` are
+  dropped from the request body — so the CLI sends `triggerWorkflow: false`. The record is deleted and nothing
+  downstream runs, with no error and no clue. Always write it in full:
+  `hap worksheet record delete <ws> --row-ids <rowid> -a <app> --trigger-workflow -y`. (Invoice Lines' delete
+  roll-up looked broken for exactly this reason; the workflow was right all along.) The two record-delete tools
+  are the only v3 schemas in the CLI carrying a boolean that defaults to `true`.
 - `hap worksheet record list` can return hidden fields as empty strings (seen on Units, not always on Contacts or
   Products); `record get` always returns their values.
 - `record get` returns a record's creation time as `_createdAt`; `record list` returns `ctime` empty.
@@ -277,10 +332,12 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   those fields ("Hours" finds Minutes and Days on a unit picker). It also **offers archived records** — the
   Invoices Journal picker lists the archived TEST Sales journal beside Sales — so a worksheet that must hide them
   needs a picker filter, which is browser-side only and has to be proved in the UI.
-- **HAP marks a read-only field three different ways in the DOM**, which matters when testing a read-only rule: a
+- **HAP marks a read-only field four different ways in the DOM**, which matters when testing a read-only rule: a
   text, number or date control gets the class `controlDisabled` on its `.customFormControlBox`; a Relation gets
-  `readonly` on `.RelateRecordDropdown-selected`; and a read-only field with **no value** renders as an empty
-  `<div class="customFormNull">`, indistinguishable from an empty editable field.
+  `readonly` on `.RelateRecordDropdown-selected`; a **formula** control gets `customFormReadonly` on its
+  `.customFormControlBox` and a recompute icon beside the value, never `controlDisabled` (Invoice Lines'
+  Subtotal); and a read-only field with **no value** renders as an empty `<div class="customFormNull">`,
+  indistinguishable from an empty editable field.
 - A **newly created record stays in a view whose filter excludes it until the page is reloaded** (a Vendor Bill
   created from the Invoices view, whose filter is Type). The filter itself is right; the open list is stale.
 - A Rich text field never shows its hint, even when clicked into. Put guidance in the description instead.
