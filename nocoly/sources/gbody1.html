@@ -19,8 +19,8 @@
     <div class="wctl">
       <div class="wslider">
         <label for="ph">Phase</label>
-        <input id="ph" type="range" min="1" max="11" value="3" step="1" aria-label="Build phase">
-        <span class="wphl" id="phl">3 — Sales</span>
+        <input id="ph" type="range" min="1" max="11" value="1" step="1" aria-label="Build phase">
+        <span class="wphl" id="phl">1 — Core Foundation</span>
       </div>
       <div class="wchips" id="chips"></div>
       <div class="wstats" id="stats"></div>
@@ -31,6 +31,16 @@
   <p class="figcap">Drag the slider to add phases. Switch a feature bundle off and the worksheets that use it turn dotted; switch off one another phase hard-depends on and they turn orange. Point of Sale at phase 4 is orange until Inventory lands at phase 5 — that is the one ordering exception in the plan, showing itself.</p>
   <div class="note">
     <p><b>Point of Sale is the one phase that can't run in its numbered order.</b> <code>point_of_sale</code> hard-depends on <code>stock_account</code>, so it needs Inventory standing before it. Either build phase 5 before phase 4, or accept that phase 4 drags a subset of Inventory in with it. Every other phase in the plan is buildable in the order shown.</p>
+  </div>
+  <div class="note">
+    <p><b>Where the build actually is — 16 September 2026.</b> This page is the plan; the app is real. Phase 1's seven
+    core worksheets are built in the Nocoly app <b>ERP Master</b>, seeded from a live Odoo 19.4 tenant, UI-tested and out
+    for review: Contacts 13/13 · Units &amp; Packagings 18/19 · Products 15/17 · Product Variants 16/16 · Journals 20/21 ·
+    Invoices 25/25 · Invoice Lines 18/20. Roles are set — four accounting roles mapped onto Odoo's own groups, nobody
+    assigned yet. The slider therefore starts at <b>1</b>.</p>
+    <p>Five feature bundles are being added to Phase 1 now, in this order: <b>Product Categories</b> ·
+    <b>Chart of Accounts</b> · <b>Payment Terms</b> · <b>Geography</b> (Countries, then States) · <b>Taxes</b> — the six
+    worksheets the core seven lean on hardest. They are switched on above. Everything else on this page is still plan.</p>
   </div>
 </section>
 

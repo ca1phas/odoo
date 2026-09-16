@@ -3,7 +3,7 @@
   const wall=$('wall'), chips=$('chips'), detail=$('detail'), stats=$('stats'), ph=$('ph'), phl=$('phl');
   if(!wall) return;
   const PHNAME={1:'Core Foundation'}; PHASES.forEach(p=>PHNAME[p[0]]=p[1]);
-  const on=new Set(['btax','bgeo','bcat','bterm','bteam','butm','bpl']);
+  const on=new Set(['bcat','bcoa','bterm','bgeo','btax']);
   const META={}; // id -> {name, sub, deps, kind, count, course}
   CORE.forEach(w=>META[w[0]]={name:w[1],sub:w[2],deps:w[3],kind:'core',count:1,course:1});
   BUNDLES.forEach(b=>b[4].forEach(w=>META[w[0]]={name:w[1],sub:w[2],deps:w[3],kind:'bundle',count:1,course:1,bundle:b[0]}));

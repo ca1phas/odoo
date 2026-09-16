@@ -385,8 +385,8 @@ figcaption b{color:var(--ink-2);font-weight:500}
     <div class="wctl">
       <div class="wslider">
         <label for="ph">阶段</label>
-        <input id="ph" type="range" min="1" max="11" value="3" step="1" aria-label="搭建阶段">
-        <span class="wphl" id="phl">3 — Sales</span>
+        <input id="ph" type="range" min="1" max="11" value="1" step="1" aria-label="搭建阶段">
+        <span class="wphl" id="phl">1 — Core Foundation</span>
       </div>
       <div class="wchips" id="chips"></div>
       <div class="wstats" id="stats"></div>
@@ -397,6 +397,16 @@ figcaption b{color:var(--ink-2);font-weight:500}
   <p class="figcap">拖动滑块可以逐阶段往上加。关掉某个 feature bundle，用到它的 worksheet 会变成虚线；关掉某个阶段硬依赖的东西，它们会变成橙色。Phase 4 的 Point of Sale 在 Inventory 于 Phase 5 落地之前一直是橙色——这就是整个方案里唯一的顺序例外，它自己显现了出来。</p>
   <div class="note">
     <p><b>Point of Sale 是唯一无法按编号顺序执行的阶段。</b><code>point_of_sale</code> 硬依赖 <code>stock_account</code>，所以它需要 Inventory 先立起来。要么把 Phase 5 挪到 Phase 4 之前，要么接受 Phase 4 会把 Inventory 的一部分一起拖进来。方案中其余所有阶段都可以按图示顺序搭建。</p>
+  </div>
+  <div class="note">
+    <p><b>实际进度 —— 2026 年 9 月 16 日。</b>本页是计划，应用是真的。第 1 阶段的七张核心工作表已在 Nocoly 应用
+    <b>ERP Master</b> 中建成，数据取自线上 Odoo 19.4 租户，已通过界面测试并交付评审：Contacts 13/13 ·
+    Units &amp; Packagings 18/19 · Products 15/17 · Product Variants 16/16 · Journals 20/21 · Invoices 25/25 ·
+    Invoice Lines 18/20。角色也已设好 —— 四个会计角色一一对应 Odoo 自身的权限组，暂未分配成员。因此滑块从
+    <b>1</b> 开始。</p>
+    <p>现正按此顺序为第 1 阶段补上五个可选功能包：<b>Product Categories</b> · <b>Chart of Accounts</b> ·
+    <b>Payment Terms</b> · <b>Geography</b>（先 Countries，后 States）· <b>Taxes</b> —— 即核心七表最依赖的六张工作表。
+    它们已在上方开启。本页其余内容仍属计划。</p>
   </div>
 </section>
 
@@ -770,7 +780,7 @@ const PHASES=[
   const wall=$('wall'), chips=$('chips'), detail=$('detail'), stats=$('stats'), ph=$('ph'), phl=$('phl');
   if(!wall) return;
   const PHNAME={1:'Core Foundation'}; PHASES.forEach(p=>PHNAME[p[0]]=p[1]);
-  const on=new Set(['btax','bgeo','bcat','bterm','bteam','butm','bpl']);
+  const on=new Set(['bcat','bcoa','bterm','bgeo','btax']);
   const META={}; // id -> {name, sub, deps, kind, count, course}
   CORE.forEach(w=>META[w[0]]={name:w[1],sub:w[2],deps:w[3],kind:'core',count:1,course:1});
   BUNDLES.forEach(b=>b[4].forEach(w=>META[w[0]]={name:w[1],sub:w[2],deps:w[3],kind:'bundle',count:1,course:1,bundle:b[0]}));

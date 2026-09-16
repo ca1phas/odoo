@@ -38,8 +38,8 @@ it planned one HAP app per Odoo app — the decisions win.
 
 | | |
 |---|---|
-| Ground-up plan (interactive) | `artifacts/ground-up-build.html` · https://claude.ai/code/artifact/abf0f678-db8a-457e-bf24-a27b945980c8 |
-| 中文 | `artifacts/ground-up-build.zh.html` · https://claude.ai/code/artifact/f9143f7a-deeb-4773-ba70-372ac474bb62 |
+| Ground-up plan (interactive) | `artifacts/ground-up-build.html` · https://claude.ai/artifact/NETamnjsBHnD5nPXDxL9QB — republished 16 Sep 2026 with the real state; the older link `…/code/artifact/abf0f678…` is the 14 Sep version and is no longer updated |
+| 中文 | `artifacts/ground-up-build.zh.html` · https://claude.ai/artifact/Vi6s67D4YmcSoVx3LXoQNY — same, 16 Sep 2026 |
 | Brownfield alternative | `artifacts/expansion-map.html` · https://claude.ai/code/artifact/927b65c6-5401-46f1-80de-3b0f2566568c |
 
 Eleven phases. Phase 1 builds the seven worksheets nothing else can exist without; the other ten are Odoo's own app
