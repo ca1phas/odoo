@@ -23,7 +23,7 @@
       <div><dt>Built and tested</dt><dd>Skeleton by Teh Li Wei, 15 Sep · completed and tested 16 Sep 2026</dd></div>
     </dl>
     <div class="scoreline">
-      <span class="chip pass">24 of 24 tests pass</span>
+      <span class="chip pass">25 of 25 tests pass</span>
       <span class="chip note">10 differences from Odoo</span>
       <span class="chip note">3 invoices and 3 customers seeded</span>
     </div>
@@ -72,7 +72,7 @@
             <tr><td class="num">22</td><td class="label">Source Document</td><td><code>invoice_origin</code></td><td>Text · read-only</td><td class="muted">—</td><td class="muted">—</td><td>The sales order a document came from (S00011). Seeded; nothing in Phase 1 writes it</td></tr>
             <tr><td class="num">23</td><td class="label">Auto-post</td><td><code>auto_post</code></td><td>Dropdown</td><td>yes</td><td>No</td><td>No · At Date · Monthly · Quarterly · Yearly</td></tr>
             <tr><td class="num">24</td><td class="label">Auto-post until</td><td><code>auto_post_until</code></td><td>Date</td><td class="muted">—</td><td class="muted">—</td><td>Shown only when Auto-post is not <em>No</em>, by rule</td></tr>
-          </tbody>
+</tbody>
         </table>
       </div>
       <p class="aside">Six controls hold no data: the three tabs kept from the skeleton, the two divider headings inside Other Info (<em>Invoice</em>, <em>Accounting</em>) and the three remark blocks that say what Odoo also keeps on each tab and which bundle brings it. <strong><code>account.move</code> has no <code>active</code> field</strong> — a document is cancelled, never archived — so there is no Active checkbox, no Archived view and no Archive / Unarchive buttons.</p>
@@ -88,7 +88,7 @@
             <tr><td class="label">A vendor document must carry its date</td><td>Type is Vendor Bill, Vendor Credit Note or Purchase Receipt</td><td>require Invoice Date</td><td><code>required="is_purchase_document(True)"</code></td></tr>
             <tr><td class="label">Every document but an entry has a tax mode</td><td>Type is not Journal Entry</td><td>require Tax mode</td><td>SQL <code>account_move_check_document_tax_mode_set</code></td></tr>
             <tr><td class="label">Auto-post until follows Auto-post</td><td>Auto-post is not <em>No</em></td><td>show Auto-post until</td><td><code>invisible="auto_post == 'no'"</code></td></tr>
-            <tr><td class="label">A posted or cancelled document is closed for editing</td><td>Status is Posted or Cancelled</td><td>make Type, Customer / Vendor, Journal, Invoice Date, Accounting Date, Due Date, Payment Terms and Tax mode read-only</td><td><code>readonly="state != 'draft'"</code></td></tr>
+            <tr><td class="label">A posted or cancelled document is closed for editing</td><td>Status is Posted or Cancelled</td><td>make Type, Customer / Vendor, Journal, Invoice Date, Accounting Date, Due Date, Payment Terms, Tax mode <strong>and the Invoice Lines table</strong> read-only</td><td><code>readonly="state != 'draft'"</code></td></tr>
           </tbody>
         </table>
       </div>
@@ -213,6 +213,7 @@ otherwise
           <tr><td class="num">22</td><td class="label">The three customers in Contacts</td><td>Three companies with the tenant's details; Company ID and DUNS empty; Contacts otherwise untouched</td><td><div class="result"><span class="chip pass small">Pass</span>Address Type Contact, Salesperson Casimir, phone formatted 03-5631 2000</div></td></tr>
           <tr><td class="num">23</td><td class="label">The three documents survive the test</td><td><code>verify</code> reports nothing missing or differing; <code>check</code> passes</td><td><div class="result"><span class="chip pass small">Pass</span>“3 in the seed file; 0 missing or differing”</div></td></tr>
           <tr><td class="num">24</td><td class="label">Odoo side by side</td><td>The same documents, numbers, customers, dates and totals</td><td><div class="result"><span class="chip pass small">Pass</span>Compared against the tenant's own records; its web list view would not load in the test tab, so the comparison was read from the tenant directly</div></td></tr>
+                    <tr><td class="num">25</td><td class="label">A posted document's lines are read-only</td><td>The subtable joined the rule; the posted table should be locked and a draft's should not</td><td><div class="result"><span class="chip pass small">Pass</span>On INV/2026/00001 the table has no <em>Add a row</em> and no <em>Batch Operation</em>, and Display Type has lost its required asterisk; on the Sunway draft both are there. Added at the end of Phase 1, and it resolves difference 11 of worksheet 07</div></td></tr>
         </tbody>
       </table>
     </div>

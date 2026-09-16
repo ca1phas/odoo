@@ -25,7 +25,7 @@
     <div class="scoreline">
       <span class="chip pass">18 of 20 tests pass</span>
       <span class="chip note">1 partly · 1 not run</span>
-      <span class="chip note">12 differences from Odoo</span>
+      <span class="chip note">11 differences, 1 resolved</span>
       <span class="chip note">8 tenant lines seeded</span>
     </div>
   </header>
@@ -196,7 +196,7 @@
         <li><span class="n">8</span><div class="head"><strong>The roll-up follows a change, it does not guarantee it</strong><span class="chip note small">HAP behaviour</span></div><p>Moving a line to another invoice leaves the old one stale, and two people saving lines of the same invoice in the same second can both read the same sum. Odoo recomputes inside the write.</p></li>
         <li><span class="n">9</span><div class="head"><strong>A line is added with + Record, not with three buttons</strong><span class="chip note small">Note</span></div><p>Odoo's <em>Add a line</em>, <em>Add a section</em> and <em>Add a note</em> are one row plus the Display Type dropdown here; the product Catalog is the Sales app.</p></li>
         <li><span class="n">10</span><div class="head"><strong>The other 25 tenant journal items are not here</strong><span class="chip note small">Note</span></div><p>They belong to documents 06 did not seed, or are the tax and payment-term lines Odoo writes itself.</p></li>
-        <li><span class="n">11</span><div class="head"><strong>A posted document's lines are still editable</strong><span class="chip note small">Open</span></div><p>06's rule locks eight named controls and the subtable is not one of them, so a posted invoice still offers <em>Add a row</em>. Odoo locks the lines of a posted move. Closing it means editing 06's rule, which is out for review — left for the owner.</p></li>
+        <li><span class="n">11</span><div class="head"><strong><s>A posted document's lines are still editable</s></strong><span class="chip pass small">Resolved</span></div><p>Settled at the end of Phase 1: the subtable joined 06's read-only rule, and a posted document's table now has no <em>Add a row</em> and no <em>Batch Operation</em> — seen on INV/2026/00001, against the Sunway draft where both are there. Odoo locks a posted move's lines the same way. One caveat stands: an interaction rule is browser-side, so the API still writes a posted document's lines, which is why the two roll-up workflows are unaffected.</p></li>
         <li><span class="n">12</span><div class="head"><strong>A tooling trap, not a difference</strong><span class="chip note small">Read before testing</span></div><p>The delete roll-up does fire — 570.00 → 450.00 with the run recorded. But <code>hap worksheet record delete</code> sends <code>triggerWorkflow: false</code> unless <code>--trigger-workflow</code> is passed, so a deletion made from the command line without it removes the line and leaves the invoice stale.</p></li>
       </ol>
     </div>

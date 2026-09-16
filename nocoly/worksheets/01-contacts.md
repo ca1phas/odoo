@@ -118,7 +118,7 @@ The company form's **Contacts** tab keeps its own columns: Name, Address Type, E
 | Upstream sync — a contact's address or Tax ID edit rewriting its company | Odoo does it; left out to avoid automation loops — edit the company instead |
 | "Potential duplicates" warning on the same Tax ID | Odoo only warns; revisit with Invoicing |
 | Email required for a contact with a user login | No logins on contacts in HAP |
-| Roles | Set once for the app at the end of Phase 1 |
+| ~~Roles~~ | **Set on 16 Sep 2026** for the whole app, at the end of Phase 1: five stock roles renamed to English and four business roles, one per Odoo accounting group, each with a rule for this worksheet. The table is in `REVIEWING.md` › *Phase 1 · Roles* |
 
 ## 2 · Build
 

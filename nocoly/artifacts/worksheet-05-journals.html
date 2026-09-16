@@ -18,8 +18,8 @@
       <div><dt>Built and tested</dt><dd>First build by Teh Li Wei, 15 Sep · completed and tested 16 Sep 2026</dd></div>
     </dl>
     <div class="scoreline">
-      <span class="chip pass">18 of 18 tests pass</span>
-      <span class="chip note">6 differences from Odoo</span>
+      <span class="chip pass">20 of 21 tests pass</span>
+      <span class="chip note">7 differences from Odoo</span>
       <span class="chip note">7 journals seeded</span>
     </div>
   </header>
@@ -73,7 +73,7 @@
             <tr><td class="label">Credit note sequence only for Sales and Purchase</td><td>Odoo's <code>invisible="type not in ['sale','purchase']"</code></td></tr>
             <tr><td class="label">Payment sequence only for Bank, Cash and Credit Card</td><td>Odoo's <code>invisible="type not in ('bank','cash','credit')"</code></td></tr>
             <tr><td class="label">Advanced Settings hidden for Bank and Cash</td><td>Hides the whole tab, note and all — Odoo's <code>invisible="type in ['bank','cash']"</code>. Written as <em>hide when</em>, so a new record with no Type still shows the tab</td></tr>
-            <tr><td class="label">Archive · Unarchive</td><td>As on every other worksheet: “Are you sure that you want to archive this record?” then Active off; Unarchive without a confirmation</td></tr>
+            <tr><td class="label">Archive · Unarchive</td><td>As on every other worksheet: “Are you sure that you want to archive this record?”, then Active is unchecked. <strong>Archive now refuses a journal that still holds draft entries</strong>, which is Odoo's own constraint and was owed to this worksheet until Invoices existed.</td></tr>
             <tr><td class="label">Journals view</td><td>Active journals: Journal Name · Type · Sequence Prefix, sorted Sequence, then Type, then Sequence Prefix — Odoo's <code>_order</code>. Type quick filter, several at a time (Cash + Bank + Credit Card is Odoo's <em>Liquidity</em>)</td></tr>
             <tr><td class="label">Archived view</td><td>Archived journals, same columns, sort and filter</td></tr>
           </tbody>
@@ -118,6 +118,7 @@
         </tbody>
       </table>
     </div>
+    <p class="prose"><strong>The archive guard, added at the end of Phase 1.</strong> Odoo refuses to archive a journal that still has draft entries (<code>_check_auto_post_draft_entries</code>). The Archive workflow now counts this journal's Invoices whose Status is Draft before it touches Active: if there is one, it stops and sends a notification carrying Odoo's message word for word, and Active is never written. Unarchive keeps no such check, as in Odoo. Proved both ways on TEST records — <em>TEST draft guard</em>, which has a draft entry, refuses; <em>TEST Journal</em>, which has none, archives and unarchives as before.</p>
     <p class="prose">CLI self-checks: every field, rule, view, button and record read back as configured; the seeded journals match the extract exactly and reproduce Odoo's list order; a duplicate prefix is refused by the API (<code>resultCode 11</code>); both buttons ran on a test record; every step re-ran without writing anything. Contacts, Units &amp; Packagings, Products and Product Variants were compared by control id before and after each save and are untouched. One finding: <strong>the 5-character limit is not enforced on API writes</strong> — the evidence is the archived TEST long prefix record.</p>
   </section>
 
@@ -146,7 +147,10 @@
           <tr><td class="num">16</td><td class="label">Unarchive</td><td>No confirmation; back in place by Sequence</td><td><div class="result"><span class="chip pass small">Pass</span></div></td></tr>
           <tr><td class="num">17</td><td class="label">Placeholders, help and the notes</td><td>Odoo's help, both placeholders, both notes render</td><td><div class="result"><span class="chip pass small">Pass</span>Help shows under the field or behind the ⓘ</div></td></tr>
           <tr><td class="num">18</td><td class="label">Odoo side by side</td><td>The same 7 journals; the same Sales form fields</td><td><div class="result"><span class="chip pass small">Pass</span>One ordering difference — difference 2</div></td></tr>
-        </tbody>
+                  <tr><td class="num">19</td><td class="label">A journal with a draft entry refuses to archive</td><td>The click reports success, but the journal stays active and a notification explains why</td><td><div class="result"><span class="chip pass small">Pass</span>TEST draft guard is still active, and the notice reads 【Cannot archive this journal】 with Odoo's message and its three steps, word for word</div></td></tr>
+          <tr><td class="num">20</td><td class="label">A journal with no draft entry still archives</td><td>Archive and Unarchive behave as before, with no notification</td><td><div class="result"><span class="chip pass small">Pass</span>Run through the button's workflow; the browser would not open the dialog on that record while the window was in use</div></td></tr>
+          <tr><td class="num">21</td><td class="label">Odoo's own refusal, side by side</td><td>Odoo refuses with a dialog carrying the same words</td><td><div class="result"><span class="chip note small">Not run</span>It would mean pressing Archive on a live journal of a tenant we treat as read-only; the refusal is read from the source instead (<code>account_journal.py:686</code>)</div></td></tr>
+</tbody>
       </table>
     </div>
 
@@ -159,6 +163,7 @@
         <li><span class="n">4</span><div class="head"><strong>The 5-character limit is a form check only</strong><span class="chip note small">HAP behaviour</span></div><p>The API stores a longer prefix. No duplicates — what entry numbering depends on — is enforced everywhere.</p></li>
         <li><span class="n">5</span><div class="head"><strong>No computed prefix or name</strong><span class="chip note small">Note</span></div><p>Odoo fills an empty prefix or name from the Type; here both are required, and the placeholders show the pattern.</p></li>
         <li><span class="n">6</span><div class="head"><strong>Archive and the Save bar</strong><span class="chip note small">HAP behaviour</span></div><p>A full-page record shows only the button that applies, and an edit is kept with Save on the <em>Modifying form data</em> bar.</p></li>
+        <li><span class="n">7</span><div class="head"><strong>The archive refusal is a notification, not a dialog</strong><span class="chip note small">HAP behaviour</span></div><p>Odoo stops the save and shows the message on the spot. A HAP button has only one message — its confirmation, shown <em>before</em> the workflow runs — so the click reports success and the explanation arrives a moment later in the Workflow notification channel. The guard itself is exact: Active is never written.</p></li>
       </ol>
     </div>
 

@@ -15,6 +15,8 @@ with the CLI's interpreter:
     ~/.hap-venv/bin/python nocoly/build/journals.py rules      # 2. what Type shows, requires and hides (upsert by name)
     ~/.hap-venv/bin/python nocoly/build/journals.py views      # 3. Journals and Archived: columns, sort, Type quick filter
     ~/.hap-venv/bin/python nocoly/build/journals.py buttons    # 4. Archive / Unarchive and their one-step workflows
+    ~/.hap-venv/bin/python nocoly/build/journals.py draftguard # 4b. Odoo's refusal to archive a journal that still
+                                                               #    has draft entries, into the Archive workflow
     ~/.hap-venv/bin/python nocoly/build/journals.py seed       # 5. the 7 journals of the reference (upsert by Sequence
                                                                #    Prefix), then verify
     ~/.hap-venv/bin/python nocoly/build/journals.py all        # every step above, then check
@@ -24,6 +26,9 @@ with the CLI's interpreter:
                                                                #    against this spec
     ~/.hap-venv/bin/python nocoly/build/journals.py selfcheck  # the API writes the worksheet must refuse, and both buttons,
                                                                #    on TEST Journal (TSTJ), which is left active
+    ~/.hap-venv/bin/python nocoly/build/journals.py draftcheck # the archive guard both ways: TEST draft guard (TSTDG),
+                                                               #    which holds a TEST draft entry, must refuse to
+                                                               #    archive; TEST Journal, which holds none, must not
     ~/.hap-venv/bin/python nocoly/build/journals.py order      # each view's records, in the order the view sorts them
     ~/.hap-venv/bin/python nocoly/build/journals.py journal "Bank"   # stored values by Journal Name, hidden fields included
     ~/.hap-venv/bin/python nocoly/build/journals.py untouched  # Contacts, Units & Packagings, Products and Product
@@ -463,6 +468,262 @@ def step_buttons():
         print(C.structure(hap.ids()['workflows'][key]))
 
 
+# ── 4b · the archive guard ──────────────────────────────────────────────────
+#
+# Odoo `_check_auto_post_draft_entries` (addons/account/models/account_journal.py:686) refuses to archive a
+# journal that still has draft entries. It waited for 06 Invoices, which is where a draft entry lives; the
+# note was left in §1 *Not built now* and in DECISIONS.md on 16 Sep 2026.
+#
+# The check goes inside the Archive **button's** workflow, in front of the step that unchecks Active:
+#
+#     Trigger by button
+#       → Draft entries in this journal          a 汇总 step (107): how many Invoices point at this journal
+#                                                with Status Draft
+#       → Does the journal still hold draft entries?
+#            · Yes (one or more)  → Tell the user the journal cannot be archived   (站内通知)
+#                                 → Stop — leave Active alone                      (中止流程, node type 30)
+#            · No                 → (nothing)
+#       → Archive the journal                    the first build's update step, untouched
+#
+# The abort node is what makes the guard work: a HAP branch **converges**, so an empty path and a path whose
+# steps have run both carry on to whatever follows the gateway. Only 中止流程 stops the run before it reaches
+# the update. Unarchive gets no such check — Odoo's constraint deliberately fires on archiving only
+# (`self.filtered(lambda j: not j.active)`).
+
+INVOICES = hap.ids()['worksheets']['Invoices']
+ARCHIVE_STEP = 'Archive the journal'                # the first build's update step; never touched
+COUNT_STEP = 'Draft entries in this journal'
+DRAFT_BRANCH = 'Does the journal still hold draft entries?'
+# The 站内通知 step's **name is part of what the user reads**: HAP renders the notification as
+# 【<node name>】<message>. So the step is named as the heading Odoo's dialog does not have, rather than as
+# what it does. 'Tell the user the journal cannot be archived' was the first cut's name and is renamed.
+TELL_STEP = 'Cannot archive this journal'
+TELL_STEP_WAS = 'Tell the user the journal cannot be archived'
+STOP_STEP = 'Stop — leave Active alone'
+GUARD_STEPS = (COUNT_STEP, DRAFT_BRANCH, TELL_STEP, STOP_STEP, ARCHIVE_STEP)   # the chain, in order
+
+NUMBER_FX = 'number_fx_id'                          # a formula node's own numeric result
+WORKSHEET_TOTAL = '107'                             # a workflow 汇总 step over a whole worksheet
+ABORT, NOTICE, BRANCH_PATH = 30, 27, 2              # flowNodeType: 中止流程 · 站内通知 · a branch path
+AT_LEAST_ONE, RELATION_EQ, IS_ANY_OF = '14', '33', '1'   # workflow conditionIds: 大于等于, a Relation, 是其中一个
+NUMBER, DROPDOWN, RELATION, MEMBER = 6, 11, 29, 26
+
+# The person who pressed the button. HAP's fixed 系统 node carries it as `triggeraid` ("Trigger", a member
+# field); `kind: triggerUser` in hap-cli's DSL means something else here — it keys `uaid` off the trigger
+# node, which on a button trigger the server reads back as **Last modifier**, the journal's last editor
+# rather than whoever clicked Archive. `translate_accounts` passes a dict with no `kind` through untouched,
+# so the recipient goes in wire-shaped.
+SYSTEM_NODE = '5d39140d381d42d20db0c4da'
+TRIGGER_USER = {'type': 6, 'entityId': SYSTEM_NODE, 'entityName': 'System', 'roleId': 'triggeraid',
+                'roleTypeId': 0, 'roleName': 'Trigger', 'controlType': MEMBER, 'avatar': '', 'count': 0,
+                'appType': 100, 'actionId': ''}
+
+# Odoo's own text, verbatim (account_journal.py:694). Its three steps name Odoo's menus, not this app's —
+# the equivalent here is Invoicing › Invoices, the Journal Entries view or the Status quick filter.
+DRAFT_MESSAGE = ("You can not archive a journal containing draft journal entries.\n\n"
+                 "To proceed:\n"
+                 "1/ go to Accounting > Accounting > Journal Entries\n"
+                 "2/ filter on this journal and on 'Unposted' entries\n"
+                 "3/ select them all and post or delete them through the action menu")
+
+
+def invoice_fields():
+    return C.fields(INVOICES)
+
+
+def draft_key(inv):
+    return next(o['key'] for o in inv['Status']['options'] if o['value'] == 'Draft')
+
+
+def guard_nodes(inv):
+    """The count and the branch, for `batch-add` in front of the update step.
+
+    The 汇总 step's filter is the journal's own rowid against the Invoices Journal field (conditionId 33, a
+    Relation compared with another node's record) and Status is Draft. The server rewrites each condition's
+    `nodeId` to the 汇总 node's own id, so what `left.node` says does not matter; what does is the
+    comparison value, which is the **trigger** journal."""
+    return [
+        {'nodeAlias': 'drafts', 'nodeType': 'rollup', 'name': COUNT_STEP,
+         'config': {'mode': 'worksheet', 'worksheet': INVOICES, 'aggregate': 'count',
+                    'filter': {'logic': 'and', 'items': [
+                        {'left': {'node': {'nodeAlias': 'trigger'}, 'fieldId': inv['Journal']['controlId'],
+                                  '_filedTypeId': RELATION},
+                         'op': RELATION_EQ,
+                         'right': {'kind': 'field', 'node': {'nodeAlias': 'trigger'}, 'fieldId': 'rowid'}},
+                        {'left': {'node': {'nodeAlias': 'trigger'}, 'fieldId': inv['Status']['controlId'],
+                                  '_filedTypeId': DROPDOWN},
+                         'op': IS_ANY_OF,
+                         'right': {'kind': 'literal', 'values': [
+                             {'key': draft_key(inv), 'value': 'Draft', 'isDeleted': False}]}},
+                    ]}}},
+        {'nodeAlias': 'draft_branch', 'nodeType': 'branch', 'name': DRAFT_BRANCH, 'config': {'paths': [
+            {'alias': 'has_drafts', 'name': 'Yes', 'nodes': [
+                {'nodeAlias': 'tell', 'nodeType': 'send_internal_notice', 'name': TELL_STEP,
+                 'config': {'content': DRAFT_MESSAGE, 'accounts': [dict(TRIGGER_USER)]}}]},
+            {'alias': 'no_drafts', 'name': 'No'}]}},
+    ]
+
+
+def at_least_one_draft(count_node):
+    """The Yes path's condition: the 汇总 step's own numeric result is 1 or more."""
+    return [[{'nodeId': count_node, 'filedId': NUMBER_FX, 'filedValue': COUNT_STEP, 'filedTypeId': NUMBER,
+              'conditionId': AT_LEAST_ONE, 'sourceType': 0, 'conditionValues': [{'value': '1'}]}]]
+
+
+def branch_paths(proc, gateway_id):
+    """A gateway's two paths: the one that carries a step, then the fall-through."""
+    paths = [n for n in proc['flowNodeMap'].values()
+             if n.get('typeId') == BRANCH_PATH and n.get('prveId') == gateway_id]
+    if len(paths) != 2:
+        sys.exit(f'{DRAFT_BRANCH}: {len(paths)} paths, expected 2')
+    yes = next((p for p in paths if p.get('nextId') not in (None, '', '99')), None)
+    return yes or paths[0], next(p for p in paths if p['id'] != (yes or paths[0])['id'])
+
+
+def save_path(pid, path, name, conditions):
+    """A branch path's name and condition. `node get` returns them as `conditions`; `node save --type 2`
+    wants `operateCondition`, and neither `batch-add` nor `node save -n` sets the name (BUILDING.md)."""
+    got = hap.run('workflow', 'node', 'get', pid, path['id'])
+    got = got.get('data', got)
+    key = lambda c: {k: c.get(k) for k in ('nodeId', 'filedId', 'conditionId')}
+    changed = [[key(c) for c in g] for g in got.get('conditions') or []] != \
+              [[key(c) for c in g] for g in conditions]
+    if changed:
+        hap.run('workflow', 'node', 'save', pid, path['id'], '--type', str(BRANCH_PATH),
+                '-c', json.dumps({'operateCondition': conditions}, ensure_ascii=False), '-n', name)
+    if path.get('name') != name:
+        hap.run('workflow', 'node', 'rename', pid, path['id'], '-n', name)
+        changed = True
+    return changed
+
+
+def save_notice(pid, node, content, account):
+    """The 站内通知 step's message and its one recipient, read back first. The node's `flowNodeMap` "106" —
+    the in-app-message channel config the server needs or the node counts as incomplete — is sent back
+    exactly as it came (BUILDING.md: without it publish fails with warningType 200)."""
+    got = hap.run('workflow', 'node', 'get', pid, node['id'])
+    got = got.get('data', got)
+    channel = got.get('flowNodeMap') or {}
+    key = lambda a: {k: a.get(k) for k in ('type', 'entityId', 'roleId', 'controlType')}
+    if got.get('sendContent') == content and channel.get('106', {}).get('name') == node['name'] \
+            and [key(a) for a in got.get('accounts') or []] == [key(account)]:
+        return False
+    if '106' in channel:                           # the channel config carries the node name too
+        channel['106']['name'] = node['name']
+    hap.run('workflow', 'node', 'save', pid, node['id'], '--type', str(NOTICE), '-c', json.dumps(
+        {'appType': got.get('appType', 1), 'selectNodeId': '', 'sendContent': content,
+         'accounts': [account], 'formProperties': [], 'showTitle': True,
+         'flowNodeMap': channel}, ensure_ascii=False), '-n', node['name'])
+    back = hap.run('workflow', 'node', 'get', pid, node['id'])
+    back = back.get('data', back)
+    if back.get('sendContent') != content:
+        sys.exit(f"{node['name']}: message read back {back.get('sendContent')!r}")
+    return True
+
+
+def nodes_by_name(pid):
+    proc = hap.run('workflow', 'node', 'list', pid)
+    return proc, {n['name']: n for n in proc['flowNodeMap'].values()}
+
+
+def guard_differences():
+    """The Archive workflow's draft-entry guard, read back: the chain, the count's filter, the branch
+    condition, the message and its recipient, and that Unarchive still has no guard at all."""
+    inv, problems = C.fields(INVOICES), []
+    pid = hap.ids()['workflows'][KEY + 'Archive']
+    proc, byname = nodes_by_name(pid)
+    missing = [n for n in GUARD_STEPS if n not in byname]
+    if missing:
+        return [f'Archive workflow: {missing} missing']
+    chain = {n: byname[n]['id'] for n in GUARD_STEPS}
+    want_next = [(proc['startEventId'], chain[COUNT_STEP]), (chain[COUNT_STEP], chain[DRAFT_BRANCH]),
+                 (chain[DRAFT_BRANCH], chain[ARCHIVE_STEP]), (chain[TELL_STEP], chain[STOP_STEP])]
+    for node_id, nxt in want_next:
+        if proc['flowNodeMap'][node_id].get('nextId') != nxt:
+            problems.append(f"{proc['flowNodeMap'][node_id]['name']!r} runs into "
+                            f"{proc['flowNodeMap'].get(proc['flowNodeMap'][node_id].get('nextId'), {}).get('name')!r}")
+    if proc['flowNodeMap'][chain[STOP_STEP]].get('typeId') != ABORT:
+        problems.append(f'{STOP_STEP!r} is node type {proc["flowNodeMap"][chain[STOP_STEP]].get("typeId")}, '
+                        f'not {ABORT} (中止流程) — a branch converges, so only an abort stops the update')
+    count = hap.run('workflow', 'node', 'get', pid, chain[COUNT_STEP])
+    count = count.get('data', count)
+    if (count.get('actionId'), count.get('appId'), count.get('reportControlId'), count.get('reportType')) != \
+            (WORKSHEET_TOTAL, INVOICES, '', 0):
+        problems.append(f"{COUNT_STEP}: actionId={count.get('actionId')} appId={count.get('appId')} "
+                        f"reportControlId={count.get('reportControlId')!r} reportType={count.get('reportType')}")
+    conds = [c for flt in count.get('filters') or [] for group in flt.get('conditions') or [] for c in group]
+    got = [(c['filedId'], c['conditionId'],
+            [v.get('controlId') or (v.get('value') or {}).get('value') for v in c['conditionValues']])
+           for c in conds]
+    want = [(inv['Journal']['controlId'], RELATION_EQ, ['rowid']),
+            (inv['Status']['controlId'], IS_ANY_OF, ['Draft'])]
+    if got != want:
+        problems.append(f'{COUNT_STEP} filter {got}')
+    if [v.get('nodeId') for c in conds for v in c['conditionValues']][:1] != [proc['startEventId']]:
+        problems.append(f'{COUNT_STEP}: the Journal is not compared with the triggering journal')
+    yes, no = branch_paths(proc, chain[DRAFT_BRANCH])
+    for path, name, want_cond in ((yes, 'Yes', [(chain[COUNT_STEP], NUMBER_FX, AT_LEAST_ONE, ['1'])]),
+                                  (no, 'No', [])):
+        got = hap.run('workflow', 'node', 'get', pid, path['id'])
+        got = got.get('data', got)
+        live = [(c['nodeId'], c['filedId'], c['conditionId'], [v.get('value') for v in c['conditionValues']])
+                for g in got.get('conditions') or [] for c in g]
+        if path.get('name') != name or live != want_cond:
+            problems.append(f'branch path {path.get("name")!r}: {live}')
+    tell = hap.run('workflow', 'node', 'get', pid, chain[TELL_STEP])
+    tell = tell.get('data', tell)
+    if tell.get('sendContent') != DRAFT_MESSAGE:
+        problems.append(f'{TELL_STEP}: message {tell.get("sendContent")!r}')
+    who = [(a.get('type'), a.get('entityId'), a.get('roleId')) for a in tell.get('accounts') or []]
+    if who != [(TRIGGER_USER['type'], TRIGGER_USER['entityId'], TRIGGER_USER['roleId'])]:
+        problems.append(f'{TELL_STEP}: recipient {who}')
+    unarchive, un_named = nodes_by_name(hap.ids()['workflows'][KEY + 'Unarchive'])
+    steps = [n['name'] for n in unarchive['flowNodeMap'].values()
+             if n.get('typeId') not in (None, 0, 100) and n.get('prveId')]
+    if steps != ['Unarchive the journal']:
+        problems.append(f'Unarchive has steps {steps}; Odoo checks nothing on unarchiving')
+    return problems
+
+
+def step_draftguard():
+    """Odoo's "You can not archive a journal containing draft journal entries." into the Archive workflow.
+
+    Re-runnable: the nodes are matched by name, the branch condition is read back before it is written, and
+    the workflow is republished only when something changed."""
+    guard()
+    pid = hap.ids()['workflows'][KEY + 'Archive']
+    proc, byname = nodes_by_name(pid)
+    if ARCHIVE_STEP not in byname:
+        sys.exit(f'{ARCHIVE_STEP!r} is not in the Archive workflow — run `buttons` first')
+    print('  backup:', hap.backup('journals_archive_workflow_pre_draftguard', proc))
+    inv = invoice_fields()
+    changed = COUNT_STEP not in byname
+    if changed:
+        # In front of the update step: batch-add inserts after the trigger, so the existing
+        # "Archive the journal" becomes what the branch converges on.
+        hap.run('workflow', 'node', 'batch-add', pid, '--nodes',
+                json.dumps(guard_nodes(inv), ensure_ascii=False),
+                '--trigger-node-id', proc['startEventId'], '--trigger-alias', 'trigger')
+        proc, byname = nodes_by_name(pid)
+    if TELL_STEP not in byname and TELL_STEP_WAS in byname:
+        hap.run('workflow', 'node', 'rename', pid, byname[TELL_STEP_WAS]['id'], '-n', TELL_STEP)
+        proc, byname = nodes_by_name(pid)
+        changed = True
+    if STOP_STEP not in byname:
+        # 中止流程 (node type 30) has no builder in hap-cli's DSL; add it by hand, last in the Yes path.
+        hap.run('workflow', 'node', 'add', pid, '--type', str(ABORT), '-n', STOP_STEP,
+                '--after', byname[TELL_STEP]['id'])
+        proc, byname = nodes_by_name(pid)
+        changed = True
+    changed |= save_notice(pid, byname[TELL_STEP], DRAFT_MESSAGE, dict(TRIGGER_USER))
+    yes, no = branch_paths(proc, byname[DRAFT_BRANCH]['id'])
+    changed |= save_path(pid, yes, 'Yes', at_least_one_draft(byname[COUNT_STEP]['id']))
+    changed |= save_path(pid, no, 'No', [])
+    print(f"  {'published' if changed else 'already built; not re-published'}:",
+          C.publish(pid) if changed else '')
+    print(C.structure(pid))
+
+
 # ── 5 · seed and verify ─────────────────────────────────────────────────────
 
 TYPES = [o['value'] for o in TYPE_OPTIONS]
@@ -713,6 +974,121 @@ def step_selfcheck():
     return sum(1 for _, refused, _ in results if not refused)
 
 
+# ── the archive guard, proved both ways ─────────────────────────────────────
+
+GUARD_JOURNAL = dict(id=0, name='TEST draft guard', type='Miscellaneous', code='TSTDG', sequence=99,
+                     invoice_reference_type='Based on Invoice', invoice_reference_model='Full Reference',
+                     refund_sequence=False, payment_sequence=False, active=True)
+GUARD_DOCUMENT = 'TEST draft guard'                 # its Customer Reference, the way 06 names a TEST document
+DRAFT = 'Draft'                                     # what an unnumbered draft's Number holds
+
+
+def invoice_option(inv, name, label):
+    return next(o['key'] for o in inv[name]['options'] if o['value'] == label)
+
+
+def draft_documents(inv):
+    """{rowid: (Customer Reference, Journal rowid, Status)} for every document, through `record list`."""
+    cid = lambda n: inv[n]['controlId']
+    out = {}
+    for r in C.records(INVOICES, APP):
+        journal = r.get(cid('Journal')) or ''
+        if isinstance(journal, str) and journal.startswith('['):
+            journal = json.loads(journal)
+        first = journal[0] if isinstance(journal, list) and journal else {}
+        status = r.get(cid('Status')) or ''
+        if isinstance(status, str) and status.startswith('['):
+            status = json.loads(status)
+        label = (status[0].get('value') if isinstance(status, list) and status and isinstance(status[0], dict)
+                 else status)
+        out[r['rowid']] = (r.get(cid('Customer Reference')) or '',
+                           first.get('sid') or first.get('rowid') or first.get('sourcevalue') or '', label)
+    return out
+
+
+def ensure_guard_records():
+    """The TEST journal the guard is proved on, and the TEST draft entry that must stop it. Both created if
+    missing, neither ever deleted: they are the reviewer's evidence."""
+    f, inv = C.fields(WORKSHEET), C.fields(INVOICES)
+    journal = next((j for j in read_journals().values() if j['name'] == GUARD_JOURNAL['name']), None)
+    if not journal:
+        rowid = C.row_id(hap.run('worksheet', 'record', 'create', WORKSHEET, '-a', APP, '--fields-json',
+                                 json.dumps(values_for(f, GUARD_JOURNAL), ensure_ascii=False)))
+        journal = read_journal(rowid)
+        print(f"  created {GUARD_JOURNAL['name']}: {rowid}")
+    docs = draft_documents(inv)
+    doc = next((rid for rid, (ref, _, _) in docs.items() if ref == GUARD_DOCUMENT), None)
+    if not doc:
+        cid = lambda n: inv[n]['controlId']
+        doc = C.row_id(hap.run('worksheet', 'record', 'create', INVOICES, '-a', APP, '--fields-json', json.dumps([
+            {'id': cid('Number'), 'value': DRAFT},
+            {'id': cid('Type'), 'value': [invoice_option(inv, 'Type', 'Journal Entry')]},
+            {'id': cid('Status'), 'value': [invoice_option(inv, 'Status', 'Draft')]},
+            {'id': cid('Accounting Date'), 'value': time.strftime('%Y-%m-%d')},
+            {'id': cid('Journal'), 'value': [journal['rowid']]},
+            {'id': cid('Auto-post'), 'value': [invoice_option(inv, 'Auto-post', 'No')]},
+            {'id': cid('Customer Reference'), 'value': GUARD_DOCUMENT}], ensure_ascii=False)))
+        print(f'  created the draft entry {GUARD_DOCUMENT}: {doc}')
+    C.remember('records', KEY + GUARD_JOURNAL['name'], journal['rowid'])
+    C.remember('records', KEY + 'draft entry ' + GUARD_DOCUMENT, doc)
+    return journal['rowid'], doc
+
+
+def archive_attempt(rowid, seconds=25):
+    """Trigger Archive and wait for Active to go, or for the guard to stop it. Returns the stored Active."""
+    before = len(hap.listing('approval', 'history', '--process-id', hap.ids()['workflows'][KEY + 'Archive']))
+    hap.run('workflow', 'trigger', hap.ids()['workflows'][KEY + 'Archive'], '-s', rowid)
+    for _ in range(seconds):
+        if not read_journal(rowid)['active']:
+            break
+        time.sleep(1)
+    runs = hap.listing('approval', 'history', '--process-id', hap.ids()['workflows'][KEY + 'Archive'])
+    return read_journal(rowid)['active'], len(runs) - before
+
+
+def step_draftcheck():
+    """Prove the archive guard both ways, on TEST records only.
+
+    A journal with a draft entry must refuse to archive and keep Active checked; a journal with none must
+    archive exactly as before. The tenant's seven journals are never touched — the Sales journal does hold
+    two seeded drafts, and archiving it is not how this is tested."""
+    guard()
+    inv = C.fields(INVOICES)
+    guarded, document = ensure_guard_records()
+    clean = next((j for j in read_journals().values() if j['name'] == TEST_NAME), None)
+    if not clean:
+        sys.exit(f'{TEST_NAME} is missing — run `selfcheck` first')
+    if not clean['active']:
+        hap.run('workflow', 'trigger', hap.ids()['workflows'][KEY + 'Unarchive'], '-s', clean['rowid'])
+        time.sleep(5)
+    bad = 0
+    lines = {ref for ref, journal, status in draft_documents(inv).values()
+             if journal == guarded and status == 'Draft'}
+    print(f"  {GUARD_JOURNAL['name']} ({guarded}) holds draft documents {sorted(lines)}")
+
+    active, runs = archive_attempt(guarded)
+    ok = active is True
+    bad += not ok
+    print(f"  {'REFUSED ' if ok else 'ARCHIVED'}  {GUARD_JOURNAL['name']}: Active={int(active)} after Archive "
+          f"({runs} new workflow run) — expected Active=1, the guard stops the flow before the update")
+
+    active, runs = archive_attempt(clean['rowid'])
+    ok = active is False
+    bad += not ok
+    print(f"  {'archived' if ok else 'REFUSED '}  {TEST_NAME}: Active={int(active)} after Archive "
+          f'({runs} new workflow run) — expected Active=0, it holds no draft entry')
+    if not active:                                  # put it back the way the reviewer found it
+        hap.run('workflow', 'trigger', hap.ids()['workflows'][KEY + 'Unarchive'], '-s', clean['rowid'])
+        for _ in range(20):
+            if read_journal(clean['rowid'])['active']:
+                break
+            time.sleep(1)
+        print(f"  {TEST_NAME} unarchived again: active={int(read_journal(clean['rowid'])['active'])}")
+    print(f"  {GUARD_JOURNAL['name']} {guarded}: "
+          f'{json.dumps(read_journal(guarded), ensure_ascii=False)}')
+    return bad
+
+
 # ── check: read the configuration back ──────────────────────────────────────
 
 def step_check():
@@ -785,18 +1161,20 @@ def step_check():
         conds = [(names.get(x['controlId']), x['filterType'], x.get('values')) for x in b.get('filters') or []]
         if conds != [('Active', op, ['1'])] or (b.get('confirmMsg') or '') != confirm:
             problems.append(f"button {name}: filters={conds} confirm={b.get('confirmMsg')!r}")
+    problems += guard_differences()
     order = sorted(ctrls, key=lambda c: (c.get('row', 0), c.get('col', 0)))
     tab_ids = {c['controlName']: c['controlId'] for c in ctrls if c['type'] == C.TAB}
     for tab in TABS:
         print(f"  tab {tab}: {[c['controlName'] for c in order if c.get('sectionId') == tab_ids.get(tab)]}")
     print(f"  no tab: {[c['controlName'] for c in order if not c.get('sectionId') and c['type'] != C.TAB]}")
-    print('  check: ' + ('OK — controls, tabs, options, defaults, rules, views and buttons as specified'
+    print('  check: ' + ('OK — controls, tabs, options, defaults, rules, views, buttons and the archive '
+                         'guard as specified'
                          if not problems else 'DIFFERENCES\n    ' + '\n    '.join(problems)))
     return len(problems)
 
 
 def step_all():
-    for name in ('layout', 'rules', 'views', 'buttons', 'seed'):
+    for name in ('layout', 'rules', 'views', 'buttons', 'draftguard', 'seed'):
         print(f'\n── {name} ' + '─' * 60)
         STEPS[name]()
     print('\n── check ' + '─' * 60)
@@ -812,11 +1190,13 @@ STEPS = {
     'rules': step_rules,
     'views': step_views,
     'buttons': step_buttons,
+    'draftguard': step_draftguard,
     'seed': step_seed,
     'all': step_all,
     'verify': step_verify,
     'check': step_check,
     'selfcheck': step_selfcheck,
+    'draftcheck': step_draftcheck,
     'order': step_order,
     'journal': step_journal,
     'untouched': step_untouched,

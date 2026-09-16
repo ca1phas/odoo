@@ -165,6 +165,19 @@
   "Invoice Lines: KKD-2026-009 line 2": "9c9e8550-93d6-4764-84ad-9106f9fb68ac",
   "Invoice Lines: STL-2026-0042 line 0": "b591346e-01ff-45cb-8e57-ac97c074fd52",
   "Invoice Lines: STL-2026-0042 line 1": "7c9baf82-9397-4d51-8a8c-4b9abaddda3e",
-  "Invoice Lines: TEST roll-up line": "92b135c5-becc-4f73-906d-2f8672d746aa"
+  "Invoice Lines: TEST roll-up line": "92b135c5-becc-4f73-906d-2f8672d746aa",
+  "Journals: TEST draft guard": "e3c801f7-7574-4b5e-995d-167ea3f0bb72",
+  "Journals: draft entry TEST draft guard": "7f549cdb-21b6-4074-b999-ca984a997717"
+ },
+ "roles": {
+  "Administrator": "25ef76ef-5538-4779-a5e6-ab1fbce9dcfe",
+  "Operator": "0a829395-8045-468c-9e24-05f028c626e8",
+  "Developer": "f4325e98-7ad5-43d6-8d83-c4bfbf33a2f9",
+  "Member": "811bb1d0-3a34-42b0-8aa9-48939a4cb2b8",
+  "Read-only": "15f65cc4-2b75-4135-a904-0713f5c1d846",
+  "Accounting Administrator": "cec938e1-d3e9-4cc2-90d6-56c7ed548275",
+  "Accountant": "7d648fbc-52b4-4c37-9d65-46c2a6d14ede",
+  "Invoicing": "8802a8e6-8113-4175-a8c1-78a53b66257a",
+  "Accounting Read-only": "b145704f-4a80-4603-a9c4-671461742892"
  }
 }

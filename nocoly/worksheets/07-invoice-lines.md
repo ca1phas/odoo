@@ -7,7 +7,7 @@
 | Odoo model | `account.move.line` |
 | Reference | **casimir.odoo.com — Odoo saas~19.4+e**: `fields_get`, the invoice form's line columns, the standalone Journal Items views, `default_get`, `_order`, the four SQL constraints and all 33 lines, extracted read-only to `nocoly/reference/odoo-19.4/account.move.line.md`. The document is `account.move.md`, built as 06 |
 | Phase | 1 — core worksheet **7 of 7**, the last |
-| Status | Built, seeded and self-checked with the hap CLI on 16 Sep 2026 — 13 controls, 1 rule, 1 view, the mount into the Invoices tab, 2 roll-up workflows and the 8 tenant lines; 06's Untaxed Amount, Total and Amount Due come from the lines and land on the tenant's own figures. **UI test in progress**: the subtable, the column order, the Section rule and a line added or changed all pass; the delete roll-up looked broken and was not — `hap worksheet record delete` suppresses workflows unless `--trigger-workflow` is passed (§2). One open question for the owner: the subtable stays editable on a posted document (difference 11). **UI-tested on 16 Sep 2026: 18 pass, 1 partly, 1 not run** (§3) — no defect in the worksheet; the one alarm, a deleted line leaving the invoice stale, proved to be `hap worksheet record delete` suppressing workflows unless `--trigger-workflow` is passed. **Ready for review** |
+| Status | Built, seeded and self-checked with the hap CLI on 16 Sep 2026 — 13 controls, 1 rule, 1 view, the mount into the Invoices tab, 2 roll-up workflows and the 8 tenant lines; 06's Untaxed Amount, Total and Amount Due come from the lines and land on the tenant's own figures. Its one open question — whether a posted document's lines stay editable — was settled the same day at the end of Phase 1: the subtable joined 06's read-only rule and a posted document's table is locked, so **difference 11 is resolved**. **UI-tested on 16 Sep 2026: 18 pass, 1 partly, 1 not run** (§3) — no defect in the worksheet; the one alarm, a deleted line leaving the invoice stale, proved to be `hap worksheet record delete` suppressing workflows unless `--trigger-workflow` is passed. At the end of Phase 1 the same day the owner took **difference 11**: the subtable joined 06's read-only rule, and 06's **test 25** proved a posted document's lines locked — so difference 11 is resolved and nothing in this worksheet changed. **Ready for review** |
 
 A journal item is one line of an `account.move`. On an invoice the lines a person edits are the **product, section and
 note lines** — Odoo maintains the tax and payment-term lines itself, and those belong with the bundles. This worksheet
@@ -93,7 +93,7 @@ Discount (%) · Subtotal**, in Odoo's column order.
 | Malaysian classification code (`l10n_my_edi_classification_code`), Professional / deductible percentage | e-invoicing and vendor-bill bundles |
 | Hide Composition / Hide Prices (`collapse_composition`, `collapse_prices`) and Parent Section Line (`parent_id`) | They only change how a **printed report** groups the lines, and nothing here renders one |
 | Odoo restricting Unit to the product's own units, and filling Label from the product | Both are onchange-time computes; the first also needs a lookup of a relation, which HAP stores as a title |
-| Roles | Set once for the app at the end of Phase 1 |
+| ~~Roles~~ | **Set on 16 Sep 2026** for the whole app, at the end of Phase 1: five stock roles renamed to English and four business roles, one per Odoo accounting group, each with a rule for this worksheet. The table is in `REVIEWING.md` › *Phase 1 · Roles* |
 
 ### Records
 
@@ -490,12 +490,22 @@ on the `TEST …` line named in them.
    note* are one row plus the Display Type dropdown here; Odoo's product **Catalog** is the Sales app.
 10. **The lines of the 25 other tenant journal items are not here** — they belong to documents 06 did not seed,
     or are the tax and payment-term lines Odoo writes itself.
-11. **A posted document's lines are still editable.** 06's rule *A posted or cancelled document is closed for
-    editing* locks eight fields on the invoice, and the subtable is not one of them — a HAP interaction rule acts
-    on a control, and the 子表 was not there when the rule was written. The UI test added a row to the table of
-    the **posted** MISC/2026/00001 and it saved. Odoo locks a posted invoice's lines outright. Adding the 子表
-    control to that rule's read-only list would close it, and is a one-line change to `invoices.py` — it is left
-    for the owner, because it touches 06's rule and 06 is out for review.
+11. ~~**A posted document's lines are still editable.**~~ **Resolved on 16 Sep 2026.** 06's rule *A posted or
+    cancelled document is closed for editing* locked eight fields on the invoice and the subtable was not one of
+    them: a HAP interaction rule acts on a control, and the 子表 was not there when the rule was written. The UI
+    test added a row to the table of the **posted** MISC/2026/00001 and it saved, where Odoo locks a posted
+    invoice's lines outright.
+
+    At the end of Phase 1 the owner took the one-line change: `Lines` (`6aaa2baae43d174ab3749de9`) is the ninth
+    control in that rule's read-only set (06 §1 and §2). **A HAP read-only rule hides a 子表's row controls**,
+    which 06's test 25 showed in the browser — the posted **INV/2026/00001** offers **no *Add a row* and no
+    *Batch Operation***, and the Display Type column's required asterisk is gone, while the **Sunway
+    Construction Group draft** keeps both and stays fully editable. So a posted document's lines are closed for
+    editing, as in Odoo, and this is no longer a difference.
+
+    It is still a **browser-side** lock, as every interaction rule is: the API writes a posted document's lines
+    either way, which is why 07's own `verify` and the two roll-up workflows are unaffected and why the build
+    scripts can still seed and roll up whatever a document's Status is.
 12. **Not a difference, a tooling trap — read this before you test a deletion.** The delete roll-up *does* fire:
     deleting a line took its invoice **570.00 → 450.00**, and the workflow recorded the run. But
     `hap worksheet record delete` sends `triggerWorkflow: false` unless **`--trigger-workflow`** is passed, so a

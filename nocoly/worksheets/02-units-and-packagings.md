@@ -99,7 +99,7 @@ None. Absolute Quantity and Parent Path follow the chain through stored lookups 
 | Ratio locked once products in this unit have stock moves or quants | `stock` module (`UomUom.write`) — Inventory is not in Phase 1 |
 | Conversion methods (`_compute_quantity`, `_compute_price`, `_check_qty`, `_has_common_reference`) | Built where they are used (Products, Invoice Lines), reading Absolute Quantity |
 | Translated unit names (`translate=True`) | One language |
-| Roles | Set once for the app at the end of Phase 1 |
+| ~~Roles~~ | **Set on 16 Sep 2026** for the whole app, at the end of Phase 1: five stock roles renamed to English and four business roles, one per Odoo accounting group, each with a rule for this worksheet. The table is in `REVIEWING.md` › *Phase 1 · Roles* |
 
 ## 2 · Build
 

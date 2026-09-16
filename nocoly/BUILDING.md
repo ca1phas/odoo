@@ -50,6 +50,9 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   "<Worksheet>: <name>" so buttons and workflows with the same name never collide. Never rename existing keys.
 - **Shared helpers** live in `build/common.py`; `build/hap.py` wraps the CLI (`run`, `controls`, `listing`, `backup`).
   Backups of anything a step replaces go to `build/backups/` (not committed).
+- **`build/roles.py` is the one builder that is not a worksheet's**: it owns the app's roles, which every
+  worksheet's *Not built now* defers to the end of a phase, and records their ids in `ids.json` under `roles`.
+  Its keys are the role names, not namespaced.
 - **No deletions without the owner's approval.** A mistake is disabled or renamed "ZZ obsolete – " and reported.
 - **Records written through the API must set Active explicitly**, or they show in neither the main view nor
   Archived. Test records are named `TEST …`.
@@ -199,6 +202,15 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   remark blocks included.
 - **Relation picker filters run in the browser only**: the picker query through the API ignores them, so prove a
   picker filter in the UI. A picker filter can compare a candidate with a Relation field on the form being edited.
+- **Read-only (type 4) on a 子表 (type 34) hides the table's row controls.** A rule item accepts the subtable
+  among its controls and the server stores it unchanged — `childControlIds: []`, `permission: []`, exactly as
+  sent — and in the browser the table loses ***Add a row* and *Batch Operation*** and its required columns lose
+  their asterisk, while a record the rule does not catch keeps both (Invoices' *A posted or cancelled document is
+  closed for editing*, proved on the posted INV/2026/00001 against the Sunway draft). Like every interaction rule
+  it is browser-side only: the API still writes the child records, so seed and roll-up scripts are unaffected.
+  **None of that is readable from the CLI** — the stored rule looks the same whether the browser greys the table,
+  hides the row controls or ignores it — so a rule acting on a control type this app has not used before has to
+  be proved in the UI before it is written down as working.
 - The CLI cannot delete a rule. Disable it (`save-rule --rule-id … --disabled`) and delete it in the UI: worksheet
   ⋯ › Set Worksheet › Business Rules › hover the rule › trash icon.
 
@@ -305,6 +317,40 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
 - **A workflow's run history is `hap approval history --process-id <pid>`** — `workflow history` is the *version*
   history, not the runs. An empty run list is the quickest way to tell "the trigger never fired" apart from
   "the steps are wrong", and it is what proved that Invoice Lines' delete roll-up had never once been reached.
+  `hap approval history-detail <instanceId>` then lists **every node one run passed through**, in order, each with
+  its own status — the only way to show that a step was *not* reached.
+- **A branch converges**, so an empty path is not a stop: both paths run into the gateway's `nextId` and carry on
+  to whatever follows the branch. To stop a run before a later step, a path must end in an **abort node**.
+- **Node type 30 is 中止流程, the abort**, and it is the only way to stop a workflow from inside. It must be last
+  in its chain — inserting one in front of an existing node is refused outright with
+  `中止节点后面不允许有节点` — and it carries a **name and a description and nothing else**: no message, nothing
+  a user ever sees. hap-cli's DSL has no builder for it (`batch-add` cannot make one), so add it with
+  `workflow node add --type 30 -n … --after <the last node of that path>`. A run that ended in one comes back from
+  `approval history` with `status` **3** and `instanceLog.causeMsg` **"中止"**, naming the node (Journals' archive
+  guard).
+- **The only thing a button workflow can put in front of a user is a 站内通知** (notice, flowNodeType 27), and it
+  is an **in-app notification**, not a dialog: it lands in the workflow channel of the notification list, reading
+  **`【<the node's name>】<sendContent>`**. So the node's name is user-facing — name it as a heading. The button's
+  own `confirmMsg` is shown *before* the workflow runs and the click always reports "Operation completed", so a
+  workflow cannot report a refusal any other way. The name is stored twice: on the node, and inside
+  `flowNodeMap` "106" (the channel config that must be sent back or publish fails with warningType 200) —
+  `workflow node rename` updates only the first.
+- **"The person who triggered the flow" is the fixed 系统 node's `triggeraid`** (`5d39140d381d42d20db0c4da`,
+  "Trigger", control type 26), sent wire-shaped:
+  `{type: 6, entityId: <系统 node>, roleId: "triggeraid", controlType: 26, appType: 100}` —
+  `translate_accounts` passes a recipient with no `kind` through untouched. hap-cli's `kind: "triggerUser"` is a
+  different thing: it keys `uaid` off the trigger node, and on a **button** trigger the server reads that back as
+  **Last modifier**, the record's last editor rather than whoever pressed the button.
+- **`workflow node get` on any node returns `flowNodeList`** — the catalogue of nodes and fields that node may
+  reference, each with its controls. It is how to discover what is reachable: the 系统 node's `triggeraid`,
+  `triggertime`, `nowTime`, `timestamp`, `sourceId` and `instanceId` are only listed there.
+- A **107 (worksheet total) node's filter conditions have their `nodeId` rewritten by the server** to the
+  aggregate node's own id. Whatever `left.node` says in the DSL filter is discarded; what binds the count to a
+  record is the **comparison value's** `nodeId` — `{kind: "field", node: …, fieldId: "rowid"}`. A later branch
+  path then compares the aggregate's own result: `filedId` `number_fx_id`, `filedTypeId` 6, conditionId 14
+  (大于等于).
+- `hap workflow node delete` **prompts unless `-y` is passed**; without it the `--json` output is
+  `{"error": "", "type": "Abort"}` and nothing is deleted.
 
 ### Records
 
@@ -322,6 +368,48 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   Products); `record get` always returns their values.
 - `record get` returns a record's creation time as `_createdAt`; `record list` returns `ctime` empty.
 - Value formats differ by field type and a wrong one is accepted silently — see `hap guide record` before writing.
+
+### Roles
+
+- **`hap app role list` is not the app's own role list.** It is the V3 endpoint, and V3 renders HAP's **built-in
+  label** — 管理员 · 运营者 · 开发者 — for the three typed roles (`roleType` 100 / 2 / 1) whatever name is stored,
+  so a rename of one of them looks like it silently failed. It has not: the app's Roles page calls the main
+  site's `AppManagement/GetRolesWithUsers`, which returns the stored name, and the browser confirmed it on
+  16 Sep 2026 — the page lists Administrator · Operator · Developer under *System* while `hap app role list` was
+  still printing the Chinese three. `hap app role permissions` is V3 too and substitutes the same way. Reach the
+  main-site call from a build script the way `common.sort_views` reaches SortWorksheetViews —
+  `role_mod.get_roles(Session.load(None), app)` (`roles.py`). The two also key a role differently: V3 by `id`,
+  the main site by `roleId`.
+- **`hap app role rename` answers `0` for a typed role and `1` for a custom one, and renames either way.** It is a
+  read-modify-write of the whole `appRoleModel` with only `name` replaced, so `roleType`, `permissionWay`, the
+  per-worksheet scopes and the members survive — but the return value is not a success flag. Read the name back.
+- **Renaming a typed role writes an app-level log entry that reads like an app rename.** `hap app logs` shows
+  `编辑了应用基础信息` and, for some of them, **`Modified App name "X" to "X" and updated App icon`** — boilerplate
+  for a save of the app record, with the old name on both sides and no icon in the request (the call sends only
+  `{appId, roleId, appRoleModel}`). The app's name, icon and colour were compared before and after and are
+  unchanged. Renaming a **custom** role logs `Updated role "<name>" permissions` instead. Expect both when
+  reading the log after a roles run, and do not chase them.
+- **`hap app role create-fine`** writes a `permissionScope` 0 role: per worksheet, `recordDataScope`
+  `{read, edit, delete}` with **0 none · 20 own · 30 own and subordinates' · 100 every record**, plus
+  `recordActions.add` for the create right. Three things to know:
+  - **Field and view permissions default to fully allowed and stay that way**, so a "read only" worksheet reads
+    every field back as `edit: true`; the **record scope is the gate**, not the field list.
+  - **`globalPermissions` comes back all `false`** on a fine-grained role and means nothing there — it belongs to
+    the coarse `permissionWay` roles.
+  - Everything the intent does not name is filled in from hap-cli's defaults: `worksheetActions` no share / no
+    import / no export / no batch, discussion on; `recordActions` no share / no print / no log, attachment
+    download and discussion on. Write down what you left at default — a reviewer cannot tell a default from a
+    decision.
+- **`create-fine` only creates, and V3 has no call that edits a role afterwards.** Change an existing role the way
+  the Roles page does and `role rename` already does: read the whole `appRoleModel` with
+  `role_mod.get_role_detail`, change only what must change, post it back through
+  `AppManagement/EditAppRole` with `{appId, roleId, appRoleModel}` (`roles.reconcile`). Everything else goes back
+  exactly as it was read, so the scopes, members, field and view permissions cannot move. The main-site model
+  names the same switches differently: V3's per-worksheet `worksheetActions.export` is
+  `sheets[].worksheetExport.enable` there, and V3's `recordDataScope` `{read, edit, delete}` is
+  `readLevel` / `editLevel` / `removeLevel`. A write through either shows up in both.
+- `hap app role list` takes `-a/--app-id`; the app id as a positional argument is refused (the V3 command shadows
+  the one in `commands/role_cmd.py`, which takes it positionally).
 
 ### In the UI
 

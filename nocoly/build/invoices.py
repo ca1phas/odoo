@@ -505,7 +505,10 @@ RULE_AUTO_POST = 'Auto-post until follows Auto-post'
 RULE_CLOSED = 'A posted or cancelled document is closed for editing'
 
 CLOSED_FIELDS = ['Type', 'Customer / Vendor', 'Journal', 'Invoice Date', 'Accounting Date', 'Due Date',
-                 'Payment Terms', 'Tax mode']
+                 'Payment Terms', 'Tax mode', LINES]
+# LINES is 07's mounted 子表. It joined the list on 16 Sep 2026, at the end of Phase 1: the rule was written
+# before Invoice Lines existed, so a posted document still offered *Add a row* where Odoo locks a posted
+# move's lines (07's difference 11). A rule item acts on a control, and a 子表 is one.
 # rule name -> (driving field, its option labels, the controls it acts on, the rule item type). A rule applies its
 # action while its condition holds and the opposite when it fails, so every `show` here also hides its field on a
 # new record whose driver is still empty — which is what Odoo's `invisible` does.

@@ -117,7 +117,7 @@ None.
 | Archiving a product archives its variants (`write`) | Product Variants (04) |
 | A duplicated product is named "… (copy)" (`copy_data`) | HAP's duplicate keeps the name |
 | "Labels cannot be printed for products of service type" | No label printing |
-| Roles | Set once for the app at the end of Phase 1 |
+| ~~Roles~~ | **Set on 16 Sep 2026** for the whole app, at the end of Phase 1: five stock roles renamed to English and four business roles, one per Odoo accounting group, each with a rule for this worksheet. The table is in `REVIEWING.md` › *Phase 1 · Roles* |
 
 ### Records
 

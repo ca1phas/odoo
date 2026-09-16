@@ -7,7 +7,7 @@
 | Odoo model | `account.journal` |
 | Reference | **casimir.odoo.com — Odoo saas~19.4+e**: fields, form, list, kanban, search, defaults, `_order`, the SQL constraint and all 7 journals, extracted read-only to `nocoly/reference/odoo-19.4/account.journal.md`. Behaviour the tenant cannot show — the code and name placeholder computed from Type, the archive check — is read from the Odoo 19.0 source in this repo, `addons/account/models/account_journal.py`. Teh Li Wei's first hand-off read his own tenant, ohyes.odoo.com; the owner settled casimir as the reference on 15 Sep 2026 |
 | Phase | 1 — core worksheet 5 of 7 |
-| Status | First built by **Teh Li Wei** on 15 Sep 2026 (worksheet, 6 controls, 2 views, no records). Gaps against the casimir reference closed, seeded and self-checked with the hap CLI on 16 Sep 2026 · CLI self-checks pass · **UI-tested on 16 Sep 2026: 18 of 18 pass** · then, on the owner's decision the same day, Odoo's two notebook tabs and a remark block in each were added; tests 5–9 and 17 were re-run and pass — **18 of 18** · ready for review |
+| Status | First built by **Teh Li Wei** on 15 Sep 2026 (worksheet, 6 controls, 2 views, no records). Gaps against the casimir reference closed, seeded and self-checked with the hap CLI on 16 Sep 2026 · CLI self-checks pass · **UI-tested on 16 Sep 2026: 18 of 18 pass** · then, on the owner's decision the same day, Odoo's two notebook tabs and a remark block in each were added; tests 5–9 and 17 were re-run and pass — **18 of 18** · then, at the end of Phase 1 the same day, **Odoo's refusal to archive a journal with draft entries** went into the Archive workflow, now that 06 Invoices exists (§2). It is proved both ways through the CLI; **tests 19–21 are still to run in the browser** · ready for review. Finally, at the end of Phase 1, the archive guard Odoo has owed this worksheet since 06 existed was built and tested — **tests 19 and 20 pass, 21 not run** (the tenant is read-only), so **20 of 21** · ready for review |
 
 A journal is the book an accounting entry is written in: customer invoices go in a Sales journal, vendor bills in a
 Purchase one, payments in Bank, Cash or Credit Card, and everything else in Miscellaneous. Type drives the whole
@@ -94,17 +94,34 @@ type and on a new record, again as Odoo does. That is why the tab rule is writte
 **Journal Entries has no visibility rule** — Odoo shows that page for every type, and so does this worksheet; only
 the two checkboxes inside it come and go.
 
-Nothing is validated. Odoo's two guards on this model are the SQL uniqueness of the code, which is the field's own
-**No duplicates**, and the refusal to archive a journal that has draft entries, which needs 06 Invoices.
+Nothing is validated on save. Odoo's two guards on this model are the SQL uniqueness of the code, which is the
+field's own **No duplicates**, and the refusal to archive a journal that has draft entries — which needed 06
+Invoices and is now inside the Archive button's workflow (Buttons below, and §2).
 
 ### Buttons (Odoo ⚙ Actions)
 
 | Button | Shown when | Does | Confirmation |
 |---|---|---|---|
-| Archive | Active is checked | Active → unchecked | "Are you sure that you want to archive this record?" · Archive / Cancel |
+| Archive | Active is checked | **Counts the Invoices whose Journal is this journal and whose Status is Draft. One or more: notifies the user with Odoo's message and stops, leaving Active alone. None: Active → unchecked** | "Are you sure that you want to archive this record?" · Archive / Cancel |
 | Unarchive | Active is unchecked | Active → checked | none |
 
-Exactly as on Contacts, Units & Packagings, Products and Product Variants: a one-step workflow that writes Active
+**The draft-entry check** is Odoo's `_check_auto_post_draft_entries`
+(`addons/account/models/account_journal.py:686`), which 05 left owed until 06 Invoices existed. It was built on
+16 Sep 2026, inside the Archive button's workflow, and the message is Odoo's own, verbatim:
+
+> You can not archive a journal containing draft journal entries.
+>
+> To proceed:
+> 1/ go to Accounting > Accounting > Journal Entries
+> 2/ filter on this journal and on 'Unposted' entries
+> 3/ select them all and post or delete them through the action menu
+
+Odoo raises this as a dialog that blocks the save. **HAP has no dialog to raise from a button workflow** — see
+§2 — so the message arrives as an **in-app notification** to whoever pressed Archive, headed
+*Cannot archive this journal*, and the flow stops before Active is touched. Unarchive keeps no such check:
+Odoo's constraint deliberately fires only when archiving (`self.filtered(lambda j: not j.active)`).
+
+Otherwise exactly as on Contacts, Units & Packagings, Products and Product Variants: a workflow that writes Active
 on the triggering record, and the button that does not apply is **not shown at all** — an open record carries only the
 one that applies, so an active journal shows Archive alone. (Re-checked on 16 Sep 2026 while testing 06 Invoices,
 which has the same button shape; the earlier note here said "greyed out", which is wrong.)
@@ -138,8 +155,8 @@ view of the same model and waits for the dashboard fields.
 | Company (`company_id`) | One company per app copy (Direction, 15 Sep) |
 | Sequence override regex (`sequence_override_regex`) | It reshapes entry numbering, which 06 Invoices has to define first |
 | Odoo computing an empty Sequence Prefix from Type (`_compute_code` → `_get_next_journal_default_code`, e.g. the second Sales journal becomes INV2) and an empty Journal Name from the placeholder ("Customer Invoices (1)") | Both are onchange-style computes with no HAP equivalent; here Sequence Prefix is required and the placeholder "e.g. Customer Invoices" tells the user what to type. A workflow could fill them later |
-| "You cannot archive a journal containing draft journal entries" (`_check_auto_post_draft_entries`) | The check counts draft entries — **needs 06 Invoices**; add it to the Archive workflow then |
-| Roles | Set once for the app at the end of Phase 1 |
+| ~~"You cannot archive a journal containing draft journal entries" (`_check_auto_post_draft_entries`)~~ | **Built on 16 Sep 2026**, once 06 Invoices existed: it is in the Archive button's workflow (Buttons above, §2). Odoo's dialog becomes an in-app notification — difference 7 |
+| ~~Roles~~ | **Set on 16 Sep 2026** for the whole app, at the end of Phase 1: five stock roles renamed to English and four business roles, one per Odoo accounting group. The table is in `REVIEWING.md` › *Phase 1 · Roles* |
 
 ### Records
 
@@ -163,15 +180,16 @@ reviewer (§3).
 
 ## 2 · Build
 
-Built by `nocoly/build/journals.py` — steps `layout → rules → views → buttons → seed`, or `all` for every one of
-them followed by `check`. Each step reads the live worksheet first, refuses to run unless the profile reaches ERP
-Master › Invoicing › Journals and the worksheet holds only the first build plus this script's own work, reads back
-what it wrote, and is safe to re-run: a second `all` wrote nothing. Helpers: `check` reads controls, their tabs,
-options, defaults, rules, views and buttons back against the spec, `verify` compares every journal with the extract,
-`selfcheck` runs the writes the worksheet must refuse and both buttons, `order` prints each view's records in the
-view's own order, `journal "<Journal Name>"` a journal's stored values (hidden fields included), `untouched` the
-other four worksheets' control count and digest, and `show` the control list. The profile comes from `$HAP_PROFILE`
-and otherwise from hap-cli's active profile; nothing in `common.py` changed.
+Built by `nocoly/build/journals.py` — steps `layout → rules → views → buttons → draftguard → seed`, or `all` for
+every one of them followed by `check`. Each step reads the live worksheet first, refuses to run unless the profile
+reaches ERP Master › Invoicing › Journals and the worksheet holds only the first build plus this script's own work,
+reads back what it wrote, and is safe to re-run: a second `all` wrote nothing. Helpers: `check` reads controls,
+their tabs, options, defaults, rules, views, buttons **and the archive guard** back against the spec, `verify`
+compares every journal with the extract, `selfcheck` runs the writes the worksheet must refuse and both buttons,
+`draftcheck` proves the archive guard both ways, `order` prints each view's records in the view's own order,
+`journal "<Journal Name>"` a journal's stored values (hidden fields included), `untouched` the other four
+worksheets' control count and digest, and `show` the control list. The profile comes from `$HAP_PROFILE` and
+otherwise from hap-cli's active profile; nothing in `common.py` changed.
 
 | Element | Built | Id |
 |---|---|---|
@@ -187,11 +205,74 @@ and otherwise from hap-cli's active profile; nothing in `common.py` changed.
 | Rules | Payment Communications only for Sales · Payment Communications are required for Sales · Dedicated Credit Note Sequence only for Sales and Purchase · Dedicated Payment Sequence only for Bank, Cash and Credit Card · Advanced Settings hidden for Bank and Cash journals | `6aa9dae5e54d2a34fa4dfde2` · `6aa9dae67d58b0f44930e6ce` · `6aa9dae67d58b0f44930e6d0` · `6aa9dae7e43d174ab37498e9` · `6aa9e8b5bd43f55762c6f48a` |
 | Views | Journals · Archived (both the first build's, re-sorted) | `6aa8f5191204328eb1af162e` · `6aa8f7074720c515252bf2c8` |
 | Buttons | Archive · Unarchive | `6aa9db31805aef7032865005` · `6aa9db34e43d174ab37498ec` |
-| Button workflows | Archive the journal · Unarchive the journal, one update step each, published | `6aa9db3116473257ad4c471e` · `6aa9db348e75db182e77e1e2` |
-| Records | 7 journals of the extract, plus TEST Journal (TSTJ, active) and the archived TEST long prefix (Tf798) and TEST Sales (TSTS) | — |
+| Button workflows | Archive the journal (five steps since the guard) · Unarchive the journal (one update step), both published | `6aa9db3116473257ad4c471e` · `6aa9db348e75db182e77e1e2` |
+| Archive guard, added 16 Sep | Draft entries in this journal (汇总, 107) · Does the journal still hold draft entries? (branch) · Cannot archive this journal (站内通知, 27) · Stop — leave Active alone (中止流程, 30) | `6aaa48f18e75db182e7b42d0` · `6aaa48f18e75db182e7b42e7` · `6aaa48f287707da9d60f6ad1` · `6aaa48f48e75db182e7b434d` |
+| Records | 7 journals of the extract, plus TEST Journal (TSTJ, active), TEST draft guard (TSTDG, active) and the archived TEST long prefix (Tf798) and TEST Sales (TSTS) | — |
 
 Every id is in `nocoly/build/ids.json` under "Journals: …" keys, the controls and rules in two new sections
 (`controls`, `rules`); no existing key was renamed.
+
+### The archive guard
+
+Odoo's `_check_auto_post_draft_entries` refuses to archive a journal that still has draft entries. 05 recorded it
+as owed once 06 Invoices existed; it was built on **16 Sep 2026**, at the end of Phase 1, by
+`journals.py draftguard` — inside the **Archive button's workflow** (`6aa9db3116473257ad4c471e`, button
+`6aa9db31805aef7032865005`), in front of the step that unchecks Active:
+
+```
+Trigger by button
+  → Draft entries in this journal              汇总 (107) over Invoices: Journal is this journal (a Relation
+                                               compared with the trigger's record, conditionId 33) and Status
+                                               is Draft
+  → Does the journal still hold draft entries?
+       · Yes — the count is 1 or more  → Cannot archive this journal   站内通知, Odoo's message, to the
+                                                                       person who pressed the button
+                                       → Stop — leave Active alone     中止流程 (node type 30)
+       · No                            → (nothing)
+  → Archive the journal                        the first build's update step, not touched
+```
+
+**Why an abort node.** A HAP branch **converges**: both paths run into whatever follows the gateway, so an empty
+path and a path whose steps have run both reach *Archive the journal*. Only 中止流程 stops the run first. Nothing
+was moved or deleted to make room for it — the branch was inserted in front of the existing update step, which
+still carries the first build's single field write, `Active` ← unchecked.
+
+**What HAP can put in front of a user, which §1 asked to be found out first.** Not a dialog. A custom action
+button has one message, its confirmation, and it is shown *before* the workflow runs; the click itself always
+reports "Operation completed". The abort node carries a name and a description and nothing user-facing. The one
+node that reaches a person is **站内通知** (notice, type 27), and it arrives as an **in-app notification** in
+HAP's workflow channel — the bell, not a dialog — reading:
+
+```
+【Cannot archive this journal】You can not archive a journal containing draft journal entries.
+
+To proceed:
+1/ go to Accounting > Accounting > Journal Entries
+2/ filter on this journal and on 'Unposted' entries
+3/ select them all and post or delete them through the action menu
+```
+
+HAP puts the **node's name in 【】 in front of the message**, so the step is named as the heading Odoo's dialog
+does not have, rather than as what it does. Two consequences a reviewer should judge:
+
+- The message is **asynchronous and easy to miss**. The user clicks Archive, is told the operation completed,
+  the row stays where it is, and the reason is in the notification list. Odoo stops the save with the text on
+  screen. This is difference 7.
+- The three numbered steps are **Odoo's menus, verbatim**, and name paths this app does not have. Here the
+  equivalent is Invoicing › Invoices, the *Journal Entries* view or the Status quick filter. Odoo's wording was
+  kept rather than rewritten; say if you would rather it named this app's own menus.
+
+**Proved both ways on TEST records** (`journals.py draftcheck`, 16 Sep 2026), leaving the tenant's seven journals
+alone — the Sales journal does hold the two seeded drafts, and archiving it is not how this is tested:
+
+- **TEST draft guard** (TSTDG, Miscellaneous, Sequence 99) with one draft entry on it — a `TEST draft guard`
+  journal entry, Status Draft, made for this — refused: `Active=1` after Archive. The run is in the workflow's
+  history with status 3 and `instanceLog.causeMsg` "中止", naming *Stop — leave Active alone*; its node trace is
+  trigger → count → branch → notice → abort, and *Archive the journal* was never reached. The notification
+  arrived, text as above.
+- **TEST Journal** (TSTJ), which holds no document, archived exactly as before: `Active=0`, node trace trigger →
+  count → branch → *Archive the journal*. It was unarchived again and is left **active** for the reviewer.
+- `draftguard` is idempotent: a second run reported "already built; not re-published".
 
 **History.** **Teh Li Wei built the worksheet on 15 Sep 2026** — the Invoicing menu group, the worksheet and its
 alias, six of the nine controls with their ids and all eleven option keys, and the Journals and Archived views with
@@ -297,6 +378,26 @@ block with it, are tests 5–9.
 - Teh Li Wei's Sequence Prefix carries `advancedSetting.hinttype` "1", which no other field in the app sets. It was
   left as it is — test 16 says where the placeholder appears.
 
+**Found while building the archive guard** (16 Sep 2026; all of it is in `BUILDING.md`):
+
+- **HAP's node type 30 is 中止流程**, an abort. Adding one anywhere but last in its chain is refused outright:
+  `中止节点后面不允许有节点`. It takes a name and a description and **nothing user-facing** — no message. hap-cli's
+  DSL has no builder for it, so it goes in with `workflow node add --type 30`.
+- **A branch converges**, so a path that "does nothing" is not a stop. Without the abort node the Yes path would
+  have notified the user and then archived the journal anyway.
+- **A 站内通知 renders its node's name as the message's heading**, `【name】text`, so the node name is user-facing.
+  The name also lives a second time inside the node's `flowNodeMap` "106" channel config, which
+  `workflow node rename` does not update.
+- **"The person who pressed the button" is the 系统 node's `triggeraid`**, not hap-cli's `kind: "triggerUser"`.
+  That kind keys `uaid` off the trigger node, which on a *button* trigger the server reads back as **Last
+  modifier** — the journal's last editor, who need not be the person clicking. The first cut had it wrong and
+  read back as such.
+- **A 汇总 (107) node's filter has its conditions' `nodeId` rewritten to the aggregate node's own id.** What binds
+  the count to the right journal is the *comparison value's* `nodeId`, the trigger.
+- **`hap approval history` is how a guard is proved.** An aborted run comes back with `status` 3 and
+  `instanceLog.causeMsg` "中止" naming the node, and `approval history-detail <instanceId>` lists every node the
+  run passed through — which is what shows that *Archive the journal* was never reached.
+
 ## 3 · Test list
 
 To run in the Nocoly UI, in Chrome, against
@@ -305,6 +406,12 @@ for the stored values. Test records are named `TEST …`. Run on 16 Sep 2026: **
 for Odoo's two tabs and their remark blocks (§2), so **tests 5–9 and 17 are to be re-run** — their expectations now
 describe the tabs and their Result column is empty again. The other twelve results stand: the change touched no
 view, button, record or field rule.
+
+**Tests 19–21 are new**, added with the archive guard on 16 Sep 2026 and proved through the CLI
+(`journals.py draftcheck`, §2) but **not yet in the browser** — the one thing the CLI cannot show is whether the
+notification actually reaches the person who pressed the button in the UI, and what the click looks like while it
+does. Tests 2, 3, 4 and 14 now see one more row, **TEST draft guard** (TSTDG, Sequence 99), which sorts last in
+Journals beside TEST Journal.
 
 | # | Check | Steps | Expected | Result |
 |---|---|---|---|---|
@@ -326,6 +433,9 @@ view, button, record or field rule.
 | 16 | Unarchive | Archived → TEST Journal → ⋯ / Unarchive (not TEST long prefix) | **No confirmation.** The row returns to Journals in its place by Sequence; TEST long prefix stays archived. `journals.py verify` → 7 in the extract, 0 missing or differing, 2 not in the extract | **Pass** — no confirmation; back in Journals in its Sequence place, TEST long prefix still archived; `verify`: 7 in the extract, 0 missing or differing |
 | 17 | Placeholders, help and the remark blocks | A new record: look at Journal Name and Sequence Prefix before typing; hover or open the field help on Type, Sequence, both dedicated sequences and both communication fields; then read both remark blocks | "**e.g. Customer Invoices**" and "**e.g. INV**" appear as placeholders. The descriptions are Odoo's help word for word, and Sequence's adds the note about there being no drag handle. Each remark block shows its heading (*Also on Odoo's Journal Entries tab* / *Also on Odoo's Advanced Settings tab*) **and its full text**, reads as a note rather than a field, and asks for no input | **Pass** — "e.g. Customer Invoices" and "e.g. INV" as placeholders; Type's and Sequence's help render under the field (Sequence's includes the drag-handle note); the other fields carry theirs behind the ⓘ beside the label on a saved record; both remark blocks render their full text |
 | 18 | Odoo side by side | casimir.odoo.com → Invoicing › Configuration › Accounting › Journals, and one journal's form (Sales, Bank) | The same seven journals in the same order, with the same Type and Sequence Prefix; the Sales form shows the same Payment Communications and Dedicated Credit Note Sequence, the Bank form the same Dedicated Payment Sequence. Everything else Odoo shows is in *Not built now* | **Pass** — the tenant lists the same 7 journals with the same Type and Sequence Prefix, and its Sales form carries Dedicated Credit Note Sequence under *Journal Entries* and Payment Communications (Based on Invoice · Full Reference (INV/2024/00001)) under *Advanced Settings*. One difference in order (difference 2) |
+| 19 | A journal with a draft entry refuses to archive | Journals → **TEST draft guard** → ⋯ / Archive → confirm. Then reload the view and open the notification list (the bell) | The confirmation appears and the click reports success, but **the row stays in Journals** and `journals.py journal "TEST draft guard"` still shows `active: true`. A notification arrives reading **【Cannot archive this journal】You can not archive a journal containing draft journal entries.** with Odoo's three steps. Difference 7 is exactly this: Odoo would have stopped the save with a dialog | **Pass** — in the browser: the confirmation appeared, the click reported success, and **TEST draft guard is still active** (`active 1`). The notification arrived in HAP's Workflow channel reading 【Cannot archive this journal】 followed by Odoo's message and its three steps, word for word |
+| 20 | A journal with no draft entry still archives | Journals → **TEST Journal** → ⋯ / Archive; then Archived → TEST Journal → ⋯ / Unarchive | Archive works as it did in test 15 — the row moves to Archived and `active: false` — and no notification arrives. Unarchive brings it back. Leave it **active** | **Pass** — run through the button's workflow, which archived TEST Journal and unarchived it again with no notification, so the guard lets a journal with no draft entries through. The browser would not open the Archive dialog on this record while the window was being used for other work; that is the test environment, not the app |
+| 21 | Odoo's own refusal, side by side | casimir.odoo.com → a journal that has an unposted entry → ⚙ Actions › Archive | Odoo refuses with a dialog carrying the same words. Treat the tenant as read-only: read the dialog and cancel | **Not run** — it would mean pressing Archive on a live journal of a tenant we treat as read-only. The refusal is read from the source instead: `addons/account/models/account_journal.py:686`, message at line 694, which is the wording the notification carries |
 
 ### Differences from Odoo seen in testing
 
@@ -343,6 +453,11 @@ view, button, record or field rule.
    are required instead.
 6. **Archive / Unarchive and the Save bar** behave as on the other worksheets: the button that does not apply is
    hidden on a full-page record, and an edit is kept with Save on the *Modifying form data* bar.
+7. **The draft-entry refusal is a notification, not a dialog.** Odoo raises a ValidationError that blocks the
+   save with the text on screen. HAP has nothing a button workflow can raise: the button's own message is its
+   confirmation, shown before the flow runs, and the click always reports "Operation completed". So the journal
+   simply stays where it is and Odoo's message arrives as an in-app notification headed *Cannot archive this
+   journal* (§2). The guard itself is exact — Active is never written — only the way the user is told differs.
 
 ### Test records left in the worksheet
 
@@ -356,5 +471,10 @@ view, button, record or field rule.
 - **TEST Sales** (TSTS, Sales, Sequence 10, archived) — created by test 13 to prove the rule that makes Payment
   Communications required on a Sales journal, with Communication Type **Based on Customer**; archived afterwards.
 
-All three are to be removed after sign-off, with the owner's approval. Tests 10–12 left nothing behind: their forms
-were closed without saving.
+- **TEST draft guard** (TSTDG, Miscellaneous, Sequence 99, active) — added on 16 Sep 2026 for the archive guard,
+  with one draft entry of its own on Invoices (`TEST draft guard`, a Journal Entry, Status Draft, Number "Draft").
+  The pair is the evidence for tests 19 and 20: the journal must refuse to archive while that entry is a draft.
+  **Leave the entry a draft** — confirming or cancelling it makes the journal archivable and the test moot.
+
+All four are to be removed after sign-off, with the owner's approval, and so is the `TEST draft guard` document on
+Invoices. Tests 10–12 left nothing behind: their forms were closed without saving.

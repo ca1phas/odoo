@@ -7,7 +7,7 @@
 | Odoo model | `account.move` |
 | Reference | **casimir.odoo.com — Odoo saas~19.4+e**: fields, form, list, kanban, search, the seven window actions, defaults, `_order`, the SQL constraint and all 8 records, extracted read-only to `nocoly/reference/odoo-19.4/account.move.md`. Numbering, which the tenant cannot show from the outside, is read from the Odoo 19.0 source in this repo — `addons/account/models/account_move.py` and `sequence.mixin`. The three seeded documents and their customers were re-read from the tenant on 16 Sep 2026 into `nocoly/data/casimir-invoice-seed.json` |
 | Phase | 1 — core worksheet 6 of 7 |
-| Status | Skeleton first built by **Teh Li Wei** on 15 Sep 2026 (15 controls, 3 tabs, no rules, buttons or records). Completed against the casimir reference, seeded and self-checked with the hap CLI on 16 Sep 2026 — 32 controls, 5 rules, 3 buttons, 3 views, 3 documents and their 3 customers. **UI-tested the same day: 24 of 24 pass.** The test found one defect (Accounting Date had no default) and one detail to tighten (Confirm dated a Journal Entry); both were fixed and re-checked, and the numbering was then changed to take one past the **highest** number rather than one past a count, which retires a difference (§2). **Ready for review** |
+| Status | Skeleton first built by **Teh Li Wei** on 15 Sep 2026 (15 controls, 3 tabs, no rules, buttons or records). Completed against the casimir reference, seeded and self-checked with the hap CLI on 16 Sep 2026 — 32 controls, 5 rules, 3 buttons, 3 views, 3 documents and their 3 customers. **UI-tested the same day: 25 of 25 pass.** The test found one defect (Accounting Date had no default) and one detail to tighten (Confirm dated a Journal Entry); both were fixed and re-checked, and the numbering was then changed to take one past the **highest** number rather than one past a count, which retires a difference (§2). At the end of Phase 1 the same day, 07's **difference 11** was resolved: the Invoice Lines subtable joined the read-only rule, and **test 25** showed a posted document's lines locked — no *Add a row*, no *Batch Operation* (§1). **Ready for review** |
 
 `account.move` is one model behind seven menus. A customer invoice, a vendor bill, either kind of credit note, a
 receipt and a plain journal entry are all the same record; **Type** decides which, and the menus in Odoo are just
@@ -108,11 +108,22 @@ to write them.
 | A vendor document must carry its date | Type is Vendor Bill, Vendor Credit Note or Purchase Receipt | **require** **Invoice Date** | `required="is_purchase_document(True)"` on `invoice_date` (labelled Bill Date) |
 | Every document but an entry has a tax mode | Type is not Journal Entry | **require** **Tax mode** | SQL `account_move_check_document_tax_mode_set` |
 | Auto-post until follows Auto-post | Auto-post is not *No* | show **Auto-post until** | `invisible="auto_post == 'no'"` |
-| A posted or cancelled document is closed for editing | Status is Posted or Cancelled | make **Type · Customer/Vendor · Journal · Invoice Date · Accounting Date · Due Date · Payment Terms · Tax mode** read-only | `readonly="state != 'draft'"` across the form; `journal_id` is read-only once numbered |
+| A posted or cancelled document is closed for editing | Status is Posted or Cancelled | make **Type · Customer/Vendor · Journal · Invoice Date · Accounting Date · Due Date · Payment Terms · Tax mode · Lines** read-only | `readonly="state != 'draft'"` across the form; `journal_id` is read-only once numbered; a posted move's `line_ids` are locked |
 
 The last rule depends on HAP offering a read-only action on interaction rules. **Check it before building**: if
 there is none, leave the rule out, record it in §2 *Found while building* and in the differences, and do not fake it
 with a hide rule — a hidden field is worse than an editable one here.
+
+**Lines — the mounted Invoice Lines subtable — joined that list on 16 Sep 2026**, at the end of Phase 1. The rule
+was written before 07 mounted the 子表, so a posted document still offered *Add a row* where Odoo locks a posted
+move's lines; 07 recorded it as its difference 11 and left it to the owner because it touches 06's rule. The
+control (`6aaa2baae43d174ab3749de9`) is now the rule's ninth target and HAP stored it like any other.
+
+**It works — a HAP read-only rule hides a 子表's row controls.** Test 25, in the browser: on the posted
+**INV/2026/00001** the Invoice Lines table shows **no *Add a row* and no *Batch Operation***, and the Display
+Type column has lost its required asterisk; on the **Sunway Construction Group draft** both controls are there
+and the table is fully editable. So a posted document's lines are closed, as in Odoo, and **07's difference 11
+is resolved**.
 
 Nothing is validated on save. Odoo's own guards on this model are the tax-mode constraint above, which the rule
 covers, and the numbering uniqueness that **Confirm** produces by construction.
@@ -171,7 +182,7 @@ graph and activity views are not reproduced.
 | Lock / hash (`restrict_mode_hash_table`, `inalterable_hash`, `secure_sequence_number`) and Odoo's refusal to change a journal's hashing once it has entries — the note left open in 05 | Hashing a chain of posted entries is its own piece of work; 05's Archive check ("you cannot archive a journal containing draft journal entries") can be added now that drafts exist, and is tracked as a follow-up on 05, not built here |
 | Duplicate and abnormal-amount warnings (`duplicated_ref_ids`, `abnormal_*_warning`, `alerts`), the partner credit warning | They are onchange-time alerts with no HAP equivalent |
 | Company (`company_id`) | One company per app copy (Direction, 15 Sep) |
-| Roles | Set once for the app at the end of Phase 1 |
+| ~~Roles~~ | **Set on 16 Sep 2026** for the whole app, at the end of Phase 1: five stock roles renamed to English and four business roles, one per Odoo accounting group, each with a rule for this worksheet. The table is in `REVIEWING.md` › *Phase 1 · Roles* |
 
 ### Records
 
@@ -280,6 +291,22 @@ finish the worksheet against casimir. What changed on 16 Sep 2026, and why:
   with type 4 and all eight controls. Nothing was faked with a hide rule. Like every interaction rule it is
   browser-side only: the API still writes a posted document, which is how the self-check puts a TEST document back
   to a draft. **Test 12 is where it is proved.**
+
+  **A ninth control joined that rule on 16 Sep 2026**, at the end of Phase 1: **Lines**
+  (`6aaa2baae43d174ab3749de9`), 07's mounted Invoice Lines 子表 (control type 34). The rule predates the mount,
+  so a posted document still offered *Add a row* where Odoo locks a posted move's lines — 07's difference 11,
+  left to the owner because it is 06's rule. One line in `invoices.py` (`CLOSED_FIELDS`), one `rules` run, and
+  the rule reads back with nine controls, the subtable stored like any other target (`childControlIds: []`,
+  `permission: []` — the server changed nothing).
+
+  **A read-only rule over a 子表 hides its row controls** — the first thing in this app to establish it, and
+  nothing else in ERP Master or in the brownfield Sales app uses the combination. It could not be established
+  from the CLI: a read-only rule is browser-side, so no reading distinguishes "greys the table" from "hides the
+  row controls" from "does nothing", and the API writes a posted document's lines either way. **Test 25 settled
+  it in the browser**: the posted **INV/2026/00001** shows its Invoice Lines table with **no *Add a row* and no
+  *Batch Operation***, and the Display Type column's required asterisk gone; the **Sunway Construction Group
+  draft** keeps both controls and stays editable. A posted document's lines are now closed, as in Odoo, and
+  07's difference 11 is resolved.
 - **A HAP workflow can do everything the numbering needs.** It can *query records* (a search step, flowNodeType 7,
   and a get-records step, 13), *count* them (a formula step, flowNodeType 9, actionId **107** — a worksheet total
   with `reportControlId` empty and `reportType` 0, which is "record count", plus its own filter), and do *string
@@ -505,6 +532,7 @@ documents, no two sharing a number. The next Sales invoice confirmed will be **I
 | 22 | The three customers in Contacts | Contacts → find **Sunway Construction Group**, **Klinik Kesihatan Damansara** and **Sarawak Timber Logistics** | Three company records, Address Type **Contact**, with the tenant's email, phone, street (Level 8, Wisma Perdana), city, state, ZIP, country Malaysia, Salesperson Casimir and the note "Seeded reference account — … sector."; **Company ID and DUNS empty** (the tenant has neither field). Contacts' own fields, views and rules are exactly as 01 left them, and its seven `TEST …` records are untouched |  **Pass** — Address Type Contact, the tenant's address, Salesperson Casimir, phone shown as 03-5631 2000, Company ID and DUNS empty; Contacts holds ten records, the seven `TEST …` and these three |
 | 23 | The three documents survive the test | `~/.hap-venv/bin/python nocoly/build/invoices.py verify` and `check` | `verify`: "3 in the seed file; **0 missing or differing**", the TEST documents listed as not in it. `check`: "OK — controls, tabs, options, defaults, rules, views, buttons and the numbering workflow as specified" |  **Pass** — “3 in the seed file; 0 missing or differing”, and `check` reports controls, tabs, options, defaults, rules, views, buttons and the numbering workflow as specified |
 | 24 | Odoo side by side | casimir.odoo.com → Invoicing › Customers › Invoices, and INV/2026/00001's form | The same customer invoices with the same numbers, customers, dates and totals; the form shows the same Customer, Invoice Date, Due Date, Payment Terms, Journal and Tax Excl./Incl. in the same places, and the same Other Info group. Everything Odoo shows that is not here is in *Not built now* |  **Pass** — the tenant still shows the same three documents with the same numbers, customers, dates and totals. Read from the tenant's own records: its web list view would not open in the test tab |
+| 25 | A posted document's lines are read-only | Open **INV/2026/00001** (Posted) → tab **Invoice Lines** → the Lines table. Then the same on the Sunway Construction Group **draft** | The rule *A posted or cancelled document is closed for editing* now names the subtable, so the posted document's table should be locked and the draft's should not. Nothing about this could be proved through the CLI: an interaction rule is browser-side, and the API writes a posted document's lines either way | **Pass** — on **INV/2026/00001** the table has **no *Add a row* and no *Batch Operation***, and the Display Type column has lost its required asterisk; on the **Sunway draft** both controls are there and the table is editable as before. A HAP read-only rule over a 子表 hides the row controls, which is the first time this app has established that. Odoo locks a posted move's lines the same way — so difference 11 of 07 is resolved, not documented |
 
 ### Differences from Odoo to look for
 
@@ -538,6 +566,10 @@ documents, no two sharing a number. The next Sales invoice confirmed will be **I
    until 07 Invoice Lines. Each says so in its own description.
 11. **Odoo's header carries ten buttons**, ribbons, alerts and smart buttons; here there are three buttons and a
    read-only Status field. The rest are in *Not built now*.
+12. ~~**A posted document's lines are editable.**~~ **Settled on 16 Sep 2026**: the Invoice Lines subtable joined
+   the read-only rule (§1), and test 25 showed it working — the posted INV/2026/00001 offers neither *Add a row*
+   nor *Batch Operation*, while the Sunway draft offers both. A posted document's lines are closed for editing,
+   as in Odoo, and 07's difference 11 is resolved with it.
 
 ### Test records left in the worksheet
 

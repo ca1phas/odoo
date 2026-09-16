@@ -156,7 +156,7 @@ archiving or unarchiving runs C once.
 | "The Reference '…' already exists." (`_onchange_default_code`) · negative Cost (`_onchange_standard_price`) | A warning only, as on Products · moot while Cost is read-only |
 | Print Labels, Kanban and Activity views | No label printing; Odoo's variant action is `list,form` |
 | Search on Product Category, Tags, Attribute Values; group by Product Category or Properties | Their bundles |
-| Roles | Set once for the app at the end of Phase 1 |
+| ~~Roles~~ | **Set on 16 Sep 2026** for the whole app, at the end of Phase 1: five stock roles renamed to English and four business roles, one per Odoo accounting group, each with a rule for this worksheet. The table is in `REVIEWING.md` › *Phase 1 · Roles* |
 
 ### Records
 

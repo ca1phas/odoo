@@ -1,0 +1,382 @@
+#!/usr/bin/env python3
+"""Roles for ERP Master — the last piece of Phase 1, deferred by every worksheet's *Not built now*.
+
+Two things:
+
+  1. HAP's **five stock roles** are renamed from Chinese to English — Administrator · Operator · Developer ·
+     Member · Read-only. Only the label changes; `roleType` and the members are never touched, so Casimir and
+     Teh Li Wei stay app administrators exactly as they are.
+  2. **Four business roles**, one per Odoo accounting group, each with per-worksheet access rules
+     (`hap app role create-fine`). Nobody is assigned to any of them — who belongs in which role is the
+     owner's call.
+
+Run from the repo root with the CLI's interpreter:
+
+    ~/.hap-venv/bin/python nocoly/build/roles.py rename    # 1. the five stock roles, Chinese -> English
+    ~/.hap-venv/bin/python nocoly/build/roles.py create    # 2. the four business roles (upsert by name), then each
+                                                           #    one's description and its export right
+    ~/.hap-venv/bin/python nocoly/build/roles.py all       # both, then check
+    ~/.hap-venv/bin/python nocoly/build/roles.py check     # read every role back against this spec
+    ~/.hap-venv/bin/python nocoly/build/roles.py show      # the live roles, with their per-worksheet scopes
+
+Every step reads the live roles first and is safe to re-run; a second run writes nothing. Nothing here deletes
+a role, and no role is given a member.
+
+Profile. As in the other builders: --profile > $HAP_PROFILE > hap-cli's active profile.
+"""
+import json
+import os
+import sys
+
+import common as C
+import hap
+
+APP = hap.ids()['app']
+WORKSHEETS = hap.ids()['worksheets']
+
+# ── 1 · the five stock roles ────────────────────────────────────────────────
+#
+# HAP creates them with every app, Chinese-named. The house rule is English labels, as in Odoo
+# (DECISIONS.md, 15 Sep 2026). `roleType` is HAP's own meaning for the role and is left alone:
+# 100 administrator · 2 operator · 1 developer · 0 member / read-only.
+
+STOCK = [  # (English name, the Chinese name HAP ships, roleType)
+    ('Administrator', '管理员', 100),
+    ('Operator', '运营者', 2),
+    ('Developer', '开发者', 1),
+    ('Member', '成员', 0),
+    ('Read-only', '只读', 0),
+]
+
+# ── 2 · the four business roles ─────────────────────────────────────────────
+#
+# One per Odoo accounting group. The group names are the `name` fields of
+# addons/account/security/account_security.xml, and the sentence after the dash is Odoo's own `comment` on
+# the group where it has one, and the file's header comment (lines 31-35) where it has not.
+
+FULL, EDIT, VIEW = 'full', 'view · add · edit', 'view'
+
+ORDER = ['Contacts', 'Units & Packagings', 'Products', 'Product Variants', 'Journals', 'Invoices',
+         'Invoice Lines']
+
+ROLES = {
+    'Accounting Administrator': (
+        'Odoo group account.group_account_manager — "Administrator". Full access, including configuration '
+        'rights. The only role here that may delete a record, and the only one that may export: Odoo keeps '
+        'exporting behind its own group, base.group_allow_export, which is granted deliberately rather than '
+        'implied by an accounting level.',
+        {name: FULL for name in ORDER},
+    ),
+    'Accountant': (
+        'Odoo group account.group_account_user — "Show Full Accounting Features". The accountant: can do '
+        'everything except advanced configuration.',
+        {'Contacts': EDIT, 'Units & Packagings': VIEW, 'Products': VIEW, 'Product Variants': VIEW,
+         'Journals': EDIT, 'Invoices': EDIT, 'Invoice Lines': EDIT},
+    ),
+    'Invoicing': (
+        'Odoo group account.group_account_invoice — "Invoicing". Invoices, payments and basic invoice '
+        'reporting; cannot see accounting configuration, so Journals is read-only.',
+        {'Contacts': EDIT, 'Units & Packagings': VIEW, 'Products': VIEW, 'Product Variants': VIEW,
+         'Journals': VIEW, 'Invoices': EDIT, 'Invoice Lines': EDIT},
+    ),
+    'Accounting Read-only': (
+        'Odoo group account.group_account_readonly — "Show Accounting Features - Readonly". Can see (and '
+        'only see) everything.',
+        {name: VIEW for name in ORDER},
+    ),
+}
+
+# What each cell of that table is, in HAP's own terms. `recordDataScope` is the scope of the three record
+# rights — 0 none · 20 own · 30 own and subordinates' · 100 every record — and `add` is the record-create
+# right. Delete is 0 everywhere but Accounting Administrator, as the owner asked.
+SCOPE = {
+    FULL: ({'read': 100, 'edit': 100, 'delete': 100}, True),
+    EDIT: ({'read': 100, 'edit': 100, 'delete': 0}, True),
+    VIEW: ({'read': 100, 'edit': 0, 'delete': 0}, False),
+}
+
+# **Export** is the one right outside the owner's table that is set deliberately. Odoo keeps exporting behind
+# its own group, `base.group_allow_export`, granted on purpose and not implied by an accounting level — so
+# hap-cli's default of no export is faithful for three of the four roles, and Accounting Administrator, the
+# Odoo Administrator, gets it (owner, 16 Sep 2026).
+EXPORTERS = {'Accounting Administrator'}
+
+# Everything else a role can be given — sharing a view, import, batch operations, record sharing, printing,
+# the record log — is left at hap-cli's own defaults, the same for all four roles. The owner's table speaks to
+# read, add, edit and delete only, and guessing at the rest would put settings in front of a reviewer that
+# nobody asked for. They read back as:
+DEFAULT_WORKSHEET_ACTIONS = {'shareView': False, 'import': False, 'export': False, 'discuss': True,
+                             'batchOperation': False}
+DEFAULT_RECORD_ACTIONS = {'share': False, 'discuss': True, 'systemPrint': False,
+                          'attachmentDownload': True, 'log': False}
+
+
+def worksheet_actions(name):
+    """The worksheetActions a role should read back with: the defaults, plus export for an exporter."""
+    return {**DEFAULT_WORKSHEET_ACTIONS, 'export': name in EXPORTERS}
+
+
+def roles():
+    """The live roles as the **app's own Roles page** sees them: AppManagement/GetRolesWithUsers, which is
+    what pd-openweb calls, returning each role's stored name.
+
+    Not `hap app role list`. That command is the V3 endpoint, and V3 renders HAP's own built-in label for the
+    three typed roles — 管理员 · 运营者 · 开发者 — whatever the stored name is. `v3_names()` prints both."""
+    from hap_cli.core import role as role_mod
+    from hap_cli.core.session import Session
+    return role_mod.get_roles(Session.load(None), APP)
+
+
+def v3_rows():
+    """{roleId: row} as `hap app role list` reports it — HAP's built-in label for a typed role, plus the
+    department, department-tree, job and org-role members the main-site list leaves out."""
+    out = hap.run('app', 'role', 'list', '-a', APP)
+    data = out.get('data', out) if isinstance(out, dict) else out
+    rows = (data or {}).get('roles', data if isinstance(data, list) else [])
+    return {r.get('id') or r.get('roleId'): r for r in rows}
+
+
+def by_name():
+    return {r['name']: r for r in roles()}
+
+
+def members(r):
+    """The names of a role's member accounts."""
+    return sorted(u.get('fullName') or u.get('fullname') or u['accountId'] for u in r.get('users') or [])
+
+
+def guard():
+    """Stop unless the profile reaches ERP Master and the app holds exactly the seven Phase 1 worksheets."""
+    who = hap.run('auth', 'whoami')
+    app = hap.run('app', 'info', '-a', APP).get('data', {})
+    if app.get('name') != 'ERP Master':
+        sys.exit(f"profile {who.get('profile')!r} does not reach ERP Master (found {app.get('name')!r})")
+    live = {i['name'] for s in app.get('sections', []) for i in s['items'] if i['type'] == 0}
+    if live != set(ORDER):
+        sys.exit(f'ERP Master holds {sorted(live)}, not the seven Phase 1 worksheets')
+    stock = {r['name'] for r in roles()}
+    unknown = stock - {n for n, _, _ in STOCK} - {c for _, c, _ in STOCK} - set(ROLES)
+    if unknown:
+        sys.exit(f'unknown role(s) in the app — stopping: {sorted(unknown)}')
+    if len(stock) != len(roles()):
+        sys.exit(f'two roles share a name: {sorted(r["name"] for r in roles())}')
+    print(f"  guard: profile {os.environ.get('HAP_PROFILE') or who.get('profile')!r}, ERP Master, "
+          f"{len(live)} worksheets, {len(stock)} roles")
+
+
+def step_rename():
+    """Rename the five stock roles to English. Matched by id (ids.json), then by either spelling of the name;
+    `roleType` and the members are not in the call — `role rename` reads the role and posts it back with only
+    the name replaced."""
+    guard()
+    live = by_name()
+    for english, chinese, role_type in STOCK:
+        known = hap.ids().get('roles', {}).get(english)
+        r = next((x for x in roles() if x['roleId'] == known), None) or live.get(english) or live.get(chinese)
+        if not r:
+            sys.exit(f'stock role {chinese!r} / {english!r} not found')
+        if r['roleType'] != role_type:
+            sys.exit(f"{r['name']!r} is roleType {r['roleType']}, expected {role_type}")
+        if r['name'] != english:
+            hap.run('app', 'role', 'rename', APP, r['roleId'], '-n', english)
+        C.remember('roles', english, r['roleId'])
+    v3 = v3_rows()
+    for r in roles():
+        if r['name'] in {n for n, _, _ in STOCK}:
+            print(f"  {r['name']:<24} {r['roleId']} roleType={r['roleType']:<3} members={members(r) or '—'}"
+                  f"   (hap app role list still calls it {v3.get(r['roleId'], {}).get('name')!r})")
+
+
+def worksheet_permissions(role, matrix):
+    """The --worksheet-permissions intent for one role: one entry per worksheet, in the table's order.
+
+    create-fine fetches each worksheet's fields and views and fills the rest of the structure in; anything
+    not named defaults to allowed, so the fields and views are all readable and the scope is what restricts."""
+    out = []
+    for name in ORDER:
+        scope, add = SCOPE[matrix[name]]
+        out.append({'worksheetId': WORKSHEETS[name], 'recordDataScope': dict(scope),
+                    'recordActions': {'add': add},
+                    'worksheetActions': {'export': role in EXPORTERS}})
+    return out
+
+
+# The V3 `worksheetActions.export` and the main-site model's `sheets[].worksheetExport.enable` are the same
+# switch; create-fine writes the first, and there is no V3 call that edits a role afterwards. An existing role
+# is changed the way the Roles page itself does it and the way `role rename` already does: read the whole
+# appRoleModel with GetRoleDetail, change what must change, post it back with EditAppRole.
+EXPORT_KEY = 'worksheetExport'
+
+
+def role_model(role_id):
+    from hap_cli.core import role as role_mod
+    from hap_cli.core.session import Session
+    return role_mod.get_role_detail(Session.load(None), APP, role_id)
+
+
+def save_role_model(role_id, model):
+    from hap_cli.core.session import Session
+    return Session.load(None).api_call('AppManagement', 'EditAppRole',
+                                       {'appId': APP, 'roleId': role_id, 'appRoleModel': model})
+
+
+def reconcile(name, role_id, description):
+    """Bring an existing business role's description and export right up to this spec, and nothing else.
+
+    Everything not named here is posted back exactly as it was read, so the scopes, the members, the field and
+    view permissions and every other action switch cannot move. Returns True when something was written."""
+    model = role_model(role_id)
+    want_export = name in EXPORTERS
+    changed = (model.get('description') or '') != description
+    model['description'] = description
+    for sheet in model.get('sheets') or []:
+        if bool((sheet.get(EXPORT_KEY) or {}).get('enable')) != want_export:
+            sheet.setdefault(EXPORT_KEY, {'enable': False, 'range': 1, 'allowExport': False})
+            sheet[EXPORT_KEY]['enable'] = want_export
+            changed = True
+    if not changed:
+        return False
+    save_role_model(role_id, model)
+    back = role_model(role_id)
+    stored = {bool((s.get(EXPORT_KEY) or {}).get('enable')) for s in back.get('sheets') or []}
+    if (back.get('description') or '') != description or stored != {want_export}:
+        sys.exit(f'{name}: read back description {back.get("description")!r}, export {stored}')
+    return True
+
+
+def step_create():
+    """Create the four business roles, matched by name, then bring each one's description and export right up
+    to this spec. No member is added to any of them."""
+    guard()
+    live = by_name()
+    for name, (description, matrix) in ROLES.items():
+        if name in live:
+            print(f'  {name}: exists ({live[name]["roleId"]}); not re-created')
+        else:
+            hap.run('app', 'role', 'create-fine', APP, '-n', name, '-d', description,
+                    '--worksheet-permissions',
+                    json.dumps(worksheet_permissions(name, matrix), ensure_ascii=False))
+            if name not in by_name():
+                sys.exit(f'{name}: created but not in the role list')
+            print(f'  {name}: created {by_name()[name]["roleId"]}')
+        role_id = by_name()[name]['roleId']
+        C.remember('roles', name, role_id)
+        if reconcile(name, role_id, description):
+            print(f"  {name}: description and export set (export "
+                  f"{'on' if name in EXPORTERS else 'off'})")
+    step_show()
+
+
+def permissions(role_id):
+    out = hap.run('app', 'role', 'permissions', role_id, '-a', APP)
+    return out.get('data', out) if isinstance(out, dict) else {}
+
+
+def scopes(role_id):
+    """{worksheet name: (recordDataScope, add)} for a role, worksheets not in the role left out."""
+    names = {wid: name for name, wid in WORKSHEETS.items()}
+    out = {}
+    for w in permissions(role_id).get('worksheetPermissions') or []:
+        out[names.get(w['id'], w['id'])] = (w.get('recordDataScope'), (w.get('recordActions') or {}).get('add'))
+    return out
+
+
+def cell(scope, add):
+    """The table's word for a stored scope, or the raw values when it is none of the three."""
+    for word, (want, want_add) in SCOPE.items():
+        if scope == want and add == want_add:
+            return word
+    return f'{scope} add={add}'
+
+
+def step_show():
+    for r in roles():
+        print(f"  {r['name']:<24} {r['roleId']} roleType={r['roleType']:<3} "
+              f"permissionWay={r.get('permissionWay'):<3} members={members(r) or '—'}")
+        if r['name'] in ROLES:
+            live = scopes(r['roleId'])
+            for name in ORDER:
+                s, add = live.get(name, (None, None))
+                print(f"      {name:<20} {cell(s, add)}")
+            print(f"      {'export':<20} {'yes' if r['name'] in EXPORTERS else 'no'}")
+
+
+def step_check():
+    """Every role back against this spec; exits non-zero on a difference."""
+    live = by_name()
+    problems = []
+    for english, chinese, role_type in STOCK:
+        r = live.get(english)
+        if not r:
+            problems.append(f'stock role {english!r} missing (Chinese name still {chinese!r}?)')
+        elif r['roleType'] != role_type:
+            problems.append(f'{english}: roleType {r["roleType"]}, want {role_type}')
+    admin = live.get('Administrator')
+    if admin and members(admin) != ['Casimir Chiong Ming Yuan', 'Teh Li Wei']:
+        problems.append(f'Administrator members {members(admin)}')
+    v3 = v3_rows()
+    for name, (description, matrix) in ROLES.items():
+        r = live.get(name)
+        if not r:
+            problems.append(f'role {name!r} missing')
+            continue
+        row = v3.get(r['roleId'], {})
+        if members(r) or row.get('accounts') or row.get('departments') or row.get('jobs') \
+                or row.get('departmentTrees') or row.get('orgRoleIds'):
+            problems.append(f'{name}: has members {members(r)} {row.get("departments")} {row.get("jobs")}')
+        detail = permissions(r['roleId'])
+        if detail.get('permissionScope') != 0:
+            problems.append(f'{name}: permissionScope {detail.get("permissionScope")}, want 0 (per worksheet)')
+        if (detail.get('description') or '') != description:
+            problems.append(f'{name}: description {detail.get("description")!r}')
+        got = scopes(r['roleId'])
+        if set(got) != set(ORDER):
+            problems.append(f'{name}: worksheets {sorted(set(got) ^ set(ORDER))}')
+        for ws in ORDER:
+            s, add = got.get(ws, (None, None))
+            if cell(s, add) != matrix[ws]:
+                problems.append(f'{name} / {ws}: {cell(s, add)!r}, want {matrix[ws]!r}')
+        for w in detail.get('worksheetPermissions') or []:
+            actions = {k: v for k, v in (w.get('worksheetActions') or {}).items()}
+            record = {k: v for k, v in (w.get('recordActions') or {}).items() if k != 'add'}
+            if actions != worksheet_actions(name):
+                problems.append(f'{name} / {w["id"]}: worksheetActions {actions}')
+            if record != DEFAULT_RECORD_ACTIONS:
+                problems.append(f'{name} / {w["id"]}: recordActions {record}')
+        # The same switch in the model the Roles page itself edits, so a difference between the two shows up
+        # rather than hiding behind whichever call is read.
+        stored = {bool((s.get(EXPORT_KEY) or {}).get('enable')) for s in role_model(r['roleId'])['sheets']}
+        if stored != {name in EXPORTERS}:
+            problems.append(f'{name}: {EXPORT_KEY}.enable {stored}, want {name in EXPORTERS}')
+    extra = set(live) - {n for n, _, _ in STOCK} - set(ROLES)
+    if extra:
+        problems.append(f'unexpected role(s) {sorted(extra)}')
+    print('  check: ' + ('OK — five stock roles in English with their roleType and members, four business '
+                         'roles with their per-worksheet scopes, export on Accounting Administrator alone, '
+                         'and no members'
+                         if not problems else 'DIFFERENCES\n    ' + '\n    '.join(problems)))
+    return len(problems)
+
+
+def step_all():
+    for name in ('rename', 'create'):
+        print(f'\n── {name} ' + '─' * 60)
+        STEPS[name]()
+    print('\n── check ' + '─' * 60)
+    return step_check()
+
+
+STEPS = {
+    'rename': step_rename,
+    'create': step_create,
+    'all': step_all,
+    'check': step_check,
+    'show': step_show,
+}
+
+if __name__ == '__main__':
+    step = sys.argv[1] if len(sys.argv) > 1 else 'check'
+    if step not in STEPS:
+        raise SystemExit(f"Unknown step {step!r}; choose from {', '.join(STEPS)}")
+    result = STEPS[step](*sys.argv[2:])
+    sys.exit(1 if isinstance(result, int) and result else 0)
