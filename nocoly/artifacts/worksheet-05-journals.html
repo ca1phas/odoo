@@ -27,7 +27,7 @@
   <aside class="callout" aria-labelledby="note-title">
     <span class="chip note small" style="justify-self:start">Worth knowing before you review</span>
     <h2 id="note-title">Type decides what the form shows</h2>
-    <p>There are no tabs: all nine fields sit on one form, and four rules on <strong>Type</strong> do what Odoo's notebook pages do. A Sales journal shows Payment Communications (required) and the credit note sequence; Purchase shows the credit note sequence; Bank, Cash and Credit Card show the payment sequence; Miscellaneous shows neither. Two other things to know: the 5-character limit on Sequence Prefix is a <em>form</em> check — the API stores longer values, while <strong>No duplicates</strong> holds everywhere — and Sequence is visible here because a HAP table has no drag handle.</p>
+    <p>Journal Name, Type, Sequence Prefix and Sequence sit above Odoo's two tabs, <strong>Journal Entries</strong> and <strong>Advanced Settings</strong>, and five rules on <strong>Type</strong> do the rest. A Sales journal shows the credit note sequence and, on Advanced Settings, Payment Communications (required); Purchase shows the credit note sequence; Bank, Cash and Credit Card show the payment sequence, and Bank and Cash lose the Advanced Settings tab, as in Odoo; Miscellaneous shows neither checkbox. Each tab ends with a note naming what Odoo also keeps there and which bundle brings it. Two other things to know: the 5-character limit on Sequence Prefix is a <em>form</em> check — the API stores longer values, while <strong>No duplicates</strong> holds everywhere — and Sequence is visible here because a HAP table has no drag handle.</p>
   </aside>
 
   <nav class="toc" aria-label="Sections">
@@ -50,14 +50,15 @@
             <tr><td class="num">2</td><td class="label">Type</td><td><code>type</code></td><td>Dropdown</td><td>yes</td><td class="muted">—</td><td>Sales · Purchase · Cash · Bank · Credit Card · Miscellaneous. Quick filter on both views</td></tr>
             <tr><td class="num">3</td><td class="label">Sequence Prefix</td><td><code>code</code></td><td>Text, at most 5 characters, No duplicates</td><td>yes</td><td class="muted">—</td><td>Placeholder “e.g. INV”. Odoo's <code>size=5</code> and “Journal codes must be unique per company”</td></tr>
             <tr><td class="num">4</td><td class="label">Sequence</td><td><code>sequence</code></td><td>Number</td><td class="muted">—</td><td>10</td><td>Orders the list; edited as a number since HAP has no drag handle</td></tr>
-            <tr><td class="num">5</td><td class="label">Dedicated Credit Note Sequence</td><td><code>refund_sequence</code></td><td>Checkbox</td><td class="muted">—</td><td>unchecked</td><td>Sales and Purchase only</td></tr>
-            <tr><td class="num">6</td><td class="label">Dedicated Payment Sequence</td><td><code>payment_sequence</code></td><td>Checkbox</td><td class="muted">—</td><td>unchecked</td><td>Bank, Cash and Credit Card only</td></tr>
-            <tr><td class="num">7</td><td class="label">Communication Type</td><td><code>invoice_reference_type</code></td><td>Dropdown</td><td>by rule</td><td>Based on Invoice</td><td>Based on Customer · Based on Invoice. Sales only</td></tr>
-            <tr><td class="num">8</td><td class="label">Communication Standard</td><td><code>invoice_reference_model</code></td><td>Dropdown</td><td>by rule</td><td>Full Reference (INV/2024/00001)</td><td>Full Reference · European (RF83INV202400001) · Numbers only (202400001). Sales only</td></tr>
-            <tr><td class="num">9</td><td class="label">Active</td><td><code>active</code></td><td>Checkbox, hidden</td><td class="muted">—</td><td>checked</td><td>Set by Archive / Unarchive</td></tr>
+            <tr><td class="num">5</td><td class="label">A Sales journal</td><td>Both tabs; credit note sequence ticked; communications required</td><td><div class="result"><span class="chip pass small">Pass</span>Each tab ends with its note</div></td></tr>
+            <tr><td class="num">6</td><td class="label">A Purchase journal</td><td>Credit note sequence; Advanced Settings holds only its note</td><td><div class="result"><span class="chip pass small">Pass</span></div></td></tr>
+            <tr><td class="num">7</td><td class="label">A Bank journal</td><td>Payment sequence; no Advanced Settings tab at all</td><td><div class="result"><span class="chip pass small">Pass</span></div></td></tr>
+            <tr><td class="num">8</td><td class="label">A Miscellaneous journal</td><td>Both tabs, each holding only its note</td><td><div class="result"><span class="chip pass small">Pass</span></div></td></tr>
+            <tr><td class="num">9</td><td class="label">A new record, defaults and the tab rule</td><td>Sequence 10; both tabs before a Type is chosen</td><td><div class="result"><span class="chip pass small">Pass</span>Cash and Bank hide Advanced Settings; Credit Card brings it back</div></td></tr>
           </tbody>
         </table>
       </div>
+      <p class="aside">Journal Name, Type, Sequence Prefix and Sequence sit above Odoo's two tabs. <strong>Journal Entries</strong> holds the two dedicated sequences, <strong>Advanced Settings</strong> the two communication fields, and each ends with a note naming what Odoo also keeps there — the invoice report and bank fields, Self Billing, the email alias and EDI — and which bundle or table brings it.</p>
       <p class="aside">Every field keeps the control id, alias and option keys of Teh Li Wei's first build, so anything already written against them stays valid.</p>
     </div>
 
@@ -71,6 +72,7 @@
             <tr><td class="label">… are required for Sales</td><td>Requires both on a Sales journal. A field a rule hides can never be filled, so this is a rule rather than a field setting</td></tr>
             <tr><td class="label">Credit note sequence only for Sales and Purchase</td><td>Odoo's <code>invisible="type not in ['sale','purchase']"</code></td></tr>
             <tr><td class="label">Payment sequence only for Bank, Cash and Credit Card</td><td>Odoo's <code>invisible="type not in ('bank','cash','credit')"</code></td></tr>
+            <tr><td class="label">Advanced Settings hidden for Bank and Cash</td><td>Hides the whole tab, note and all — Odoo's <code>invisible="type in ['bank','cash']"</code>. Written as <em>hide when</em>, so a new record with no Type still shows the tab</td></tr>
             <tr><td class="label">Archive · Unarchive</td><td>As on every other worksheet: “Are you sure that you want to archive this record?” then Active off; Unarchive without a confirmation</td></tr>
             <tr><td class="label">Journals view</td><td>Active journals: Journal Name · Type · Sequence Prefix, sorted Sequence, then Type, then Sequence Prefix — Odoo's <code>_order</code>. Type quick filter, several at a time (Cash + Bank + Credit Card is Odoo's <em>Liquidity</em>)</td></tr>
             <tr><td class="label">Archived view</td><td>Archived journals, same columns, sort and filter</td></tr>
@@ -108,7 +110,8 @@
           <tr><td class="label">Worksheet</td><td>Journals, menu group Invoicing</td><td class="id">6aa8f5191204328eb1af162a</td></tr>
           <tr><td class="label">Kept from the first build</td><td>Journal Name · Type · Sequence Prefix · Communication Type · Communication Standard · Active</td><td class="id">…1676 · …1678 · …1677 · …1679 · …167a · …167b</td></tr>
           <tr><td class="label">Added</td><td>Sequence · Dedicated Credit Note Sequence · Dedicated Payment Sequence</td><td class="id">6aa9dabcbd43f55762c6f430 · …431 · …432</td></tr>
-          <tr><td class="label">Rules</td><td>The four above, all on Type</td><td class="id">6aa9dae5e54d2a34fa4dfde2 · 6aa9dae67d58b0f44930e6ce · …6d0 · 6aa9dae7e43d174ab37498e9</td></tr>
+          <tr><td class="label">Tabs and notes</td><td>Journal Entries · Advanced Settings, each with a heading and a remark block</td><td class="id">6aa9e869e54d2a34fa4dfe40 · …41 · …42 · …43 · 6aa9eca8e43d174ab37499c2 · …c3</td></tr>
+          <tr><td class="label">Rules</td><td>The five above, all on Type</td><td class="id">6aa9dae5e54d2a34fa4dfde2 · 6aa9dae67d58b0f44930e6ce · …6d0 · 6aa9dae7e43d174ab37498e9 · 6aa9e8b5bd43f55762c6f48a</td></tr>
           <tr><td class="label">Buttons</td><td>Archive · Unarchive, one-step workflows</td><td class="id">6aa9db31805aef7032865005 · 6aa9db34e43d174ab37498ec</td></tr>
           <tr><td class="label">Views</td><td>Journals · Archived (his ids, re-sorted onto the new Sequence)</td><td class="id">6aa8f5191204328eb1af162e · 6aa8f7074720c515252bf2c8</td></tr>
           <tr><td class="label">Records</td><td>The tenant's 7 journals: Sales INV · Purchases BILL · Bank BNK1 · Miscellaneous Operations MISC · Cash Basis Taxes CABA · Exchange Difference EXCH · Tax Returns TAX</td><td class="muted">—</td></tr>
@@ -141,7 +144,7 @@
           <tr><td class="num">14</td><td class="label">Sequence moves a journal</td><td>Sequence 1 puts it first, 99 last</td><td><div class="result"><span class="chip pass small">Pass</span>After a refresh</div></td></tr>
           <tr><td class="num">15</td><td class="label">Archive</td><td>Confirmation, then the row moves to Archived</td><td><div class="result"><span class="chip pass small">Pass</span>Cancel changed nothing</div></td></tr>
           <tr><td class="num">16</td><td class="label">Unarchive</td><td>No confirmation; back in place by Sequence</td><td><div class="result"><span class="chip pass small">Pass</span></div></td></tr>
-          <tr><td class="num">17</td><td class="label">Placeholders and help</td><td>Odoo's help and both placeholders</td><td><div class="result"><span class="chip pass small">Pass</span></div></td></tr>
+          <tr><td class="num">17</td><td class="label">Placeholders, help and the notes</td><td>Odoo's help, both placeholders, both notes render</td><td><div class="result"><span class="chip pass small">Pass</span>Help shows under the field or behind the ⓘ</div></td></tr>
           <tr><td class="num">18</td><td class="label">Odoo side by side</td><td>The same 7 journals; the same Sales form fields</td><td><div class="result"><span class="chip pass small">Pass</span>One ordering difference — difference 2</div></td></tr>
         </tbody>
       </table>
@@ -150,7 +153,7 @@
     <div class="block">
       <h3>Differences from Odoo seen in testing</h3>
       <ol class="differences">
-        <li><span class="n">1</span><div class="head"><strong>One flat form</strong><span class="chip note small">Decision</span></div><p>Odoo splits the journal over <em>Journal Entries</em> and <em>Advanced Settings</em>; each would hold one or two fields here until the deferred settings land, so Type governs visibility instead.</p></li>
+        <li><span class="n">1</span><div class="head"><strong>Odoo's two tabs, with a note in each</strong><span class="chip note small">Decision</span></div><p>The tabs were built even though the deferred settings leave them thin, so each ends with a remark block naming what Odoo also shows there and which bundle or table brings it. Odoo's Incoming and Outgoing Payments tabs are not built at all.</p></li>
         <li><span class="n">2</span><div class="head"><strong>Order at equal Sequence</strong><span class="chip note small">Note</span></div><p>Odoo's list then falls back to creation order (Exchange Difference before Cash Basis Taxes); ours follows the model's declared order, Type then Sequence Prefix. The first four rows are identical.</p></li>
         <li><span class="n">3</span><div class="head"><strong>Sequence is visible and editable</strong><span class="chip note small">HAP behaviour</span></div><p>Odoo hides it behind the list's drag handle, which HAP has no equivalent for.</p></li>
         <li><span class="n">4</span><div class="head"><strong>The 5-character limit is a form check only</strong><span class="chip note small">HAP behaviour</span></div><p>The API stores a longer prefix. No duplicates — what entry numbering depends on — is enforced everywhere.</p></li>

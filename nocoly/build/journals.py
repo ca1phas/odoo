@@ -3,13 +3,16 @@
 
 Teh Li Wei built the first cut on 15 Sep 2026 — the worksheet, six controls and the two views. This script keeps
 his control ids, aliases and option keys and closes the gaps against the casimir reference: Sequence (which he
-removed), the two dedicated-sequence checkboxes, Odoo's help and placeholders, the Sequence Prefix limit and
-uniqueness, the four rules, Archive / Unarchive and the seven journals. Requirements:
-nocoly/worksheets/05-journals.md. Generic helpers: common.py. Run from the repo root with the CLI's interpreter:
+removed), the two dedicated-sequence checkboxes, Odoo's two notebook tabs with a heading and a remark block each,
+Odoo's help and placeholders, the Sequence Prefix limit and uniqueness, the five rules, Archive / Unarchive and the
+seven journals. Requirements: nocoly/worksheets/05-journals.md. Generic helpers: common.py. Run from the repo root
+with the CLI's interpreter:
 
-    ~/.hap-venv/bin/python nocoly/build/journals.py layout     # 1. Sequence and the two dedicated sequences; places,
-                                                               #    help, hints, required, Sequence Prefix ≤ 5 and unique
-    ~/.hap-venv/bin/python nocoly/build/journals.py rules      # 2. what Type shows and requires (upsert by name)
+    ~/.hap-venv/bin/python nocoly/build/journals.py layout     # 1. Sequence, the two dedicated sequences, the tabs
+                                                               #    Journal Entries and Advanced Settings, each with a
+                                                               #    divider heading and a remark block; places, tabs,
+                                                               #    help, hints, required, Prefix ≤ 5 and unique
+    ~/.hap-venv/bin/python nocoly/build/journals.py rules      # 2. what Type shows, requires and hides (upsert by name)
     ~/.hap-venv/bin/python nocoly/build/journals.py views      # 3. Journals and Archived: columns, sort, Type quick filter
     ~/.hap-venv/bin/python nocoly/build/journals.py buttons    # 4. Archive / Unarchive and their one-step workflows
     ~/.hap-venv/bin/python nocoly/build/journals.py seed       # 5. the 7 journals of the reference (upsert by Sequence
@@ -17,7 +20,8 @@ nocoly/worksheets/05-journals.md. Generic helpers: common.py. Run from the repo 
     ~/.hap-venv/bin/python nocoly/build/journals.py all        # every step above, then check
 
     ~/.hap-venv/bin/python nocoly/build/journals.py verify     # compare the live journals with the reference
-    ~/.hap-venv/bin/python nocoly/build/journals.py check      # read controls, rules, views and buttons back against this spec
+    ~/.hap-venv/bin/python nocoly/build/journals.py check      # read controls, tabs, rules, views and buttons back
+                                                               #    against this spec
     ~/.hap-venv/bin/python nocoly/build/journals.py selfcheck  # the API writes the worksheet must refuse, and both buttons,
                                                                #    on TEST Journal (TSTJ), which is left active
     ~/.hap-venv/bin/python nocoly/build/journals.py order      # each view's records, in the order the view sorts them
@@ -94,17 +98,44 @@ FIRST_BUILD = {
 
 # ── 1 · the form ────────────────────────────────────────────────────────────
 
-# Odoo saas~19.4 view_account_journal_form on HAP's 12-column grid: name; Type · Sequence Prefix; then the two
-# notebook pages flattened — Journal Entries (the dedicated sequences) and Advanced Settings › Payment
-# Communications — because each page would hold one or two fields until the deferred settings arrive. Sequence is
-# not on Odoo's form at all: it is the list's drag handle, and a HAP table has none (see its description).
-PLACE = {  # name -> (row, col, size)
-    'Journal Name': (0, 0, 12),
-    'Type': (1, 0, 6), 'Sequence Prefix': (1, 1, 6),
-    'Sequence': (2, 0, 6),
-    'Dedicated Credit Note Sequence': (3, 0, 6), 'Dedicated Payment Sequence': (3, 1, 6),
-    'Communication Type': (4, 0, 6), 'Communication Standard': (4, 1, 6),
-    'Active': (5, 0, 6),
+# Odoo saas~19.4 view_account_journal_form on HAP's 12-column grid: Journal Name; Type · Sequence Prefix; then
+# Odoo's two notebook pages as HAP tabs — Journal Entries (page name="bank_account") and Advanced Settings. Each
+# tab also carries a remark block naming what Odoo shows there and which bundle or table brings it (owner,
+# 16 Sep 2026). Sequence is on no Odoo form: it is the list's drag handle, and a HAP table has none (its help
+# says so). Active is hidden and belongs to no tab.
+JOURNAL_ENTRIES, ADVANCED_SETTINGS = 'Journal Entries', 'Advanced Settings'
+REMARK_ENTRIES = "Also on Odoo's Journal Entries tab"       # type 22: the heading only (its desc renders nowhere)
+REMARK_ADVANCED = "Also on Odoo's Advanced Settings tab"
+NOTE_ENTRIES, NOTE_ADVANCED = 'Journal Entries note', 'Advanced Settings note'   # type 10010: the text itself
+TABS = (JOURNAL_ENTRIES, ADVANCED_SETTINGS)
+PLACE = {  # name -> (row, col, size, tab)
+    'Journal Name': (0, 0, 12, None),
+    'Type': (1, 0, 6, None), 'Sequence Prefix': (1, 1, 6, None),
+    'Sequence': (2, 0, 6, None),
+    JOURNAL_ENTRIES: (3, 0, 12, None),
+    'Dedicated Credit Note Sequence': (4, 0, 6, JOURNAL_ENTRIES),
+    'Dedicated Payment Sequence': (4, 1, 6, JOURNAL_ENTRIES),
+    REMARK_ENTRIES: (5, 0, 12, JOURNAL_ENTRIES),
+    NOTE_ENTRIES: (6, 0, 12, JOURNAL_ENTRIES),
+    ADVANCED_SETTINGS: (7, 0, 12, None),
+    'Communication Type': (8, 0, 6, ADVANCED_SETTINGS),
+    'Communication Standard': (8, 1, 6, ADVANCED_SETTINGS),
+    REMARK_ADVANCED: (9, 0, 12, ADVANCED_SETTINGS),
+    NOTE_ADVANCED: (10, 0, 12, ADVANCED_SETTINGS),
+    'Active': (11, 0, 6, None),
+}
+# What each tab's remark block says, as the HTML the block stores. A remark block renders this; a divider's
+# description renders nowhere, so the dividers keep their heading and nothing else.
+HTML = {
+    NOTE_ENTRIES: "<p><strong>Also on Odoo's Journal Entries tab:</strong> the Invoice report, and — on Bank and "
+                  'Credit Card journals — the Bank Account Number, BIC and Bank Feeds. Odoo also lists this '
+                  "journal's payment method lines on its Incoming and Outgoing Payments tabs.</p>"
+                  '<p>The bank fields come with bank accounts, the report with the invoice report templates, and '
+                  'the payment method lines with the Payments bundle.</p>',
+    NOTE_ADVANCED: "<p><strong>Also on Odoo's Advanced Settings tab:</strong> Automation (Self Billing), Emails "
+                   '(Email Alias and Send Copy To) and Electronic Data Interchange.</p>'
+                   '<p>Self Billing and the EDI settings come with e-invoicing; the alias needs a mail alias and '
+                   'incoming mail.</p>',
 }
 HINTS = {  # Odoo's placeholders on this form; every other field's placeholder is cleared
     'Journal Name': 'e.g. Customer Invoices',     # Odoo computes name_placeholder from Type
@@ -130,6 +161,8 @@ DESC = {  # Odoo field help, verbatim (addons/account/models/account_journal.py)
     'Dedicated Payment Sequence': "Check this box if you don't want to share the same sequence on payments and "
                                   'bank transactions posted on this journal',
     'Active': 'Set active to false to hide the Journal without removing it.',
+    # The two dividers carry no description: HAP renders a type-22 divider's `desc` nowhere at all — not even as a
+    # tooltip (UI test, 16 Sep 2026). Their text lives in the remark blocks below them, in HTML.
 }
 # Odoo: name and code required always, type required; the two communication fields are required on the model but
 # only ever shown for Sales, so here a rule requires them instead — a hidden required field can never be filled.
@@ -145,37 +178,68 @@ ADVANCED = {  # advancedSetting keys this script owns
     'Active': {'defsource': C.static_default(1)},
     'Communication Type': {'defsource': C.static_default(DEFAULT_OPTION['Communication Type'])},
     'Communication Standard': {'defsource': C.static_default(DEFAULT_OPTION['Communication Standard'])},
+    NOTE_ENTRIES: {'hidetitle': '1'},              # the remark block's controlName is an internal label only
+    NOTE_ADVANCED: {'hidetitle': '1'},
 }
+DIVIDER = 22                                      # HAP's 分段 divider (hap-cli "SPLIT_LINE"): a heading, no more —
+                                                  # whatever is put in its `desc` is never rendered
+NOTE = 10010                                      # HAP's remark block: HTML in `dataSource`, `hidetitle` "1", and
+                                                  # the controlName only an internal label. hap-cli has no builder
+                                                  # for it, so its JSON is written out in full below
 NEW = {  # controls this script adds: (type, alias, extra control keys)
     'Sequence': ('NUMBER', 'sequence', {'dot': 0}),
     'Dedicated Credit Note Sequence': ('SWITCH', 'refund_sequence', {}),
     'Dedicated Payment Sequence': ('SWITCH', 'payment_sequence', {}),
+    JOURNAL_ENTRIES: ('SECTION', '', {}),
+    ADVANCED_SETTINGS: ('SECTION', '', {}),
+    REMARK_ENTRIES: ('SPLIT_LINE', '', {}),
+    REMARK_ADVANCED: ('SPLIT_LINE', '', {}),
+    NOTE_ENTRIES: (NOTE, '', {}),
+    NOTE_ADVANCED: (NOTE, '', {}),
 }
 
 
 def new_control(name):
+    """A control to add. The remark block is sent as raw JSON — `add-fields` mints its id, as it does for the
+    controls hap-cli can build."""
     kind, alias, extra = NEW[name]
-    return C.control(kind, name, PLACE[name], alias=alias, hint=HINTS.get(name, ''), desc=DESC.get(name, ''),
+    row, col, size, _ = PLACE[name]
+    if kind == NOTE:
+        return {'controlName': name, 'type': NOTE, 'row': row, 'col': col, 'size': size, 'alias': alias,
+                'dataSource': HTML[name], 'advancedSetting': {'hidetitle': '1'}, 'desc': '', 'hint': '',
+                'required': False, 'unique': False}
+    return C.control(kind, name, (row, col, size), alias=alias, hint=HINTS.get(name, ''), desc=DESC.get(name, ''),
                      hidden=name in HIDDEN, required=name in REQUIRED, unique=name in UNIQUE,
                      advanced_setting=dict(ADVANCED.get(name, {}), showtype='0') if kind == 'SWITCH'
                      else ADVANCED.get(name) or None, extra=extra or None)
 
 
-def desired(c):
-    """The attributes `layout` owns on control c, as they should read back."""
+def desired(c, tab_ids):
+    """The attributes `layout` owns on control c, as they should read back. A tab owns its place only; a divider
+    its place and an empty description; a remark block its place and its HTML; a field all of it."""
     name = c['controlName']
-    row, col, size = PLACE[name]
-    return {'row': row, 'col': col, 'size': size, 'hint': HINTS.get(name, ''), 'desc': DESC.get(name, ''),
-            'required': name in REQUIRED, 'unique': name in UNIQUE,
-            'fieldPermission': '011' if name in HIDDEN else '111'}
+    row, col, size, tab = PLACE[name]
+    want = {'row': row, 'col': col, 'size': size, 'sectionId': tab_ids.get(tab, '') if tab else ''}
+    if c['type'] == C.TAB:
+        return want
+    if c['type'] == NOTE:
+        want['dataSource'] = HTML[name]
+        return want
+    want['desc'] = DESC.get(name, '')
+    if c['type'] == DIVIDER:
+        return want
+    want.update(hint=HINTS.get(name, ''), required=name in REQUIRED, unique=name in UNIQUE,
+                fieldPermission='011' if name in HIDDEN else '111')
+    return want
 
 
 def layout_differences(ctrls):
+    tab_ids = {c['controlName']: c['controlId'] for c in ctrls if c['type'] == C.TAB}
     out = {}
     for c in ctrls:
         if c['controlName'] not in PLACE:
             continue
-        diff = {k: (c.get(k), v) for k, v in desired(c).items() if c.get(k) != v}
+        diff = {k: (c.get(k), v) for k, v in desired(c, tab_ids).items() if c.get(k) != v}
         adv = c.get('advancedSetting') or {}
         diff.update({f'advancedSetting.{k}': (adv.get(k), v)
                      for k, v in ADVANCED.get(c['controlName'], {}).items() if adv.get(k) != v})
@@ -242,6 +306,8 @@ def guard():
     problems += [f"unknown control {c['controlName']!r} ({c['controlId']})" for c in ctrls
                  if c['controlName'] not in PLACE]
     names = hap.by_name(ctrls)
+    if len(names) != len(ctrls):                   # a tab and a field may share a name; here none may
+        problems.append(f'two controls share a name: {sorted(c["controlName"] for c in ctrls)}')
     for name, opts in OPTIONS.items():
         live = [(o['key'], o['value']) for o in names.get(name, {}).get('options', []) if not o.get('isDeleted')]
         if live != [(o['key'], o['value']) for o in opts]:
@@ -266,8 +332,9 @@ def guard():
 
 
 def step_layout():
-    """Add Sequence and the two dedicated sequences, then set every control's place, hint, help, required,
-    visibility, default — and Sequence Prefix's 5-character limit and No duplicates."""
+    """Add what is missing — Sequence, the two dedicated sequences, the two tabs and their remark blocks — then
+    set every control's place and tab, hint, help, required, visibility, default, and Sequence Prefix's
+    5-character limit and No duplicates. The tabs are saved first so the fields can point at their ids."""
     ctrls = guard()
     print('  backup:', hap.backup('journals_controls_pre_layout', ctrls))
     missing = [n for n in NEW if n not in {c['controlName'] for c in ctrls}]
@@ -279,9 +346,10 @@ def step_layout():
         print(f'  added: {missing}')
     changed = layout_differences(ctrls)
     if changed:
+        tab_ids = {c['controlName']: c['controlId'] for c in ctrls if c['type'] == C.TAB}
         for c in ctrls:
             if c['controlName'] in changed:
-                c.update(desired(c))
+                c.update(desired(c, tab_ids))
                 c['advancedSetting'] = {**(c.get('advancedSetting') or {}), **ADVANCED.get(c['controlName'], {})}
         save_controls(ctrls)
         print('  updated:', json.dumps(changed, ensure_ascii=False))
@@ -306,7 +374,10 @@ RULE_COMMUNICATIONS = 'Payment Communications only for Sales'
 RULE_COMMUNICATIONS_REQ = 'Payment Communications are required for Sales'
 RULE_CREDIT_NOTE = 'Dedicated Credit Note Sequence only for Sales and Purchase'
 RULE_PAYMENT = 'Dedicated Payment Sequence only for Bank, Cash and Credit Card'
-# rule name -> (Type options, controls it acts on, rule item type)
+RULE_ADVANCED_TAB = 'Advanced Settings hidden for Bank and Cash journals'
+# rule name -> (Type options, controls it acts on, rule item type). A rule applies its action while its condition
+# holds and reverses it when it does not, so every show rule here also hides its fields while Type is empty — and
+# the one hide rule shows its tab for every other type, and on a new record, which is what Odoo's `invisible` does.
 RULES = {
     # <group string="Payment Communications" invisible="type != 'sale'">
     RULE_COMMUNICATIONS: (['Sales'], ['Communication Type', 'Communication Standard'], C.SHOW),
@@ -316,12 +387,14 @@ RULES = {
     RULE_CREDIT_NOTE: (['Sales', 'Purchase'], ['Dedicated Credit Note Sequence'], C.SHOW),
     # <field name="payment_sequence" invisible="type not in ('bank', 'cash', 'credit')"/>
     RULE_PAYMENT: (['Bank', 'Cash', 'Credit Card'], ['Dedicated Payment Sequence'], C.SHOW),
+    # <page name="advanced_settings" invisible="type in ['bank', 'cash']"> — the tab control, contents and all.
+    # Journal Entries has no such condition and stays visible for every type.
+    RULE_ADVANCED_TAB: (['Bank', 'Cash'], [ADVANCED_SETTINGS], C.HIDE),
 }
 
 
 def type_is(f, labels):
-    """Condition: Type is any of the labels. A rule's action applies when it holds and is reversed when it does
-    not, so `show when Type is Sales` keeps the field hidden while Type is still empty."""
+    """Condition: Type is any of the labels (one filter, several option keys)."""
     keys = [o['key'] for o in f['Type']['options'] if o['value'] in labels]
     if len(keys) != len(labels):
         sys.exit(f'Type options {labels} not all found')
@@ -330,8 +403,8 @@ def type_is(f, labels):
 
 
 def step_rules():
-    guard()
-    f = C.fields(WORKSHEET)
+    ctrls = guard()
+    f = hap.by_name(ctrls)                         # tabs included: one rule targets the Advanced Settings tab
     rules = [(name, C.INTERACTION, C.any_of([type_is(f, types)]),
               [C.item(kind, *[f[t] for t in targets])], {})
              for name, (types, targets, kind) in RULES.items()]
@@ -712,7 +785,12 @@ def step_check():
         conds = [(names.get(x['controlId']), x['filterType'], x.get('values')) for x in b.get('filters') or []]
         if conds != [('Active', op, ['1'])] or (b.get('confirmMsg') or '') != confirm:
             problems.append(f"button {name}: filters={conds} confirm={b.get('confirmMsg')!r}")
-    print('  check: ' + ('OK — controls, options, defaults, rules, views and buttons as specified'
+    order = sorted(ctrls, key=lambda c: (c.get('row', 0), c.get('col', 0)))
+    tab_ids = {c['controlName']: c['controlId'] for c in ctrls if c['type'] == C.TAB}
+    for tab in TABS:
+        print(f"  tab {tab}: {[c['controlName'] for c in order if c.get('sectionId') == tab_ids.get(tab)]}")
+    print(f"  no tab: {[c['controlName'] for c in order if not c.get('sectionId') and c['type'] != C.TAB]}")
+    print('  check: ' + ('OK — controls, tabs, options, defaults, rules, views and buttons as specified'
                          if not problems else 'DIFFERENCES\n    ' + '\n    '.join(problems)))
     return len(problems)
 

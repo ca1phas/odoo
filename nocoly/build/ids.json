@@ -62,12 +62,19 @@
   "Journals: Dedicated Payment Sequence": "6aa9dabcbd43f55762c6f432",
   "Journals: Communication Type": "6aa8f6c81204328eb1af1679",
   "Journals: Communication Standard": "6aa8f6c81204328eb1af167a",
-  "Journals: Active": "6aa8f6c81204328eb1af167b"
+  "Journals: Active": "6aa8f6c81204328eb1af167b",
+  "Journals: Journal Entries": "6aa9e869e54d2a34fa4dfe40",
+  "Journals: Also on Odoo's Journal Entries tab": "6aa9e869e54d2a34fa4dfe42",
+  "Journals: Advanced Settings": "6aa9e869e54d2a34fa4dfe41",
+  "Journals: Also on Odoo's Advanced Settings tab": "6aa9e869e54d2a34fa4dfe43",
+  "Journals: Journal Entries note": "6aa9eca8e43d174ab37499c2",
+  "Journals: Advanced Settings note": "6aa9eca8e43d174ab37499c3"
  },
  "rules": {
   "Journals: Payment Communications only for Sales": "6aa9dae5e54d2a34fa4dfde2",
   "Journals: Payment Communications are required for Sales": "6aa9dae67d58b0f44930e6ce",
   "Journals: Dedicated Credit Note Sequence only for Sales and Purchase": "6aa9dae67d58b0f44930e6d0",
-  "Journals: Dedicated Payment Sequence only for Bank, Cash and Credit Card": "6aa9dae7e43d174ab37498e9"
+  "Journals: Dedicated Payment Sequence only for Bank, Cash and Credit Card": "6aa9dae7e43d174ab37498e9",
+  "Journals: Advanced Settings hidden for Bank and Cash journals": "6aa9e8b5bd43f55762c6f48a"
  }
 }

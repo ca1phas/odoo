@@ -82,6 +82,13 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   `update-fields` save that leaves one out deletes it: reuse their ids for your own fields.
 - A tab and a field can share a name (the Sales tab and the Sales checkbox): look fields up by name among non-tab
   controls (`common.fields`).
+- **Static text on a form takes two controls.** The 分段 block, control type 22 (`SPLIT_LINE`, "Divider"), renders
+  its `controlName` as a heading and **renders its `desc` nowhere at all** — not even as a tooltip, so a note written
+  there is invisible. The text itself is HAP's **remark block, control type 10010**: the content is HTML in
+  `dataSource` (`<p><strong>…</strong> …</p>`), with `advancedSetting.hidetitle` "1" so the `controlName` stays an
+  internal label, and `size` 12 for full width. `worksheet_templates` has no builder for type 10010 — send the control
+  JSON through `add-fields` and read it back. Both take a `sectionId`, so both can sit inside a tab (Journals' two
+  tabs). Note that `common.fields` returns them, since it only filters out type 52.
 - A field's **No duplicates** (`unique`) holds on API writes too: the write is refused with `resultCode 11` naming the
   field. Empty values are never compared.
 - A text field's **maximum length does not**. `advancedSetting` `checkrange` "1" with `min` / `max` is a form-side
@@ -139,12 +146,15 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
 - A rule **applies its action while its condition holds and the opposite when it does not**, so show and hide are two
   ways of writing the same toggle — except on an empty field. "Show when Type is Sales" keeps the field hidden on a
   new record whose Type is still empty, while "hide when Type is not Sales" depends on how the server compares an
-  empty option. Write the positive form (show · equals) whenever the field must stay hidden until the driver is set.
+  empty option. Choose the form by what a **new record** should show: *show · equals* leaves the field hidden until
+  the driver is set (Journals' four field rules), *hide · equals* leaves the target visible from the start
+  (Journals' Advanced Settings tab, Odoo's `invisible="type in ['bank','cash']"`). Flipping one changes the empty case.
 - A dropdown condition takes **several option keys in one `values` list**, meaning "is any of" (Journals' Type). It
   reads back in the options' own order, not the order it was written in, so compare unordered.
 - A field a rule hides can never be filled, so **a field a rule hides must not be required on the field itself**:
   require it with a second rule carrying the same condition (Journals' two Payment Communications).
-- A show/hide rule can target a **whole tab** (the tab's section control).
+- A show/hide rule can target a **whole tab** (the tab's section control), and takes the tab's contents with it —
+  remark blocks included.
 - **Relation picker filters run in the browser only**: the picker query through the API ignores them, so prove a
   picker filter in the UI. A picker filter can compare a candidate with a Relation field on the form being edited.
 - The CLI cannot delete a rule. Disable it (`save-rule --rule-id … --disabled`) and delete it in the UI: worksheet
