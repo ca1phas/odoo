@@ -1,0 +1,245 @@
+<title>ERP Master Invoices</title>
+<meta name="description" content="Review pack for worksheet 06 of the Odoo-to-Nocoly build: requirements, build ids and UI test results.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<link rel="stylesheet" href="review.css">
+<style>
+  pre.rule-code { margin: 0; padding: 14px 16px; overflow-x: auto; border: 1px solid var(--rule);
+    border-radius: 6px; background: var(--accent-soft); color: var(--code);
+    font: 400 12.5px/1.7 var(--mono); max-width: 86ch; }
+</style>
+
+<main class="page">
+
+  <header class="identity">
+    <div class="eyebrow"><span>ERP Master</span><span>Phase 1</span><span>Worksheet 06 of 7</span></div>
+    <h1>Invoices <span class="model">account.move</span></h1>
+    <p class="lede">One model sits behind seven Odoo menus. A customer invoice, a vendor bill, either kind of credit note, a receipt and a plain journal entry are all the same record — <strong>Type</strong> decides which, and Odoo's menus are filtered views of the one table. A document starts as a <strong>Draft</strong> with no number; confirming it posts it and takes a number from its <strong>Journal</strong>, which is the link back to 05.</p>
+    <dl class="meta">
+      <div><dt>Reference</dt><dd>casimir.odoo.com — Odoo saas~19.4+e</dd></div>
+      <div><dt>Behaviour read from</dt><dd>Odoo 19.0 source, <code>account_move.py</code> and <code>sequence.mixin</code></dd></div>
+      <div><dt>Nocoly</dt><dd>App ERP Master · menu group Invoicing</dd></div>
+      <div><dt>Built and tested</dt><dd>Skeleton by Teh Li Wei, 15 Sep · completed and tested 16 Sep 2026</dd></div>
+    </dl>
+    <div class="scoreline">
+      <span class="chip pass">24 of 24 tests pass</span>
+      <span class="chip note">10 differences from Odoo</span>
+      <span class="chip note">3 invoices and 3 customers seeded</span>
+    </div>
+  </header>
+
+  <aside class="callout" aria-labelledby="note-title">
+    <span class="chip note small" style="justify-self:start">Worth knowing before you review</span>
+    <h2 id="note-title">Confirm is where the work happens</h2>
+    <p>There are three buttons, not Odoo's ten. <strong>Confirm</strong> posts a draft and builds its number the way Odoo's sequence does — the journal's Sequence Prefix, the year of the Accounting Date and five digits, so the Sales journal gives INV/2026/00001 and a credit note off a journal with a Dedicated Credit Note Sequence gives RINV/2026/00001. It also fills an empty Invoice Date with today on anything but a journal entry and, on a customer document, copies the new number into the Payment Reference. <strong>Cancel</strong> asks first; <strong>Reset to Draft</strong> takes a document back and <em>keeps</em> its number. Two things to keep in mind while reviewing: a document that already has a number <em>keeps</em> it through Reset to Draft and the next Confirm, as in Odoo, and a new number is taken one past the highest already issued on that journal and year — so gaps are harmless but two people confirming in the same second could still collide, because HAP has no row lock; and <code>account.move</code> has no Active field, so this is the first worksheet with no Archive.</p>
+  </aside>
+
+  <nav class="toc" aria-label="Sections">
+    <a href="#requirements"><span>1</span>Requirements</a>
+    <a href="#build"><span>2</span>Build</a>
+    <a href="#tests"><span>3</span>Tests and differences</a>
+  </nav>
+
+  <section id="requirements" aria-labelledby="req-title">
+    <div class="section-head"><span class="n">1</span><h2 class="section" id="req-title">Requirements</h2></div>
+
+    <div class="block">
+      <h3>Fields</h3>
+      <p class="aside">Labels are Odoo 19.4's; descriptions are Odoo's own help, verbatim, where Odoo has one. Nine fields were kept from Teh Li Wei's skeleton with their control ids.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th class="num">#</th><th>Field</th><th>Odoo field</th><th>Nocoly type</th><th>Required</th><th>Default</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td class="num">1</td><td class="label">Number</td><td><code>name</code></td><td>Text · title field · read-only</td><td class="muted">—</td><td>Draft</td><td>Written by Confirm. Odoo stores <code>/</code> and displays “Draft”; here the field holds the word</td></tr>
+            <tr><td class="num">2</td><td class="label">Type</td><td><code>move_type</code></td><td>Dropdown</td><td>yes</td><td>Customer Invoice</td><td>Journal Entry · Customer Invoice · Customer Credit Note · Vendor Bill · Vendor Credit Note · Sales Receipt · Purchase Receipt. Quick filter on every view</td></tr>
+            <tr><td class="num">3</td><td class="label">Status</td><td><code>state</code></td><td>Dropdown · read-only</td><td class="muted">—</td><td>Draft</td><td>Draft · Posted · Cancelled — Odoo's status bar; moved only by the three buttons</td></tr>
+            <tr><td class="num">4</td><td class="label">Customer / Vendor</td><td><code>partner_id</code></td><td>Relation → Contacts</td><td class="muted">—</td><td class="muted">—</td><td>Odoo renames the one field per type; HAP cannot, so it carries both words</td></tr>
+            <tr><td class="num">5</td><td class="label">Delivery Address</td><td><code>partner_shipping_id</code></td><td>Relation → Contacts</td><td class="muted">—</td><td class="muted">—</td><td>Customer documents only, by rule</td></tr>
+            <tr><td class="num">6</td><td class="label">Invoice Date</td><td><code>invoice_date</code></td><td>Date</td><td>by rule</td><td class="muted">—</td><td>Placeholder “Today”. Odoo calls it Bill Date on a vendor document, where it is required</td></tr>
+            <tr><td class="num">7</td><td class="label">Accounting Date</td><td><code>date</code></td><td>Date</td><td>yes</td><td>today</td><td>The date the entry is booked under, and the year the number is taken from</td></tr>
+            <tr><td class="num">8</td><td class="label">Due Date</td><td><code>invoice_date_due</code></td><td>Date</td><td class="muted">—</td><td class="muted">—</td><td>Odoo's “Due Date or Payment Terms”. The skeleton's default is removed — Odoo has none. That default was <em>today</em>: HAP's date sentinel reads like a two-day offset and is not one</td></tr>
+            <tr><td class="num">9</td><td class="label">Payment Terms</td><td><code>invoice_payment_term_id</code></td><td>Text</td><td class="muted">—</td><td class="muted">—</td><td><strong>Stand-in</strong>: plain text holding the term's name until the Payment Terms table arrives</td></tr>
+            <tr><td class="num">10</td><td class="label">Journal</td><td><code>journal_id</code></td><td>Relation → Journals</td><td>yes</td><td class="muted">—</td><td>Its Sequence Prefix is what Confirm numbers with, so it is always visible; read-only once numbered</td></tr>
+            <tr><td class="num">11</td><td class="label">Tax mode</td><td><code>document_tax_mode</code></td><td>Dropdown</td><td>by rule</td><td>Tax Excluded</td><td>Whether a line's Amount is its subtotal or its total. Odoo's SQL constraint requires it on everything but an entry</td></tr>
+            <tr><td class="num">12</td><td class="label">Terms and Conditions</td><td><code>narration</code></td><td>Rich text</td><td class="muted">—</td><td class="muted">—</td><td>Tab Invoice Lines, under where the lines will be</td></tr>
+            <tr><td class="num">13–16</td><td class="label">Untaxed Amount · Tax · Total · Amount Due</td><td><code>amount_untaxed</code> · <code>amount_tax</code> · <code>amount_total</code> · <code>amount_residual</code></td><td>Number, 2 decimals · read-only</td><td class="muted">—</td><td>0.00</td><td>Seeded from the tenant; 07 Invoice Lines turns them into roll-ups. Amount Due equals Total until Payments lands</td></tr>
+            <tr><td class="num">17</td><td class="label">Customer Reference</td><td><code>ref</code></td><td>Text</td><td class="muted">—</td><td class="muted">—</td><td>Tab Other Info. Odoo shows the same field as Bill Reference on a vendor document</td></tr>
+            <tr><td class="num">18</td><td class="label">Salesperson</td><td><code>invoice_user_id</code></td><td>Member</td><td class="muted">—</td><td class="muted">—</td><td>Tab Other Info</td></tr>
+            <tr><td class="num">19</td><td class="label">Recipient Bank</td><td><code>partner_bank_id</code></td><td>Text</td><td class="muted">—</td><td class="muted">—</td><td><strong>Stand-in</strong>: Odoo points at a bank account record</td></tr>
+            <tr><td class="num">20</td><td class="label">Payment Reference</td><td><code>payment_reference</code></td><td>Text</td><td class="muted">—</td><td class="muted">—</td><td>Placeholder “Standard communication”. Confirm fills it with the Number on a customer document</td></tr>
+            <tr><td class="num">21</td><td class="label">Delivery Date</td><td><code>delivery_date</code></td><td>Date</td><td class="muted">—</td><td class="muted">—</td><td>Tab Other Info</td></tr>
+            <tr><td class="num">22</td><td class="label">Source Document</td><td><code>invoice_origin</code></td><td>Text · read-only</td><td class="muted">—</td><td class="muted">—</td><td>The sales order a document came from (S00011). Seeded; nothing in Phase 1 writes it</td></tr>
+            <tr><td class="num">23</td><td class="label">Auto-post</td><td><code>auto_post</code></td><td>Dropdown</td><td>yes</td><td>No</td><td>No · At Date · Monthly · Quarterly · Yearly</td></tr>
+            <tr><td class="num">24</td><td class="label">Auto-post until</td><td><code>auto_post_until</code></td><td>Date</td><td class="muted">—</td><td class="muted">—</td><td>Shown only when Auto-post is not <em>No</em>, by rule</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="aside">Six controls hold no data: the three tabs kept from the skeleton, the two divider headings inside Other Info (<em>Invoice</em>, <em>Accounting</em>) and the three remark blocks that say what Odoo also keeps on each tab and which bundle brings it. <strong><code>account.move</code> has no <code>active</code> field</strong> — a document is cancelled, never archived — so there is no Active checkbox, no Archived view and no Archive / Unarchive buttons.</p>
+    </div>
+
+    <div class="block">
+      <h3>Rules</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Rule</th><th>When</th><th>Effect</th><th>Odoo source</th></tr></thead>
+          <tbody>
+            <tr><td class="label">Delivery Address is for customer documents</td><td>Type is Customer Invoice, Customer Credit Note or Sales Receipt</td><td>show Delivery Address</td><td><code>invisible="not is_sale_document(True)"</code></td></tr>
+            <tr><td class="label">A vendor document must carry its date</td><td>Type is Vendor Bill, Vendor Credit Note or Purchase Receipt</td><td>require Invoice Date</td><td><code>required="is_purchase_document(True)"</code></td></tr>
+            <tr><td class="label">Every document but an entry has a tax mode</td><td>Type is not Journal Entry</td><td>require Tax mode</td><td>SQL <code>account_move_check_document_tax_mode_set</code></td></tr>
+            <tr><td class="label">Auto-post until follows Auto-post</td><td>Auto-post is not <em>No</em></td><td>show Auto-post until</td><td><code>invisible="auto_post == 'no'"</code></td></tr>
+            <tr><td class="label">A posted or cancelled document is closed for editing</td><td>Status is Posted or Cancelled</td><td>make Type, Customer / Vendor, Journal, Invoice Date, Accounting Date, Due Date, Payment Terms and Tax mode read-only</td><td><code>readonly="state != 'draft'"</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="aside">The last one is the first read-only rule in the app — HAP rule item type 4. Like every interaction rule it is a form-side guard, not a database one.</p>
+    </div>
+
+    <div class="block">
+      <h3>Buttons and numbering</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Button</th><th>Shown when</th><th>Does</th><th>Confirmation</th></tr></thead>
+          <tbody>
+            <tr><td class="label">Confirm</td><td>Status is Draft</td><td>Status → Posted; assigns a Number <strong>when the document has none</strong>; fills an empty Invoice Date with today on anything but a journal entry; on a customer document copies the Number into an empty Payment Reference</td><td class="muted">none — Odoo posts straight away</td></tr>
+            <tr><td class="label">Cancel</td><td>Status is Draft</td><td>Status → Cancelled, Number kept</td><td>“Are you sure you want to cancel this document?” · Cancel document / Back</td></tr>
+            <tr><td class="label">Reset to Draft</td><td>Status is Posted or Cancelled</td><td>Status → Draft, <strong>keeping the Number</strong></td><td class="muted">none</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <pre class="rule-code">Number already set (not empty, not "Draft")   → keep it, as Odoo does
+
+otherwise
+  prefix  = the Journal's Sequence Prefix                     e.g. INV
+          = "R" + prefix   for a Customer or Vendor Credit Note whose
+                           Journal has Dedicated Credit Note Sequence      e.g. RINV
+  year    = the year of the Accounting Date                                2026
+  highest = the greatest Number starting "&lt;prefix&gt;/&lt;year&gt;/"                INV/2026/00006
+  n       = last five digits of highest, + 1   (1 when there is none)
+  Number  = "&lt;prefix&gt;/&lt;year&gt;/&lt;n padded to 5 digits&gt;"                       INV/2026/00007</pre>
+    </div>
+
+    <div class="block">
+      <h3>Views</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>View</th><th>Shows</th><th>Odoo 19.4</th></tr></thead>
+          <tbody>
+            <tr><td class="label">Invoices — opens first</td><td>The three customer types. Number · Customer/Vendor · Invoice Date · Due Date · Journal · Untaxed Amount · Total · Amount Due · Status, sorted Accounting Date then Number, descending</td><td>The Invoices and Credit Notes actions</td></tr>
+            <tr><td class="label">Bills</td><td>The three vendor types, same columns and sort</td><td>The Bills and Refunds actions</td></tr>
+            <tr><td class="label">Journal Entries</td><td>Type is Journal Entry. Number · Accounting Date · Journal · Total · Status</td><td>The Accounting Entries action</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="aside">Quick filters on Type and Status sit on all three. Odoo's <code>_order</code> is <code>date desc, name desc, invoice_date desc, id desc</code>; HAP sorts on the first two. Odoo's kanban, pivot, graph and activity views are not reproduced.</p>
+    </div>
+
+    <div class="block">
+      <h3>Not built now, and why</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Odoo 19.4 field or feature</th><th>Why not now</th></tr></thead>
+          <tbody>
+            <tr><td>Invoice Lines and Journal Items, Add a line / section / note, the Catalog</td><td><strong>07 Invoice Lines</strong>, the next worksheet. The tab and its note are already here</td></tr>
+            <tr><td>Taxes on those lines, and so real Untaxed Amount / Tax / Total</td><td>The Taxes bundle. The four amounts are seeded read-only figures until 07</td></tr>
+            <tr><td>Payment Terms and Recipient Bank as relations</td><td>The Payment Terms table and bank account records; text stand-ins hold the tenant's values meanwhile</td></tr>
+            <tr><td>Pay, Payment Status, the Payments and Reversals smart buttons, outstanding credits</td><td>The Payments bundle — so Amount Due equals Total and nothing can be marked paid</td></tr>
+            <tr><td>Credit Note (<code>action_reverse</code>), Reversal of / Reversal Move</td><td>Reversing copies the lines with the sign flipped, so it needs 07. Both credit-note types already exist</td></tr>
+            <tr><td>Send, Print, Preview, Sent, the invoice PDF, UBL/CII</td><td>Reports and outgoing mail; nothing here renders a PDF</td></tr>
+            <tr><td>Currency · Commercial Entity</td><td>One currency (MYR) per app copy, which is why Odoo hides the field; nothing in Phase 1 reads the commercial entity</td></tr>
+            <tr><td>Fiscal Position, Incoterms, Cash Rounding, Payment Method, Ledger</td><td>Each is its own table and its own bundle</td></tr>
+            <tr><td>Sales Team, the UTM fields, and anything writing Source Document</td><td>The Sales app, out of Phase 1. Source Document stays read-only so the seeded S00011 is visible</td></tr>
+            <tr><td>MyInvois state, Tax Exemption Reason, Customs Form Reference and the three MyInvois buttons</td><td>The e-invoicing bundle; the tab and its note mark the place</td></tr>
+            <tr><td>Auto-Complete, quick edit, OCR, To Review, Last Reminder, deferred entries, the signature</td><td>Each needs a module or a flow that is not in Phase 1</td></tr>
+            <tr><td>Lock and the hash chain, duplicate and abnormal-amount warnings, the partner credit warning</td><td>Hashing posted entries is its own piece of work; the warnings are onchange-time alerts with no HAP equivalent</td></tr>
+            <tr><td>Company · Roles</td><td>One company per app copy; roles are set once at the end of Phase 1</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section id="build" aria-labelledby="build-title">
+    <div class="section-head"><span class="n">2</span><h2 class="section" id="build-title">Build</h2></div>
+    <p class="prose">Teh Li Wei built the skeleton on 15 September: the worksheet, three tabs, two divider headings, an empty remark block and nine fields — no rules, buttons, records, aliases or views but the stock <em>All</em>. On 16 September we completed it against casimir with <code>nocoly/build/invoices.py</code> — steps layout, rules, views, buttons, customers, seed, each safe to re-run — keeping every one of his control ids. Every id is in <code>nocoly/build/ids.json</code> under “Invoices: …”.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Element</th><th>Built</th><th>Id</th></tr></thead>
+        <tbody>
+          <tr><td class="label">Worksheet</td><td>Invoices, menu group Invoicing, alias <code>account_move</code></td><td class="id">6aa90facf363582dd37a62f7</td></tr>
+          <tr><td class="label">Kept from the skeleton</td><td>Customer / Vendor · Invoice Date · Due Date · Payment Terms · Customer Reference · Salesperson · Recipient Bank · Payment Reference · Delivery Date, and the three tabs, two dividers and one remark block</td><td class="id">6aa920d74a73a3142152e689 · …68b · …68c · …68d · …692 · …693 · …694 · …695 · …696</td></tr>
+          <tr><td class="label">Added, fields</td><td>Number · Type · Status · Accounting Date · Tax mode · Terms and Conditions · the four amounts · Source Document · Auto-post · Auto-post until</td><td class="id">6aa9f847e54d2a34fa4dfeed … …ef9</td></tr>
+          <tr><td class="label">Added, relations</td><td>Delivery Address → Contacts · Journal → Journals</td><td class="id">6aa9f848805aef703286517a · …17c</td></tr>
+          <tr><td class="label">Added, remark blocks</td><td>Invoice Lines note · MyInvois note (type 10010, HTML)</td><td class="id">6aa9f846e54d2a34fa4dfedc · …dd</td></tr>
+          <tr><td class="label">Rules</td><td>The five above</td><td class="id">6aa9f86de54d2a34fa4dff23 · 6aa9f86d805aef7032865182 · 6aa9f86e7d58b0f44930e8b1 · 6aa9f86fe54d2a34fa4dff25 · 6aa9f86f805aef7032865184</td></tr>
+          <tr><td class="label">Buttons and workflows</td><td>Confirm (a search, two formulas, a count, three updates and two branches) · Cancel · Reset to Draft</td><td class="id">6aa9f89be43d174ab3749b55 · 6aa9f990bd43f55762c6f603 · 6aa9f993805aef7032865196</td></tr>
+          <tr><td class="label">Views</td><td>Invoices (the skeleton's own view, renamed from <em>All</em>) · Bills · Journal Entries</td><td class="id">6aa90facf363582dd37a62fb · 6aa9f87d7d58b0f44930e8b5 · 6aa9f87e7d58b0f44930e8b7</td></tr>
+          <tr><td class="label">Records</td><td>The tenant's 3 customer invoices, their 3 customers in Contacts, and the TEST documents of §3</td><td class="muted">—</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose">Three labels were changed and the note moved into the field's description, so a reviewer reads Odoo's own label: <strong>Customer → Customer / Vendor</strong>, <strong>Payment Terms* (Future Relation) → Payment Terms</strong>, <strong>Recipient Bank (Relation in Odoo) → Recipient Bank</strong>. Number became the worksheet's title field — a HAP title is what every picker and card shows, and an invoice picked on a line must read INV/2026/00001, not a date. Invented placeholders were cleared; Odoo's own three (“Today”, “Standard communication”, “Terms and Conditions”) stayed.</p>
+    <p class="prose">CLI self-checks: every control, tab, option, default, rule, view, button and the whole numbering chain read back as configured; the three seeded documents match the extract on all twenty stored values; a second and third full run created, renamed and published nothing. The numbering was proved end to end — INV/2026/00002 then 00003 following the seeded 00001, RINV/2026/00001 on a journal with a dedicated credit note sequence, BILL/2026/00001 and MISC/2026/00001 — and again after the UI test, when it was changed to read <strong>one past the highest number already issued</strong> instead of one past a count, and to leave an existing number alone: a fresh Sales invoice stepped over the gap to INV/2026/00006, a journal entry on an unused prefix opened BNK1/2026/00001, and a document already carrying RINV/2026/00001 kept it through reset, confirm and cancel. Fourteen documents, no two sharing a number. The other five worksheets were compared by control digest before and after every save and are untouched; Contacts gained exactly three records and nothing else.</p>
+  </section>
+
+  <section id="tests" aria-labelledby="tests-title">
+    <div class="section-head"><span class="n">3</span><h2 class="section" id="tests-title">Tests and differences</h2></div>
+    <p class="prose">Run in the Nocoly UI in Chrome on 16 Sep 2026, reading stored values back with <code>invoices.py document</code>, <code>order</code>, <code>verify</code> and <code>check</code>.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th class="num">#</th><th>Check</th><th>Expected</th><th>Result</th></tr></thead>
+        <tbody>
+          <tr><td class="num">1</td><td class="label">Menu and views</td><td>Invoicing → Journals then Invoices; views Invoices · Bills · Journal Entries</td><td><div class="result"><span class="chip pass small">Pass</span></div></td></tr>
+          <tr><td class="num">2</td><td class="label">The Invoices table</td><td>The customer documents, nine columns in order, sorted by Accounting Date then Number</td><td><div class="result"><span class="chip pass small">Pass</span>No Type, Accounting Date, Tax or Salesperson column, as designed</div></td></tr>
+          <tr><td class="num">3</td><td class="label">The Bills table</td><td>Vendor documents only</td><td><div class="result"><span class="chip pass small">Pass</span></div></td></tr>
+          <tr><td class="num">4</td><td class="label">The Journal Entries table</td><td>MISC/2026/00001; five columns only</td><td><div class="result"><span class="chip pass small">Pass</span></div></td></tr>
+          <tr><td class="num">5</td><td class="label">Quick filters</td><td>Type and Status narrow the view; neither reaches a row the view excludes</td><td><div class="result"><span class="chip pass small">Pass</span>Vendor Bill inside the Invoices view gives “No matching records found”</div></td></tr>
+          <tr><td class="num">6</td><td class="label">The posted seeded invoice, field by field</td><td>INV/2026/00001 in full, on all three tabs</td><td><div class="result"><span class="chip pass small">Pass</span>Payment Reference INV/2026/00001, Source Document S00014</div></td></tr>
+          <tr><td class="num">7</td><td class="label">The two seeded drafts</td><td>Number reads “Draft”, no Invoice Date, the tenant's totals</td><td><div class="result"><span class="chip pass small">Pass</span></div></td></tr>
+          <tr><td class="num">8</td><td class="label">Read-only fields on a draft</td><td>Number, Status, the four amounts and Source Document refuse input; the rest accept it</td><td><div class="result"><span class="chip pass small">Pass</span></div></td></tr>
+          <tr><td class="num">9</td><td class="label">A new record and the defaults</td><td>Draft · Customer Invoice · Draft · today · Tax Excluded · No · 0.00, four required marks, Delivery Address shown</td><td><div class="result"><span class="chip pass small">Pass</span>after a fix — Accounting Date came up empty on the first run; the default was re-encoded and the form now opens with today. Everything else was right first time</div></td></tr>
+          <tr><td class="num">10</td><td class="label">Rule · Delivery Address is for customer documents</td><td>Gone for the three vendor types and Journal Entry, back for the three customer ones</td><td><div class="result"><span class="chip pass small">Pass</span></div></td></tr>
+          <tr><td class="num">11</td><td class="label">Rule · a vendor document's date, and the tax mode</td><td>Submit refused with both fields marked; Journal Entry needs neither</td><td><div class="result"><span class="chip pass small">Pass</span>“Please fill in Invoice Date” and “Please fill in Accounting Date” on a Vendor Bill; a Journal Entry needs neither the date nor a tax mode</div></td></tr>
+          <tr><td class="num">12</td><td class="label">Rule · a posted or cancelled document is closed</td><td>The eight fields read-only when posted and when cancelled, editable on a draft</td><td><div class="result"><span class="chip pass small">Pass</span>Delivery Address, Salesperson, the references and Auto-post stay editable, as designed</div></td></tr>
+          <tr><td class="num">13</td><td class="label">Rule · Auto-post until follows Auto-post</td><td>Appears for Monthly, gone again for No</td><td><div class="result"><span class="chip pass small">Pass</span></div></td></tr>
+          <tr><td class="num">14</td><td class="label">The three tabs and their notes</td><td>Each remark block renders as text, with its bold lead-in and no field label</td><td><div class="result"><span class="chip pass small">Pass</span>Other Info also shows the Invoice and Accounting headings</div></td></tr>
+          <tr><td class="num">15</td><td class="label">Confirm · the numbering</td><td>Status → Posted, a number from the journal, Invoice Date filled when empty</td><td><div class="result"><span class="chip pass small">Pass</span>A Vendor Bill written in the Sales journal became INV/2026/00004 — the prefix follows the <em>journal</em>, not the type, as in Odoo — and its Payment Reference stayed empty. Two Sales invoices numbered one after the other were proved by the CLI self-check, not in the browser</div></td></tr>
+          <tr><td class="num">16</td><td class="label">Confirm · a credit note on a journal with a dedicated sequence</td><td>The R prefix and its own counter</td><td><div class="result"><span class="chip pass small">Pass</span>RINV/2026/00002</div></td></tr>
+          <tr><td class="num">17</td><td class="label">Confirm · a journal without one, and a vendor document</td><td>No R; the vendor document's Payment Reference stays empty</td><td><div class="result"><span class="chip pass small">Pass</span>MISC/2026/00002 and BILL/2026/00002, the bill's Payment Reference empty</div></td></tr>
+          <tr><td class="num">18</td><td class="label">Reset to Draft keeps the Number</td><td>Back to Draft with the number intact, and confirming again keeps it</td><td><div class="result"><span class="chip pass small">Pass</span>Re-run after the numbering change: INV/2026/00004 survived Reset to Draft <em>and</em> a second Confirm, exactly as Odoo does, so no gap opens</div></td></tr>
+          <tr><td class="num">19</td><td class="label">Cancel and its confirmation</td><td>The dialog, Back changes nothing, Cancel document sets Cancelled and keeps the Number</td><td><div class="result"><span class="chip pass small">Pass</span>The button that does not apply is <em>hidden</em>, not greyed out as on Journals</div></td></tr>
+          <tr><td class="num">20</td><td class="label">The relation pickers</td><td>Customer / Vendor and Delivery Address list Contacts; Journal lists Journals</td><td><div class="result"><span class="chip pass small">Pass</span>The Journal picker also offers the <em>archived</em> TEST Sales journal (difference 8). On one attempt the Contacts picker drew the matching company as two identical rows — Contacts holds exactly one, so nothing is duplicated in the data</div></td></tr>
+          <tr><td class="num">21</td><td class="label">Placeholders and help</td><td>“Today” and “Standard communication”; Odoo's help word for word</td><td><div class="result"><span class="chip pass small">Pass</span>Every field carries its description under the label in the create form</div></td></tr>
+          <tr><td class="num">22</td><td class="label">The three customers in Contacts</td><td>Three companies with the tenant's details; Company ID and DUNS empty; Contacts otherwise untouched</td><td><div class="result"><span class="chip pass small">Pass</span>Address Type Contact, Salesperson Casimir, phone formatted 03-5631 2000</div></td></tr>
+          <tr><td class="num">23</td><td class="label">The three documents survive the test</td><td><code>verify</code> reports nothing missing or differing; <code>check</code> passes</td><td><div class="result"><span class="chip pass small">Pass</span>“3 in the seed file; 0 missing or differing”</div></td></tr>
+          <tr><td class="num">24</td><td class="label">Odoo side by side</td><td>The same documents, numbers, customers, dates and totals</td><td><div class="result"><span class="chip pass small">Pass</span>Compared against the tenant's own records; its web list view would not load in the test tab, so the comparison was read from the tenant directly</div></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="block">
+      <h3>Differences from Odoo</h3>
+      <ol class="differences">
+        <li><span class="n">1</span><div class="head"><strong>One field, two words</strong><span class="chip note small">Note</span></div><p>Odoo renames <code>partner_id</code> per type — Customer on a customer document, Vendor on a vendor one — and <code>invoice_date</code> likewise (Invoice Date / Bill Date). HAP cannot rename a field from a rule, so Customer / Vendor carries both words and Invoice Date keeps the customer wording, with a rule making it required on a vendor document.</p></li>
+        <li><span class="n">2</span><div class="head"><strong>Journal and Accounting Date are always shown</strong><span class="chip note small">Note</span></div><p>Odoo shows the Journal only when several suit the type, and the Accounting Date only on vendor documents or once a posted invoice's date differs. Both are always visible here — the Journal because Confirm numbers from it.</p></li>
+        <li><span class="n">3</span><div class="head"><strong>Two confirmations in the same second could collide</strong><span class="chip note small">HAP behaviour</span></div><p>The number is read one past the highest already issued, which survives gaps and deletions, but a HAP workflow has no row lock where Odoo's sequence takes one. Number therefore allows duplicates by design — every draft holds the word “Draft”.</p></li>
+        <li><span class="n">4</span><div class="head"><strong>A draft's Number literally reads “Draft”</strong><span class="chip note small">Decision</span></div><p>Odoo stores <code>/</code> and displays Draft; here the field holds the word, because it is the worksheet's title and a title shows in every picker, card and relation.</p></li>
+        <li><span class="n">5</span><div class="head"><strong>No Active field, no Archive</strong><span class="chip note small">Note</span></div><p><code>account.move</code> has none — a document is cancelled instead — so this worksheet has no Archived view and no Archive / Unarchive buttons, unlike the five before it.</p></li>
+        <li><span class="n">6</span><div class="head"><strong>Payment Terms and Recipient Bank are text stand-ins</strong><span class="chip note small">Decision</span></div><p>And the four amounts are seeded read-only figures until 07 Invoice Lines turns them into roll-ups of the lines. Each field says so in its own description.</p></li>
+        <li><span class="n">7</span><div class="head"><strong>Odoo's header carries ten buttons</strong><span class="chip note small">Note</span></div><p>Plus ribbons, alerts and smart buttons; here there are three buttons and a read-only Status field. The rest are in <em>Not built now</em>.</p></li>
+        <li><span class="n">8</span><div class="head"><strong>A relation picker offers archived records</strong><span class="chip note small">HAP behaviour</span></div><p>The Journal picker lists the archived TEST Sales journal beside Sales; Odoo hides archived journals from the field.</p></li>
+        <li><span class="n">9</span><div class="head"><strong>A button whose condition fails is hidden, not greyed out</strong><span class="chip note small">HAP behaviour</span></div><p>A draft shows Confirm and Cancel; a posted or cancelled document shows Reset to Draft. Journals behaves the same way — its own hand-off said “greyed out”, and that has been corrected.</p></li>
+        <li><span class="n">10</span><div class="head"><strong>A new record stays in a view that excludes it until you refresh</strong><span class="chip note small">HAP behaviour</span></div><p>A Vendor Bill created from the Invoices view stayed in that view until the page was reloaded, then dropped out correctly. The view's filter is right; the grid just does not re-apply it to the row you have just made.</p></li>
+      </ol>
+    </div>
+
+    <div class="block">
+      <h3>Test records left for you</h3>
+      <p class="prose">Eleven <code>TEST …</code> documents are left as the evidence for the numbering, and they are the only rows in the Bills and Journal Entries views. <strong>TEST-SEQ-1</strong> to <strong>TEST-SEQ-7</strong> came from the CLI self-check — among them a journal entry confirmed without gaining an Invoice Date, and the invoice that proves a new number clears the gap left by test 18. <strong>TEST UI rules</strong> and <strong>TEST UI 3</strong> to <strong>TEST UI 5</strong> came from the browser test: a vendor bill numbered from the Sales journal, a credit note with the R prefix, one without it on a journal that has no dedicated sequence, and a vendor bill reset to draft and then cancelled, which kept its number. They are removed after sign-off. The three tenant invoices (SCG-PO-88213, KKD-2026-009, STL-2026-0042) and the three customers in Contacts are real records and stay.</p>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <p>Worksheet 06 of 7 · <code>nocoly/worksheets/06-invoices.md</code> · reference <code>nocoly/reference/odoo-19.4/account.move.md</code> · build <code>nocoly/build/invoices.py</code>. Next: 07 Invoice Lines.</p>
+  </footer>
+</main>

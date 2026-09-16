@@ -11,7 +11,8 @@
   "Units & Packagings": "6aa8d14d4a73a3142152d3f6",
   "Products": "6aa8ea0c4a22ad87b728cf0b",
   "Journals": "6aa8f5191204328eb1af162a",
-  "Product Variants": "6aa90c161204328eb1af1b82"
+  "Product Variants": "6aa90c161204328eb1af1b82",
+  "Invoices": "6aa90facf363582dd37a62f7"
  },
  "workflows": {
   "Archive": "6aa8a565e589b8933dd4cc6d",
@@ -28,7 +29,10 @@
   "Product Variants: copy a product's Internal Reference, Cost, Weight and Volume to its active variant": "6aa91186e589b8933dd9367a",
   "Product Variants: archive and unarchive a product's variant with it": "6aa9118ce589b8933dd93748",
   "Journals: Archive": "6aa9db3116473257ad4c471e",
-  "Journals: Unarchive": "6aa9db348e75db182e77e1e2"
+  "Journals: Unarchive": "6aa9db348e75db182e77e1e2",
+  "Invoices: Confirm": "6aa9f89b4f2a99acac043704",
+  "Invoices: Cancel": "6aa9f99016473257ad4d3bc6",
+  "Invoices: Reset to Draft": "6aa9f9938e75db182e78a8b3"
  },
  "buttons": {
   "Archive": "6aa8a5654720c515252bda3d",
@@ -40,7 +44,10 @@
   "Product Variants: Archive": "6aa90fc04a22ad87b728ea89",
   "Product Variants: Unarchive": "6aa90fc34720c515252bf9b8",
   "Journals: Archive": "6aa9db31805aef7032865005",
-  "Journals: Unarchive": "6aa9db34e43d174ab37498ec"
+  "Journals: Unarchive": "6aa9db34e43d174ab37498ec",
+  "Invoices: Confirm": "6aa9f89be43d174ab3749b55",
+  "Invoices: Cancel": "6aa9f990bd43f55762c6f603",
+  "Invoices: Reset to Draft": "6aa9f993805aef7032865196"
  },
  "views": {
   "Units & Packagings: Units & Packagings": "6aa8d14d4a73a3142152d3fa",
@@ -51,7 +58,10 @@
   "Journals: Journals": "6aa8f5191204328eb1af162e",
   "Journals: Archived": "6aa8f7074720c515252bf2c8",
   "Product Variants: Product Variants": "6aa90c161204328eb1af1b86",
-  "Product Variants: Archived": "6aa90f171204328eb1af1bbf"
+  "Product Variants: Archived": "6aa90f171204328eb1af1bbf",
+  "Invoices: Invoices": "6aa90facf363582dd37a62fb",
+  "Invoices: Bills": "6aa9f87d7d58b0f44930e8b5",
+  "Invoices: Journal Entries": "6aa9f87e7d58b0f44930e8b7"
  },
  "controls": {
   "Journals: Journal Name": "6aa8f6c81204328eb1af1676",
@@ -68,13 +78,65 @@
   "Journals: Advanced Settings": "6aa9e869e54d2a34fa4dfe41",
   "Journals: Also on Odoo's Advanced Settings tab": "6aa9e869e54d2a34fa4dfe43",
   "Journals: Journal Entries note": "6aa9eca8e43d174ab37499c2",
-  "Journals: Advanced Settings note": "6aa9eca8e43d174ab37499c3"
+  "Journals: Advanced Settings note": "6aa9eca8e43d174ab37499c3",
+  "Invoices: Status": "6aa9f847e54d2a34fa4dfeef",
+  "Invoices: Type": "6aa9f847e54d2a34fa4dfeee",
+  "Invoices: Number": "6aa9f847e54d2a34fa4dfeed",
+  "Invoices: Customer / Vendor": "6aa920d74a73a3142152e689",
+  "Invoices: Invoice Date": "6aa920d74a73a3142152e68b",
+  "Invoices: Delivery Address": "6aa9f848805aef703286517a",
+  "Invoices: Accounting Date": "6aa9f847e54d2a34fa4dfef0",
+  "Invoices: Due Date": "6aa920d74a73a3142152e68c",
+  "Invoices: Payment Terms": "6aa920d74a73a3142152e68d",
+  "Invoices: Journal": "6aa9f848805aef703286517c",
+  "Invoices: Tax mode": "6aa9f847e54d2a34fa4dfef1",
+  "Invoices: Invoice Lines": "6aa920d74a73a3142152e68e",
+  "Invoices: Invoice Lines note": "6aa9f846e54d2a34fa4dfedc",
+  "Invoices: Terms and Conditions": "6aa9f847e54d2a34fa4dfef2",
+  "Invoices: Untaxed Amount": "6aa9f847e54d2a34fa4dfef3",
+  "Invoices: Tax": "6aa9f847e54d2a34fa4dfef4",
+  "Invoices: Total": "6aa9f847e54d2a34fa4dfef5",
+  "Invoices: Amount Due": "6aa9f847e54d2a34fa4dfef6",
+  "Invoices: Other Info": "6aa920d74a73a3142152e68f",
+  "Invoices: Invoice": "6aa920d74a73a3142152e690",
+  "Invoices: Invoice note": "6aa920d74a73a3142152e691",
+  "Invoices: Customer Reference": "6aa920d74a73a3142152e692",
+  "Invoices: Salesperson": "6aa920d74a73a3142152e693",
+  "Invoices: Recipient Bank": "6aa920d74a73a3142152e694",
+  "Invoices: Payment Reference": "6aa920d74a73a3142152e695",
+  "Invoices: Delivery Date": "6aa920d74a73a3142152e696",
+  "Invoices: Accounting": "6aa920d74a73a3142152e697",
+  "Invoices: Source Document": "6aa9f847e54d2a34fa4dfef7",
+  "Invoices: Auto-post": "6aa9f847e54d2a34fa4dfef8",
+  "Invoices: Auto-post until": "6aa9f847e54d2a34fa4dfef9",
+  "Invoices: MyInvois": "6aa920d74a73a3142152e698",
+  "Invoices: MyInvois note": "6aa9f846e54d2a34fa4dfedd"
  },
  "rules": {
   "Journals: Payment Communications only for Sales": "6aa9dae5e54d2a34fa4dfde2",
   "Journals: Payment Communications are required for Sales": "6aa9dae67d58b0f44930e6ce",
   "Journals: Dedicated Credit Note Sequence only for Sales and Purchase": "6aa9dae67d58b0f44930e6d0",
   "Journals: Dedicated Payment Sequence only for Bank, Cash and Credit Card": "6aa9dae7e43d174ab37498e9",
-  "Journals: Advanced Settings hidden for Bank and Cash journals": "6aa9e8b5bd43f55762c6f48a"
+  "Journals: Advanced Settings hidden for Bank and Cash journals": "6aa9e8b5bd43f55762c6f48a",
+  "Invoices: Delivery Address is for customer documents": "6aa9f86de54d2a34fa4dff23",
+  "Invoices: A vendor document must carry its date": "6aa9f86d805aef7032865182",
+  "Invoices: Every document but an entry has a tax mode": "6aa9f86e7d58b0f44930e8b1",
+  "Invoices: Auto-post until follows Auto-post": "6aa9f86fe54d2a34fa4dff25",
+  "Invoices: A posted or cancelled document is closed for editing": "6aa9f86f805aef7032865184"
+ },
+ "records": {
+  "Invoices: customer Sunway Construction Group": "a4935a3f-0262-4d68-9b3b-6049d32e390b",
+  "Invoices: customer Klinik Kesihatan Damansara": "2e7d5aa9-adc4-4b3a-93c5-0e140969fe14",
+  "Invoices: customer Sarawak Timber Logistics": "a7c8c712-a817-4b2a-90eb-c9544521f4f1",
+  "Invoices: SCG-PO-88213": "5d3723e7-757a-49f5-8f11-bddf470a0b2f",
+  "Invoices: KKD-2026-009": "834d8111-3108-433f-9ebe-52de8feb61ed",
+  "Invoices: STL-2026-0042": "0fcc3dde-fe8b-4922-9349-0f5f88cb5ff4",
+  "Invoices: TEST-SEQ-1": "65469834-43c5-49f5-a6e0-1f9aa8013174",
+  "Invoices: TEST-SEQ-2": "8f283f48-bdc8-452a-9925-ec19953c3056",
+  "Invoices: TEST-SEQ-3": "22412152-79f6-40ff-87f1-097db45895b8",
+  "Invoices: TEST-SEQ-4": "35b2e477-53c2-4d3c-a88d-e1d108975578",
+  "Invoices: TEST-SEQ-5": "139ebcae-04ea-46dc-8462-ee02bff598c7",
+  "Invoices: TEST-SEQ-6": "f16036f4-8188-4886-8bf1-3c3a7a7cd103",
+  "Invoices: TEST-SEQ-7": "c70beecb-8497-4114-ac75-f3a7475bbca0"
  }
 }

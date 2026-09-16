@@ -55,7 +55,7 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   Archived. Test records are named `TEST …`.
 - **Read back every write.** Several HAP writes return success and store nothing, or store a malformed value.
 
-## HAP and hap-cli traps (verified 15 Sep 2026, hap-cli 0.8.31)
+## HAP and hap-cli traps (verified 15–16 Sep 2026, hap-cli 0.8.31)
 
 ### Worksheets and fields
 
@@ -68,6 +68,11 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   `advancedSetting.bidirectional` "0". The target worksheet gets no reverse field.
 - A **static Relation default** is `defsource: [{"staticValue": "[\"<rowid>\"]"}]`; the server stores the whole record
   in place of the id. The API applies no defaults — only the form does.
+- A **Date field's default is a sentinel, not a value**: `defsource` `staticValue` **"2"** with `time` "current" is
+  HAP's 当天, the current day (hap-cli's captured payload, `tests/test_core.py::test_date_now_default`). It reads
+  like a "+2 days" offset and is not one. An **empty** `staticValue` with the same `time` is stored without
+  complaint and applies nothing — and since the API applies no defaults at all, only the form or a byte comparison
+  of the stored string can tell the two apart (Invoices' Accounting Date).
 - A **hidden field never shows as a table column**, even as the title and listed in the view's columns. A hidden
   title still reaches record titles, cards and pickers. To keep a computed title off the create form but in
   tables, make it read-only and hidden on create: `fieldPermission` "100" (the three places are hidden · read-only ·
@@ -99,6 +104,15 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   `record create` through the API and workflows still create records.
 - The Phone control validates numbers (libphonenumber): an unallocated number such as 03-1234 5678, or a placeholder
   like "NA", is refused.
+- `hap worksheet update --alias` answers `参数错误` unless `-a/--app-id` is passed. `common.ensure_worksheet` calls it
+  without one and works there because the worksheet is being created in the same breath; re-aliasing an existing
+  worksheet needs the app id (Invoices, `invoices` → `account_move`).
+- **The title field moves in one full save**: set `attribute` on every control in the same `update-fields` (1 on the
+  new title, 0 on the rest). Two controls carrying `attribute` 1 in one save is undefined, so a control added with
+  `is_title` while another still holds it is a coin toss — add it plain and let the layout save move the title.
+- A Relation's `sourceControlId` can name a **control that does not exist**: the server reserves the id for a reverse
+  field, and if none is ever saved on the target the id just dangles. Re-sending such a control in a full save does
+  not create the reverse field either (Invoices' Customer / Vendor, whose placeholder on Contacts was never used).
 
 ### Formulas and lookups
 
@@ -124,12 +138,16 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
 - `hap worksheet view sort` never works: it omits the app id, the server answers false and nothing moves. Use
   `common.sort_views`, which makes the same call with the app id.
 - `sortType` 1 is descending, 2 ascending. `record list --view-id` applies the view's filter and sort but returns only
-  that view's columns.
+  that view's columns — a field the view sorts on but does not show comes back empty.
 - An ascending sort puts **empty values first**. `moreSort[].emptyRule` is stored (1, 2 and 3 tried) and changes
   nothing, so Odoo's NULLS LAST cannot be matched.
 - **Deleting a field leaves every view sorting on its id.** `sortCid` and `moreSort` keep the dead control id and
   nothing cleans them up (Journals' two views still pointed at a Sequence field removed on 15 Sep). Re-write the sort
   after a field goes.
+- A **view's or a button's condition on a single select is filterType 51**, not 2: the CLI's filter translator maps
+  `eq` to 51 (EQ_FOR_SINGLE) only when the condition carries `dataType` 9 or 11, and to 2 without it. 51 with several
+  option keys means "is any of" (Invoices' Reset to Draft: Status is Posted or Cancelled). A **business rule's**
+  filter is the other enum, where the same "is any of" is filterType 2.
 - `--view-spec` `tableFields` sets only `displayControls`, and the table then shows every field. A table's columns are
   `showControls` plus `advancedSetting.customShowControls`:
   `view update --view-json '{"showControls":[…],"advancedSetting":{"customdisplay":"1","customShowControls":"[…]"}}'
@@ -137,8 +155,11 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
 
 ### Rules
 
-- Rule item types: 1 show · 2 hide · 4 read-only · 5 required · 6 error message · 7 whole record read-only.
+- Rule item types: 1 show · 2 hide · **4 read-only** · 5 required · 6 error message · 7 whole record read-only.
   Filter operators: 2 equals · 6 not equals · 7 empty · 8 not empty.
+- **Read-only (type 4) works and takes several controls at once** (Invoices locks eight fields while Status is
+  Posted or Cancelled). Like every interaction rule it is browser-side: `record create` / `record update` still
+  write the fields it greys out — which is how a build script can put a posted record back to a draft.
 - A validation rule with `--check-type 1` is enforced on API writes too — but the server checks it **only when one
   of its condition fields is in the write**. A rule that tests only a lookup or formula never fires on the API; add
   the field being edited as a condition. A refused write returns `resultCode 32` naming `<ruleId>:<rowid>`.
@@ -166,7 +187,10 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   button up by name with `hap worksheet custom-actions <ws>` first.
 - A button that runs a workflow gets a hidden workflow; while it has no steps, its trigger's `nextId` is `99`.
   Deleting the button deletes that workflow too.
-- A button's condition greys it out when unmet; it does not hide it.
+- A button's condition **hides** it when unmet on an open record — a posted Invoices document shows Reset to Draft
+  and neither Confirm nor Cancel — though a greyed-out button has also been seen elsewhere in the UI. Do not write
+  a test expecting one or the other without checking the worksheet you are on; Journals' own hand-off records the
+  same hiding on a full-page record.
 - `hap workflow trigger <processId> -s <rowid>` runs a button's workflow on one record — a CLI check of a button.
 - In a button's workflow a **get related record** step cannot start from the trigger record: the server leaves the
   trigger out of that step's sources, drops the relation field, and publishing fails (warningType 103, 200). Search
@@ -198,6 +222,39 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   workflow; `workflow get` returns its description as `explain`.
 - A search step's result branch marks its paths `resultTypeId` 3 (found) and 4 (not found) in `workflow node list`;
   `node get` leaves it out, and `workflow structure` leaves out get-records (type 13) steps.
+- **An update step's `selectNodeId` must name a node that produces a record** — the trigger, or a search step.
+  Pointed at another **update** step the node comes back `isException: true` with `fields: []` and every field write
+  is dropped silently; publishing then fails with `warningType 103`. This is what `batch-add --trigger-node-id <an
+  update step>` produces, so re-save those steps' `selectNodeId` afterwards.
+- **A workflow update step's field value by type**: a dropdown is the **bare option key** in `fieldValue` (a list
+  makes `flowNode/saveNode` answer HTTP 500; a JSON array string is accepted and stored empty). A **text** taken
+  from another node is the template `$<nodeId>-<fieldId>$` in `fieldValue`, not `nodeId` + `fieldValueId`. Every
+  other type from a node is `nodeId` + `fieldValueId`; from the fixed 系统 node (`5d39140d381d42d20db0c4da`,
+  `nowTime` = current time) add `nodeTypeId` 100 and **`nodeAppType`** 100 — send `appType` and the server rewrites
+  it, so a step comparing what it sent with what came back re-saves for ever.
+- **A search step (flowNodeType 7, actionId 406) returns one record and can be sorted**: `sorts`
+  `[{controlId, controlType, isAsc}]` on the node, a filter whose comparison value may be an **earlier formula
+  node's** result (`conditionValues: [{nodeId, controlId: "string_fx_id"}]`), and `$<searchNodeId>-<controlId>$`
+  reachable from any later formula. Found nothing, that reference reads back as the empty string. So "the row with
+  the greatest X" needs no extra field — sort descending and read the first (Invoices' highest-number step).
+  `batch-add` writes neither the filter (it sends `operateCondition`) nor the sort; both go in with
+  `node save --type 7`.
+- **`+` concatenates in a workflow formula whenever either side is text, and the result is then read as an octal
+  literal**: `"5" + 1` is `51`, and `"00005" + 1` is **41** — "000051" parsed as octal. Anything sliced out of a
+  text field with `RIGHT`/`LEFT`/`MID` is text, however numeric it looks. Force a numeric context with
+  **`SUM(x, 1)`**, `x * 1` or `INT(x)`. There is **no `VALUE()` and no `LEN()`** — either one computes the whole
+  expression empty, with no error.
+- **A workflow function formula compares with `==`, never `=`.** `IF(1 = 1, …)` saves, publishes and computes
+  **empty**, silently emptying the `CONCAT` around it; there is no error anywhere, only a wrong stored value.
+  `&&` / `||` are the boolean operators; a ternary and `IIF()` also compute empty. `CONCAT`, `IF`, `YEAR`, `RIGHT`
+  and arithmetic work. Inside a formula a dropdown renders its **label** and a checkbox renders `true`/`false`,
+  but the checkbox compares equal to `1`.
+- A formula node's own result is `string_fx_id` (text) or `number_fx_id` (number). **Counting records** is a formula
+  node with actionId **107** (worksheet total), `reportControlId` empty and `reportType` 0, plus its own `filters` —
+  and that filter can compare a field with an earlier formula node's result (`kind: "field"`, `fieldId:
+  string_fx_id`). There is **no code node** through the CLI: `batch-add` refuses `nodeType: "code"` outright.
+- `batch-add` in a **second** call drops a branch path's name as well as its condition. `node save --type 2` with
+  `operateCondition` sets the condition but not the name even with `-n`; the name needs `workflow node rename`.
 - **A record written by a workflow starts that worksheet's event workflows** (a variant's Unarchive button writing its
   product started the product's archive workflow). Design cascades so the second run finds nothing to change.
 - Give a worksheet-event trigger a condition when most records cannot need the run — every run counts against the
@@ -217,7 +274,15 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   already stored; Save clears it.
 - A dropdown opens reliably by typing into it; clicking the arrow sometimes does nothing.
 - A Relation shown as a dropdown lists record titles only, never its `showControls`; its search still matches
-  those fields ("Hours" finds Minutes and Days on a unit picker).
+  those fields ("Hours" finds Minutes and Days on a unit picker). It also **offers archived records** — the
+  Invoices Journal picker lists the archived TEST Sales journal beside Sales — so a worksheet that must hide them
+  needs a picker filter, which is browser-side only and has to be proved in the UI.
+- **HAP marks a read-only field three different ways in the DOM**, which matters when testing a read-only rule: a
+  text, number or date control gets the class `controlDisabled` on its `.customFormControlBox`; a Relation gets
+  `readonly` on `.RelateRecordDropdown-selected`; and a read-only field with **no value** renders as an empty
+  `<div class="customFormNull">`, indistinguishable from an empty editable field.
+- A **newly created record stays in a view whose filter excludes it until the page is reloaded** (a Vendor Bill
+  created from the Invoices view, whose filter is Type). The filter itself is right; the open list is stale.
 - A Rich text field never shows its hint, even when clicked into. Put guidance in the description instead.
 - A checkbox quick filter has two states once used: a click filters for ticked, the next for unticked, and the box
   then looks empty while still filtering. Reloading the view clears it.

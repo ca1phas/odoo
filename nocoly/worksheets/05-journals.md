@@ -105,7 +105,9 @@ Nothing is validated. Odoo's two guards on this model are the SQL uniqueness of 
 | Unarchive | Active is unchecked | Active → checked | none |
 
 Exactly as on Contacts, Units & Packagings, Products and Product Variants: a one-step workflow that writes Active
-on the triggering record, and the button that does not apply is greyed out rather than hidden.
+on the triggering record, and the button that does not apply is **not shown at all** — an open record carries only the
+one that applies, so an active journal shows Archive alone. (Re-checked on 16 Sep 2026 while testing 06 Invoices,
+which has the same button shape; the earlier note here said "greyed out", which is wrong.)
 
 ### Views
 
