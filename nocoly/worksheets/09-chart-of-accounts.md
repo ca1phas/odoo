@@ -7,7 +7,7 @@
 | Odoo model | `account.account` |
 | Reference | **casimir.odoo.com — Odoo saas~19.4+e**: fields by module, form, list, search, the window action, all 87 accounts, `ir.default`, the raw view arch that places every account field on Journals, Product Categories, Products and Contacts, and the accounts of the seeded journal items — extracted read-only to `nocoly/reference/odoo-19.4/account.account.md`, with the data in `nocoly/data/casimir-accounts.json`. Behaviour the tenant cannot show is read from the Odoo 19.0 source in this repo (`addons/account/models/account_account.py`, `account_journal.py`, `account_move_line.py`, `partner.py`, `product.py`), minding where 19.4 has moved on — parent accounts replace account groups |
 | Phase | 1 — **bundle 2 of 6** (Product Categories · Chart of Accounts · Payment Terms · Countries · States · Taxes) |
-| Status | §1 written 16 Sep 2026 · **part A — the worksheet — built 16 Sep 2026**, CLI self-checks pass, not yet UI-tested (§2) · part B — the account fields on the other worksheets — not built |
+| Status | §1 written 16 Sep 2026 · **part A — the worksheet — built and UI-tested 15/15 on 16 Sep 2026** (§2, §3) · part B — the account fields on the other worksheets — not built |
 
 The ledger's list of accounts: every amount Odoo posts lands on one of them. The tenant carries Malaysia's chart,
 87 accounts. This bundle builds the worksheet and then does what bundle 1 did for Products, five times over:
