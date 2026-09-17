@@ -113,21 +113,29 @@ REMARK_ENTRIES = "Also on Odoo's Journal Entries tab"       # type 22: the headi
 REMARK_ADVANCED = "Also on Odoo's Advanced Settings tab"
 NOTE_ENTRIES, NOTE_ADVANCED = 'Journal Entries note', 'Advanced Settings note'   # type 10010: the text itself
 TABS = (JOURNAL_ENTRIES, ADVANCED_SETTINGS)
+# The Chart of Accounts bundle (09-chart-of-accounts.md, built by accounts.py `journals`) brings Odoo's five account
+# fields to the tab Journal Entries, above the two dedicated sequences, in Odoo's order: Default Account | Suspense
+# Account · Profit Account | Loss Account · Private Share Account. accounts.py adds them with `add-fields`, which
+# parks a control at row 9999; this script's `layout` places them, and everything under them moved down three rows.
+ACCOUNTS = ('Default Account', 'Suspense Account', 'Profit Account', 'Loss Account', 'Private Share Account')
 PLACE = {  # name -> (row, col, size, tab)
     'Journal Name': (0, 0, 12, None),
     'Type': (1, 0, 6, None), 'Sequence Prefix': (1, 1, 6, None),
     'Sequence': (2, 0, 6, None),
     JOURNAL_ENTRIES: (3, 0, 12, None),
-    'Dedicated Credit Note Sequence': (4, 0, 6, JOURNAL_ENTRIES),
-    'Dedicated Payment Sequence': (4, 1, 6, JOURNAL_ENTRIES),
-    REMARK_ENTRIES: (5, 0, 12, JOURNAL_ENTRIES),
-    NOTE_ENTRIES: (6, 0, 12, JOURNAL_ENTRIES),
-    ADVANCED_SETTINGS: (7, 0, 12, None),
-    'Communication Type': (8, 0, 6, ADVANCED_SETTINGS),
-    'Communication Standard': (8, 1, 6, ADVANCED_SETTINGS),
-    REMARK_ADVANCED: (9, 0, 12, ADVANCED_SETTINGS),
-    NOTE_ADVANCED: (10, 0, 12, ADVANCED_SETTINGS),
-    'Active': (11, 0, 6, None),
+    'Default Account': (4, 0, 6, JOURNAL_ENTRIES), 'Suspense Account': (4, 1, 6, JOURNAL_ENTRIES),
+    'Profit Account': (5, 0, 6, JOURNAL_ENTRIES), 'Loss Account': (5, 1, 6, JOURNAL_ENTRIES),
+    'Private Share Account': (6, 0, 6, JOURNAL_ENTRIES),
+    'Dedicated Credit Note Sequence': (7, 0, 6, JOURNAL_ENTRIES),
+    'Dedicated Payment Sequence': (7, 1, 6, JOURNAL_ENTRIES),
+    REMARK_ENTRIES: (8, 0, 12, JOURNAL_ENTRIES),
+    NOTE_ENTRIES: (9, 0, 12, JOURNAL_ENTRIES),
+    ADVANCED_SETTINGS: (10, 0, 12, None),
+    'Communication Type': (11, 0, 6, ADVANCED_SETTINGS),
+    'Communication Standard': (11, 1, 6, ADVANCED_SETTINGS),
+    REMARK_ADVANCED: (12, 0, 12, ADVANCED_SETTINGS),
+    NOTE_ADVANCED: (13, 0, 12, ADVANCED_SETTINGS),
+    'Active': (14, 0, 6, None),
 }
 # What each tab's remark block says, as the HTML the block stores. A remark block renders this; a divider's
 # description renders nowhere, so the dividers keep their heading and nothing else.
@@ -166,6 +174,18 @@ DESC = {  # Odoo field help, verbatim (addons/account/models/account_journal.py)
     'Dedicated Payment Sequence': "Check this box if you don't want to share the same sequence on payments and "
                                   'bank transactions posted on this journal',
     'Active': 'Set active to false to hide the Journal without removing it.',
+    # The Chart of Accounts bundle's five accounts. Default Account has one label per journal type in Odoo, which a
+    # HAP field cannot change by condition, so its description says so (09 §1); the other four carry Odoo's help.
+    'Default Account': 'Odoo labels this Bank Account on a Bank journal, Cash Account on Cash, Journal Account on '
+                       'Credit Card, Default Income Account on Sales, Default Expense Account on Purchase, and Default '
+                       'Account on Miscellaneous, where it is used to automatically balance entries.',
+    'Suspense Account': 'Bank statements transactions will be posted on the suspense account until the final '
+                        'reconciliation allowing finding the right account.',
+    'Profit Account': 'Used to register a profit when the ending balance of a cash register differs from what the '
+                      'system computes',
+    'Loss Account': 'Used to register a loss when the ending balance of a cash register differs from what the '
+                    'system computes',
+    'Private Share Account': 'Account used to register the private part of mixed expenses.',
     # The two dividers carry no description: HAP renders a type-22 divider's `desc` nowhere at all — not even as a
     # tooltip (UI test, 16 Sep 2026). Their text lives in the remark blocks below them, in HTML.
 }
@@ -282,9 +302,11 @@ def step_untouched():
 
 
 def save_controls(ctrls):
-    """A full update-fields save, proving the other worksheets' controls unchanged."""
+    """A full save, proving the other worksheets' controls unchanged. Through the CLI's session, not
+    `update-fields --controls`: the five account Relations' snapshots of Chart of Accounts put the control list past
+    the kernel's argument limit (common.save_controls)."""
     before = signatures()
-    hap.run('worksheet', 'update-fields', WORKSHEET, '--controls', json.dumps(ctrls, ensure_ascii=False))
+    C.save_controls(WORKSHEET, ctrls)
     check_untouched(before)
 
 
@@ -380,6 +402,14 @@ RULE_COMMUNICATIONS_REQ = 'Payment Communications are required for Sales'
 RULE_CREDIT_NOTE = 'Dedicated Credit Note Sequence only for Sales and Purchase'
 RULE_PAYMENT = 'Dedicated Payment Sequence only for Bank, Cash and Credit Card'
 RULE_ADVANCED_TAB = 'Advanced Settings hidden for Bank and Cash journals'
+# The Chart of Accounts bundle's five accounts (accounts.py `journals`). Required by rules, never on the field: a
+# field a rule hides can never be filled, and only Accounting Administrator and Accountant, who both see these
+# fields, can edit a journal (09 §1).
+RULE_DEFAULT_REQ = 'Default Account is required for Sales, Purchase, Bank, Cash and Credit Card'
+RULE_SUSPENSE = 'Suspense Account only for Bank, Cash and Credit Card'
+RULE_SUSPENSE_REQ = 'Suspense Account is required for Bank, Cash and Credit Card'
+RULE_PROFIT_LOSS = 'Profit and Loss Accounts only for Bank and Cash'
+RULE_PRIVATE_SHARE = 'Private Share Account only for Purchase'
 # rule name -> (Type options, controls it acts on, rule item type). A rule applies its action while its condition
 # holds and reverses it when it does not, so every show rule here also hides its fields while Type is empty — and
 # the one hide rule shows its tab for every other type, and on a new record, which is what Odoo's `invisible` does.
@@ -395,6 +425,16 @@ RULES = {
     # <page name="advanced_settings" invisible="type in ['bank', 'cash']"> — the tab control, contents and all.
     # Journal Entries has no such condition and stays visible for every type.
     RULE_ADVANCED_TAB: (['Bank', 'Cash'], [ADVANCED_SETTINGS], C.HIDE),
+    # default_account_id: shown for every type; required for sale and purchase, and for bank, cash and credit once
+    # saved (Odoo creates the account when it is left empty on a new one — a HAP save cannot)
+    RULE_DEFAULT_REQ: (['Sales', 'Purchase', 'Bank', 'Cash', 'Credit Card'], ['Default Account'], C.REQUIRE),
+    # suspense_account_id: invisible="type not in ('bank', 'cash', 'credit')", and required for the same three
+    RULE_SUSPENSE: (['Bank', 'Cash', 'Credit Card'], ['Suspense Account'], C.SHOW),
+    RULE_SUSPENSE_REQ: (['Bank', 'Cash', 'Credit Card'], ['Suspense Account'], C.REQUIRE),
+    # profit_account_id, loss_account_id: invisible="type not in ('cash', 'bank')"
+    RULE_PROFIT_LOSS: (['Bank', 'Cash'], ['Profit Account', 'Loss Account'], C.SHOW),
+    # non_deductible_account_id: invisible="type != 'purchase'"
+    RULE_PRIVATE_SHARE: (['Purchase'], ['Private Share Account'], C.SHOW),
 }
 
 
@@ -410,9 +450,11 @@ def type_is(f, labels):
 def step_rules():
     ctrls = guard()
     f = hap.by_name(ctrls)                         # tabs included: one rule targets the Advanced Settings tab
+    # The five account rules wait for their fields on a build that has not reached bundle 2 (accounts.py `journals`).
     rules = [(name, C.INTERACTION, C.any_of([type_is(f, types)]),
               [C.item(kind, *[f[t] for t in targets])], {})
-             for name, (types, targets, kind) in RULES.items()]
+             for name, (types, targets, kind) in RULES.items()
+             if all(t in f for t in targets) or not set(targets) & set(ACCOUNTS)]
     C.upsert_rules(WORKSHEET, rules, 'journals_rules_pre_rules')
     for r in hap.listing('worksheet', 'rules', WORKSHEET):
         C.remember('rules', KEY + r['name'], r['ruleId'])
@@ -420,17 +462,17 @@ def step_rules():
 
 # ── 3 · views ───────────────────────────────────────────────────────────────
 
-COLUMNS = ('Journal Name', 'Type', 'Sequence Prefix')
+COLUMNS = ('Journal Name', 'Type', 'Sequence Prefix', 'Default Account')   # Default Account: Chart of Accounts bundle
 SORT = ('Sequence', 'Type', 'Sequence Prefix')                # Odoo _order "sequence, type, code"
 
 
 def step_views():
-    """Journals and Archived. Odoo's list is Journal Name · Type · Sequence Prefix (Default Account waits for
-    Chart of Accounts); its search filters Sales · Purchases · Liquidity · Miscellaneous become one Type quick
-    filter that takes several types at once (Liquidity = Cash + Bank + Credit Card)."""
+    """Journals and Archived. Odoo's list is Journal Name · Type · Sequence Prefix · Default Account (the last
+    arrived with the Chart of Accounts bundle); its search filters Sales · Purchases · Liquidity · Miscellaneous
+    become one Type quick filter that takes several types at once (Liquidity = Cash + Bank + Credit Card)."""
     guard()
     f = C.fields(WORKSHEET)
-    columns = [f[n]['controlId'] for n in COLUMNS]
+    columns = [f[n]['controlId'] for n in COLUMNS if n in f or n not in ACCOUNTS]   # Default Account: bundle 2
     sort = C.sort_spec([f[n] for n in SORT])
     quick = [{'fieldId': f['Type']['controlId'], 'selectionType': 'multiple', 'displayType': 'dropdown'}]
     views = {

@@ -32,6 +32,8 @@ read by a formula, a view or a picker.
 | 6 | # Products | `product_count` | 汇总 roll-up over field 5, count | — | — | **Read-only.** The number on Odoo's stat button. It counts the products **in this category**, not in its children — see the note below |
 | — | Parent Complete Name | — | Lookup through Parent Category of the parent's **Complete Name** | — | — | Hidden; field 2 is built on it. Not an Odoo field: Odoo computes `complete_name` recursively in Python, and HAP does the same thing with a stored lookup that chains, as Units & Packagings' Absolute Quantity already does up a unit chain |
 
+**Added since by bundles:** **Income Account** and **Expense Account** (`property_account_income_categ_id`, `property_account_expense_categ_id`), relations to Chart of Accounts defaulting to 410000 Trade Income and 510000 Costs, on a new tab **Accounting**, placed to come first in the tab bar, before Child Categories and Products (a browser has yet to confirm it) — bundle 2, `09-chart-of-accounts.md`.
+
 **# Products counts this category's own products.** Odoo's help says exactly that — *"Does not consider the
 children categories"* — but `_compute_product_count` reads `('categ_id', 'child_of', self.ids)`, so Odoo's number
 is the whole subtree: on the tenant, Goods holds no product of its own and shows **11**, the total of its four
@@ -113,7 +115,7 @@ Accounting Administrator *full*; Accountant, Invoicing and Accounting Read-only 
 
 | Odoo 19.4 field / feature | Why not now |
 |---|---|
-| Income Account, Expense Account (`property_account_income_categ_id`, `property_account_expense_categ_id`) | **Chart of Accounts bundle — bundle 2, immediately after this one.** They are `account.account` relations, company-dependent in Odoo; this worksheet gains two relations when it lands. Whoever builds bundle 2 must come back here |
+| ~~Income Account, Expense Account (`property_account_income_categ_id`, `property_account_expense_categ_id`)~~ | **Built on 17 Sep 2026 by the Chart of Accounts bundle** — the tab Accounting with both accounts, defaulting to 410000 and 510000, and every category seeded with them; see `worksheets/09-chart-of-accounts.md` |
 | Product Properties (`product_properties_definition`) and the products' `product_properties` | Odoo's ad-hoc fields, defined per category; in HAP an admin adds a field to the worksheet. Same reason 03 gives |
 | Company (`company_id`) | One company per app copy; multi-company is not in Phase 1 |
 | Parent Path (`parent_path`) | Technical — Odoo's `_parent_store` index. HAP's lookup chain does the same work |
@@ -439,7 +441,7 @@ names that switch, so only the browser can show it.
 
 Run on 16 September 2026 against the built worksheet, in the Nocoly UI where the UI is the point and through the
 CLI where the question is whether HAP recomputes — every value read back with `hap worksheet record get`.
-**16 of 18 pass, 1 in part, 1 with a caveat.**
+**17 of 18 pass, 1 with a caveat** (test 8 was in part on 16 Sep and passed when re-run on 17 Sep).
 
 | # | Test | How | Result |
 |---|---|---|---|
@@ -450,7 +452,7 @@ CLI where the question is whether HAP recomputes — every value read back with 
 | 5 | Clear a parent | CLI | **Pass.** The category fell back to its bare name and the child to "TEST UI renamed / TEST UI child" |
 | 6 | Complete Name on the create form | UI | **Pass.** Not on the create form at all; on a saved record it is read-only (`customFormReadonly`), as `fieldPermission` "100" asks |
 | 7 | The Categories view order | UI | **Pass.** Expenses · Goods · Goods / Consumables · … · Services — the indented tree. A record just created sits at the **top** of the table until the view is reloaded, whatever the sort |
-| 8 | The Parent Category quick filter | UI | **In part.** It is there and its dropdown lists every category by Complete Name; **applying** it could not be driven from automation (the click frame and the screenshot frame disagree on this page) — one click for the reviewer |
+| 8 | The Parent Category quick filter | UI | **Pass** — re-run on 17 Sep 2026. Goods narrows the view to its four children, "Total 4 row(s)": Consumables · IT Equipment · Office Furniture · Software. On 16 Sep the filter's list could be read but no choice would stick through automation; a relation filter's item has to be clicked where the page itself places it (`BUILDING.md` › *In the UI*) |
 | 9 | The Parent Category picker | UI | **Pass.** Every category by Complete Name, and **+ Record** at the foot — Odoo's `can_create` / `name_create` quick-create, matched |
 | 10 | Child Categories on Goods | UI | **Pass.** A read-only tab listing its four children with Complete Name and # Products — 2 · 2 · 4 · 3, which add to Odoo's 11 |
 | 11 | The Products list and # Products | UI + CLI | **Pass.** IT Equipment lists its four products by Name and Internal Reference; the counts are §1's — Services 3, IT Equipment 4, Office Furniture 3, Consumables 2, Software 2, **0 on Goods and Expenses** |

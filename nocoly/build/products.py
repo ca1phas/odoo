@@ -37,8 +37,8 @@ def units_ws():
 
 # Odoo saas~19.4 product_template_form_view on HAP's 12-column grid. Header: Name (the favourite star beside
 # it), the Sales and Purchase checkboxes under it, the image; then the notebook.
-GENERAL, SALES, INVENTORY = 'General Information', 'Sales', 'Inventory'
-TAB_ROWS = {GENERAL: 3, SALES: 8, INVENTORY: 11}
+GENERAL, SALES, INVENTORY, ACCOUNTING = 'General Information', 'Sales', 'Inventory', 'Accounting'
+TAB_ROWS = {GENERAL: 3, SALES: 8, INVENTORY: 11, ACCOUNTING: 13}
 PLACE = {  # field name -> (row, col, size, tab)
     'Name': (0, 0, 12, None),
     'Favorite': (1, 0, 4, None), 'Sales': (1, 1, 4, None), 'Purchase': (1, 2, 4, None),
@@ -53,10 +53,15 @@ PLACE = {  # field name -> (row, col, size, tab)
     'Internal Notes': (7, 0, 12, GENERAL),
     'Packagings': (9, 0, 12, SALES), 'Sales Description': (10, 0, 12, SALES),
     'Weight': (12, 0, 6, INVENTORY), 'Volume': (12, 1, 6, INVENTORY),
-    'Active': (13, 0, 6, None),
+    # The tab Accounting and its two accounts belong to the Chart of Accounts bundle (09-chart-of-accounts.md, built
+    # by accounts.py `products`), added with `add-fields` and placed by this step, as Category was: after Inventory,
+    # where Odoo has the page. Odoo's group title "Cost and Revenue" is left out, as the other group titles are.
+    'Income Account': (14, 0, 6, ACCOUNTING), 'Expense Account': (14, 1, 6, ACCOUNTING),
+    'Active': (15, 0, 6, None),
 }
 HINTS = {'Name': 'e.g. Cheese Burger', 'Internal Notes': 'This note is only for internal purposes.',
-         'Sales Description': 'This note is added to sales orders and invoices.'}   # no other placeholders, as in Odoo
+         'Sales Description': 'This note is added to sales orders and invoices.',
+         'Income Account': 'From Category', 'Expense Account': 'From Category'}   # no other placeholders, as in Odoo
 DESC = {  # Odoo field help (product_template.py)
     'Product Type': 'Goods are tangible materials and merchandise you provide.\n'
                     'A service is a non-material product you provide.',
@@ -70,6 +75,11 @@ DESC = {  # Odoo field help (product_template.py)
                          'description will be copied to every Sales Order, Delivery Order and Customer '
                          'Invoice/Credit Note',
     'Active': 'If unchecked, it will allow you to hide the product without removing it.',
+    # the Chart of Accounts bundle (product.py, property_account_income_id / property_account_expense_id)
+    'Income Account': 'Keep this field empty to use the default value from the product category.',
+    'Expense Account': 'Keep this field empty to use the default value from the product category. If anglo-saxon '
+                       'accounting with automated valuation method is configured, the expense account on the product '
+                       'category will be used.',
 }
 HIDDEN = ['Active']
 MYR = json.dumps({'currencycode': 'MYR', 'symbol': 'RM'})
@@ -150,7 +160,7 @@ def step_fields():
         number('Weight', 'weight', 'kg'), number('Volume', 'volume', 'm³'),
         switch('Active', 'active', 1),
     ]
-    hap.run('worksheet', 'update-fields', ws(), '--controls', json.dumps(controls, ensure_ascii=False))
+    C.save_controls(ws(), controls)
     C.show(ws())
 
 
@@ -244,7 +254,9 @@ def step_layout():
     f['Unit']['advancedSetting']['defsource'] = json.dumps([{'cid': '', 'rcid': '', 'relateSheetName': 'Units',
                                                              'staticValue': json.dumps([rows['Units']['rowid']])}])
     before = units_signature()
-    hap.run('worksheet', 'update-fields', ws(), '--controls', json.dumps(ctrls, ensure_ascii=False))
+    # Through the CLI's session, not the command line: the account Relations' snapshots of Chart of Accounts put
+    # the control list past the kernel's argument limit (common.save_controls).
+    C.save_controls(ws(), ctrls)
     check_units_untouched(before)
     C.show(ws())
 

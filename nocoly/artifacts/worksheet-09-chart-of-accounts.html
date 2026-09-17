@@ -1,0 +1,165 @@
+<title>ERP Master Chart of Accounts</title>
+<meta name="description" content="Review pack for worksheet 09 of the Odoo-to-Nocoly build, the second feature bundle: requirements, build ids and UI test results.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<link rel="stylesheet" href="review.css">
+<style>
+  pre.rule-code { margin: 0; padding: 14px 16px; overflow-x: auto; border: 1px solid var(--rule);
+    border-radius: 6px; background: var(--accent-soft); color: var(--code);
+    font: 400 12.5px/1.7 var(--mono); max-width: 86ch; }
+</style>
+
+<main class="page">
+
+  <header class="identity">
+    <div class="eyebrow"><span>ERP Master</span><span>Phase 1</span><span>Bundle 2 of 6</span></div>
+    <h1>Chart of Accounts <span class="model">account.account</span></h1>
+    <p class="lede">The ledger's list of accounts — Malaysia's chart, 87 of them. The worksheet is only half of this bundle: <strong>every field in the app that points at an account arrives with it</strong>, on Contacts, Products, Product Categories, Journals and Invoice Lines, seeded with the tenant's own values. It stops short of double entry: an invoice line gains an account, not a debit and a credit.</p>
+    <dl class="meta">
+      <div><dt>Reference</dt><dd>casimir.odoo.com — Odoo saas~19.4+e</dd></div>
+      <div><dt>Behaviour read from</dt><dd>Odoo 19.0 source, <code>account_account.py</code>, <code>account_move_line.py</code></dd></div>
+      <div><dt>Nocoly</dt><dd>App ERP Master · menu group Invoicing, first</dd></div>
+      <div><dt>Built and tested</dt><dd>16–17 September 2026</dd></div>
+    </dl>
+    <div class="scoreline">
+      <span class="chip pass">27 of 28 tests pass</span>
+      <span class="chip note">1 not run</span>
+      <span class="chip note">87 accounts · 5 worksheets extended</span>
+    </div>
+  </header>
+
+  <aside class="callout" aria-labelledby="note-title">
+    <span class="chip note small" style="justify-self:start">Worth knowing before you review</span>
+    <h2 id="note-title">None of the new account fields is required — on purpose</h2>
+    <p>Odoo marks a contact's receivable and payable accounts, and an invoice line's account, as required. But Odoo also <strong>hides those fields from part of the accounting staff</strong> — an Invoicing user never sees them — and in HAP a field that is required yet hidden from a role blocks every save that role makes. So the defaults, the seed and an automation keep them filled instead, and the tests check that they do. <strong>Journals is the exception</strong>: only the two roles that see its accounts can edit a journal, so a rule requires them there. One thing to try yourself: switch an account's Type to Receivable. The message <em>"You cannot have a receivable/payable account that is not reconcilable."</em> appears at once and you tick the box; Odoo ticks it for you.</p>
+  </aside>
+
+  <nav class="toc" aria-label="Sections">
+    <a href="#requirements"><span>1</span>Requirements</a>
+    <a href="#build"><span>2</span>Build</a>
+    <a href="#tests"><span>3</span>Tests and differences</a>
+  </nav>
+
+  <section id="requirements" aria-labelledby="req-title">
+    <div class="section-head"><span class="n">1</span><h2 class="section" id="req-title">Requirements</h2></div>
+
+    <div class="block">
+      <h3>The worksheet</h3>
+      <p class="aside">Labels are Odoo 19.4's; aliases are Odoo's field names.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th class="num">#</th><th>Field</th><th>Odoo field</th><th>Nocoly type</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td class="num">1</td><td class="label">Code</td><td><code>code</code></td><td>Text · required · no duplicates</td><td>"e.g. 101000"; letters, digits and dots only, with Odoo's message</td></tr>
+            <tr><td class="num">2</td><td class="label">Account Name</td><td><code>name</code></td><td>Text · required</td><td>"e.g. Current Assets"</td></tr>
+            <tr><td class="num">3</td><td class="label">Display Name</td><td><code>display_name</code></td><td>Formula · <strong>title</strong></td><td>"410000 Trade Income" — read-only, not on the create form</td></tr>
+            <tr><td class="num">4</td><td class="label">Type</td><td><code>account_type</code></td><td>Dropdown · required</td><td>Odoo's 19 types, in Odoo's order</td></tr>
+            <tr><td class="num">5</td><td class="label">Internal Group</td><td><code>internal_group</code></td><td>Formula</td><td>Asset · Liability · Equity · Income · Expense · Off Balance, from Type</td></tr>
+            <tr><td class="num">6</td><td class="label">Payment Reconciliation</td><td><code>reconcile</code></td><td>Checkbox</td><td>Set from Type by automation A; hidden for Bank and Cash, Credit Card, Off-Balance Sheet</td></tr>
+            <tr><td class="num">7</td><td class="label">Non Trade</td><td><code>non_trade</code></td><td>Checkbox</td><td>Shown only for Receivable and Payable</td></tr>
+            <tr><td class="num">8</td><td class="label">Parent Account</td><td><code>parent_id</code></td><td>Relation → itself</td><td><strong>New in 19.4</strong>: accounts form a tree. "Root account"; the picker leaves out the account itself</td></tr>
+            <tr><td class="num">9</td><td class="label">Description</td><td><code>description</code></td><td>Text</td><td>"Enter description here..."</td></tr>
+            <tr><td class="num">10</td><td class="label">Active</td><td><code>active</code></td><td>Checkbox · hidden</td><td>Archive and Unarchive buttons, and an Archived view</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="prose"><strong>Rules:</strong> Payment Reconciliation is not offered for bank, card and off-balance accounts · Non Trade only for receivable and payable accounts · a receivable or payable account must be reconcilable. <strong>Automation A</strong> sets Payment Reconciliation from Type, as Odoo's compute does. <strong>Views:</strong> Chart of Accounts (Code A→Z, quick filters Type and Internal Group) and Archived.</p>
+    </div>
+
+    <div class="block">
+      <h3>What it brings to the worksheets already built</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Worksheet</th><th>New</th><th>Seeded from the tenant</th></tr></thead>
+          <tbody>
+            <tr><td class="label">Contacts</td><td>Tab <strong>Invoicing</strong> — Account Receivable (Receivable accounts only) · Account Payable (Payable only); hidden for a contact under a company</td><td>Every contact: 124000 / 221100, the company defaults every tenant contact reads</td></tr>
+            <tr><td class="label">Products</td><td>Tab <strong>Accounting</strong> after Inventory — Income Account · Expense Account, "From Category"</td><td>Nothing: empty is what makes a product use its category's account</td></tr>
+            <tr><td class="label">Product Categories</td><td>Tab <strong>Accounting</strong> — Income Account · Expense Account</td><td>Every category: 410000 Trade Income / 510000 Costs</td></tr>
+            <tr><td class="label">Journals</td><td>Default Account · Suspense Account · Profit Account · Loss Account · Private Share Account, shown and required by Type; a Default Account column</td><td>INV 410000 · BILL 510000 · BNK1 120001 / 120002 / 999001 / 999002</td></tr>
+            <tr><td class="label">Invoice Lines</td><td><strong>Account</strong> after Label — on the form, the Lines view and inside each invoice; none on a section or note</td><td>The eight tenant lines: 410000 Trade Income</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="prose"><strong>Automation B</strong> gives a product line its account, as Odoo's <code>_compute_account_id</code> does: the product's Income Account, else its category's — the Expense accounts on a vendor document. The journal's Default Account fills it only when it is still empty, and on a journal entry. It runs on a line created without an account and when a line's Product changes.</p>
+      <p class="prose"><strong>Roles:</strong> Chart of Accounts is written by Accounting Administrator alone, as Odoo's access list has it. And as Odoo's views do, the Invoicing role loses all twelve account fields, and Accounting Read-only loses Contacts' two — with the tabs those fields leave empty.</p>
+    </div>
+  </section>
+
+  <section id="build" aria-labelledby="build-title">
+    <div class="section-head"><span class="n">2</span><h2 class="section" id="build-title">Build</h2></div>
+    <p class="prose">Built by <code>nocoly/build/accounts.py</code> in two parts — the worksheet, then the fields on the other five — each step safe to re-run: a full second run of part B saved nothing and wrote none of its 58 references. New controls were placed through each worksheet's own layout step, so re-running any of those scripts keeps them.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Element</th><th>Built</th><th>Id</th></tr></thead>
+        <tbody>
+          <tr><td class="label">Worksheet</td><td>Chart of Accounts, alias <code>account_account</code>, first in Invoicing</td><td class="id">6aaa92ae805aef70328667da</td></tr>
+          <tr><td class="label">Automation A</td><td>Payment Reconciliation follows Type — four paths</td><td class="id">6aaa9397a1c923a16effd002</td></tr>
+          <tr><td class="label">Automation B</td><td>Two workflows: a new line, and a Product change</td><td class="id">6aab44254f2a99acac0f026f · 6aab447416473257ad590b41</td></tr>
+          <tr><td class="label">Contacts</td><td>Invoicing tab, two accounts, one rule</td><td class="muted">in ids.json</td></tr>
+          <tr><td class="label">Products · Product Categories</td><td>An Accounting tab and two accounts each</td><td class="muted">in ids.json</td></tr>
+          <tr><td class="label">Journals</td><td>Five accounts, five rules, a list column</td><td class="muted">in ids.json</td></tr>
+          <tr><td class="label">Invoice Lines</td><td>Account, the section rule, the Lines column and the invoice table's column</td><td class="id">6aab42fdbd43f55762c71ed6</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose">CLI self-checks: every control, picker, default, rule, column and role setting reads back as specified; the 87 accounts and all 58 references match the extract; and every other record on the nine worksheets reads back unchanged — the invoices' amounts included. Two things the build learned are worth a reviewer's attention: <strong>a HAP role can hide a single field</strong>, which is what made Odoo's group visibility buildable, and <strong>a workflow search on an empty value fails the whole run</strong>, so automation B checks every relation it reads through.</p>
+  </section>
+
+  <section id="tests" aria-labelledby="tests-title">
+    <div class="section-head"><span class="n">3</span><h2 class="section" id="tests-title">Tests and differences</h2></div>
+    <p class="prose">Part A was run in the Nocoly UI on 16 September, part B on 17 September, with stored values read back through the CLI.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th class="num">#</th><th>Check</th><th>Result</th></tr></thead>
+        <tbody>
+          <tr><td class="num">1–2</td><td class="label">Sidebar and the main view</td><td><div class="result"><span class="chip pass small">Pass</span>First in Invoicing; 87 accounts, Code A→Z</div></td></tr>
+          <tr><td class="num">3</td><td class="label">Quick filters</td><td><div class="result"><span class="chip pass small">Pass</span>Type Payable + Receivable → 7; Internal Group is a search box, "Income" → 8</div></td></tr>
+          <tr><td class="num">4</td><td class="label">A seeded account, field by field</td><td><div class="result"><span class="chip pass small">Pass</span>124700 SST Receivable: reconciled, Non Trade, Asset</div></td></tr>
+          <tr><td class="num">5</td><td class="label">The create form</td><td><div class="result"><span class="chip pass small">Pass</span>Odoo's placeholders and help; no Display Name or Internal Group until saved</div></td></tr>
+          <tr><td class="num">6</td><td class="label">A duplicate code</td><td><div class="result"><span class="chip pass small">Pass</span>"Duplicates are not allowed", live, and refused</div></td></tr>
+          <tr><td class="num">7</td><td class="label">A malformed code</td><td><div class="result"><span class="chip pass small">Pass</span>"The account code can only contain alphanumeric characters and dots." — in the form only</div></td></tr>
+          <tr><td class="num">8</td><td class="label">Automation A, through the form</td><td><div class="result"><span class="chip pass small">Pass</span>Bank and Cash cleared the box after the save</div></td></tr>
+          <tr><td class="num">9–10</td><td class="label">The two visibility rules</td><td><div class="result"><span class="chip pass small">Pass</span></div></td></tr>
+          <tr><td class="num">11</td><td class="label">A receivable account must be reconcilable</td><td><div class="result"><span class="chip pass small">Pass</span>With a difference: the message shows the moment Type becomes Receivable, and you tick the box where Odoo ticks it</div></td></tr>
+          <tr><td class="num">12</td><td class="label">The Parent Account picker</td><td><div class="result"><span class="chip pass small">Pass</span>Leaves out the account itself and archived accounts</div></td></tr>
+          <tr><td class="num">13</td><td class="label">Archive and Unarchive</td><td><div class="result"><span class="chip pass small">Pass</span></div></td></tr>
+          <tr><td class="num">14–15</td><td class="label">Internal Group; an unrelated edit does not re-run automation A</td><td><div class="result"><span class="chip pass small">Pass</span></div></td></tr>
+          <tr><td class="num">16</td><td class="label">Contacts: the Invoicing tab</td><td><div class="result"><span class="chip pass small">Pass</span>On a company; not on a contact under a company</div></td></tr>
+          <tr><td class="num">17</td><td class="label">Contacts: a new contact's defaults</td><td><div class="result"><span class="chip pass small">Pass</span>124000 and 221100</div></td></tr>
+          <tr><td class="num">18</td><td class="label">Contacts: the pickers</td><td><div class="result"><span class="chip pass small">Pass</span>Exactly 4 receivable and 3 payable accounts</div></td></tr>
+          <tr><td class="num">19–20</td><td class="label">Products: the Accounting tab and its filter</td><td><div class="result"><span class="chip pass small">Pass</span>After Inventory; no receivable, payable or bank account offered</div></td></tr>
+          <tr><td class="num">21</td><td class="label">Product Categories: the Accounting tab</td><td><div class="result"><span class="chip pass small">Pass</span>First in the tab bar; 410000 / 510000</div></td></tr>
+          <tr><td class="num">22–24</td><td class="label">Journals: accounts by type, required, the column</td><td><div class="result"><span class="chip pass small">Pass</span>A Sales journal without a Default Account is refused</div></td></tr>
+          <tr><td class="num">25–26</td><td class="label">Invoice Lines: the column, and none on a section</td><td><div class="result"><span class="chip pass small">Pass</span>After Label in the list and inside the invoice; amounts unchanged</div></td></tr>
+          <tr><td class="num">27</td><td class="label">Automation B</td><td><div class="result"><span class="chip pass small">Pass</span>Every case through the CLI, results read in the UI. Fixed after the first build: the journal's Default Account no longer overwrites an Account a line already has</div></td></tr>
+          <tr><td class="num">28</td><td class="label">Field visibility by role</td><td><div class="result"><span class="chip note small">Not run</span>The roles have no members, so nobody can see the app as one; the settings read back as built</div></td></tr>
+          <tr><td class="num">—</td><td class="label">A line created from an invoice's own table</td><td><div class="result"><span class="chip note small">Not run</span>The browser went to the background; the same path is proved through the CLI</div></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="block">
+      <h3>Differences from Odoo</h3>
+      <ol class="differences">
+        <li><span class="n">1</span><div class="head"><strong>A receivable or payable account's box is ticked by hand</strong><span class="chip note small">HAP behaviour</span></div><p>HAP checks a rule before the save and runs a workflow after it, so the automation that sets Payment Reconciliation cannot beat the rule that requires it.</p></li>
+        <li><span class="n">2</span><div class="head"><strong>The new account fields are not required</strong><span class="chip note small">Decision</span></div><p>Required and hidden from a role would block that role's saves. Defaults, the seed and automation B keep them filled; Journals, edited only by roles that see its accounts, requires them.</p></li>
+        <li><span class="n">3</span><div class="head"><strong>Checks that live in the form only</strong><span class="chip note small">HAP behaviour</span></div><p>The code format, the receivable rule and every default hold in the form; the API writes around them. No duplicates holds everywhere.</p></li>
+        <li><span class="n">4</span><div class="head"><strong>A product and an account set in the same save</strong><span class="chip note small">HAP behaviour</span></div><p>Automation B gives the line the product's account and overwrites the one chosen; Odoo keeps an account written with the product.</p></li>
+        <li><span class="n">5</span><div class="head"><strong>One level of category</strong><span class="chip note small">Note</span></div><p>Odoo walks up a category's parents for an account; every category here carries one, so automation B reads the product's own category.</p></li>
+        <li><span class="n">6</span><div class="head"><strong>No debit, no credit, no balance</strong><span class="chip note small">Scope</span></div><p>No Balance button, no <em>Account with Entries</em> filter, no tax or payment-term lines — double entry is beyond this bundle.</p></li>
+        <li><span class="n">7</span><div class="head"><strong>Pickers that cannot follow the record</strong><span class="chip note small">HAP behaviour</span></div><p>A journal's Default Account picker offers every account, where Odoo narrows it by the journal's type; a Parent Account picker cannot leave out the account's descendants.</p></li>
+        <li><span class="n">8</span><div class="head"><strong>Odoo creates a bank journal's account when left empty</strong><span class="chip note small">HAP behaviour</span></div><p>Here the rule requires one instead.</p></li>
+      </ol>
+    </div>
+
+    <div class="block">
+      <h3>Test records left for you</h3>
+      <p class="prose">Accounts <strong>TEST01</strong>, <strong>TEST02</strong> (archived) and <strong>TEST03 "TEST UI account"</strong>. Four <strong>TEST B</strong> documents on Invoices — a customer invoice, a cancelled vendor bill and two journal entries — and their 19 lines, <strong>TEST B</strong> and, after the fix, <strong>TEST B2</strong>, each named for the case it proves. All go after sign-off, with your approval. The 87 accounts and every seeded reference are the tenant's and stay.</p>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <p>Bundle 2 of 6 · <code>nocoly/worksheets/09-chart-of-accounts.md</code> · reference <code>nocoly/reference/odoo-19.4/account.account.md</code> · build <code>nocoly/build/accounts.py</code>. Next is <strong>Payment Terms</strong>, the first bundle that replaces a text stand-in — Invoices' Payment Terms — and so the first that deletes a field, carrying its values across first. <strong>Taxes</strong>, bundle 6, must come back here for each account's Default Taxes.</p>
+  </footer>
+</main>

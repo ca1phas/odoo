@@ -8,7 +8,8 @@ Two things:
      Teh Li Wei stay app administrators exactly as they are.
   2. **Four business roles**, one per Odoo accounting group, each with per-worksheet access rules
      (`hap app role create-fine`). Nobody is assigned to any of them — who belongs in which role is the
-     owner's call.
+     owner's call. The Chart of Accounts bundle added per-field hiding: the account fields Odoo keeps from its
+     Invoicing and Read-only groups are hidden from those roles, field by field (HIDDEN_FIELDS).
 
 Run from the repo root with the CLI's interpreter:
 
@@ -98,6 +99,63 @@ SCOPE = {
     EDIT: ({'read': 100, 'edit': 100, 'delete': 0}, True),
     VIEW: ({'read': 100, 'edit': 0, 'delete': 0}, False),
 }
+
+# ── 3 · account fields hidden from a role ───────────────────────────────────
+#
+# Odoo hides the account fields from part of the accounting staff with `groups=` on its views (09-chart-of-accounts
+# §1 › Roles). A HAP fine-grained role carries a switch per field: the Roles page's **新增 · 查看 · 编辑** (add · view ·
+# edit) columns, stored on each sheet's `fields[]` as `notAdd` / `notRead` / `notEdit`. A hidden field here is all
+# three — off the create form, not visible, not editable — which is what the page stores when a person unticks it
+# (pd-openweb RoleSet/TooltipSetting: unticking 查看 clears 编辑 with it). The page also hides a **tab** once every
+# field in it is hidden and shows it again as soon as one is visible; the three tabs this bundle added hold nothing
+# but these accounts, so they follow them the same way. No other field or tab is touched.
+ACCOUNT_READONLY_FIELDS = {   # groups="account.group_account_readonly": Invoicing does not see them
+    'Journals': ['Default Account', 'Suspense Account', 'Profit Account', 'Loss Account', 'Private Share Account'],
+    'Products': ['Income Account', 'Expense Account'],
+    'Product Categories': ['Income Account', 'Expense Account'],
+    'Invoice Lines': ['Account'],
+}
+ACCOUNT_USER_FIELDS = {       # groups="account.group_account_user": neither Invoicing nor Accounting Read-only
+    'Contacts': ['Account Receivable', 'Account Payable'],
+}
+HIDDEN_FIELDS = {
+    'Accounting Administrator': {},
+    'Accountant': {},
+    'Invoicing': {**ACCOUNT_READONLY_FIELDS, **ACCOUNT_USER_FIELDS},
+    'Accounting Read-only': dict(ACCOUNT_USER_FIELDS),
+}
+OWNED_FIELDS = {**ACCOUNT_READONLY_FIELDS, **ACCOUNT_USER_FIELDS}   # the fields whose visibility this table decides
+FIELD_SWITCHES = ('notRead', 'notEdit', 'notAdd')
+
+
+def missing_owned(sheet, worksheet):
+    """The fields OWNED_FIELDS names that this sheet does not list — none once bundle 2 is built."""
+    names = {f['fieldName'] for f in sheet.get('fields') or [] if f.get('type') != 52}
+    return [n for n in OWNED_FIELDS.get(worksheet) or [] if n not in names]
+
+
+def field_targets(role, sheet, worksheet):
+    """{fieldId: hidden} on one role's sheet for the fields OWNED_FIELDS decides — and for a tab holding nothing
+    else, hidden exactly when all of them are. A field not built yet is left out (a build that has not reached
+    bundle 2); `check` reports it."""
+    owned = OWNED_FIELDS.get(worksheet) or []
+    if not owned:
+        return {}
+    fields = sheet.get('fields') or []
+    by_name = {f['fieldName']: f for f in fields if f.get('type') != 52}
+    hidden = set(HIDDEN_FIELDS.get(role, {}).get(worksheet) or [])
+    out = {by_name[n]['fieldId']: n in hidden for n in owned if n in by_name}
+    for tab in (f for f in fields if f.get('type') == 52):
+        children = [f for f in fields if f.get('sectionId') == tab['fieldId']]
+        if children and all(c['fieldId'] in out for c in children):
+            out[tab['fieldId']] = all(out[c['fieldId']] for c in children)
+    return out
+
+
+def field_state(sheet, targets):
+    return {f['fieldId']: tuple(bool(f.get(k)) for k in FIELD_SWITCHES) for f in sheet.get('fields') or []
+            if f['fieldId'] in targets}
+
 
 # **Export** is the one right outside the owner's table that is set deliberately. Odoo keeps exporting behind
 # its own group, `base.group_allow_export`, granted on purpose and not implied by an accounting level — so
@@ -280,6 +338,16 @@ def reconcile(name, role_id, description, matrix):
                 if not view.get(key):
                     view[key] = True
                     changed.append(f'{worksheet}.{view["viewName"]}.{key}')
+        # the account fields (and their own tabs) hidden from this role, or shown to it
+        targets = field_targets(name, sheet, worksheet)
+        for field in sheet.get('fields') or []:
+            hide = targets.get(field['fieldId'])
+            if hide is None:
+                continue
+            for key in FIELD_SWITCHES:
+                if bool(field.get(key)) != hide:
+                    field[key] = hide
+                    changed.append(f'{worksheet}.{field["fieldName"]}.{key}')
     if not changed:
         return False
     save_role_model(role_id, model)
@@ -288,11 +356,13 @@ def reconcile(name, role_id, description, matrix):
     for worksheet, cell in matrix.items():
         scope, add = SCOPE[cell]
         sheet = back.get(WORKSHEETS[worksheet], {})
+        targets = field_targets(name, sheet, worksheet) if sheet else {}
         got = (tuple(sheet.get(LEVEL_KEY[r]) for r in ('read', 'edit', 'delete')), bool(sheet.get('canAdd')),
                {k: bool((sheet.get(k) or {}).get('enable')) for k in (*SHEET_SWITCHES, ADD_KEY, EXPORT_KEY)},
-               all(v.get(k) for v in sheet.get('views') or [] for k in VIEW_RIGHTS))
+               all(v.get(k) for v in sheet.get('views') or [] for k in VIEW_RIGHTS), field_state(sheet, targets))
         want = (tuple(scope[r] for r in ('read', 'edit', 'delete')), add,
-                {**SHEET_SWITCHES, ADD_KEY: add, EXPORT_KEY: want_export}, True)
+                {**SHEET_SWITCHES, ADD_KEY: add, EXPORT_KEY: want_export}, True,
+                {fid: (hide,) * len(FIELD_SWITCHES) for fid, hide in targets.items()})
         if got != want:
             wrong[worksheet] = (got, want)
     if wrong:
@@ -402,14 +472,36 @@ def step_check():
                 problems.append(f'{name} / {w["id"]}: recordActions {record}')
         # The same switch in the model the Roles page itself edits, so a difference between the two shows up
         # rather than hiding behind whichever call is read.
-        stored = {bool((s.get(EXPORT_KEY) or {}).get('enable')) for s in role_model(r['roleId'])['sheets']}
+        model = role_model(r['roleId'])
+        stored = {bool((s.get(EXPORT_KEY) or {}).get('enable')) for s in model['sheets']}
         if stored != {name in EXPORTERS}:
             problems.append(f'{name}: {EXPORT_KEY}.enable {stored}, want {name in EXPORTERS}')
+        # the account fields: hidden where 09 §1 hides them, visible everywhere else — read in the Roles page's own
+        # model and again through V3's fieldPermissions, which names the same switches read · edit · add
+        v3_fields = {w['id']: {f['id']: f for f in w.get('fieldPermissions') or []}
+                     for w in detail.get('worksheetPermissions') or []}
+        for sheet in model['sheets']:
+            worksheet = next((n for n, wid in WORKSHEETS.items() if wid == sheet['sheetId']), None)
+            if worksheet in OWNED_FIELDS and missing_owned(sheet, worksheet):
+                problems.append(f'{name} / {worksheet}: the role lists no field {missing_owned(sheet, worksheet)}')
+            targets = field_targets(name, sheet, worksheet) if worksheet in OWNED_FIELDS else {}
+            if not targets:
+                continue
+            stored_fields = field_state(sheet, targets)
+            wanted_fields = {fid: (hide,) * len(FIELD_SWITCHES) for fid, hide in targets.items()}
+            if stored_fields != wanted_fields:
+                problems.append(f'{name} / {worksheet}: fields {stored_fields} != {wanted_fields}')
+            v3 = v3_fields.get(sheet['sheetId'], {})
+            v3_stored = {fid: (not v3.get(fid, {}).get('read'), not v3.get(fid, {}).get('edit'),
+                               not v3.get(fid, {}).get('add')) for fid in targets}
+            if v3_stored != wanted_fields:
+                problems.append(f'{name} / {worksheet}: V3 fieldPermissions {v3_stored} != {wanted_fields}')
     extra = set(live) - {n for n, _, _ in STOCK} - set(ROLES)
     if extra:
         problems.append(f'unexpected role(s) {sorted(extra)}')
     print('  check: ' + ('OK — five stock roles in English with their roleType and members, four business '
-                         'roles with their per-worksheet scopes, export on Accounting Administrator alone, '
+                         'roles with their per-worksheet scopes, export on Accounting Administrator alone, the '
+                         'account fields hidden from Invoicing and Accounting Read-only as 09 §1 says, '
                          'and no members'
                          if not problems else 'DIFFERENCES\n    ' + '\n    '.join(problems)))
     return len(problems)

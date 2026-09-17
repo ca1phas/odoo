@@ -76,6 +76,7 @@ KEY = 'Invoice Lines: '                            # ids.json key prefix for eve
 INVOICES = hap.ids()['worksheets']['Invoices']
 VARIANTS = hap.ids()['worksheets']['Product Variants']
 UNITS = hap.ids()['worksheets']['Units & Packagings']
+ACCOUNTS = hap.ids()['worksheets']['Chart of Accounts']
 OTHERS = ('Contacts', 'Units & Packagings', 'Products', 'Product Variants', 'Journals')   # must stay untouched
 
 SUBLIST = 34                                       # HAP's 子表: a worksheet mounted under a parent record
@@ -119,16 +120,22 @@ TEXT_LINES = ['Section', 'Subsection', 'Note']     # Odoo's non-accountable disp
 # Odoo's line columns on HAP's 12-column grid. The parent link first (Odoo's Journal Entry), then the two
 # columns that decide what the line is, then Odoo's own column order, then the three read-only values the
 # standalone list needs.
+#
+# Account arrived with the Chart of Accounts bundle (09-chart-of-accounts.md, accounts.py `lines`), after Label as on
+# Odoo's invoice form: accounts.py adds it with `add-fields`, which parks it at row 9999, and `layout` here places
+# it; everything under it moved down one row.
+BUNDLE_2 = ('Account',)
 PLACE = {  # name -> (row, col, size)
     'Invoice': (0, 0, 12),
     'Sequence': (1, 0, 6), 'Display Type': (1, 1, 6),
     'Product': (2, 0, 12),
     'Label': (3, 0, 12),
-    'Quantity': (4, 0, 6), 'Unit': (4, 1, 6),
-    'Unit Price': (5, 0, 6), 'Discount (%)': (5, 1, 6),
-    'Subtotal': (6, 0, 12),
-    'Number': (7, 0, 6), 'Accounting Date': (7, 1, 6),
-    'Status': (8, 0, 6),
+    'Account': (4, 0, 12),
+    'Quantity': (5, 0, 6), 'Unit': (5, 1, 6),
+    'Unit Price': (6, 0, 6), 'Discount (%)': (6, 1, 6),
+    'Subtotal': (7, 0, 12),
+    'Number': (8, 0, 6), 'Accounting Date': (8, 1, 6),
+    'Status': (9, 0, 6),
 }
 TITLE = 'Label'                                    # Odoo's _rec_name on account.move.line is `name`
 REQUIRED = {'Invoice', 'Display Type'}
@@ -140,7 +147,7 @@ DESC = {  # Odoo field help, verbatim where Odoo has one (addons/account/models/
     'Sequence': 'Orders the lines within one invoice. Odoo reorders them by dragging a handle, which a HAP '
                 'subtable has no equivalent for, so the number is the only way to move a line.',
     'Display Type': "Odoo's *Add a line*, *Add a section* and *Add a note*. A section, a subsection and a note "
-                    'carry no figures: the rule hides Product, Quantity, Unit, Unit Price, Discount (%) and '
+                    'carry no figures: the rule hides Product, Account, Quantity, Unit, Unit Price, Discount (%) and '
                     'Subtotal. The tax, payment-term, rounding and early-payment-discount lines Odoo writes '
                     'itself are not built.',
     'Product': 'The **variant**, never the template: every Odoo order line, stock move and invoice line points '
@@ -148,6 +155,11 @@ DESC = {  # Odoo field help, verbatim where Odoo has one (addons/account/models/
                'purchase_ok on a vendor one.',
     'Label': "Odoo fills it from the product's display name and its sales description when a product is chosen, "
              'on two lines. Here it is typed or seeded; on a section or a note it *is* the text.',
+    # Odoo has no help on account_id; this says what fills it (automation B, 09 §1)
+    'Account': 'The account the line posts to. A product line saved without one is given it, and a change of '
+               "Product gives it again: the product's Income Account, else its category's — the Expense Accounts on "
+               "a vendor document. The journal's Default Account fills it only when it is still empty, and is the "
+               'only source on a journal entry. A section, a subsection and a note carry none.',
     'Quantity': 'The optional quantity expressed by this line, eg: number of product sold.',
     'Unit': "Odoo offers only the product's own unit and its packagings (allowed_uom_ids); every unit is offered "
             'here, because that domain needs a lookup of a relation, which HAP stores as a title.',
@@ -171,12 +183,13 @@ ADVANCED = {  # advancedSetting keys this script owns
 }
 DOT = {'Sequence': 0, 'Quantity': 2, 'Unit Price': 2, 'Discount (%)': 2, 'Subtotal': 2}
 ALIAS = {'Invoice': 'move_id', 'Sequence': 'sequence', 'Display Type': 'display_type', 'Product': 'product_id',
-         'Label': 'name', 'Quantity': 'quantity', 'Unit': 'product_uom_id', 'Unit Price': 'price_unit',
+         'Label': 'name', 'Account': 'account_id', 'Quantity': 'quantity', 'Unit': 'product_uom_id',
+         'Unit Price': 'price_unit',
          'Discount (%)': 'discount', 'Subtotal': 'price_subtotal', 'Number': 'move_name',
          'Accounting Date': 'date', 'Status': 'parent_state'}
-RELATIONS = {'Product': VARIANTS, 'Unit': UNITS}   # one-way; neither target gets a reverse field
+RELATIONS = {'Product': VARIANTS, 'Unit': UNITS, 'Account': ACCOUNTS}   # one-way; no target gets a reverse field
 LOOKUPS = [('Number', 'Number'), ('Accounting Date', 'Accounting Date'), ('Status', 'Status')]
-FIGURES = ['Product', 'Quantity', 'Unit', 'Unit Price', 'Discount (%)', 'Subtotal']   # what a section hides
+FIGURES = ['Product', 'Account', 'Quantity', 'Unit', 'Unit Price', 'Discount (%)', 'Subtotal']   # what a section hides
 
 
 def ws():
@@ -256,9 +269,7 @@ def save_worksheet_controls(worksheet, ctrls):
     mounted subtable carries its `relationControls` snapshot of all thirteen Invoice Lines controls, Invoices'
     list is past the kernel's argument limit — `OSError: [Errno 7] Argument list too long`. Same call, same
     optimistic-lock retry; only the transport differs (Found while building)."""
-    from hap_cli.core.session import Session
-    from hap_cli.core import worksheet as ws_mod
-    return ws_mod.save_controls(Session.load(None), worksheet, ctrls)
+    return C.save_controls(worksheet, ctrls)    # the same call, which also checks the answer
 
 
 def save_controls(ctrls):
@@ -364,8 +375,8 @@ def step_fields():
 # ── 3 · the mount ───────────────────────────────────────────────────────────
 
 # What the subtable shows inside an invoice, in Odoo's own column order.
-SUBTABLE_COLUMNS = ('Sequence', 'Display Type', 'Product', 'Label', 'Quantity', 'Unit', 'Unit Price',
-                    'Discount (%)', 'Subtotal')
+SUBTABLE_COLUMNS = ('Sequence', 'Display Type', 'Product', 'Label', 'Account', 'Quantity', 'Unit', 'Unit Price',
+                    'Discount (%)', 'Subtotal')          # Account: the Chart of Accounts bundle
 
 
 def sub_list(ctrls=None):
@@ -534,7 +545,8 @@ def step_layout():
     save. The Invoice relation the mount created is placed here too — and its `sourceControlId`, which is what
     pairs it with the subtable on Invoices, is read from the live control and sent back untouched."""
     ctrls = guard()
-    missing = [n for n in PLACE if n not in {c['controlName'] for c in ctrls}]
+    # Account is bundle 2's and is placed when it is there; accounts.py adds it.
+    missing = [n for n in PLACE if n not in {c['controlName'] for c in ctrls} and n not in BUNDLE_2]
     if missing:
         sys.exit(f'{missing} are not on the worksheet yet — run fields, mount and computed first')
     hap.backup('invlines_controls_pre_layout', ctrls)
@@ -581,8 +593,9 @@ def step_rules():
     Display Type has not been read yet, which is what a line is for."""
     guard()
     f = C.fields(ws())
+    # Account is bundle 2's (accounts.py `lines`): on a build that has not reached it yet, the rule hides the rest.
     rules = [(RULE_FIGURES, C.INTERACTION, C.any_of([is_any_of(f, 'Display Type', TEXT_LINES)]),
-              [C.item(C.HIDE, *[f[t] for t in FIGURES])], {})]
+              [C.item(C.HIDE, *[f[t] for t in FIGURES if t in f or t not in BUNDLE_2])], {})]
     C.upsert_rules(ws(), rules, 'invlines_rules_pre_rules')
     for r in hap.listing('worksheet', 'rules', ws()):
         C.remember('rules', KEY + r['name'], r['ruleId'])
@@ -590,17 +603,19 @@ def step_rules():
 
 # ── 7 · the view ────────────────────────────────────────────────────────────
 
-VIEW_COLUMNS = ('Number', 'Label', 'Product', 'Quantity', 'Unit', 'Unit Price', 'Discount (%)', 'Subtotal')
+VIEW_COLUMNS = ('Number', 'Label', 'Account', 'Product', 'Quantity', 'Unit', 'Unit Price', 'Discount (%)',
+                'Subtotal')                           # Account: the Chart of Accounts bundle
 VIEWS = ('Lines',)
 
 
 def step_views():
-    """Odoo's standalone *Journal Items* list, minus everything the Chart of Accounts and Taxes bundles bring.
-    `_order` is `date desc, move_name desc, id`; the third level is Sequence ascending, which is the order the
-    lines of one document are written in."""
+    """Odoo's standalone *Journal Items* list, minus the double entry and everything the Taxes bundle brings;
+    the Chart of Accounts bundle added the Account column after Label. `_order` is `date desc, move_name desc, id`;
+    the third level is Sequence ascending, which is the order the lines of one document are written in."""
     guard()
     f = C.fields(ws())
-    columns = [f[n]['controlId'] for n in VIEW_COLUMNS]
+    # Account is bundle 2's (accounts.py `lines`): until it exists the view shows the other columns.
+    columns = [f[n]['controlId'] for n in VIEW_COLUMNS if n in f or n not in BUNDLE_2]
     sort = C.sort_by([(f['Accounting Date'], False), (f['Number'], False), (f['Sequence'], True)])
     quick = [{'fieldId': f['Display Type']['controlId'], 'selectionType': 'multiple', 'displayType': 'dropdown'}]
     views = {'Lines': (dict(viewType='table', tableFields=columns, quickFilters=quick), sort, columns)}

@@ -25,8 +25,8 @@
       <div><dt>Built and tested</dt><dd>16 September 2026</dd></div>
     </dl>
     <div class="scoreline">
-      <span class="chip pass">16 of 18 tests pass</span>
-      <span class="chip note">1 partly · 1 caveat</span>
+      <span class="chip pass">17 of 18 tests pass</span>
+      <span class="chip note">1 caveat</span>
       <span class="chip note">8 differences</span>
       <span class="chip note">7 categories · all 14 products</span>
     </div>
@@ -64,6 +64,7 @@
           </tbody>
         </table>
       </div>
+      <p class="aside"><strong>Added since by bundles:</strong> Income Account and Expense Account on a new <em>Accounting</em> tab, first in the tab bar, defaulting to 410000 Trade Income and 510000 Costs — bundle 2, Chart of Accounts, 17 September 2026.</p>
       <p class="aside"><code>product.category</code> has <strong>no <code>active</code> field</strong> — so this is the first worksheet in the app with <strong>no Archive, no Unarchive and no Archived view</strong>. Odoo's only way to remove a category is to delete it. That absence is deliberate, not an omission.</p>
     </div>
 
@@ -142,7 +143,7 @@ Services                        3     Annual Support Retainer · Implementation 
           <tr><td class="num">5</td><td class="label">Clear a parent</td><td>The path shortens</td><td><div class="result"><span class="chip pass small">Pass</span></div></td></tr>
           <tr><td class="num">6</td><td class="label">Complete Name on the create form</td><td>Absent there, read-only when saved</td><td><div class="result"><span class="chip pass small">Pass</span></div></td></tr>
           <tr><td class="num">7</td><td class="label">The Categories view order</td><td>An indented tree</td><td><div class="result"><span class="chip pass small">Pass</span>A record just created sits at the top until the view reloads, whatever the sort</div></td></tr>
-          <tr><td class="num">8</td><td class="label">The Parent Category quick filter</td><td>Narrows to one parent's children</td><td><div class="result"><span class="chip note small">Partly</span>It is there and lists every category by Complete Name; <strong>applying</strong> it would not stick through automation — one click for you</div></td></tr>
+          <tr><td class="num">8</td><td class="label">The Parent Category quick filter</td><td>Narrows to one parent's children</td><td><div class="result"><span class="chip pass small">Pass</span>Goods narrows the view to its four children — re-run on 17 September, once a relation filter could be driven from automation</div></td></tr>
           <tr><td class="num">9</td><td class="label">The Parent Category picker</td><td>Lists by Complete Name; can create one</td><td><div class="result"><span class="chip pass small">Pass</span><strong>+ Record</strong> at the foot — Odoo's quick-create, matched</div></td></tr>
           <tr><td class="num">10</td><td class="label">Child Categories on Goods</td><td>Its four children, read-only</td><td><div class="result"><span class="chip pass small">Pass</span>With their own counts — 2 · 2 · 4 · 3</div></td></tr>
           <tr><td class="num">11</td><td class="label">The Products list and # Products</td><td>The tenant's numbers</td><td><div class="result"><span class="chip pass small">Pass</span>Services 3 · IT Equipment 4 · Office Furniture 3 · Consumables 2 · Software 2 · Goods and Expenses 0</div></td></tr>
@@ -179,6 +180,6 @@ Services                        3     Annual Support Retainer · Implementation 
   </section>
 
   <footer class="foot">
-    <p>Bundle 1 of 6 · <code>nocoly/worksheets/08-product-categories.md</code> · reference <code>nocoly/reference/odoo-19.4/product.category.md</code> · build <code>nocoly/build/prodcat.py</code>. Next is <strong>Chart of Accounts</strong>, which has to come back to this worksheet: Odoo hangs an <em>Income Account</em> and an <em>Expense Account</em> on every category, and both point at <code>account.account</code>.</p>
+    <p>Bundle 1 of 6 · <code>nocoly/worksheets/08-product-categories.md</code> · reference <code>nocoly/reference/odoo-19.4/product.category.md</code> · build <code>nocoly/build/prodcat.py</code>. <strong>Chart of Accounts</strong> came back on 17 September, as promised: every category now carries an Income Account and an Expense Account on an Accounting tab.</p>
   </footer>
 </main>

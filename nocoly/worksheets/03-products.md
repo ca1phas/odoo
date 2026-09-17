@@ -39,7 +39,7 @@ Odoo's field help where it has one.
 | 15 | Volume | `volume` | Number, 2 decimals, suffix m³ | no | 0 | Tab Inventory. Odoo precision "Volume" = 2; unit label m³ |
 | 16 | Active | `active` | Checkbox | — | checked | Hidden. Set by Archive / Unarchive |
 
-**Added since by bundles:** **Category** (`categ_id`), a relation to Product Categories on General Information between Cost and Internal Reference — bundle 1, `08-product-categories.md`.
+**Added since by bundles:** **Category** (`categ_id`), a relation to Product Categories on General Information between Cost and Internal Reference — bundle 1, `08-product-categories.md`; **Income Account** and **Expense Account** (`property_account_income_id`, `property_account_expense_id`), relations to Chart of Accounts with the placeholder "From Category" and no default, on a new tab **Accounting** after Inventory — bundle 2, `09-chart-of-accounts.md`.
 
 ### Form layout
 
@@ -99,7 +99,7 @@ None.
 | ~~Product Category (`categ_id`)~~ | **Built on 16 Sep 2026 by the Product Categories bundle** — a Category relation on General Information between Cost and Internal Reference, and a quick filter on the Products and List views. See `worksheets/08-product-categories.md` |
 | Tags (`product_tag_ids`) | Product Tags bundle — excluded |
 | Sales Taxes, Purchase Taxes (`taxes_id`, `supplier_taxes_id`, `tax_string`) | Taxes bundle; module `account` |
-| Income and Expense Accounts (`property_account_income_id`, `property_account_expense_id`), Account Tags | Chart of Accounts bundle; module `account` |
+| ~~Income and Expense Accounts (`property_account_income_id`, `property_account_expense_id`)~~, Account Tags (`account_tag_ids`) | **The two accounts were built on 17 Sep 2026 by the Chart of Accounts bundle** — a tab Accounting after Inventory; see `worksheets/09-chart-of-accounts.md`. Account Tags are not among the six bundles |
 | Product Type **Combo**, Combo Choices (`combo_ids`) and the checks "A combo product must contain at least 1 combo choice." and "A sellable combo product can only contain sellable products." | Product Combos bundle; module `product` |
 | Attributes & Variants tab (`attribute_line_ids`), the Variants smart button | Product Variants bundle; module `product` |
 | Barcode (`barcode`) | Stored on the variant: worksheet 04 Product Variants |

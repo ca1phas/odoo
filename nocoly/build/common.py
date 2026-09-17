@@ -104,13 +104,75 @@ def fields(ws):
     return hap.by_name(c for c in hap.controls(ws) if c['type'] != TAB)
 
 
+def save_controls(ws, ctrls):
+    """A full SaveWorksheetControls save of worksheet `ws` — exactly what `hap worksheet update-fields --controls`
+    does — made through the CLI's own session instead of the command line.
+
+    Every Relation control carries a `relationControls` snapshot of its target worksheet's controls, so a worksheet
+    holding a few Relations to a large worksheet is past the kernel's 128 KiB limit on a single argument, and the
+    command dies with `OSError: [Errno 7] Argument list too long` (Invoices once 07 mounted its subtable; Contacts,
+    Products, Product Categories and Journals once bundle 2 gave them Relations to Chart of Accounts). Same call,
+    same optimistic-lock retry; only the transport differs. Raises on a response that is not a success."""
+    from hap_cli.core import worksheet as ws_mod
+    from hap_cli.core.session import Session
+    resp = ws_mod.save_controls(Session.load(None), ws, relation_defaults_by_id(ctrls))
+    if isinstance(resp, dict) and resp.get('code') not in (None, 1):
+        raise RuntimeError(f'SaveWorksheetControls on {ws} answered {json.dumps(resp, ensure_ascii=False)[:400]}')
+    return resp
+
+
+def relation_defaults_by_id(ctrls):
+    """The controls with every static Relation default put back in the form a save accepts: the record ids.
+
+    The server stores a static Relation default sent as `["<rowid>"]` as the **whole record** — its JSON, `utime`
+    included — and hands that back from GetWorksheetControls. Sent back in that long form, as any read-modify-write
+    save does, the default is **cleared**: `staticValue` reads back `""`, with no error (proved on Contacts' two
+    account defaults, 17 Sep 2026). hap-cli's own normaliser only rewrites dynamic defaults whose value starts with
+    "{". Controls that need it are copied, so the caller's dicts stay as read."""
+    out = []
+    for c in ctrls:
+        settings = c.get('advancedSetting')
+        raw = settings.get('defsource') if isinstance(settings, dict) else None
+        if c.get('type') != 29 or not isinstance(raw, str) or '{' not in raw:
+            out.append(c)
+            continue
+        try:
+            entries = json.loads(raw)
+        except ValueError:
+            out.append(c)
+            continue
+        changed = False
+        for entry in entries if isinstance(entries, list) else []:
+            static = entry.get('staticValue') if isinstance(entry, dict) else None
+            if not (isinstance(static, str) and static.startswith('[')):
+                continue
+            try:
+                items = json.loads(static)
+            except ValueError:
+                continue
+            ids = []
+            for item in items if isinstance(items, list) else []:
+                if isinstance(item, str) and item.startswith('{'):
+                    try:
+                        item = json.loads(item).get('rowid') or item
+                        changed = True
+                    except (ValueError, AttributeError):
+                        pass
+                ids.append(item)
+            entry['staticValue'] = json.dumps(ids)
+        out.append({**c, 'advancedSetting': {**settings, 'defsource': json.dumps(entries, ensure_ascii=False)}}
+                   if changed else c)
+    return out
+
+
 def add_fields(ws, ctrls):
     """Append controls, then re-save the whole set so they get server ids.
 
     add-fields stores a control under its client-side id, and a formula or concatenation saved that way
-    computes nothing until a full save re-mints the id; lookups built on the client id would dangle."""
+    computes nothing until a full save re-mints the id; lookups built on the client id would dangle. The re-save
+    goes through save_controls: the whole control list no longer fits on a command line."""
     hap.run('worksheet', 'add-fields', ws, '--controls', json.dumps(ctrls, ensure_ascii=False))
-    hap.run('worksheet', 'update-fields', ws, '--controls', json.dumps(hap.controls(ws), ensure_ascii=False))
+    save_controls(ws, hap.controls(ws))
 
 
 def append_controls(ws, ctrls):

@@ -40,6 +40,8 @@ Labels are Odoo's. "Hidden" means not on the form but used by views, rules or bu
 | 23 | Display Name | `complete_name` | Function formula, text · **title field** | — | — | Read-only, under Image on a saved contact; not on the create form. Odoo `_get_complete_name`: the Name — or, for a nameless Invoice, Delivery or Other address under a company, its Address Type — prefixed with the Company's Name and ", " when there is a Company: "TEST QA Trading Sdn Bhd, TEST Person One", "TEST QA Trading Sdn Bhd, Delivery". A contact without a Company is its Name. Trimmed, as Odoo strips it |
 | — | Parent name | `parent_name` *(helper)* | Lookup through Company of its Name, stored | — | — | Hidden. Feeds Display Name. Odoo's related field `parent_id.name` |
 
+**Added since by bundles:** **Account Receivable** and **Account Payable** (`property_account_receivable_id`, `property_account_payable_id`), relations to Chart of Accounts defaulting to 124000 and 221100, on a new tab **Invoicing** between Sales & Purchase and Notes that is hidden for a contact under a company — bundle 2, `09-chart-of-accounts.md`.
+
 **How Display Name works.** A number formula has no IF, so Display Name is a HAP *function formula* with a text
 result:
 
@@ -110,7 +112,7 @@ The company form's **Contacts** tab keeps its own columns: Name, Address Type, E
 | Pricelist, Payment Terms, Payment Method, Incoterm, Fiscal Position (tab Sales & Purchase) | Pricelists, Payment Terms, Payments, Incoterms and Fiscal Positions bundles |
 | Industry (`industry_id`) | Its own table (`res.partner.industry`), not in Phase 1 |
 | GLN (`global_location_number`, delivery addresses) | Module `account` on the tenant — arrives with Invoicing |
-| Invoicing tab — bank accounts, e-invoice sending and format, credit limit | Invoicing |
+| ~~Invoicing tab, Account Receivable, Account Payable~~ — on that tab, bank accounts (`bank_ids`), *Auto-post bills*, e-invoice sending and format, credit limit | **The tab and its two accounts were built on 17 Sep 2026 by the Chart of Accounts bundle** (`worksheets/09-chart-of-accounts.md`). Bank accounts are `res.partner.bank` records and auto-posting needs vendor bill automation — neither is among the six bundles; the rest comes with Invoicing |
 | Smart buttons (Opportunities, Sales, Invoiced, Meetings, Tasks), Activities, Last Reminder | Owned by other apps; HAP has native activity and discussion |
 | Language (`lang`) | Odoo hides it while one language is installed |
 | Properties | Odoo's ad-hoc custom fields; in HAP an admin adds a field instead |

@@ -33,6 +33,8 @@ verbatim. "Hidden" means not on the form but used by the views and the buttons.
 | 8 | Communication Standard | `invoice_reference_model` | Single Select, dropdown | by rule | Full Reference (INV/2024/00001) | Tab **Advanced Settings**. **Full Reference (INV/2024/00001) · European (RF83INV202400001) · Numbers only (202400001)** — Odoo's `odoo`, `euro`, `number`, labelled with the examples the tenant shows. Required by the same rule |
 | 9 | Active | `active` | Checkbox | — | checked | **Hidden**, on no tab. Odoo's help. Set by Archive / Unarchive; the two views filter on it |
 
+**Added since by bundles:** **Default Account**, **Suspense Account**, **Profit Account**, **Loss Account** and **Private Share Account** (`default_account_id`, `suspense_account_id`, `profit_account_id`, `loss_account_id`, `non_deductible_account_id`), relations to Chart of Accounts on the tab Journal Entries above the two dedicated sequences, shown and required by Type through five rules, and a Default Account column after Sequence Prefix on both views — bundle 2, `09-chart-of-accounts.md`.
+
 Type, Communication Type and Communication Standard keep the option keys of the first build, and every field keeps
 its control id and alias — records already written against them stay valid.
 
@@ -134,7 +136,8 @@ which has the same button shape; the earlier note here said "greyed out", which 
 | Archived | table | Archived journals, the same columns, sort and quick filter | The *Archived* search filter |
 
 Odoo's search filters Sales · Purchases · Liquidity · Miscellaneous become the one Type quick filter, which takes
-several types at once — Liquidity is Cash + Bank + Credit Card. Default Account waits for Chart of Accounts.
+several types at once — Liquidity is Cash + Bank + Credit Card. Default Account arrived with the Chart of Accounts
+bundle (*Added since by bundles*, above).
 Odoo's kanban (name and type only) is not reproduced; its second action, the Invoicing *Dashboard*, is a different
 view of the same model and waits for the dashboard fields.
 
@@ -142,7 +145,7 @@ view of the same model and waits for the dashboard fields.
 
 | Odoo 19.4 field / feature | Why not now |
 |---|---|
-| Default Account, Suspense Account, Profit Account, Loss Account, Private Share Account (`default_account_id`, `suspense_account_id`, `profit_account_id`, `loss_account_id`, `non_deductible_account_id`) — and Odoo's Default Account list column | They point at `account.account`: the **Chart of Accounts** worksheet, not in Phase 1. A Text substitute would be the wrong model. The tenant's admin cannot even see them (Accounting groups) |
+| ~~Default Account, Suspense Account, Profit Account, Loss Account, Private Share Account (`default_account_id`, `suspense_account_id`, `profit_account_id`, `loss_account_id`, `non_deductible_account_id`) — and Odoo's Default Account list column~~ | **Built on 17 Sep 2026 by the Chart of Accounts bundle** — the five accounts on the tab Journal Entries, Odoo's visibility and requirement by Type as rules, and the column on both views; see `worksheets/09-chart-of-accounts.md` |
 | Currency (`currency_id`) | Currencies bundle; one currency (MYR) per app copy for now |
 | Payment method lines and available methods (`inbound_payment_method_line_ids`, `outbound_payment_method_line_ids`, `available_payment_method_ids`), tabs Incoming / Outgoing Payments | **Payments** bundle — each line is its own record pointing at a payment method and an account |
 | Bank Account (`bank_account_id`), Account Number, BIC, Bank Name, Bank Feeds (`bank_statements_source`) and the `account_online_synchronization` fields | Bank accounts are `res.partner.bank` records; feeds are a paid online service |

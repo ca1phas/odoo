@@ -40,7 +40,9 @@
   "Invoice Lines: Roll the lines up when a line is deleted": "6aaa2ebba1c923a16efc8ecf",
   "Chart of Accounts: Payment Reconciliation follows Type": "6aaa9397a1c923a16effd002",
   "Chart of Accounts: Archive": "6aaa942487707da9d612e86a",
-  "Chart of Accounts: Unarchive": "6aaa94274f2a99acac091db5"
+  "Chart of Accounts: Unarchive": "6aaa94274f2a99acac091db5",
+  "Invoice Lines: fill the account of a new line": "6aab44254f2a99acac0f026f",
+  "Invoice Lines: fill the account when the Product changes": "6aab447416473257ad590b41"
  },
  "buttons": {
   "Archive": "6aa8a5654720c515252bda3d",
@@ -157,7 +159,22 @@
   "Chart of Accounts: Parent Account": "6aaa92d87d58b0f44930f225",
   "Chart of Accounts: Description": "6aaa92ae805aef70328667dc",
   "Chart of Accounts: Active": "6aaa92d87d58b0f44930f227",
-  "Chart of Accounts: Child Accounts": "6aaa92d87d58b0f44930f226"
+  "Chart of Accounts: Child Accounts": "6aaa92d87d58b0f44930f226",
+  "Contacts: Invoicing": "6aab3ed9bd43f55762c71d3e",
+  "Contacts: Account Receivable": "6aab3f17e43d174ab374a802",
+  "Contacts: Account Payable": "6aab3f17e43d174ab374a804",
+  "Products: Accounting": "6aab40a1bd43f55762c71dc1",
+  "Products: Income Account": "6aab40a3e43d174ab374a818",
+  "Products: Expense Account": "6aab40a3e43d174ab374a81a",
+  "Product Categories: Accounting": "6aab4109e43d174ab374a821",
+  "Product Categories: Income Account": "6aab410b7d58b0f44930f5e5",
+  "Product Categories: Expense Account": "6aab410b7d58b0f44930f5e7",
+  "Journals: Default Account": "6aab4249e54d2a34fa4e1f82",
+  "Journals: Suspense Account": "6aab4249e54d2a34fa4e1f84",
+  "Journals: Profit Account": "6aab4249e54d2a34fa4e1f86",
+  "Journals: Loss Account": "6aab4249e54d2a34fa4e1f88",
+  "Journals: Private Share Account": "6aab4249e54d2a34fa4e1f8a",
+  "Invoice Lines: Account": "6aab42fdbd43f55762c71ed6"
  },
  "rules": {
   "Journals: Payment Communications only for Sales": "6aa9dae5e54d2a34fa4dfde2",
@@ -173,7 +190,13 @@
   "Invoice Lines: A section or a note carries no figures": "6aaa2d3c7d58b0f44930eb72",
   "Chart of Accounts: Payment Reconciliation is not offered for bank, card and off-balance accounts": "6aaa93327d58b0f44930f30d",
   "Chart of Accounts: Non Trade only for receivable and payable accounts": "6aaa9332e43d174ab374a527",
-  "Chart of Accounts: A receivable or payable account must be reconcilable": "6aaa9351e54d2a34fa4e14f2"
+  "Chart of Accounts: A receivable or payable account must be reconcilable": "6aaa9351e54d2a34fa4e14f2",
+  "Contacts: Invoicing hidden for a contact under a company": "6aab4032e54d2a34fa4e1f69",
+  "Journals: Default Account is required for Sales, Purchase, Bank, Cash and Credit Card": "6aab4279bd43f55762c71de8",
+  "Journals: Suspense Account only for Bank, Cash and Credit Card": "6aab427a7d58b0f44930f60a",
+  "Journals: Suspense Account is required for Bank, Cash and Credit Card": "6aab427a7d58b0f44930f610",
+  "Journals: Profit and Loss Accounts only for Bank and Cash": "6aab427b7d58b0f44930f612",
+  "Journals: Private Share Account only for Purchase": "6aab427c805aef7032866c1d"
  },
  "records": {
   "Invoices: customer Sunway Construction Group": "a4935a3f-0262-4d68-9b3b-6049d32e390b",
@@ -296,7 +319,30 @@
   "Chart of Accounts: 999998": "71640bf1-cffa-40e2-8aba-d2d7ab0c987d",
   "Chart of Accounts: 999999": "46404fcd-9438-4ca8-9c63-569b568c590a",
   "Chart of Accounts: TEST01": "a2b4c8c0-1134-439f-ba5d-a046ae15bba9",
-  "Chart of Accounts: TEST02": "c7928ba1-3497-4967-82e4-517da832bb96"
+  "Chart of Accounts: TEST02": "c7928ba1-3497-4967-82e4-517da832bb96",
+  "Invoices: TEST B customer invoice": "b042dd75-cd81-40ea-9c4d-8b7aa0bce9bf",
+  "Invoices: TEST B vendor bill": "67ef77cf-ce74-4a76-a89d-8c52862df5b5",
+  "Invoices: TEST B journal entry": "959cfd34-3e3a-47a8-ae53-3c70be84eba8",
+  "Invoices: TEST B entry on Sales": "d69605df-a56e-40a4-8215-a17eb59b9208",
+  "Invoice Lines: TEST B category account": "a226cfbf-da97-4108-b9ac-de01162a35f9",
+  "Invoice Lines: TEST B product account": "9f8c584a-65df-48e4-988f-3b1ffef4651e",
+  "Invoice Lines: TEST B vendor bill line": "a1e2df25-5ee1-4c1a-9421-a70f47b57aeb",
+  "Invoice Lines: TEST B explicit account": "170e3290-3b6e-41a6-8cce-bd2936774844",
+  "Invoice Lines: TEST B entry without default": "916b3ab2-ce65-4b2c-a984-2bb2dc1ded59",
+  "Invoice Lines: TEST B no product": "ecd5d5a2-a541-41b0-a1a8-357feae52107",
+  "Invoice Lines: TEST B entry on Sales line": "29a5f12c-4369-43b9-b5db-c9a859640d15",
+  "Invoice Lines: TEST B section": "5d0f5bbc-2491-430e-ab4d-77b8b4ec89e3",
+  "Invoice Lines: TEST B no product, guarded": "fd6f3a1e-c1eb-433b-b538-1be322a1cd13",
+  "Invoice Lines: TEST B product without a category": "abff405d-1926-4224-927d-2108f84ae6e5",
+  "Invoice Lines: TEST B2 category account": "23e05ad1-1db1-4e6f-ad22-2cc7de71e14f",
+  "Invoice Lines: TEST B2 product account": "519567be-2d84-4668-a449-484c56f41c4d",
+  "Invoice Lines: TEST B2 vendor bill line": "c0e2d83f-caf4-4b1e-a6d7-495ce27b5a5d",
+  "Invoice Lines: TEST B2 explicit account": "88a94904-95cc-4c92-9a91-3955337062e4",
+  "Invoice Lines: TEST B2 entry without default": "b3e05f94-4add-4810-9936-2bedff4b3169",
+  "Invoice Lines: TEST B2 no product": "0ca9c3ec-f95b-4010-a633-0eb15135d140",
+  "Invoice Lines: TEST B2 entry on Sales line": "21c8b311-36df-4bea-9d70-623631437d87",
+  "Invoice Lines: TEST B2 section": "9e25cd43-97fb-4be4-940c-73adc7a64c4d",
+  "Invoice Lines: TEST B2 product without a category": "f87b7b96-29d5-4b5b-a7dc-417997a00003"
  },
  "roles": {
   "Administrator": "25ef76ef-5538-4779-a5e6-ab1fbce9dcfe",

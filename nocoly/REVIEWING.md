@@ -47,8 +47,9 @@ record was seeded from the Odoo tenant.
 | 04 | Product Variants | `product.product` | Built, seeded (one variant per product), UI-tested 16/16 — ready for review | [md](worksheets/04-product-variants.md) · [page](https://claude.ai/artifact/1xo4yDavxjPNwHsUMHFYGV) |
 | 05 | Journals | `account.journal` | First build by Teh Li Wei; gaps closed against casimir, seeded (7 journals), UI-tested 18/18, plus the archive guard at the end of Phase 1 — 20/21 — ready for review | [md](worksheets/05-journals.md) · [page](https://claude.ai/artifact/BckMvdNdP9bQhj66UyCdcr) |
 | 06 | Invoices | `account.move` | Skeleton by Teh Li Wei; completed against casimir, seeded (3 tenant invoices and their 3 customers), UI-tested 25/25 — ready for review | [md](worksheets/06-invoices.md) · [page](https://claude.ai/artifact/DjdgDLdRmYC44dWoQTvG7T) |
-| 07 | Invoice Lines | `account.move.line` | Built, mounted inside Invoices, seeded (the 8 lines of the 3 seeded documents), UI-tested 18/20 + 1 partly + 1 not run; its one open question is now resolved — ready for review | [md](worksheets/07-invoice-lines.md) · [page](https://claude.ai/artifact/7HsZ8L7Ecsp6mDbqGyocCh) |
-| 08 | Product Categories | `product.category` | **Bundle 1 of 6.** Built, seeded (7 categories, all 14 products categorised), UI-tested 16/18 + 1 partly + 1 caveat; Products gained the Category it never had, between Cost and Internal Reference — ready for review | [md](worksheets/08-product-categories.md) · [page](https://claude.ai/artifact/5RbMmEJKXzV2Vf3QEdmz99) |
+| 07 | Invoice Lines | `account.move.line` | Built, mounted inside Invoices, seeded (the 8 lines of the 3 seeded documents), UI-tested 19/20 + 1 not run (test 3 re-run on 17 Sep); its one open question is now resolved — ready for review | [md](worksheets/07-invoice-lines.md) · [page](https://claude.ai/artifact/7HsZ8L7Ecsp6mDbqGyocCh) |
+| 08 | Product Categories | `product.category` | **Bundle 1 of 6.** Built, seeded (7 categories, all 14 products categorised), UI-tested 17/18 + 1 caveat (test 8 re-run on 17 Sep); Products gained the Category it never had, between Cost and Internal Reference — ready for review | [md](worksheets/08-product-categories.md) · [page](https://claude.ai/artifact/5RbMmEJKXzV2Vf3QEdmz99) |
+| 09 | Chart of Accounts | `account.account` | **Bundle 2 of 6.** The worksheet with the tenant's 87 accounts, and every account field on Contacts, Products, Product Categories, Journals and Invoice Lines, seeded with the tenant's values and hidden by role as Odoo hides them. UI-tested 27/28 + 1 not run (the role check: no members) — ready for review | [md](worksheets/09-chart-of-accounts.md) · [page](https://claude.ai/artifact/5boffeaSTZzPnY7xsvjWtN) |
 
 ## Phase 1 · Roles
 
@@ -72,12 +73,12 @@ group it stands for is written in its description, checked against
 `addons/account/security/account_security.xml` in this checkout. **None of them has a member** — who belongs in
 which role is the owner's call, and the two people above stay app administrators as they were.
 
-| Role | Odoo group (and Odoo's own name for it) | Contacts | Units & Packagings | Products | Product Variants | Product Categories | Journals | Invoices | Invoice Lines |
-|---|---|---|---|---|---|---|---|---|---|
-| Accounting Administrator | `account.group_account_manager` — *Administrator*, plus `base.group_allow_export` | full | full | full | full | full | full | full | full |
-| Accountant | `account.group_account_user` — *Show Full Accounting Features* | view · add · edit | view | view | view | view | view · add · edit | view · add · edit | view · add · edit |
-| Invoicing | `account.group_account_invoice` — *Invoicing* | view · add · edit | view | view | view | view | **view** | view · add · edit | view · add · edit |
-| Accounting Read-only | `account.group_account_readonly` — *Show Accounting Features - Readonly* | view | view | view | view | view | view | view | view |
+| Role | Odoo group (and Odoo's own name for it) | Contacts | Units & Packagings | Products | Product Variants | Product Categories | Chart of Accounts | Journals | Invoices | Invoice Lines |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Accounting Administrator | `account.group_account_manager` — *Administrator*, plus `base.group_allow_export` | full | full | full | full | full | full | full | full | full |
+| Accountant | `account.group_account_user` — *Show Full Accounting Features* | view · add · edit | view | view | view | view | view | view · add · edit | view · add · edit | view · add · edit |
+| Invoicing | `account.group_account_invoice` — *Invoicing* | view · add · edit | view | view | view | view | view | **view** | view · add · edit | view · add · edit |
+| Accounting Read-only | `account.group_account_readonly` — *Show Accounting Features - Readonly* | view | view | view | view | view | view | view | view | view |
 
 Read the three words as HAP stores them, per worksheet:
 
@@ -86,6 +87,14 @@ Read the three words as HAP stores them, per worksheet:
 | **full** | every record | every record | every record | yes | Accounting Administrator only |
 | **view · add · edit** | every record | every record | — | yes | — |
 | **view** | every record | — | — | no | — |
+
+**Chart of Accounts added the first per-field hiding (17 Sep 2026).** Odoo shows account fields only to some
+accounting groups, and a HAP role can hide a single field, so the roles now do the same: **Invoicing** does not see
+Journals' five accounts, Products' and Product Categories' Income and Expense Account, or Invoice Lines' Account
+(Odoo's `groups="account.group_account_readonly"`), and neither **Invoicing** nor **Accounting Read-only** sees a
+contact's Account Receivable and Account Payable (`groups="account.group_account_user"`). The tabs those fields leave
+empty for a role are hidden with them. Chart of Accounts itself is written by Accounting Administrator alone, as
+Odoo's access list has it.
 
 **Only Accounting Administrator may delete**, as the owner asked. Journals is the one cell where Invoicing and
 Accountant differ: Odoo's `group_account_invoice` "cannot see accounting related stuff", so an Invoicing user

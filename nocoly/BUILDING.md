@@ -58,7 +58,7 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   Archived. Test records are named `TEST …`.
 - **Read back every write.** Several HAP writes return success and store nothing, or store a malformed value.
 
-## HAP and hap-cli traps (verified 15–16 Sep 2026, hap-cli 0.8.31)
+## HAP and hap-cli traps (verified 15–17 Sep 2026, hap-cli 0.8.31)
 
 ### Worksheets and fields
 
@@ -96,6 +96,13 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   once and follows a record moving in or out of the relation (Product Categories' # Products).
 - A **static Relation default** is `defsource: [{"staticValue": "[\"<rowid>\"]"}]`; the server stores the whole record
   in place of the id. The API applies no defaults — only the form does.
+- **…and a save that sends that whole record back clears the default.** `GetWorksheetControls` returns the record's
+  JSON inside `staticValue`, and a read-modify-write save that returns it unchanged — every `layout` step — stores
+  `staticValue` `""` instead, with no error (Contacts' two account defaults, 17 Sep 2026: set, round-tripped, gone).
+  `products.py layout` rewrites its Unit default from the record id on every run, which is why it never showed there.
+  **`common.save_controls` reduces every static Relation default to its record ids before it saves**
+  (`relation_defaults_by_id`); hap-cli's own normaliser only rewrites dynamic defaults whose value starts with "{".
+  Compare such a default by record id, never as a string (`accounts.defsource_state`).
 - A **Date field's default is a sentinel, not a value**: `defsource` `staticValue` **"2"** with `time` "current" is
   HAP's 当天, the current day (hap-cli's captured payload, `tests/test_core.py::test_date_now_default`). It reads
   like a "+2 days" offset and is not one. An **empty** `staticValue` with the same `time` is stored without
@@ -115,6 +122,11 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   form grid, whatever row the layout gives it. And a list with no `showControls` shows its row count over the
   words ***No visible fields*** — the columns have to be named, by controlId, from the *target* worksheet
   (Product Categories' Child Categories and Products lists).
+- **The tab bar at the foot of a record has an order of its own** (pd-openweb `getControlsByTab`): the type-52 tabs
+  and the relation lists with `showtype` **"6"** come first, in row order, and the lists with `showtype` **"2"** after
+  all of them. Product Categories' Child Categories is a "6" and Products a "2", so an Accounting tab placed under the
+  lists would sit between them; at row 2 the bar reads Accounting · Child Categories · Products (bundle 2 — for the
+  browser to confirm).
 - `worksheet add-fields` keeps a control's client-side 32-hex id, and a formula or text combination added that way
   computes nothing until an `update-fields` save re-mints the id. Inside one `update-fields` save, references to
   not-yet-minted ids (formula expressions, a lookup's source) are rewritten to the minted ids.
@@ -177,6 +189,16 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   `OSError: [Errno 7] Argument list too long`. Make the same call through the CLI's own session:
   `hap_cli.core.worksheet.save_controls(Session.load(None), ws, controls)`, which is what the command does anyway
   (`invlines.save_worksheet_controls`; `invoices.py` uses it too since Invoice Lines was mounted).
+- **…and so does any worksheet holding a few Relations to a large one.** Every Relation carries the same
+  `relationControls` snapshot of its target, and the limit is the kernel's **128 KiB for one argument**
+  (`MAX_ARG_STRLEN`), not `ARG_MAX`: Contacts was 93 KB before its two account Relations, and each Relation to Chart of
+  Accounts adds about 55 KB. Since bundle 2 the full saves of `contacts.py`, `products.py`, `prodcat.py`,
+  `journals.py`, `invlines.py` and `common.add_fields` go through **`common.save_controls(ws, controls)`** — the
+  session transport, which also checks the answer and keeps static Relation defaults (above). `invoices.py` already
+  used the session; `units.py`, `variants.py` and part A of `accounts.py` still put the list on the command line, and
+  their worksheets are well under the limit — switch them the day one gains Relations.
+- `add-fields` stores a new control's `fieldPermission` as `""` where every saved control reads `"111"`; the first
+  `layout` save writes `"111"`, and a before/after comparison shows it as a change.
 - **A control-set digest is not a reliable "untouched" signal when a static Relation default is in play.** The
   default stores the whole related record, `utime` included, so saving *any* record that the default points at
   changes the holding worksheet's control payload without the worksheet being written to at all — no
@@ -351,6 +373,19 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   the greatest X" needs no extra field — sort descending and read the first (Invoices' highest-number step).
   `batch-add` writes neither the filter (it sends `operateCondition`) nor the sort; both go in with
   `node save --type 7`.
+- **A search step whose filter value is empty fails the whole run** — status 4, cause 100000 **"筛选条件值为空
+  记录ID"** — even with `executeType` 2 (carry on when nothing is found). A Relation that is empty on the record the
+  value comes from is enough: Invoice Lines' automation B died at *Get the product variant* on a line with no Product.
+  The condition editor's **条件异常时忽略** (`ignoreEmpty` 1 on the condition, offered on a dynamic value) lets the run
+  go on — **but the ignored condition leaves the step with no condition, and it hands back a record anyway**: the run
+  detail showed the TEST Product variant found for a line with no product, and the category Goods for a product with
+  none. So every later step or path that reads a record found that way must first check the Relation it was found
+  through (automation B's guarded paths). 值为空时忽略 (`ignoreValueEmpty`) is a different switch, and the editor does
+  not offer it on Record ID *equals*.
+- **`approval history-detail` gives each step's `sourceId`** — the record a search found or an update wrote — which is
+  how to see what a step actually read.
+- A path of an exclusive gateway takes **several OR-ed condition groups**: `operateCondition` is a list of AND-groups,
+  and `path_state`-style read-backs return the same shape (automation B's journal paths carry four).
 - **`+` concatenates in a workflow formula whenever either side is text, and the result is then read as an octal
   literal**: `"5" + 1` is `51`, and `"00005" + 1` is **41** — "000051" parsed as octal. Anything sliced out of a
   text field with `RIGHT`/`LEFT`/`MID` is text, however numeric it looks. Force a numeric context with
@@ -401,6 +436,13 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   four-path automation).
 - **A record written by a workflow starts that worksheet's event workflows** (a variant's Unarchive button writing its
   product started the product's archive workflow). Design cascades so the second run finds nothing to change.
+- **…but a worksheet-event workflow's write of its own trigger record started none of that worksheet's event
+  workflows.** Invoice Lines' automation B writes Account on the line that started it; 07's roll-up, which triggers
+  on *any* change to a line (新增或更新, no fields), ran once for every API write of a line — the eight Account-only
+  writes of bundle 2's seed included — and **not once** for the seventeen writes automation B made (each in the line's
+  record log as `requestType` 2, five or six seconds after the API write). Whether HAP suppresses the event because
+  the record is the run's own trigger, or because the write comes from inside a run on the same worksheet, was not
+  isolated; do not rely on a cascade through the same worksheet without proving it.
 - Give a worksheet-event trigger a condition when most records cannot need the run — every run counts against the
   organisation's workflow quota.
 - **A workflow's run history is `hap approval history --process-id <pid>`** — `workflow history` is the *version*
@@ -530,6 +572,13 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   the view flags are what make the entry real.
 - `hap app role list` takes `-a/--app-id`; the app id as a positional argument is refused (the V3 command shadows
   the one in `commands/role_cmd.py`, which takes it positionally).
+- **A fine-grained role can hide a single field.** Each sheet of the role model lists every control of the worksheet in
+  `fields[]` with **`notAdd` · `notRead` · `notEdit`** — the Roles page's 新增 · 查看 · 编辑 columns — and its tab in
+  `sectionId`; V3's `fieldPermissions` reads the same switches as `add` · `read` · `edit`. A control added to a worksheet
+  joins every role at once, visible. The page clears 编辑 when 查看 is unticked, and hides a **tab** once every field
+  in it is hidden and shows it again as soon as one is visible (pd-openweb `Role/component/RoleSet/TooltipSetting`);
+  `roles.py` HIDDEN_FIELDS writes the same through `EditAppRole` (bundle 2's account fields). None of it is readable
+  as *behaviour* from the CLI: whether a member of the role sees the field gone needs a browser test with a member.
 
 ### In the UI
 
@@ -538,7 +587,11 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
 - A dropdown opens reliably by typing into it; clicking the arrow sometimes does nothing. **To choose an option from
   browser automation, open the dropdown, type the option's label and press Enter** — a click on an option in the
   list does not register, and a quick-filter dropdown behaves the same way (Chart of Accounts' Type filter). A
-  **Relation picker does not take Enter**: its list can be read, but choosing needs a real click.
+  **Relation picker or relation quick filter does not take Enter or the arrow keys**: open it, type to narrow the
+  list, then click the item — a `.RelateRecordListItem` — at its own rectangle scaled to the screenshot frame
+  (`getBoundingClientRect()` × frame width ÷ `innerWidth`; the page can be far wider than the screenshot). The item
+  takes a ✓, and a quick filter applies when the list closes on a click outside it (Product Categories' Parent
+  Category filter, 17 Sep).
 - A validation rule's message shows **while the form is being edited**, the moment its condition holds — before any
   save (Chart of Accounts: Type set to Receivable with the box unticked). No duplicates shows the same way.
 - **Escape inside a Create Record dialog closes it and asks "Save the filled content as a draft?"** — close that

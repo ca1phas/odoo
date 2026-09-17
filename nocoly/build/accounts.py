@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """Build the Chart of Accounts worksheet (Odoo account.account, as on casimir.odoo.com saas~19.4) in ERP Master.
 
-Bundle 2 of the six that join Phase 1 — **part A, the worksheet itself**. Part B, the account fields this bundle
-brings to Contacts, Products, Product Categories, Journals and Invoice Lines (and their per-field hiding in the
-roles), is a separate build: nothing here writes to any other worksheet. Requirements:
-nocoly/worksheets/09-chart-of-accounts.md §1. Generic helpers: common.py. Run from the repo root with the CLI's
-interpreter:
+Bundle 2 of the six that join Phase 1, in two parts. **Part A** is the worksheet itself, and none of its steps
+writes to another worksheet. **Part B** brings the account fields to Contacts, Products, Product Categories,
+Journals and Invoice Lines (and the lines table inside Invoices), automation B that fills a line's account, the
+per-field hiding in the roles, and the tenant's references. Requirements: nocoly/worksheets/09-chart-of-accounts.md
+§1. Generic helpers: common.py. Run from the repo root with the CLI's interpreter:
 
     ~/.hap-venv/bin/python nocoly/build/accounts.py create      # 0. the worksheet, first in the menu group Invoicing
     ~/.hap-venv/bin/python nocoly/build/accounts.py fields      # 1. the stored fields and Parent Account, in one save
@@ -39,9 +39,39 @@ interpreter:
     ~/.hap-venv/bin/python nocoly/build/accounts.py untouched   # every other worksheet: control count and digest
     ~/.hap-venv/bin/python nocoly/build/accounts.py show        # the live control list
 
-Every step reads the live state first and is safe to re-run; a second run writes nothing to HAP. Every write step
-stops unless the profile reaches ERP Master › Invoicing › Chart of Accounts and the worksheet holds only this
-script's own work, and compares the other eight worksheets' controls id by id before and after.
+Part B — each step adds with `add-fields`, places through the worksheet's own script (its `layout`, `rules`,
+`views`, whose tables carry this bundle's additions) and reads everything back:
+
+    ~/.hap-venv/bin/python nocoly/build/accounts.py contacts      # B1. tab Invoicing, Account Receivable / Payable,
+                                                                  #     the tab's rule (contacts.py layout, rules)
+    ~/.hap-venv/bin/python nocoly/build/accounts.py products      # B2. tab Accounting, Income / Expense Account
+                                                                  #     (products.py layout)
+    ~/.hap-venv/bin/python nocoly/build/accounts.py categories    # B3. tab Accounting, Income / Expense Account with
+                                                                  #     their defaults (prodcat.py layout)
+    ~/.hap-venv/bin/python nocoly/build/accounts.py journals      # B4. the five accounts, their five rules, the
+                                                                  #     Default Account column (journals.py layout,
+                                                                  #     rules, views)
+    ~/.hap-venv/bin/python nocoly/build/accounts.py lines         # B5. Account, the figures rule, the Lines column
+                                                                  #     and the Invoices subtable column (invlines.py
+                                                                  #     layout, rules, views)
+    ~/.hap-venv/bin/python nocoly/build/accounts.py automation-b  # B6. automation B, two workflows with one body
+    ~/.hap-venv/bin/python nocoly/build/accounts.py visibility    # B7. the fields hidden by role (roles.py create)
+    ~/.hap-venv/bin/python nocoly/build/accounts.py references    # B8. Records step 2, each read back
+    ~/.hap-venv/bin/python nocoly/build/accounts.py all-b         # every part B step above, then check-b
+
+    ~/.hap-venv/bin/python nocoly/build/accounts.py check-b       # part B's configuration against §1
+    ~/.hap-venv/bin/python nocoly/build/accounts.py verify-b      # the references read back
+    ~/.hap-venv/bin/python nocoly/build/accounts.py selfcheck-b   # automation B proved on TEST records (left in place)
+    ~/.hap-venv/bin/python nocoly/build/accounts.py runs-b        # automation B's run history by status and step
+    ~/.hap-venv/bin/python nocoly/build/accounts.py rerun-b       # the owning steps this bundle extended, run again:
+                                                                  #     each must write nothing
+    ~/.hap-venv/bin/python nocoly/build/accounts.py records-b     # every record against the pre-part-B snapshot in
+                                                                  #     backups/ (not committed)
+
+Every step reads the live state first and is safe to re-run; a second run writes nothing to HAP. Every part A write
+step stops unless the profile reaches ERP Master › Invoicing › Chart of Accounts and the worksheet holds only this
+script's own work, and compares the other eight worksheets' controls id by id before and after. Every part B write
+is bracketed by a control-by-control comparison of all nine worksheets, allowing only the changes it names.
 
 Profile. As in the other builders: --profile > $HAP_PROFILE > hap-cli's active profile.
 """
@@ -1718,6 +1748,1860 @@ def step_all():
     return step_check()
 
 
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# Part B — the account fields this bundle brings to the worksheets already built
+# (09 §1 › "What this bundle brings to the worksheets already built", automation B, Roles, Records step 2)
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+#
+# Every account field is a **one-way** Relation → Chart of Accounts (single, dropdown), required nowhere on the field,
+# whose picker lists active accounts only. Who owns what:
+#
+#  * **this script** adds the controls with `add-fields` (which parks them at row 9999) and owns what no other step
+#    rewrites: the Relation itself, its alias, its picker filter and its static default — and automation B, the
+#    references and the checks;
+#  * **each worksheet's own script** places them: its `layout` step is the full read-modify-write save that moves a
+#    control, so its PLACE (and tab rows) carry them, and so do its descriptions and placeholders wherever that step
+#    rewrites them;
+#  * **its rules and views steps** carry the rule and column changes in their own fixed lists, so a re-run of any of
+#    them keeps what this bundle added — the account steps here run exactly those steps;
+#  * **roles.py** owns the per-field hiding.
+#
+# Every write is bracketed by a control-by-control comparison of all nine worksheets (`b_snapshot` / `b_expect`): on
+# the worksheet written, only the controls named may change, and only in the attributes named; the others must read
+# back identical.
+
+B_TOUCHED = ('Contacts', 'Products', 'Product Categories', 'Journals', 'Invoice Lines', 'Invoices')
+B_ALL = B_TOUCHED + ('Units & Packagings', 'Product Variants', WORKSHEET)
+RELATION, SUBTABLE = 29, 34
+PLACE_KEYS = {'row', 'col', 'size', 'sectionId'}
+OWNER = {'Contacts': 'contacts', 'Products': 'products', 'Product Categories': 'prodcat', 'Journals': 'journals',
+         'Invoice Lines': 'invlines', 'Invoices': 'invoices'}
+
+# Odoo ACCOUNT_DOMAIN (addons/account/models/product.py): the income-and-expense filter on Products' and Product
+# Categories' accounts.
+INCOME_EXPENSE = ('not in', ['Receivable', 'Payable', 'Bank and Cash', 'Credit Card', 'Off-Balance Sheet'])
+# The tenant's invoice form narrows the line's account_id to these (the model itself only drops Off-Balance Sheet).
+LINE_ACCOUNTS = ('not in', ['Receivable', 'Payable', 'Off-Balance Sheet'])
+
+# worksheet -> [(control name, alias = Odoo's field, picker (op, Type labels) or None for every active account,
+#               the Code of a static default or None)]
+B_FIELDS = {
+    'Contacts': [('Account Receivable', 'property_account_receivable_id', ('in', ['Receivable']), '124000'),
+                 ('Account Payable', 'property_account_payable_id', ('in', ['Payable']), '221100')],
+    'Products': [('Income Account', 'property_account_income_id', INCOME_EXPENSE, None),
+                 ('Expense Account', 'property_account_expense_id', INCOME_EXPENSE, None)],
+    'Product Categories': [('Income Account', 'property_account_income_categ_id', INCOME_EXPENSE, '410000'),
+                           ('Expense Account', 'property_account_expense_categ_id', INCOME_EXPENSE, '510000')],
+    'Journals': [('Default Account', 'default_account_id', None, None),
+                 ('Suspense Account', 'suspense_account_id', ('in', ['Current Assets']), None),
+                 ('Profit Account', 'profit_account_id', ('in', ['Income', 'Other Income']), None),
+                 ('Loss Account', 'loss_account_id', ('in', ['Expenses']), None),
+                 ('Private Share Account', 'non_deductible_account_id', None, None)],
+    'Invoice Lines': [('Account', 'account_id', LINE_ACCOUNTS, None)],
+}
+# The tab each worksheet's accounts sit in. Journals' tab exists; the other three arrive with this bundle.
+B_TAB = {'Contacts': 'Invoicing', 'Products': 'Accounting', 'Product Categories': 'Accounting',
+         'Journals': 'Journal Entries'}
+B_NEW_TAB = ('Contacts', 'Products', 'Product Categories')
+
+
+def wid_of(worksheet):
+    return hap.ids()['worksheets'][worksheet]
+
+
+def owner(worksheet):
+    """The build script that owns a worksheet — its places, descriptions and placeholders, and its own steps."""
+    import importlib
+    return importlib.import_module(OWNER[worksheet])
+
+
+def spec_of(worksheet, name):
+    return next((alias, picker, default) for n, alias, picker, default in B_FIELDS[worksheet] if n == name)
+
+
+def place_of(worksheet, name, tab=False):
+    """(row, col, size, tab name or None) of a control, from its owner's own tables. `tab` says the control is a tab:
+    Contacts and Products keep their tabs' rows apart, and a tab can share its name with a field there ("Notes",
+    "Sales")."""
+    m = owner(worksheet)
+    if worksheet == 'Contacts':
+        return (m.TABS[name], 0, 12, None) if tab else m.PLACE[name]
+    if worksheet == 'Products':
+        return (m.TAB_ROWS[name], 0, 12, None) if tab else m.PLACE[name]
+    if worksheet == 'Product Categories':
+        row, col, size = m.PLACE[name]
+        return row, col, size, m.TAB_OF.get(name)
+    if worksheet in ('Journals', 'Invoices'):
+        return m.PLACE[name]
+    row, col, size = m.PLACE[name]                  # Invoice Lines has no tabs
+    return row, col, size, None
+
+
+def desc_of(worksheet, name):
+    return owner(worksheet).DESC.get(name, '')
+
+
+def hint_of(worksheet, name):
+    return '' if worksheet == 'Invoice Lines' else getattr(owner(worksheet), 'HINTS', {}).get(name, '')
+
+
+_coa_fields = {}
+
+
+def coa_fields():
+    """Chart of Accounts' controls by name, read once per run: this bundle never writes to them."""
+    if not _coa_fields:
+        _coa_fields.update(C.fields(ws()))
+    return _coa_fields
+
+
+def account_rowid(code):
+    rowid = hap.ids().get('records', {}).get(KEY + code) or record_index().get(code, (None,))[0]
+    if not rowid:
+        sys.exit(f'no account {code} in {WORKSHEET}')
+    return rowid
+
+
+PICKER_BASE = {'spliceType': 1, 'dateRange': 0, 'dateRangeType': 0, 'minValue': None, 'maxValue': None,
+               'isAsc': False, 'advancedSetting': None, 'isGroup': False, 'groupFilters': None, 'emptyRule': 0}
+
+
+def account_picker(picker):
+    """A Relation's picker filter over Chart of Accounts, in the shape the UI saves: Active is checked, and — when
+    `picker` is given — Type is any of (EQ) or none of (NE) the labels, several option keys in one condition. A
+    picker filter runs in the browser only (BUILDING.md), so the UI pass proves it."""
+    f = coa_fields()
+    items = [{'controlId': f[ACTIVE]['controlId'], 'dataType': SWITCH, **PICKER_BASE, 'filterType': C.EQ,
+              'value': '1', 'values': ['1'], 'dynamicSource': []}]
+    if picker:
+        op, labels = picker
+        items.append({'controlId': f[TYPE]['controlId'], 'dataType': 11, **PICKER_BASE,
+                      'filterType': C.EQ if op == 'in' else C.NE, 'value': '',
+                      'values': [OPTION_KEY[label] for label in labels], 'dynamicSource': []})
+    return json.dumps(items, ensure_ascii=False, separators=(',', ':'))
+
+
+def picker_state(value):
+    """A picker filter in comparable form: its conditions (AND-ed, so unordered), each with its values unordered."""
+    try:
+        items = json.loads(value) if isinstance(value, str) else (value or [])
+    except ValueError:
+        return value
+    return sorted((i.get('controlId'), i.get('dataType'), i.get('filterType'), tuple(sorted(i.get('values') or [])),
+                   tuple(d.get('cid') for d in i.get('dynamicSource') or [])) for i in items)
+
+
+def account_default(code):
+    """A static Relation default, as products.py writes Unit's: the record id in a JSON list. The server stores the
+    whole record in its place (BUILDING.md), so it is read back with default_rowids."""
+    return json.dumps([{'cid': '', 'rcid': '', 'staticValue': json.dumps([account_rowid(code)])}])
+
+
+def defsource_state(value):
+    """An advancedSetting.defsource in comparable form. A static Relation default stores the whole related record,
+    `utime` included, so a save of that record changes the string without anyone touching the control: the record
+    is reduced to its rowid (BUILDING.md, "A control-set digest is not a reliable untouched signal")."""
+    try:
+        entries = json.loads(value) if value else []
+    except (TypeError, ValueError):
+        return value
+    out = []
+    for e in entries if isinstance(entries, list) else []:
+        if not isinstance(e, dict):
+            out.append(e)
+            continue
+        static = e.get('staticValue')
+        if isinstance(static, str) and static.startswith('['):
+            try:
+                static = tuple((json.loads(x).get('rowid') if isinstance(x, str) and x.startswith('{') else x)
+                               for x in json.loads(static))
+            except (TypeError, ValueError, AttributeError):
+                pass
+        out.append((e.get('cid') or '', e.get('rcid') or '', static, e.get('time') or ''))
+    return out
+
+
+def default_rowids(value):
+    return [x for entry in defsource_state(value) if isinstance(entry, tuple) and isinstance(entry[2], tuple)
+            for x in entry[2]]
+
+
+JSON_KEYS = ('filters', 'filterregex', 'controlssorts', 'customShowControls')
+
+
+def control_state(c):
+    """A control's SIGNATURE attributes, with its JSON-valued advancedSetting keys parsed and a static Relation
+    default reduced to record ids."""
+    out = {k: c.get(k) for k in SIGNATURE}
+    settings = dict(c.get('advancedSetting') or {})
+    for key, value in settings.items():
+        if key == 'defsource':
+            settings[key] = defsource_state(value)
+        elif key in JSON_KEYS and isinstance(value, str) and value:
+            try:
+                settings[key] = json.loads(value)
+            except ValueError:
+                pass
+    out['advancedSetting'] = settings
+    return out
+
+
+def b_snapshot(names=B_ALL):
+    return {name: {c['controlId']: control_state(c) for c in hap.controls(wid_of(name))} for name in names}
+
+
+def b_expect(before, label, changed=None, new=None):
+    """Read the worksheets of `before` again and stop unless the only differences are the ones named: `new` —
+    {worksheet: control names that may appear} — and `changed` — {worksheet: {control name: attributes that may
+    change}}. Prints what did change, control by control."""
+    after = b_snapshot(tuple(before))
+    changed, new = changed or {}, new or {}
+    problems, seen, same = [], [], []
+    for name in before:
+        b, a = before[name], after[name]
+        problems += [f"{name}: {b[cid]['controlName']!r} ({cid}) is gone" for cid in sorted(set(b) - set(a))]
+        for cid in sorted(set(a) - set(b)):
+            if a[cid]['controlName'] in new.get(name, ()):
+                seen.append(f"{name} + {a[cid]['controlName']!r} {cid}")
+            else:
+                problems.append(f"{name}: an unexpected new control {a[cid]['controlName']!r} ({cid})")
+        touched = False
+        for cid in sorted(set(a) & set(b)):
+            diff = [k for k in SIGNATURE if a[cid][k] != b[cid][k]]
+            if not diff:
+                continue
+            touched = True
+            allowed = changed.get(name, {}).get(b[cid]['controlName'], set())
+            extra = [k for k in diff if k not in allowed]
+            if extra:
+                problems.append(f"{name}: {b[cid]['controlName']!r} changed " + '; '.join(
+                    f'{k} {json.dumps(b[cid][k], ensure_ascii=False)[:160]} -> '
+                    f'{json.dumps(a[cid][k], ensure_ascii=False)[:160]}' for k in extra))
+            else:
+                seen.append(f"{name}: {b[cid]['controlName']!r} {', '.join(f'{k} {b[cid][k]!r}→{a[cid][k]!r}' if k in PLACE_KEYS else k for k in diff)}")
+        if not touched and set(a) == set(b):
+            same.append(f'{name} ({len(a)})')
+    if problems:
+        sys.exit(f'{label}: controls read back with differences nobody asked for — stopping:\n  '
+                 + '\n  '.join(problems))
+    print(f'  {label}: compared control by control')
+    for line in seen:
+        print(f'    {line}')
+    print(f"    identical: {', '.join(same)}")
+    return after
+
+
+def rule_snapshot(worksheet):
+    """{ruleId: comparable rule} of a worksheet's business rules."""
+    out = {}
+    for r in hap.listing('worksheet', 'rules', wid_of(worksheet)):
+        groups = [sorted((g.get('controlId'), g.get('dataType'), g.get('filterType'), tuple(sorted(g.get('values') or [])))
+                         for g in f.get('groupFilters') or []) for f in r.get('filters') or []]
+        items = [(i['type'], [x['controlId'] for x in i.get('controls') or []], i.get('message') or '')
+                 for i in r.get('ruleItems') or []]
+        out[r['ruleId']] = dict(name=r['name'], type=r['type'], disabled=r['disabled'], groups=groups, items=items,
+                                check=r.get('checkType'), hint=r.get('hintType'))
+    return out
+
+
+def rules_expect(before, worksheet, label, new=(), changed=()):
+    """Stop unless the rules read back as before, but for the rules named in `new` (added) and `changed`."""
+    after = rule_snapshot(worksheet)
+    problems = [f"rule {before[r]['name']!r} is gone" for r in set(before) - set(after)]
+    problems += [f"unexpected new rule {after[r]['name']!r}" for r in set(after) - set(before)
+                 if after[r]['name'] not in new]
+    problems += [f"rule {before[r]['name']!r} changed: {before[r]} -> {after[r]}" for r in set(before) & set(after)
+                 if before[r] != after[r] and before[r]['name'] not in changed]
+    if problems:
+        sys.exit(f'{label}: rules read back with differences nobody asked for — stopping:\n  ' + '\n  '.join(problems))
+    added = [after[r]['name'] for r in set(after) - set(before)]
+    moved = [after[r]['name'] for r in set(after) & set(before) if before[r] != after[r]]
+    print(f'  {label}: {len(after)} rules compared; added {added}; changed {moved}; every other rule identical')
+    return after
+
+
+def view_snapshot(worksheet):
+    """{viewId: comparable view} — name, filters, sort, columns, quick filters and the column display settings."""
+    out = {}
+    for v in hap.listing('worksheet', 'view', 'list', wid_of(worksheet), '-a', APP):
+        info = C.view_info(wid_of(worksheet), APP, v['viewId'])
+        settings = info.get('advancedSetting') or {}
+        out[v['viewId']] = dict(
+            name=info.get('name'), type=info.get('viewType'),
+            filters=[(x.get('controlId'), x.get('dataType'), x.get('filterType'), x.get('values')) for x in info.get('filters') or []],
+            sortCid=info.get('sortCid'), sortType=info.get('sortType'),
+            moreSort=[(s.get('controlId'), s.get('isAsc')) for s in info.get('moreSort') or []],
+            showControls=info.get('showControls'), displayControls=info.get('displayControls'),
+            customShowControls=settings.get('customShowControls'), customdisplay=settings.get('customdisplay'),
+            fastFilters=[(q.get('controlId'), q.get('dataType'), q.get('filterType'),
+                          (q.get('advancedSetting') or {}).get('allowitem'), (q.get('advancedSetting') or {}).get('direction'))
+                         for q in info.get('fastFilters') or []],
+            coverCid=info.get('coverCid'))
+    return out
+
+
+def views_expect(before, worksheet, label, changed=None):
+    """Stop unless every view reads back as before, but for `changed` — {view name: attributes that may change}."""
+    after = view_snapshot(worksheet)
+    changed = changed or {}
+    problems = []
+    if list(after) != list(before):
+        problems.append(f'views {[before[v]["name"] for v in before]} -> {[after[v]["name"] for v in after]}')
+    for vid in set(before) & set(after):
+        diff = [k for k in before[vid] if before[vid][k] != after[vid][k]]
+        extra = [k for k in diff if k not in changed.get(before[vid]['name'], ())]
+        if extra:
+            problems.append(f"view {before[vid]['name']!r}: " + '; '.join(f'{k} {before[vid][k]} -> {after[vid][k]}'
+                                                                         for k in extra))
+    if problems:
+        sys.exit(f'{label}: views read back with differences nobody asked for — stopping:\n  ' + '\n  '.join(problems))
+    print(f'  {label}: {len(after)} views compared; changed ' +
+          str({before[v]['name']: [k for k in before[v] if before[v][k] != after[v][k]] for v in before
+               if v in after and before[v] != after[v]}))
+    return after
+
+
+def account_control(worksheet, name, tab_id):
+    """One account field to add: a one-way Relation → Chart of Accounts, single, shown as a dropdown, with its picker
+    filter and its static default. Built by hap-cli's own builder; sent without a controlId so the server mints it
+    and — `bidirectional` "0" — the Chart of Accounts gets no reverse control."""
+    alias, picker, default = spec_of(worksheet, name)
+    row, col, size, _ = place_of(worksheet, name)
+    settings = {'bidirectional': '0', 'showtype': '3', 'filters': account_picker(picker)}
+    if default:
+        settings['defsource'] = account_default(default)
+    control = C.control('RELATE_SHEET', name, (row, col, size), alias=alias, hint=hint_of(worksheet, name),
+                        desc=desc_of(worksheet, name), data_source=ws(), multi=False, advanced_setting=settings)
+    control['sectionId'] = tab_id
+    return control
+
+
+def b_add(worksheet):
+    """Add what is missing of this bundle's controls on a worksheet with `add-fields`: the tab first, when the bundle
+    brings one, then the account Relations carrying the tab's id. `add-fields` parks everything at row 9999; the
+    owner's `layout` step places it. Returns the names added."""
+    wid = wid_of(worksheet)
+    ctrls = hap.controls(wid)
+    tabs = {c['controlName']: c for c in ctrls if c['type'] == C.TAB}
+    fields = {c['controlName']: c for c in ctrls if c['type'] != C.TAB}
+    tab = B_TAB.get(worksheet)
+    wanted = [n for n, _, _, _ in B_FIELDS[worksheet] if n not in fields]
+    tab_missing = bool(tab) and tab not in tabs
+    if tab_missing and worksheet not in B_NEW_TAB:
+        sys.exit(f'{worksheet} has no tab {tab!r} — its own script builds it')
+    if not wanted and not tab_missing:
+        print(f"  {worksheet}: {', '.join(n for n, _, _, _ in B_FIELDS[worksheet])} already there; nothing added")
+        return []
+    print('  backup:', hap.backup(f"accounts_b_{OWNER[worksheet]}_controls_pre_add", ctrls))
+    before = b_snapshot()
+    added = []
+    if tab_missing:
+        row, col, size, _ = place_of(worksheet, tab, tab=True)
+        C.append_controls(wid, [C.control('SECTION', tab, (row, col, size))])
+        added.append(tab)
+        tabs = {c['controlName']: c for c in hap.controls(wid) if c['type'] == C.TAB}
+        if tab not in tabs:
+            sys.exit(f'{worksheet}: the tab {tab!r} did not read back after add-fields')
+    if wanted:
+        C.append_controls(wid, [account_control(worksheet, n, tabs[tab]['controlId'] if tab else '') for n in wanted])
+        added += wanted
+    b_expect(before, f'{worksheet}: add-fields {added}', new={worksheet: set(added)})
+    return added
+
+
+def owner_place_differences(worksheet, ctrls=None):
+    """{control name: {attribute: (live, want)}} for every control whose place its owner's tables give and whose
+    live row, col, size or tab differs — what the owner's `layout` step would move."""
+    ctrls = ctrls or hap.controls(wid_of(worksheet))
+    tab_ids = {c['controlName']: c['controlId'] for c in ctrls if c['type'] == C.TAB}
+    out = {}
+    for c in ctrls:
+        name = c['controlName']
+        try:
+            row, col, size, tab = place_of(worksheet, name, tab=c['type'] == C.TAB)
+        except KeyError:
+            continue
+        want = dict(row=row, col=col, size=size, sectionId=tab_ids.get(tab, '') if tab else '')
+        diff = {k: (c.get(k) or ('' if k == 'sectionId' else c.get(k)), v) for k, v in want.items()
+                if (c.get(k) or ('' if k == 'sectionId' else c.get(k))) != v}
+        if diff:
+            out[f'{name} (tab)' if c['type'] == C.TAB else name] = diff
+    return out
+
+
+def b_field_differences(worksheet, ctrls=None):
+    """This bundle's controls on one worksheet read back against 09 §1 and the owner's tables: the tab and its
+    place; each account's type, target, single-ness, alias, description, placeholder, not required, visible, place,
+    tab, one-way-ness, dropdown, picker filter and static default. Records every id in ids.json."""
+    ctrls = ctrls or hap.controls(wid_of(worksheet))
+    tabs = {c['controlName']: c for c in ctrls if c['type'] == C.TAB}
+    fields = {c['controlName']: c for c in ctrls if c['type'] != C.TAB}
+    out = []
+    tab = B_TAB.get(worksheet)
+    if tab and tab not in tabs:
+        return [f'{worksheet}: no tab {tab!r}']
+    if tab and worksheet in B_NEW_TAB:
+        t = tabs[tab]
+        C.remember('controls', f'{worksheet}: {tab}', t['controlId'])
+        row, col, size, _ = place_of(worksheet, tab, tab=True)
+        if (t.get('row'), t.get('col'), t.get('size'), t.get('sectionId') or '') != (row, col, size, ''):
+            out.append(f"{worksheet} / tab {tab}: row {t.get('row')} col {t.get('col')} size {t.get('size')} "
+                       f"section {t.get('sectionId')!r}, want {(row, col, size)}")
+    coa_ids = {c['controlId'] for c in hap.controls(ws())}
+    for name, alias, picker, default in B_FIELDS[worksheet]:
+        c = fields.get(name)
+        if not c:
+            out.append(f'{worksheet}: no {name!r}')
+            continue
+        C.remember('controls', f'{worksheet}: {name}', c['controlId'])
+        row, col, size, in_tab = place_of(worksheet, name)
+        want = dict(type=RELATION, dataSource=ws(), enumDefault=1, alias=alias, desc=desc_of(worksheet, name),
+                    hint=hint_of(worksheet, name), required=False, fieldPermission='111', attribute=0, row=row,
+                    col=col, size=size, sectionId=tabs[in_tab]['controlId'] if in_tab else '')
+        got = {k: c.get(k) for k in want}
+        for k in ('desc', 'hint', 'sectionId', 'alias'):
+            got[k] = got[k] or ''
+        got['attribute'] = got['attribute'] or 0
+        diff = {k: (got[k], v) for k, v in want.items() if got[k] != v}
+        settings = c.get('advancedSetting') or {}
+        if (settings.get('bidirectional'), settings.get('showtype')) != ('0', '3'):
+            diff['one-way dropdown'] = ((settings.get('bidirectional'), settings.get('showtype')), ('0', '3'))
+        if picker_state(settings.get('filters')) != picker_state(account_picker(picker)):
+            diff['picker'] = (settings.get('filters'), account_picker(picker))
+        want_default = [account_rowid(default)] if default else []
+        if default_rowids(settings.get('defsource')) != want_default:
+            diff['default'] = (default_rowids(settings.get('defsource')), want_default)
+        if c.get('sourceControlId') in coa_ids:
+            diff['reverse'] = (c.get('sourceControlId'), 'a one-way Relation has no control on Chart of Accounts')
+        if diff:
+            out.append(f'{worksheet} / {name}: ' + json.dumps(diff, ensure_ascii=False, default=str)[:900])
+    return out
+
+
+def b_place(worksheet, extra_changes=None):
+    """Run the owner's own `layout` step when a control is not where the owner's tables put it, bracketed by the
+    control-by-control comparison: only row, col, size and tab may move, and only on the controls it had to move.
+    `extra_changes` names further attributes that step is known to rewrite on a control."""
+    moves = owner_place_differences(worksheet)
+    if not moves:
+        print(f'  {worksheet}: every control already where {OWNER[worksheet]}.py puts it; its layout step not run')
+        return
+    print(f'  {worksheet}: {OWNER[worksheet]}.py layout moves ' +
+          json.dumps({n: {k: v for k, v in d.items()} for n, d in moves.items()}, ensure_ascii=False))
+    before = b_snapshot()
+    owner(worksheet).step_layout()
+    allowed = {name.removesuffix(' (tab)'): set(PLACE_KEYS) for name in moves}
+    for name, keys in (extra_changes or {}).items():
+        allowed[name] = allowed.get(name, set()) | set(keys)
+    b_expect(before, f'{worksheet}: {OWNER[worksheet]}.py layout', changed={worksheet: allowed})
+    left = owner_place_differences(worksheet)
+    if left:
+        sys.exit(f'{worksheet}: still out of place after its layout step: {left}')
+
+
+def b_settings(worksheet):
+    """Bring what this script owns on each account field back to spec when it has drifted — alias, description,
+    placeholder, not required, visible, one-way dropdown, picker filter, static default — in one full save through
+    common.save_controls, bracketed by the comparison. Place is the owner's `layout`'s, and is not touched here."""
+    wid = wid_of(worksheet)
+    ctrls = hap.controls(wid)
+    fields = {c['controlName']: c for c in ctrls if c['type'] != C.TAB}
+    todo = []
+    for name, alias, picker, default in B_FIELDS[worksheet]:
+        c = fields.get(name)
+        if not c:
+            sys.exit(f'{worksheet}: {name!r} is missing — run this step again to add it')
+        settings = dict(c.get('advancedSetting') or {})
+        want_settings = {'bidirectional': '0', 'showtype': '3'}
+        stale = [k for k, v in want_settings.items() if settings.get(k) != v]
+        if picker_state(settings.get('filters')) != picker_state(account_picker(picker)):
+            stale.append('filters')
+        want_default = [account_rowid(default)] if default else []
+        if default_rowids(settings.get('defsource')) != want_default:
+            stale.append('defsource')
+        attrs = dict(alias=alias, desc=desc_of(worksheet, name), hint=hint_of(worksheet, name), required=False,
+                     fieldPermission='111')
+        stale += [k for k, v in attrs.items() if (c.get(k) or ('' if isinstance(v, str) else c.get(k))) != v]
+        if stale:
+            todo.append((name, stale))
+            c.update(attrs)
+            settings.update(want_settings, filters=account_picker(picker))
+            if default:
+                settings['defsource'] = account_default(default)
+            elif default_rowids(settings.get('defsource')):
+                settings['defsource'] = '[]'
+            c['advancedSetting'] = settings
+    if not todo:
+        print(f'  {worksheet}: alias, help, placeholder, picker and default already as specified; nothing saved')
+        return
+    print('  backup:', hap.backup(f"accounts_b_{OWNER[worksheet]}_controls_pre_settings", hap.controls(wid)))
+    before = b_snapshot()
+    C.save_controls(wid, ctrls)
+    b_expect(before, f'{worksheet}: account settings {todo}',
+             changed={worksheet: {name: {'alias', 'desc', 'hint', 'required', 'fieldPermission', 'advancedSetting'}
+                                  for name, _ in todo}})
+
+
+def b_report(worksheet, problems):
+    if problems:
+        sys.exit(f'{worksheet} read back with differences:\n  ' + '\n  '.join(problems))
+    print(f"  {worksheet}: read back as specified — {', '.join(n for n, _, _, _ in B_FIELDS[worksheet])}")
+
+
+# ── B1 · Contacts ───────────────────────────────────────────────────────────
+
+def contacts_rule_want():
+    """The Invoicing tab rule as rule_snapshot reads it: hide the tab while Company is not empty."""
+    import contacts as K
+    ctrls = hap.controls(K.WS)
+    company = next(c for c in ctrls if c['controlName'] == 'Company' and c['type'] != C.TAB)
+    tab = next(c for c in ctrls if c['controlName'] == 'Invoicing' and c['type'] == C.TAB)
+    return dict(name=K.RULE_INVOICING, type=C.INTERACTION, disabled=False,
+                groups=[[(company['controlId'], RELATION, C.NOT_EMPTY, ())]],
+                items=[(C.HIDE, [tab['controlId']], '')], check=0, hint=0)
+
+
+def contacts_rule_differences():
+    import contacts as K
+    live = next((r for r in rule_snapshot('Contacts').values() if r['name'] == K.RULE_INVOICING), None)
+    want = contacts_rule_want()
+    keys = ('name', 'type', 'disabled', 'groups', 'items')
+    return [] if live and {k: live[k] for k in keys} == {k: want[k] for k in keys} else \
+        [f'rule {K.RULE_INVOICING!r}: {live} != {want}']
+
+
+def step_b_contacts():
+    """Contacts (01): the tab **Invoicing** between Sales & Purchase and Notes, hidden while Company is set, holding
+    **Account Receivable** (Type = Receivable, default 124000) and **Account Payable** (Type = Payable, default
+    221100). Placed by contacts.py `layout`; the rule by contacts.py `rules`."""
+    guard()
+    import contacts as K
+    b_add('Contacts')
+    b_place('Contacts')
+    b_settings('Contacts')
+    b_report('Contacts', b_field_differences('Contacts'))
+    if contacts_rule_differences():
+        before = rule_snapshot('Contacts')
+        print('  backup:', hap.backup('accounts_b_contacts_rules_pre_rules', list(before.values())))
+        views = b_snapshot(('Contacts',))
+        K.step_rules()
+        rules_expect(before, 'Contacts', 'contacts.py rules', new=(K.RULE_INVOICING,))
+        b_expect(views, 'Contacts: after the rules step')
+    else:
+        print(f'  rule {K.RULE_INVOICING!r} already as specified; contacts.py rules not run')
+    problems = contacts_rule_differences()
+    rule = next(r for r, x in rule_snapshot('Contacts').items() if x['name'] == K.RULE_INVOICING)
+    C.remember('rules', 'Contacts: ' + K.RULE_INVOICING, rule)
+    if problems:
+        sys.exit('\n'.join(problems))
+    print(f'  rule {K.RULE_INVOICING!r} ({rule}): hide the tab Invoicing while Company is not empty')
+    K.show()
+
+
+# ── B2 · Products ──────────────────────────────────────────────────────────
+
+def step_b_products():
+    """Products (03): the tab **Accounting** after Inventory, holding **Income Account** and **Expense Account** —
+    the income-and-expense filter, placeholder "From Category", Odoo's help and no default (an empty account is what
+    makes a product use its category's). Placed by products.py `layout`, which also writes their placeholder, help
+    and visibility from its own tables."""
+    guard()
+    b_add('Products')
+    b_place('Products', extra_changes={n: {'fieldPermission', 'hint', 'desc'} for n in ('Income Account',
+                                                                                        'Expense Account')})
+    b_settings('Products')
+    b_report('Products', b_field_differences('Products'))
+    C.show(wid_of('Products'))
+
+
+# ── B3 · Product Categories ────────────────────────────────────────────────
+
+def step_b_categories():
+    """Product Categories (08): the tab **Accounting** holding **Income Account** (default 410000 Trade Income) and
+    **Expense Account** (default 510000 Costs) — the income-and-expense filter and Odoo's help. Placed by prodcat.py
+    `layout`, at row 2: HAP's tab bar lists type-52 tabs and showtype-6 relation lists (Child Categories) in row
+    order and showtype-2 lists (Products) after them (pd-openweb getControlsByTab), so the bar reads Accounting ·
+    Child Categories · Products — what the browser shows is for the UI pass."""
+    guard()
+    b_add('Product Categories')
+    b_place('Product Categories', extra_changes={n: {'fieldPermission'} for n in ('Income Account',
+                                                                                  'Expense Account')})
+    tabs = [(c['controlName'], c['row'], (c.get('advancedSetting') or {}).get('showtype'))
+            for c in hap.controls(wid_of('Product Categories'))
+            if c['type'] == C.TAB or (c['type'] == RELATION and (c.get('advancedSetting') or {}).get('showtype') in ('2', '6'))]
+    in_rows = sorted((row, name) for name, row, show in tabs if show != '2')
+    print('  the tab bar, as pd-openweb getControlsByTab orders it: '
+          + ' · '.join([name for _, name in in_rows] + [name for name, _, show in sorted(tabs, key=lambda t: t[1])
+                                                        if show == '2']))
+    b_settings('Product Categories')
+    b_report('Product Categories', b_field_differences('Product Categories'))
+    C.show(wid_of('Product Categories'))
+
+
+# ── B4 · Journals ──────────────────────────────────────────────────────────
+
+def journals_rule_names():
+    import journals as J
+    return (J.RULE_DEFAULT_REQ, J.RULE_SUSPENSE, J.RULE_SUSPENSE_REQ, J.RULE_PROFIT_LOSS, J.RULE_PRIVATE_SHARE)
+
+
+def journals_rule_differences():
+    """The five account rules read back against journals.RULES: an interaction rule, not disabled, one item of the
+    kind named, Type any of the types named, acting on the controls named."""
+    import journals as J
+    ctrls = hap.controls(J.WORKSHEET)
+    f, names = hap.by_name(ctrls), {c['controlId']: c['controlName'] for c in ctrls}
+    keys = {o['key']: o['value'] for o in f['Type']['options']}
+    live = {r['name']: r for r in hap.listing('worksheet', 'rules', J.WORKSHEET)}
+    out = []
+    for name in journals_rule_names():
+        types, targets, kind = J.RULES[name]
+        r = live.get(name)
+        if not r:
+            out.append(f'rule {name!r} missing')
+            continue
+        conds = [g for group in r['filters'] for g in group.get('groupFilters', [])]
+        got = (r['type'], r['disabled'], [i['type'] for i in r['ruleItems']],
+               [(names.get(c['controlId']), c['filterType'], sorted(keys.get(v) for v in c.get('values', [])))
+                for c in conds],
+               [names.get(c['controlId']) for i in r['ruleItems'] for c in i['controls']])
+        want = (C.INTERACTION, False, [kind], [('Type', C.EQ, sorted(types))], list(targets))
+        if got != want:
+            out.append(f'rule {name!r}: {got} != {want}')
+        else:
+            C.remember('rules', J.KEY + name, r['ruleId'])
+    return out
+
+
+def columns_of(worksheet, view_names):
+    names = {c['controlId']: c['controlName'] for c in hap.controls(wid_of(worksheet))}
+    views = {v['name']: v['viewId'] for v in hap.listing('worksheet', 'view', 'list', wid_of(worksheet), '-a', APP)}
+    out = {}
+    for name in view_names:
+        info = C.view_info(wid_of(worksheet), APP, views[name]) if name in views else {}
+        settings = info.get('advancedSetting') or {}
+        out[name] = ([names.get(x, x) for x in info.get('showControls') or []],
+                     [names.get(x, x) for x in json.loads(settings.get('customShowControls') or '[]')])
+    return out
+
+
+def step_b_journals():
+    """Journals (05): on the tab Journal Entries, above the two dedicated sequences, **Default Account**, **Suspense
+    Account**, **Profit Account**, **Loss Account** and **Private Share Account** with §1's pickers and help; the
+    visibility and requirement rules by Type; and a **Default Account** column after Sequence Prefix on both views.
+    Placed by journals.py `layout`, the rules by its `rules` and the columns by its `views` — whose lists carry them."""
+    guard()
+    import journals as J
+    J.guard()
+    b_add('Journals')
+    b_place('Journals', extra_changes={n: {'fieldPermission'} for n in J.ACCOUNTS})
+    b_settings('Journals')
+    b_report('Journals', b_field_differences('Journals'))
+    if journals_rule_differences():
+        before, ctrls = rule_snapshot('Journals'), b_snapshot(('Journals',))
+        print('  backup:', hap.backup('accounts_b_journals_rules_pre_rules', list(before.values())))
+        J.step_rules()
+        rules_expect(before, 'Journals', 'journals.py rules', new=journals_rule_names())
+        b_expect(ctrls, 'Journals: after the rules step')
+    else:
+        print('  the five account rules already as specified; journals.py rules not run')
+    problems = journals_rule_differences()
+    if problems:
+        sys.exit('Journals rules read back with differences:\n  ' + '\n  '.join(problems))
+    print(f'  rules: {list(journals_rule_names())} read back as specified')
+    want = list(J.COLUMNS)
+    if any(cols != (want, want) for cols in columns_of('Journals', ('Journals', 'Archived')).values()):
+        before, ctrls = view_snapshot('Journals'), b_snapshot(('Journals',))
+        print('  backup:', hap.backup('accounts_b_journals_views_pre_views', before))
+        J.step_views()
+        column_keys = ('showControls', 'customShowControls', 'displayControls')
+        views_expect(before, 'Journals', 'journals.py views', changed={'Journals': column_keys, 'Archived': column_keys})
+        b_expect(ctrls, 'Journals: after the views step')
+    else:
+        print('  both views already show Default Account after Sequence Prefix; journals.py views not run')
+    got = columns_of('Journals', ('Journals', 'Archived'))
+    if any(cols != (want, want) for cols in got.values()):
+        sys.exit(f'Journals views read back {got}, want {want}')
+    print(f'  views: {got}')
+    C.show(J.WORKSHEET)
+
+
+# ── B5 · Invoice Lines, and the lines table inside Invoices ────────────────
+
+def lines_rule_differences():
+    """07's rule *A section or a note carries no figures* read back against invlines.FIGURES, Account included."""
+    import invlines as L
+    ctrls = hap.controls(L.ws())
+    names = {c['controlId']: c['controlName'] for c in ctrls}
+    r = next((r for r in hap.listing('worksheet', 'rules', L.ws()) if r['name'] == L.RULE_FIGURES), None)
+    if not r:
+        return [f'rule {L.RULE_FIGURES!r} missing']
+    conds = [g for group in r['filters'] for g in group.get('groupFilters', [])]
+    got = (r['type'], r['disabled'], [i['type'] for i in r['ruleItems']],
+           sorted(L.LABEL['Display Type'].get(v) for c in conds for v in c.get('values', [])),
+           [names.get(c['controlId']) for i in r['ruleItems'] for c in i['controls']])
+    want = (C.INTERACTION, False, [C.HIDE], sorted(L.TEXT_LINES), list(L.FIGURES))
+    return [] if got == want else [f'rule {L.RULE_FIGURES!r}: {got} != {want}']
+
+
+def subtable_columns():
+    import invlines as L
+    names = {c['controlId']: c['controlName'] for c in hap.controls(L.ws())}
+    sub = L.sub_list()
+    settings = (sub or {}).get('advancedSetting') or {}
+    return ([names.get(x, x) for x in (sub or {}).get('showControls') or []],
+            [names.get(x, x) for x in json.loads(settings.get('controlssorts') or '[]')])
+
+
+def step_b_lines():
+    """Invoice Lines (07), and the lines table inside Invoices (06): **Account** after Label — active accounts whose
+    Type is not Receivable, Payable or Off-Balance Sheet — joining the rule *A section or a note carries no figures*,
+    and a column after Label on the Lines view and in the Invoices subtable. Placed by invlines.py `layout`, which
+    also re-places the subtable (`place_subtable`, a save of Invoices through the CLI's session — `update-fields
+    --controls` cannot carry Invoices); the rule by its `rules`, the column by its `views`."""
+    guard()
+    import invlines as L
+    L.guard()
+    b_add('Invoice Lines')
+    ctrls = hap.controls(L.ws())
+    moves, pending = owner_place_differences('Invoice Lines', ctrls), L.layout_differences(ctrls)
+    want_columns = list(L.SUBTABLE_COLUMNS)
+    if moves or pending or subtable_columns() != (want_columns, want_columns):
+        print(f'  Invoice Lines: invlines.py layout — moves {json.dumps(moves, ensure_ascii=False)}; '
+              f'differences {json.dumps(pending, ensure_ascii=False)[:600]}; subtable {subtable_columns()}')
+        before = b_snapshot()
+        L.step_layout()
+        allowed = {name: set(PLACE_KEYS) for name in moves}
+        for name, diff in pending.items():
+            allowed.setdefault(name, set()).update(k.split('.')[0] for k in diff)
+        b_expect(before, 'invlines.py layout (Invoice Lines, and the subtable on Invoices)',
+                 changed={'Invoice Lines': allowed, 'Invoices': {L.LINES_FIELD: {'showControls', 'advancedSetting'}}})
+    else:
+        print('  Invoice Lines: every control in place and the subtable already shows Account; layout not run')
+    left = owner_place_differences('Invoice Lines') or L.layout_differences(hap.controls(L.ws()))
+    if left:
+        sys.exit(f'Invoice Lines still differs after its layout step: {left}')
+    if subtable_columns() != (want_columns, want_columns):
+        sys.exit(f'the Invoices subtable reads back {subtable_columns()}, want {want_columns}')
+    print(f'  the Invoices subtable {L.LINES_FIELD!r} shows {subtable_columns()[0]}')
+    b_settings('Invoice Lines')
+    b_report('Invoice Lines', b_field_differences('Invoice Lines'))
+    if lines_rule_differences():
+        before, ctrls = rule_snapshot('Invoice Lines'), b_snapshot(('Invoice Lines',))
+        print('  backup:', hap.backup('accounts_b_invlines_rules_pre_rules', list(before.values())))
+        L.step_rules()
+        rules_expect(before, 'Invoice Lines', 'invlines.py rules', changed=(L.RULE_FIGURES,))
+        b_expect(ctrls, 'Invoice Lines: after the rules step')
+    else:
+        print(f'  rule {L.RULE_FIGURES!r} already hides Account; invlines.py rules not run')
+    problems = lines_rule_differences()
+    if problems:
+        sys.exit('\n'.join(problems))
+    print(f'  rule {L.RULE_FIGURES!r} hides {L.FIGURES}')
+    want = list(L.VIEW_COLUMNS)
+    if columns_of('Invoice Lines', ('Lines',))['Lines'] != (want, want):
+        before, ctrls = view_snapshot('Invoice Lines'), b_snapshot(('Invoice Lines',))
+        print('  backup:', hap.backup('accounts_b_invlines_views_pre_views', before))
+        L.step_views()
+        views_expect(before, 'Invoice Lines', 'invlines.py views',
+                     changed={'Lines': ('showControls', 'customShowControls', 'displayControls')})
+        b_expect(ctrls, 'Invoice Lines: after the views step')
+    else:
+        print('  the Lines view already shows Account after Label; invlines.py views not run')
+    got = columns_of('Invoice Lines', ('Lines',))['Lines']
+    if got != (want, want):
+        sys.exit(f'the Lines view reads back {got}, want {want}')
+    print(f'  view Lines: {got[0]}')
+    C.show(L.ws())
+
+
+# ── B6 · automation B — Invoice Lines: fill the account ─────────────────────
+#
+# Odoo account.move.line _compute_account_id, as 09 §1 tabulates it, for a Product line:
+#
+#   customer document (Customer Invoice, Customer Credit Note, Sales Receipt)
+#       the product's Income Account → its category's Income Account → the invoice journal's Default Account
+#   vendor document (Vendor Bill, Vendor Credit Note, Purchase Receipt)
+#       the product's Expense Account → its category's Expense Account → the journal's Default Account
+#   Journal Entry
+#       the journal's Default Account
+#
+# **and the journal's Default Account fills only an empty Account** — Odoo's `accounts['income'] or line.account_id`:
+# when the product and its category give nothing, the line keeps the account it has, and the journal's default is
+# used only when it has none (the coordinator's call of 17 Sep 2026, over §1's flattened "first of"). The product's
+# and the category's accounts replace whatever the line carries. The line's Product is a **variant**, so "the product"
+# is the variant's Product; Odoo walks up the category's parents, and every category here carries both accounts, so
+# the category read is the product's own.
+#
+# **A search step whose filter value is empty fails the run** — status 4, cause 100000 "筛选条件值为空 记录ID" — even
+# when it is told to carry on when nothing is found (the self-check's line with no Product, 17 Sep 2026). So each
+# search's condition carries HAP's **条件异常时忽略** (`ignoreEmpty` 1, "ignore the condition when it is abnormal"),
+# which the condition editor offers on a dynamic value, and every path of the gateway checks the Relation each record
+# it reads was found through: a search whose condition was ignored may hand back any record, and no path reads one.
+#
+# Two workflows with one body, because HAP's worksheet trigger takes one event (BUILDING.md): a line **created with
+# no Account** (新增 '1', condition: Display Type is Product and Account is empty — a line created with an Account keeps
+# it), and a line whose **Product changes** (仅更新 '4', narrowed to Product, condition: Display Type is Product). The
+# body reads the invoice, the variant, the product, the category and the journal with five search steps (Record ID =
+# the Relation on the record before it; carry on when nothing is found), then one exclusive gateway whose seven paths
+# are §1's table, each written out in full — its guards included — so that no path depends on the order the gateway
+# reads them in. A run that matches none — a journal entry on a journal with no Default Account, or a Product change
+# that finds nothing on the product or its category for a line that already has an Account — stops at the gateway
+# with 40002 "未通过分支" and writes nothing, as automation A does on an empty Type.
+#
+# Neither workflow starts the other: both write Account alone, and the second is narrowed to Product. Nor do their
+# writes start 07's roll-up, which runs for every API write of a line and for none of automation B's (BUILDING.md).
+
+B_NEW_LINE = 'Invoice Lines: fill the account of a new line'
+B_PRODUCT_CHANGED = 'Invoice Lines: fill the account when the Product changes'
+B_EVENTS = {B_NEW_LINE: ('create', '1'), B_PRODUCT_CHANGED: ('update', '4')}
+B_TRIGGER_NAMES = {B_NEW_LINE: 'When a product line is created with no Account',
+                   B_PRODUCT_CHANGED: "When a product line's Product changes"}
+B_DESC_COMMON = ("Odoo account.move.line _compute_account_id: a product line's Account becomes the product's Income "
+                 "Account, else its category's, on a customer document; the Expense Accounts on a vendor document. The "
+                 "invoice journal's Default Account fills it only while it is still empty, and is the only source on a "
+                 "journal entry. Otherwise Account is left as it is.")
+B_DESCS = {B_NEW_LINE: 'Runs when a product line is created with no Account. ' + B_DESC_COMMON,
+           B_PRODUCT_CHANGED: "Runs when a product line's Product changes. " + B_DESC_COMMON}
+B_GET_INVOICE, B_GET_VARIANT, B_GET_PRODUCT = 'Get the invoice', 'Get the product variant', 'Get the product'
+B_GET_CATEGORY, B_GET_JOURNAL = "Get the product's category", "Get the invoice's journal"
+B_GATEWAY = 'Which account does the line take?'
+B_SEARCH_ORDER = (B_GET_INVOICE, B_GET_VARIANT, B_GET_PRODUCT, B_GET_CATEGORY, B_GET_JOURNAL)
+CONTINUE_WHEN_NOT_FOUND = 2                        # a search step's executeType: 0 stop · 1 add a record · 2 carry on
+EMPTY_ID, NOT_EMPTY_ID, EQUALS_ID = '8', '7', '9'  # workflow conditionIds 为空 · 不为空 · 等于
+IGNORE_WHEN_ABNORMAL = 1                           # a condition's ignoreEmpty: the editor's 条件异常时忽略
+
+
+def b_ids():
+    """Every control id automation B reads or writes, by the worksheet it lives on."""
+    ids = hap.ids()['worksheets']
+    lines, invoices = C.fields(ids['Invoice Lines']), C.fields(ids['Invoices'])
+    variants, products = C.fields(ids['Product Variants']), C.fields(ids['Products'])
+    categories, journals = C.fields(ids['Product Categories']), C.fields(ids['Journals'])
+    return dict(
+        lines=ids['Invoice Lines'], invoices=ids['Invoices'], variants=ids['Product Variants'],
+        products=ids['Products'], categories=ids['Product Categories'], journals=ids['Journals'],
+        line_invoice=lines['Invoice'], line_product=lines['Product'], line_type=lines['Display Type'],
+        line_account=lines['Account'], invoice_type=invoices['Type'], invoice_journal=invoices['Journal'],
+        variant_product=variants['Product'], product_category=products['Category'],
+        product_income=products['Income Account'], product_expense=products['Expense Account'],
+        category_income=categories['Income Account'], category_expense=categories['Expense Account'],
+        journal_default=journals['Default Account'])
+
+
+def b_searches(x):
+    """(step name, worksheet, the step whose record carries the Relation — None for the trigger, the Relation)."""
+    return [(B_GET_INVOICE, x['invoices'], None, x['line_invoice']),
+            (B_GET_VARIANT, x['variants'], None, x['line_product']),
+            (B_GET_PRODUCT, x['products'], B_GET_VARIANT, x['variant_product']),
+            (B_GET_CATEGORY, x['categories'], B_GET_PRODUCT, x['product_category']),
+            (B_GET_JOURNAL, x['journals'], B_GET_INVOICE, x['invoice_journal'])]
+
+
+def b_paths(x):
+    """§1's table as seven paths: (path name, [condition groups — any one matches], the update step, the step and
+    control it takes Account from). A condition is (the step whose record is read — None for the trigger line —,
+    the control, an operator: 'set', 'empty' or a list of Type labels).
+
+    Each group carries its own guards: the line names its invoice; a product or category account is read only when
+    the line names a product, the variant names its product and — for the category — the product names its category;
+    the journal's account only when the invoice names its journal. The journal paths list the four ways the product
+    and category yield nothing, and **every journal group requires the line's Account to be empty**: the journal's
+    Default Account fills only an empty Account, as Odoo's `accounts['income'] or line.account_id` does (the
+    coordinator's call of 17 Sep 2026). The product's and the category's accounts replace whatever the line has."""
+    import invoices as I
+    line_invoice, line_product = x['line_invoice'], x['line_product']
+    has = lambda node, control: (node, control, 'set')
+    lacks = lambda node, control: (node, control, 'empty')
+    doc = lambda types: (B_GET_INVOICE, x['invoice_type'], list(types))
+    journal = [has(B_GET_INVOICE, x['invoice_journal']), has(B_GET_JOURNAL, x['journal_default']),
+               lacks(None, x['line_account'])]
+    product_known = [has(None, line_product), has(B_GET_VARIANT, x['variant_product'])]
+    category_known = product_known + [has(B_GET_PRODUCT, x['product_category'])]
+
+    def nothing_from(product_account, category_account):
+        """The four ways the product and its category give no account."""
+        return [[lacks(None, line_product)],
+                [has(None, line_product), lacks(B_GET_VARIANT, x['variant_product'])],
+                product_known + [lacks(B_GET_PRODUCT, product_account), lacks(B_GET_PRODUCT, x['product_category'])],
+                category_known + [lacks(B_GET_PRODUCT, product_account), lacks(B_GET_CATEGORY, category_account)]]
+
+    out = []
+    for side, types, product_account, category_account, word in (
+            ('Customer document', I.CUSTOMER_TYPES, x['product_income'], x['category_income'], 'Income'),
+            ('Vendor document', I.VENDOR_TYPES, x['product_expense'], x['category_expense'], 'Expense')):
+        base = [has(None, line_invoice), doc(types)]
+        out += [
+            (f"{side} — the product's {word} Account", [base + product_known + [has(B_GET_PRODUCT, product_account)]],
+             f"Take the product's {word} Account", (B_GET_PRODUCT, product_account)),
+            (f"{side} — the category's {word} Account",
+             [base + category_known + [lacks(B_GET_PRODUCT, product_account), has(B_GET_CATEGORY, category_account)]],
+             f"Take the category's {word} Account", (B_GET_CATEGORY, category_account)),
+            (f"{side} — the journal's Default Account",
+             [base + journal + group for group in nothing_from(product_account, category_account)],
+             f"Take the journal's Default Account ({side.lower()})", (B_GET_JOURNAL, x['journal_default'])),
+        ]
+    out.append(("Journal entry — the journal's Default Account",
+                 [[has(None, line_invoice), doc(['Journal Entry'])] + journal],
+                 "Take the journal's Default Account (journal entry)", (B_GET_JOURNAL, x['journal_default'])))
+    return out
+
+
+def b_nodes(x):
+    """The five searches and the gateway with its seven paths and steps, for `batch-add`. Search filters, path names
+    and conditions and the steps' field writes are all written again afterwards and read back: batch-add sends a
+    search's filter as `operateCondition`, which the UI never reads, and drops path names (BUILDING.md)."""
+    alias = {B_GET_INVOICE: 'invoice', B_GET_VARIANT: 'variant', B_GET_PRODUCT: 'product',
+             B_GET_CATEGORY: 'category', B_GET_JOURNAL: 'journal'}
+    nodes = [{'nodeAlias': alias[name], 'nodeType': 'get_single', 'name': name,
+              'config': {'worksheet': worksheet, 'execute_type': CONTINUE_WHEN_NOT_FOUND}}
+             for name, worksheet, _, _ in b_searches(x)]
+    paths = []
+    for i, (name, _, step, (source, control)) in enumerate(b_paths(x)):
+        paths.append({'alias': f'path{i}', 'name': name, 'nodes': [
+            {'nodeAlias': f'step{i}', 'nodeType': 'update_record', 'name': step,
+             'config': {'target': {'node': {'nodeAlias': 'trigger'}}, 'worksheet': x['lines'],
+                        'fields': [{'fieldId': x['line_account']['controlId'], 'type': RELATION,
+                                    'valueRef': {'kind': 'field', 'node': {'nodeAlias': alias[source]},
+                                                 'fieldId': control['controlId']}}]}}]})
+    nodes.append({'nodeAlias': 'which', 'nodeType': 'branch', 'name': B_GATEWAY,
+                  'config': {'mode': 'exclusive', 'paths': paths}})
+    return nodes
+
+
+def b_trigger_filter(x, workflow):
+    """The trigger's condition: a product line — and, for a new line, one with no Account."""
+    import invlines as L
+    items = [{'left': {'node': {'nodeAlias': 'trigger'}, 'fieldId': x['line_type']['controlId'], '_filedTypeId': 11,
+                       '_filedValue': 'Display Type'},
+              'op': 'in', 'right': {'kind': 'literal', 'values': [{'key': L.PRODUCT_LINE, 'value': 'Product',
+                                                                   'isDeleted': False}]}}]
+    if workflow == B_NEW_LINE:
+        items.append({'left': {'node': {'nodeAlias': 'trigger'}, 'fieldId': x['line_account']['controlId'],
+                               '_filedTypeId': RELATION, '_enumDefault': 1, '_filedValue': 'Account'}, 'op': 'empty'})
+    return {'logic': 'and', 'items': items}
+
+
+def b_trigger_want(x, workflow):
+    import invlines as L
+    fields = [x['line_product']['controlId']] if workflow == B_PRODUCT_CHANGED else []
+    shape = [[(x['line_type']['controlId'], '1', [L.PRODUCT_LINE])] +
+             ([(x['line_account']['controlId'], EMPTY_ID, [])] if workflow == B_NEW_LINE else [])]
+    return dict(appId=x['lines'], triggerId=B_EVENTS[workflow][1], fields=sorted(fields), condition=shape,
+                name=B_TRIGGER_NAMES[workflow])
+
+
+def b_trigger_state(pid, start):
+    t = node_get(pid, start)
+    shape = [[(c.get('filedId'), str(c.get('conditionId')),
+               sorted(((v.get('value') or {}).get('key') if isinstance(v.get('value'), dict) else v.get('value'))
+                      for v in c.get('conditionValues') or []))
+              for c in group] for group in t.get('operateCondition') or []]
+    return dict(appId=t.get('appId'), triggerId=str(t.get('triggerId')), fields=sorted(t.get('assignFieldIds') or []),
+                condition=shape, name=t.get('name'))
+
+
+def b_search_condition(node_id, source_id, relation):
+    """Record ID equals the Relation on the source record — the UI's shape of a search filter (invoices.journal_of)
+    — ignored when abnormal: an empty Relation would otherwise fail the whole run."""
+    return {'nodeId': node_id, 'nodeType': 7, 'actionId': '406', 'filedId': 'rowid', 'filedValue': 'Record ID',
+            'filedTypeId': 2, 'enumDefault': 0, 'conditionId': EQUALS_ID, 'sourceType': 0,
+            'ignoreEmpty': IGNORE_WHEN_ABNORMAL,
+            'conditionValues': [{'nodeId': source_id, 'controlId': relation['controlId'], 'value': '',
+                                 'sureNodeId': source_id}]}
+
+
+def b_search_state(pid, node_id):
+    d = node_get(pid, node_id)
+    conds = [(c.get('filedId'), str(c.get('conditionId')), c.get('ignoreEmpty'),
+              [(v.get('nodeId'), v.get('controlId')) for v in c.get('conditionValues') or []])
+             for flt in d.get('filters') or [] for group in flt.get('conditions') or [] for c in group]
+    return dict(appId=d.get('appId'), actionId=str(d.get('actionId')), executeType=d.get('executeType'), filters=conds)
+
+
+def b_search_want(worksheet, source_id, relation):
+    return dict(appId=worksheet, actionId='406', executeType=CONTINUE_WHEN_NOT_FOUND,
+                filters=[('rowid', EQUALS_ID, IGNORE_WHEN_ABNORMAL, [(source_id, relation['controlId'])])])
+
+
+def b_path_conditions(x, start, byname, groups):
+    """A path's condition groups in the wire shape `node save --type 2` takes (`operateCondition`)."""
+    import invoices as I
+    out = []
+    for group in groups:
+        wire = []
+        for node, control, op in group:
+            node_id = start if node is None else byname[node]['id']
+            if isinstance(op, list):
+                wire.append({'nodeId': node_id, 'filedId': control['controlId'], 'filedValue': control['controlName'],
+                             'filedTypeId': 11, 'enumDefault': 0, 'conditionId': IS_ANY_OF, 'sourceType': 0,
+                             'conditionValues': [{'value': {'key': I.OPTION_KEY['Type'][label], 'value': label,
+                                                            'isDeleted': False}} for label in op]})
+            else:
+                wire.append({'nodeId': node_id, 'filedId': control['controlId'], 'filedValue': control['controlName'],
+                             'filedTypeId': RELATION, 'enumDefault': 1,
+                             'conditionId': EMPTY_ID if op == 'empty' else NOT_EMPTY_ID, 'sourceType': 0,
+                             'conditionValues': []})
+        out.append(wire)
+    return out
+
+
+def b_step_fields(x, byname, source, control):
+    node = byname[source]['id']
+    return [{'fieldId': x['line_account']['controlId'], 'type': RELATION, 'addType': 0, 'fieldValue': '',
+             'fieldValueId': control['controlId'], 'nodeId': node, 'sureNodeId': node, 'nodeAppType': 1}]
+
+
+def b_step_state(pid, node_id):
+    d = node_get(pid, node_id)
+    return dict(selectNodeId=d.get('selectNodeId'), appId=d.get('appId'), isException=bool(d.get('isException')),
+                fields=[(f.get('fieldId'), f.get('nodeId'), f.get('fieldValueId')) for f in d.get('fields') or []])
+
+
+def b_workflow_id(workflow):
+    pid = hap.ids().get('workflows', {}).get(workflow)
+    if pid:
+        return pid
+    return {w['name']: w.get('id') or w.get('processId') for w in hap.listing('workflow', 'list', APP)}.get(workflow)
+
+
+def automation_b_differences(workflow, x=None):
+    """One of the two workflows read back against §1: trigger, the five searches in order with their filters, the
+    gateway and its seven paths with their conditions, each path's one update step, name, description, published."""
+    x = x or b_ids()
+    pid = b_workflow_id(workflow)
+    if not pid:
+        return [f'{workflow}: not built']
+    proc, byname = nodes_by_name(pid)
+    start, out = proc['startEventId'], []
+    t, want = b_trigger_state(pid, start), b_trigger_want(x, workflow)
+    if t != want:
+        out.append(f'{workflow}: trigger {t} != {want}')
+    missing = [n for n in B_SEARCH_ORDER + (B_GATEWAY,) if n not in byname]
+    if missing:
+        return out + [f'{workflow}: missing {missing}']
+    chain, node = [], proc['flowNodeMap'][start].get('nextId')
+    while node and node in proc['flowNodeMap'] and proc['flowNodeMap'][node].get('typeId') == 7:
+        chain.append(proc['flowNodeMap'][node]['name'])
+        node = proc['flowNodeMap'][node].get('nextId')
+    if chain != list(B_SEARCH_ORDER) or node != byname[B_GATEWAY]['id']:
+        out.append(f'{workflow}: the trigger runs through {chain} into {proc["flowNodeMap"].get(node, {}).get("name")!r}')
+    for name, worksheet, source, relation in b_searches(x):
+        source_id = start if source is None else byname[source]['id']
+        got = b_search_state(pid, byname[name]['id'])
+        want = b_search_want(worksheet, source_id, relation)
+        if got != want:
+            out.append(f'{workflow} / {name}: {got} != {want}')
+    gateway = byname[B_GATEWAY]
+    if gateway.get('gatewayType') != EXCLUSIVE or gateway.get('nextId') not in ('99', '', None):
+        out.append(f"{workflow}: gateway type {gateway.get('gatewayType')} next {gateway.get('nextId')}")
+    paths = [proc['flowNodeMap'][i] for i in gateway.get('flowIds') or []]
+    specs = b_paths(x)
+    if [p.get('name') for p in paths] != [s[0] for s in specs]:
+        out.append(f"{workflow}: paths {[p.get('name') for p in paths]}")
+    for node, (name, groups, step, (source, control)) in zip(paths, specs):
+        want = [[(c['nodeId'], c['filedId'], c['conditionId'],
+                  sorted(v['value']['key'] for v in c['conditionValues']))
+                 for c in group] for group in b_path_conditions(x, start, byname, groups)]
+        if path_state(pid, node['id']) != want:
+            out.append(f'{workflow} / path {name!r}: {path_state(pid, node["id"])} != {want}')
+        nxt = proc['flowNodeMap'].get(node.get('nextId'))
+        if not nxt or nxt.get('name') != step or nxt.get('typeId') != 6 or nxt.get('nextId') not in ('', '99', None):
+            out.append(f'{workflow} / path {name!r} runs into {nxt and nxt.get("name")!r}')
+            continue
+        got = b_step_state(pid, nxt['id'])
+        wanted = dict(selectNodeId=start, appId=x['lines'], isException=False,
+                      fields=[(x['line_account']['controlId'], byname[source]['id'], control['controlId'])])
+        if got != wanted:
+            out.append(f'{workflow} / {step!r}: {got} != {wanted}')
+    info = hap.run('workflow', 'get', pid)
+    info = info.get('data', info)
+    if (info.get('name'), info.get('explain') or '') != (workflow, B_DESCS[workflow]):
+        out.append(f"{workflow}: name / description {info.get('name')!r} / {info.get('explain')!r}")
+    if not info.get('enabled') or info.get('publishStatus') != 2:
+        out.append(f"{workflow}: enabled={info.get('enabled')} publishStatus={info.get('publishStatus')}")
+    return out
+
+
+def build_automation_b(workflow, x):
+    """Create one of the two workflows if missing, then bring every part up to spec in place, republishing only when
+    something was written. No node is ever deleted."""
+    from hap_cli.core.workflow_node_dsl import translate_condition_group
+    pid = b_workflow_id(workflow)
+    if not pid:
+        out = hap.run('workflow', 'create', '-c', hap.ids()['org'], '-n', workflow, '-a', APP, '--type', 'worksheet',
+                      '-d', B_DESCS[workflow])
+        data_ = out.get('data', out) if isinstance(out, dict) else out
+        pid = data_ if isinstance(data_, str) else (data_.get('id') or data_.get('processId'))
+        if not pid:
+            sys.exit(f'no process id in `workflow create` output: {out}')
+        print(f'  created {workflow}: {pid}')
+    C.remember('workflows', workflow, pid)
+    proc, byname = nodes_by_name(pid)
+    print('  backup:', hap.backup('accounts_b_automation_' + B_EVENTS[workflow][0], proc))
+    changed = False
+    if B_GATEWAY not in byname:
+        args = ['workflow', 'node', 'batch-add', pid, '--nodes', json.dumps(b_nodes(x), ensure_ascii=False),
+                '--trigger-worksheet', x['lines'], '--trigger-event', B_EVENTS[workflow][0], '--trigger-alias', 'trigger',
+                '--trigger-filter', json.dumps(b_trigger_filter(x, workflow), ensure_ascii=False)]
+        if workflow == B_PRODUCT_CHANGED:
+            args += ['--trigger-fields', x['line_product']['controlId']]
+        hap.run(*args)
+        proc, byname = nodes_by_name(pid)
+        changed = True
+        print('  searches, gateway, paths and steps added')
+    start = proc['startEventId']
+    want = b_trigger_want(x, workflow)
+    live = b_trigger_state(pid, start)
+    if {k: live[k] for k in ('appId', 'triggerId', 'fields', 'condition')} != \
+            {k: want[k] for k in ('appId', 'triggerId', 'fields', 'condition')}:
+        condition = translate_condition_group(b_trigger_filter(x, workflow), {'trigger': start})
+        hap.run('workflow', 'node', 'save', pid, start, '--type', '0', '-n', B_TRIGGER_NAMES[workflow], '-c', json.dumps(
+            {'appId': x['lines'], 'appType': 1, 'triggerId': B_EVENTS[workflow][1], 'assignFieldIds': want['fields'],
+             'operateCondition': condition, 'returns': []}, ensure_ascii=False))
+        changed = True
+        print(f'  trigger rewritten: {b_trigger_state(pid, start)}')
+    if b_trigger_state(pid, start)['name'] != B_TRIGGER_NAMES[workflow]:
+        hap.run('workflow', 'node', 'rename', pid, start, '-n', B_TRIGGER_NAMES[workflow])
+        changed = True
+    info = hap.run('workflow', 'get', pid)
+    info = info.get('data', info)
+    if (info.get('name'), info.get('explain') or '') != (workflow, B_DESCS[workflow]):
+        hap.run('workflow', 'update', pid, '-n', workflow, '-d', B_DESCS[workflow])
+        changed = True
+    proc, byname = nodes_by_name(pid)
+    for name, worksheet, source, relation in b_searches(x):
+        node = byname[name]
+        source_id = start if source is None else byname[source]['id']
+        want_state = b_search_want(worksheet, source_id, relation)
+        if b_search_state(pid, node['id']) != want_state:
+            hap.run('workflow', 'node', 'save', pid, node['id'], '--type', '7', '-n', name, '-c', json.dumps(
+                {'actionId': '406', 'appId': worksheet, 'selectNodeId': '',
+                 'filters': [{'spliceType': 2, 'conditions': [[b_search_condition(node['id'], source_id, relation)]]}],
+                 'sorts': [{'controlId': 'ctime', 'controlType': 16, 'isAsc': True}],
+                 'executeType': CONTINUE_WHEN_NOT_FOUND}, ensure_ascii=False))
+            changed = True
+            got = b_search_state(pid, node['id'])
+            if got != want_state:
+                sys.exit(f'{workflow} / {name}: read back {got}, want {want_state}')
+    gateway = byname[B_GATEWAY]
+    paths = [proc['flowNodeMap'][i] for i in gateway.get('flowIds') or []]
+    specs = b_paths(x)
+    if len(paths) != len(specs):
+        sys.exit(f'{workflow}: {len(paths)} paths, want {len(specs)} — left for a person to look at')
+    by_step = {}
+    for node in paths:
+        nxt = proc['flowNodeMap'].get(node.get('nextId'))
+        by_step.setdefault(nxt.get('name') if nxt else None, []).append((node, nxt))
+    for name, groups, step, (source, control) in specs:
+        found = by_step.get(step) or []
+        if len(found) != 1 or found[0][1].get('typeId') != 6:
+            sys.exit(f'{workflow}: {len(found)} path(s) run into {step!r} — left for a person to look at')
+        node, nxt = found[0]
+        changed |= set_path(pid, node, name, b_path_conditions(x, start, byname, groups))
+        wanted = b_step_fields(x, byname, source, control)
+        state = b_step_state(pid, nxt['id'])
+        if (state['selectNodeId'], state['fields'], state['isException']) != \
+                (start, [(x['line_account']['controlId'], byname[source]['id'], control['controlId'])], False):
+            hap.run('workflow', 'node', 'save', pid, nxt['id'], '--type', '6', '-n', step, '-c', json.dumps(
+                {'actionId': '2', 'appId': x['lines'], 'appType': 1, 'selectNodeId': start, 'fields': wanted},
+                ensure_ascii=False))
+            changed = True
+    proc, _ = nodes_by_name(pid)
+    order = [proc['flowNodeMap'][i].get('name') for i in proc['flowNodeMap'][gateway['id']].get('flowIds') or []]
+    if order != [s[0] for s in specs]:
+        print(f'  note: the gateway lists its paths as {order}')
+    info = hap.run('workflow', 'get', pid)
+    info = info.get('data', info)
+    if changed or not info.get('enabled') or info.get('publishStatus') != 2:
+        result = C.publish(pid)
+        print('  published:', result)
+        if not result.get('isPublish'):
+            sys.exit(f'{workflow}: publish failed: {result}')
+    else:
+        print(f'  {workflow}: already built and published; nothing written')
+    left = automation_b_differences(workflow, x)
+    if left:
+        sys.exit(f'{workflow} read back with differences:\n  ' + '\n  '.join(left))
+    print(C.structure(pid))
+
+
+def step_b_automation():
+    """B · Invoice Lines: fill the account — the two workflows, built and read back."""
+    guard()
+    x = b_ids()
+    before = b_snapshot()
+    for workflow in (B_NEW_LINE, B_PRODUCT_CHANGED):
+        print(f'  ── {workflow}')
+        build_automation_b(workflow, x)
+    b_expect(before, 'automation B (no control may change)')
+
+
+# ── B7 · the account fields hidden by role ──────────────────────────────────
+
+def step_b_visibility():
+    """Roles (§1): Journals' five accounts, Products' and Product Categories' Income and Expense Account and Invoice
+    Lines' Account hidden from **Invoicing**; Contacts' Account Receivable and Account Payable hidden from Invoicing
+    and **Accounting Read-only**. HAP's fine-grained role carries a switch per field, so this is built field by field
+    — by roles.py, which owns the roles (HIDDEN_FIELDS), through its `create` step. No control may change."""
+    guard()
+    import roles
+    before = b_snapshot()
+    roles.step_create()
+    b_expect(before, 'roles.py create (no control may change)')
+    return roles.step_check()
+
+
+# ── B8 · the references — Records step 2 ────────────────────────────────────
+#
+# Every contact → 124000 / 221100 and every category → 410000 / 510000 (the company defaults every one of them
+# reads on the tenant, TEST records included); INV, BILL and BNK1 as the extract's journal table; the eight tenant
+# invoice lines → 410000; nothing on Products. Codes come from data/casimir-accounts.json, never from here. Only a
+# differing value is written, each record is read back at once, and nothing is ever cleared: a record the extract
+# says carries no account and does carry one is reported, not overwritten.
+
+def account_code_of():
+    return {rowid: code for code, (rowid, _) in record_index().items()}
+
+
+def read_accounts_on(worksheet, rowid):
+    """(the record as `record get` returns it, {account field: the rowid it points at, or None})."""
+    d = hap.run('worksheet', 'record', 'get', wid_of(worksheet), rowid, '-a', APP)['data']
+    out = {}
+    for name, alias, _, _ in B_FIELDS[worksheet]:
+        linked = relation(d.get(alias))
+        out[name] = linked[0][0] if linked else None
+    return d, out
+
+
+def reference_plan():
+    """[(worksheet, rowid, title, {account field: Code, or None for "carries none"}, write?)] — every record Records
+    step 2 speaks for. `write` is False where the extract says the record carries nothing: that is checked, never
+    written."""
+    d = data()
+    defaults = d['company_defaults']
+    plan = []
+    receivable = defaults['res.partner.property_account_receivable_id']
+    payable = defaults['res.partner.property_account_payable_id']
+    for r in C.records(wid_of('Contacts'), APP):
+        plan.append(('Contacts', r['rowid'], None, {'Account Receivable': receivable, 'Account Payable': payable}, True))
+    income = defaults['product.category.property_account_income_categ_id']
+    expense = defaults['product.category.property_account_expense_categ_id']
+    for r in C.records(wid_of('Product Categories'), APP):
+        plan.append(('Product Categories', r['rowid'], None, {'Income Account': income, 'Expense Account': expense},
+                     True))
+    for r in C.records(wid_of('Products'), APP):
+        plan.append(('Products', r['rowid'], None, {'Income Account': None, 'Expense Account': None}, False))
+    field_of = {alias: name for name, alias, _, _ in B_FIELDS['Journals']}
+    journals = {code: values for code, values in d['journals'].items() if not code.startswith('_')}
+    for r in C.records(wid_of('Journals'), APP):
+        got = hap.run('worksheet', 'record', 'get', wid_of('Journals'), r['rowid'], '-a', APP)['data']
+        codes = {name: None for name in field_of.values()}
+        codes.update({field_of[alias]: code for alias, code in journals.get(got.get('code'), {}).items()})
+        plan.append(('Journals', r['rowid'], None, codes, got.get('code') in journals))
+    import invlines as L
+    documents = L.invoice_numbers()
+    lines = {L.seed_key(line): line for line in L.read_lines().values()}
+    for ref, codes in d['invoice_lines'].items():
+        if ref.startswith('_'):
+            continue
+        invoice_row = documents.get(ref, (None,))[0]
+        for sequence, code in enumerate(codes):
+            line = lines.get((invoice_row, sequence))
+            if not line:
+                sys.exit(f'no line {sequence} on {ref} — run invlines.py seed first')
+            plan.append(('Invoice Lines', line['rowid'], f'{ref} line {sequence}', {'Account': code}, True))
+    return plan
+
+
+def title_of(worksheet, d, fallback):
+    if worksheet in ('Contacts', 'Product Categories'):
+        return d.get('complete_name') or fallback or '(no name)'
+    if worksheet == 'Journals':
+        return f"{d.get('code')} {d.get('name')}"
+    return fallback or d.get('name') or '(no name)'
+
+
+def step_b_references():
+    """Records step 2, written where a value differs and read back record by record; then 07's amounts checked,
+    since every line write starts the roll-up."""
+    guard()
+    controls = b_snapshot()
+    codes = account_code_of()
+    plan = reference_plan()
+    backup = {}
+    wrote, reported = [], []
+    for worksheet, rowid, title, want, write in plan:
+        d, have = read_accounts_on(worksheet, rowid)
+        title = title_of(worksheet, d, title)
+        backup[f'{worksheet} {rowid}'] = {n: codes.get(v, v) for n, v in have.items()}
+        want_ids = {n: (account_rowid(code) if code else None) for n, code in want.items()}
+        differing = [n for n in want if have[n] != want_ids[n]]
+        if not differing:
+            continue
+        to_write = [n for n in differing if write and want_ids[n]]
+        left = [n for n in differing if n not in to_write]
+        if left:
+            reported.append(f'{worksheet} {title}: ' + ', '.join(f'{n} is {codes.get(have[n], have[n])}, the extract '
+                                                                   f'says {want[n]}' for n in left))
+        if not to_write:
+            continue
+        if not wrote:
+            print('  backup:', hap.backup('accounts_b_records_pre_references', backup))
+        fields = {name: c['controlId'] for name, c in C.fields(wid_of(worksheet)).items()}
+        hap.run('worksheet', 'record', 'update', wid_of(worksheet), rowid, '-a', APP, '--fields-json', json.dumps(
+            [{'id': fields[n], 'value': [want_ids[n]]} for n in to_write], ensure_ascii=False))
+        _, back = read_accounts_on(worksheet, rowid)
+        wrong = {n: codes.get(back[n], back[n]) for n in to_write if back[n] != want_ids[n]}
+        if wrong:
+            sys.exit(f'{worksheet} {title}: read back {wrong}, want { {n: want[n] for n in to_write} }')
+        wrote.append((worksheet, title, {n: want[n] for n in to_write}))
+        print(f"  {worksheet:<18} {title:<48} " + ', '.join(f'{n} {want[n]}' for n in to_write))
+    hap.backup('accounts_b_records_pre_references_all', backup)
+    print(f'  {len(wrote)} record(s) written and read back; {len(plan) - len(wrote)} already as the extract has them')
+    for line in reported:
+        print(f'  NOT WRITTEN  {line}')
+    b_expect(controls, 'references (no control may change)')
+    if any(w == 'Invoice Lines' for w, _, _ in wrote):
+        print('  every line write starts 07\'s roll-up once; waiting for the runs to settle')
+        time.sleep(25)
+    import invlines as L
+    bad = L.step_verify()
+    return verify_b_references() + bad + len(reported)
+
+
+def verify_b_references():
+    """Records step 2 read back: every record of the plan, then the lines outside the seed (TEST lines) shown as they
+    are."""
+    codes = account_code_of()
+    bad, seen = 0, set()
+    for worksheet, rowid, title, want, write in reference_plan():
+        d, have = read_accounts_on(worksheet, rowid)
+        seen.add(rowid)
+        got = {n: codes.get(v, v) for n, v in have.items()}
+        ok = got == want
+        bad += not ok
+        print(f"  {'OK  ' if ok else 'DIFF'}  {worksheet:<18} {title_of(worksheet, d, title):<48} "
+              + ', '.join(f'{n} {got[n] or "—"}' for n in got) + ('' if ok else f'   <- want {want}'))
+    for r in C.records(wid_of('Invoice Lines'), APP):
+        if r['rowid'] in seen:
+            continue
+        d, have = read_accounts_on('Invoice Lines', r['rowid'])
+        print(f"  ·     Invoice Lines      {(d.get('move_name') or '') + ' ' + (d.get('name') or '')[:38]:<48} "
+              f"Account {codes.get(have['Account'], have['Account']) or '—'}   (not in the seed)")
+    print(f'  references: {bad} differing')
+    return bad
+
+
+# ── B9 · automation B, proved through the CLI on TEST records ───────────────
+#
+# Four TEST documents, each a draft named by its Customer Reference, and the TEST lines on them. The documents on
+# the tenant's journals are new ones — Sales already holds drafts, and the bill on Purchases is cancelled at the end
+# through the Cancel button's own workflow, so no tenant journal gains a draft entry its Archive guard would count.
+
+B_TEST_DOCUMENTS = {  # Customer Reference -> (Type, the journal's Sequence Prefix)
+    'TEST B customer invoice': ('Customer Invoice', 'INV'),
+    'TEST B vendor bill': ('Vendor Bill', 'BILL'),
+    'TEST B journal entry': ('Journal Entry', 'TSTDG'),     # TEST draft guard: Miscellaneous, no Default Account
+    'TEST B entry on Sales': ('Journal Entry', 'INV'),
+}
+B_CANCEL_AFTER = ('TEST B vendor bill',)
+B_TEST_PRODUCT, B_TEST_VARIANT = 'TEST Product', '[TEST-0001] TEST Product'   # TEST-0001; category TEST UI renamed
+B_PLAIN_VARIANT = '[CONS-0002] Whiteboard Marker Set'   # no account of its own; category Goods / Consumables
+B_NO_CATEGORY_VARIANT = '[TEST-0004] TEST Variant From UI'   # a TEST product with no category and no account
+B_OWN_INCOME, B_OWN_EXPENSE, B_EXPLICIT = '420000', '510100', '421000'   # tenant accounts, none of them a TEST one
+
+
+def b_documents():
+    """The four TEST documents, created when missing: {Customer Reference: rowid}."""
+    import invoices as I
+    inv = C.fields(wid_of('Invoices'))
+    cid = lambda n: inv[n]['controlId']
+    refs = {r.get(cid('Customer Reference')): r['rowid'] for r in C.records(wid_of('Invoices'), APP)}
+    journals = {}
+    for r in C.records(wid_of('Journals'), APP):
+        journals[hap.run('worksheet', 'record', 'get', wid_of('Journals'), r['rowid'], '-a', APP)['data'].get('code')] = \
+            r['rowid']
+    out = {}
+    for ref, (kind, code) in B_TEST_DOCUMENTS.items():
+        rowid = refs.get(ref)
+        if not rowid:
+            values = [{'id': cid('Number'), 'value': I.DRAFT},
+                      {'id': cid('Type'), 'value': [I.OPTION_KEY['Type'][kind]]},
+                      {'id': cid('Status'), 'value': [I.OPTION_KEY['Status']['Draft']]},
+                      {'id': cid('Accounting Date'), 'value': time.strftime('%Y-%m-%d')},
+                      {'id': cid('Journal'), 'value': [journals[code]]},
+                      {'id': cid('Auto-post'), 'value': [I.OPTION_KEY['Auto-post']['No']]},
+                      {'id': cid('Customer Reference'), 'value': ref}]
+            if kind != 'Journal Entry':
+                values.append({'id': cid('Tax mode'), 'value': [I.OPTION_KEY['Tax mode']['Tax Excluded']]})
+            rowid = C.row_id(hap.run('worksheet', 'record', 'create', wid_of('Invoices'), '-a', APP, '--fields-json',
+                                     json.dumps(values, ensure_ascii=False)))
+            print(f'  created the TEST document {ref!r} ({kind}, journal {code}): {rowid}')
+        C.remember('records', 'Invoices: ' + ref, rowid)
+        out[ref] = rowid
+    return out
+
+
+def b_run_steps(instance_id):
+    """The update step a run of automation B took, or None when it wrote nothing."""
+    passed = [name for _, name in run_nodes(instance_id)]
+    return next((name for name in passed if name.startswith('Take ')), None)
+
+
+def b_described(runs):
+    return [(r.get('createDate'), r.get('status'), b_run_steps(r['id']),
+             (r.get('instanceLog') or {}).get('cause'), (r.get('instanceLog') or {}).get('causeMsg')) for r in runs]
+
+
+def step_b_selfcheck():
+    """Prove automation B through the CLI, on TEST records only — as built since 17 Sep 2026 11:42, when the journal's
+    Default Account became a fill for an **empty** Account only (the coordinator's call; Odoo's rule).
+
+    **The new-line workflow**, each case on a *TEST B2* line created once (a re-run finds it by its Label — the
+    Invoice Lines title, which is also each run's title — and re-reads the run its create started):
+
+      1. a customer invoice line whose product has no account of its own takes the category's 410000;
+      2. a product given its own Income Account (420000) gives that one;
+      4. a vendor bill line takes the category's Expense Account, 510000;
+      5. a line created with an explicit Account (421000) keeps it, and no run starts;
+      6. a line on a journal entry whose journal has no Default Account is left empty — no path matches;
+      7. a product line with no Product takes the journal's Default Account;
+      8. a journal entry on a journal with a Default Account takes it;
+      9. a Section line starts no run;
+     10. a product with no category (and no account of its own) takes the journal's Default Account.
+
+    **The Product-change workflow** then walks every path of the gateway on the same lines, each walk ending where it
+    started (a line found elsewhere, after an interrupted run, is first brought back, unchecked). An Account written
+    alone starts neither workflow — that is how a walk empties the line or gives it an explicit account:
+
+      3.  customer: the product's own Income Account, then the category's, each replacing the line's (line 1);
+      3p. a product with no category and no account: a line **with** an Account keeps it; the same change on a line
+          **without** one takes the journal's Default Account (line 2);
+      3v. vendor: the product's own Expense Account; no Product keeps it; the category's replaces it; emptied, no
+          Product takes the journal's 510000 (line 4);
+      3n. customer, no Product: a line with an explicit Account keeps it; the category's replaces it; emptied, no
+          Product takes the journal's 410000 (line 7);
+      3e. a journal entry on Sales keeps an explicit Account and, emptied, takes the journal's; one on a journal with
+          no Default Account stays empty either way (lines 8 and 6);
+
+    and a write that leaves Product out starts neither workflow. The TEST product's own accounts are put back at the
+    end. The *TEST B* lines of the builds before are no longer written to; the first build's failed run on *TEST B
+    no product* is re-read as the LIMIT it recorded. `DIFF` is the build not doing what §1 and the coordinator's call
+    say; `LIMIT` is platform behaviour recorded, not counted."""
+    guard()
+    import invlines as L
+    x = b_ids()
+    pids = {w: b_workflow_id(w) for w in (B_NEW_LINE, B_PRODUCT_CHANGED)}
+    if not all(pids.values()):
+        sys.exit('automation B is not built — run `automation-b` first')
+    controls = b_snapshot()
+    docs = b_documents()
+    variants, units = L.titles(wid_of('Product Variants'), 'Display Name'), L.titles(wid_of('Units & Packagings'),
+                                                                                     'Unit Name')
+    variant_row = lambda name: L.row_of(variants, name, 'variant')
+    unit_row = L.row_of(units, 'Units', 'unit')
+    codes = account_code_of()
+    lines_f = C.fields(wid_of('Invoice Lines'))
+    lcid = lambda n: lines_f[n]['controlId']
+    problems, limits = [], []
+
+    def check(label, ok, detail):
+        print(f"  {'OK   ' if ok else 'DIFF '}  {label}: {detail}")
+        if not ok:
+            problems.append(f'{label}: {detail}')
+
+    def limit(label, detail):
+        print(f'  LIMIT  {label}: {detail}')
+        limits.append(f'{label}: {detail}')
+
+    def account(rowid):
+        return codes.get(read_accounts_on('Invoice Lines', rowid)[1]['Account'])
+
+    def existing(label):
+        return next((r['rowid'] for r in C.records(wid_of('Invoice Lines'), APP)
+                     if (r.get(lcid('Label')) or '') == label), None)
+
+    def runs_titled(workflow, label):
+        return [r for r in all_runs(pids[workflow]) if r.get('title') == label]
+
+    def write(action, expect_new, expect_changed):
+        """Run `action` and return the new runs of each workflow, told apart by instance id: the runs expected are
+        waited for first, then a short window is watched for the ones that must not come (a run registers some
+        seconds after its write)."""
+        snaps = {w: run_snapshot(pids[w]) for w in pids}
+        result = action()
+        got = {}
+        for workflow, n in sorted(((B_NEW_LINE, expect_new), (B_PRODUCT_CHANGED, expect_changed)),
+                                  key=lambda item: -item[1]):
+            got[workflow] = wait_new_runs(pids[workflow], snaps[workflow], n, seconds=90 if n else 12)
+        return result, got[B_NEW_LINE], got[B_PRODUCT_CHANGED]
+
+    def line(label, doc, sequence, variant=None, kind='Product', explicit=None):
+        """A TEST line, created once: (rowid, the new-line runs its create started, the change runs, created now)."""
+        rowid = existing(label)
+        if rowid:                                   # the run its create started: the oldest one bearing its title
+            C.remember('records', 'Invoice Lines: ' + label, rowid)
+            return rowid, runs_titled(B_NEW_LINE, label)[-1:], [], False
+        values = [{'id': lcid('Invoice'), 'value': [docs[doc]]}, {'id': lcid('Sequence'), 'value': sequence},
+                  {'id': lcid('Display Type'), 'value': [L.OPTION_KEY['Display Type'][kind]]},
+                  {'id': lcid('Label'), 'value': label}]
+        if kind == 'Product':
+            values += [{'id': lcid('Quantity'), 'value': 1}, {'id': lcid('Unit'), 'value': [unit_row]},
+                       {'id': lcid('Unit Price'), 'value': 10}, {'id': lcid('Discount (%)'), 'value': 0}]
+            if variant:
+                values.append({'id': lcid('Product'), 'value': [variant_row(variant)]})
+        if explicit:
+            values.append({'id': lcid('Account'), 'value': [account_rowid(explicit)]})
+        expect = 1 if kind == 'Product' and not explicit else 0
+        created, new, changed = write(lambda: C.row_id(hap.run('worksheet', 'record', 'create', wid_of('Invoice Lines'),
+                                                                 '-a', APP, '--fields-json',
+                                                                 json.dumps(values, ensure_ascii=False))), expect, 0)
+        C.remember('records', 'Invoice Lines: ' + label, created)
+        print(f'  created {label!r} on {doc}: {created}')
+        return created, new, changed, True
+
+    # the TEST product's own accounts, for the paths that read them; put back at the end
+    products = {hap.run('worksheet', 'record', 'get', wid_of('Products'), r['rowid'], '-a', APP)['data'].get('name'):
+                r['rowid'] for r in C.records(wid_of('Products'), APP)}
+    product = products[B_TEST_PRODUCT]
+    product_fields = C.fields(wid_of('Products'))
+
+    def set_own(income, expense):
+        hap.run('worksheet', 'record', 'update', wid_of('Products'), product, '-a', APP, '--fields-json', json.dumps(
+            [{'id': product_fields['Income Account']['controlId'], 'value': [account_rowid(income)] if income else []},
+             {'id': product_fields['Expense Account']['controlId'],
+              'value': [account_rowid(expense)] if expense else []}]))
+        got = read_accounts_on('Products', product)[1]
+        return codes.get(got['Income Account']), codes.get(got['Expense Account'])
+
+    was = tuple(codes.get(v) for v in read_accounts_on('Products', product)[1].values())
+    if any(v not in (None, B_OWN_INCOME, B_OWN_EXPENSE) for v in was):
+        sys.exit(f'{B_TEST_PRODUCT} carries accounts of its own {was} — left for a person to look at')
+    check(f'{B_TEST_PRODUCT} given its own Income and Expense Accounts',
+          set_own(B_OWN_INCOME, B_OWN_EXPENSE) == (B_OWN_INCOME, B_OWN_EXPENSE), f'{B_OWN_INCOME} / {B_OWN_EXPENSE}')
+
+    # ── the new-line workflow ──
+    tests = [
+        ('1. customer invoice, the product has no account of its own', 'TEST B2 category account',
+         'TEST B customer invoice', 1010, B_PLAIN_VARIANT, 'Product', None,
+         "Take the category's Income Account", '410000'),
+        ('2. customer invoice, the product has its own Income Account', 'TEST B2 product account',
+         'TEST B customer invoice', 1020, B_TEST_VARIANT, 'Product', None, "Take the product's Income Account",
+         B_OWN_INCOME),
+        ('4. vendor bill', 'TEST B2 vendor bill line', 'TEST B vendor bill', 1010, B_PLAIN_VARIANT, 'Product', None,
+         "Take the category's Expense Account", '510000'),
+        ('5. created with an explicit Account', 'TEST B2 explicit account', 'TEST B customer invoice', 1030,
+         B_PLAIN_VARIANT, 'Product', B_EXPLICIT, None, B_EXPLICIT),
+        ('6. journal entry on a journal with no Default Account', 'TEST B2 entry without default',
+         'TEST B journal entry', 1010, B_PLAIN_VARIANT, 'Product', None, None, None),
+        ('7. a product line with no Product', 'TEST B2 no product', 'TEST B customer invoice', 1045, None, 'Product',
+         None, "Take the journal's Default Account (customer document)", '410000'),
+        ('8. journal entry on a journal with a Default Account', 'TEST B2 entry on Sales line', 'TEST B entry on Sales',
+         1010, B_PLAIN_VARIANT, 'Product', None, "Take the journal's Default Account (journal entry)", '410000'),
+        ('9. a Section line', 'TEST B2 section', 'TEST B customer invoice', 1050, None, 'Section', None, None, None),
+        ('10. a product with no category and no account of its own', 'TEST B2 product without a category',
+         'TEST B customer invoice', 1060, B_NO_CATEGORY_VARIANT, 'Product', None,
+         "Take the journal's Default Account (customer document)", '410000'),
+    ]
+    rows = {}
+    old = existing('TEST B no product')
+    if old:                                          # the first build's evidence, kept and not written to
+        C.remember('records', 'Invoice Lines: TEST B no product', old)
+        first = runs_titled(B_NEW_LINE, 'TEST B no product')[-1:]
+        limit('a product line with no Product, in the first build (a search on an empty Relation)',
+              f'{b_described(first)} — the run failed at "Get the product variant"; Account '
+              f'{account(old) or "—"}. The search steps now ignore an abnormal condition and the paths guard it (7)')
+    for title, label, doc, sequence, variant, kind, explicit, step, want in tests:
+        rowid, new, changed, fresh = line(label, doc, sequence, variant, kind, explicit)
+        rows[label] = rowid
+        got = account(rowid)
+        steps = [b_run_steps(r['id']) for r in new]
+        if kind != 'Product' or explicit:
+            ok = not new and not changed and got == want
+            detail = f'no run of either workflow ({len(new)} / {len(changed)}); Account {got or "—"}'
+        elif step is None:
+            causes = [((r.get('instanceLog') or {}).get('cause'), (r.get('instanceLog') or {}).get('causeMsg'))
+                      for r in new]
+            ok = len(new) == 1 and steps == [None] and new[0].get('status') == 3 and got is None and not changed
+            detail = f'{len(new)} run(s) {b_described(new)}; Account {got or "—"}; causes {causes}'
+        else:
+            ok = len(new) == 1 and steps == [step] and new[0].get('status') == 2 and got == want and not changed
+            detail = f'{len(new)} run(s) {b_described(new)}; Account {got or "—"}'
+        check(title + ('' if fresh else ' (created in an earlier run; the run its create started re-read)'), ok,
+              detail)
+
+    # ── the Product-change workflow, through every path of the final gateway ──
+    def change(title, rowid, variant, step, want):
+        """Set the line's Product (None clears it); one run of the change workflow must take `step` (None: no path,
+        the run stops at the gateway) and Account must then read `want`."""
+        value = [variant_row(variant)] if variant else []
+        _, new, changed = write(lambda: hap.run('worksheet', 'record', 'update', wid_of('Invoice Lines'), rowid, '-a',
+                                                APP, '--fields-json', json.dumps([{'id': lcid('Product'),
+                                                                                   'value': value}])), 0, 1)
+        got = account(rowid)
+        steps = [b_run_steps(r['id']) for r in changed]
+        status = [r.get('status') for r in changed]
+        ok = not new and steps == [step] and status == [2 if step else 3] and got == want
+        check(f'{title}: Product → {variant or "none"}', ok,
+              f'{len(changed)} change run(s) {b_described(changed)}, {len(new)} new-line run(s); Account {got or "—"}')
+
+    def set_account(title, rowid, code):
+        """Write Account alone (None empties it): neither workflow may start, and Account must then read `code`."""
+        value = [account_rowid(code)] if code else []
+        _, new, changed = write(lambda: hap.run('worksheet', 'record', 'update', wid_of('Invoice Lines'), rowid, '-a',
+                                                APP, '--fields-json', json.dumps([{'id': lcid('Account'),
+                                                                                   'value': value}])), 0, 0)
+        got = account(rowid)
+        check(f'{title}: Account → {code or "none"}, written alone', not new and not changed and got == code,
+              f'{len(new)} / {len(changed)} run(s); Account {got or "—"}')
+
+    def walk(title, rowid, start, stops):
+        """Walk a line from `start` — (variant or None, account code or None), where the walk also ends — through
+        `stops`: ('product', variant or None, the step the change run takes or None, the Account then) or ('account',
+        code or None). A line found elsewhere (an interrupted run) is first brought to `start`, unchecked."""
+        now = (read_line_product(rowid), account(rowid))
+        if now != start:
+            variant, code = start
+            if now[0] != variant:
+                write(lambda: hap.run('worksheet', 'record', 'update', wid_of('Invoice Lines'), rowid, '-a', APP,
+                                      '--fields-json', json.dumps([{'id': lcid('Product'), 'value':
+                                                                    [variant_row(variant)] if variant else []}])), 0, 1)
+            if account(rowid) != code:
+                hap.run('worksheet', 'record', 'update', wid_of('Invoice Lines'), rowid, '-a', APP, '--fields-json',
+                        json.dumps([{'id': lcid('Account'), 'value': [account_rowid(code)] if code else []}]))
+            back = (read_line_product(rowid), account(rowid))
+            print(f'  setup  {title}: found at {now}, brought to {back}')
+            if back != start:
+                sys.exit(f'{title}: could not bring the line to {start}; it reads {back}')
+        for stop in stops:
+            if stop[0] == 'product':
+                change(title, rowid, *stop[1:])
+            else:
+                set_account(title, rowid, stop[1])
+
+    customer_default = "Take the journal's Default Account (customer document)"
+    walk('3. customer invoice (line 1)', rows['TEST B2 category account'], (B_PLAIN_VARIANT, '410000'), [
+        ('product', B_TEST_VARIANT, "Take the product's Income Account", B_OWN_INCOME),
+        ('product', B_PLAIN_VARIANT, "Take the category's Income Account", '410000')])
+    walk('3p. customer invoice, a product with no category (line 2)', rows['TEST B2 product account'],
+         (B_TEST_VARIANT, B_OWN_INCOME), [
+             ('product', B_NO_CATEGORY_VARIANT, None, B_OWN_INCOME),          # the line has an Account: it keeps it
+             ('product', B_TEST_VARIANT, "Take the product's Income Account", B_OWN_INCOME),
+             ('account', None),
+             ('product', B_NO_CATEGORY_VARIANT, customer_default, '410000'),  # the same change, no Account: the journal's
+             ('product', B_TEST_VARIANT, "Take the product's Income Account", B_OWN_INCOME)])
+    walk('3v. vendor bill (line 4)', rows['TEST B2 vendor bill line'], (B_PLAIN_VARIANT, '510000'), [
+        ('product', B_TEST_VARIANT, "Take the product's Expense Account", B_OWN_EXPENSE),
+        ('product', None, None, B_OWN_EXPENSE),
+        ('product', B_PLAIN_VARIANT, "Take the category's Expense Account", '510000'),
+        ('account', None),
+        ('product', None, "Take the journal's Default Account (vendor document)", '510000'),
+        ('product', B_PLAIN_VARIANT, "Take the category's Expense Account", '510000')])
+    walk('3n. customer invoice, no Product (line 7)', rows['TEST B2 no product'], (None, '410000'), [
+        ('product', B_PLAIN_VARIANT, "Take the category's Income Account", '410000'),
+        ('account', B_EXPLICIT),
+        ('product', None, None, B_EXPLICIT),
+        ('product', B_PLAIN_VARIANT, "Take the category's Income Account", '410000'),
+        ('account', None),
+        ('product', None, customer_default, '410000')])
+    walk('3e. journal entry on Sales (line 8)', rows['TEST B2 entry on Sales line'], (B_PLAIN_VARIANT, '410000'), [
+        ('account', B_EXPLICIT),
+        ('product', B_TEST_VARIANT, None, B_EXPLICIT),
+        ('account', None),
+        ('product', B_PLAIN_VARIANT, "Take the journal's Default Account (journal entry)", '410000')])
+    walk('3e. journal entry with no Default Account (line 6)', rows['TEST B2 entry without default'],
+         (B_PLAIN_VARIANT, None), [
+             ('product', B_TEST_VARIANT, None, None),
+             ('product', B_PLAIN_VARIANT, None, None)])
+
+    first = rows['TEST B2 category account']
+    _, new, changed = write(lambda: hap.run('worksheet', 'record', 'update', wid_of('Invoice Lines'), first, '-a', APP,
+                                            '--fields-json', json.dumps([{'id': lcid('Quantity'), 'value': 2}])), 0, 0)
+    check('3b. a write that leaves Product out (Quantity 2) starts neither workflow', not new and not changed,
+          f'{len(new)} / {len(changed)} run(s); Account {account(first)}')
+    hap.run('worksheet', 'record', 'update', wid_of('Invoice Lines'), first, '-a', APP, '--fields-json',
+            json.dumps([{'id': lcid('Quantity'), 'value': 1}]))
+
+    check(f'{B_TEST_PRODUCT} put back: no account of its own', set_own(None, None) == (None, None), '— / —')
+    for ref in B_CANCEL_AFTER:
+        status = hap.run('worksheet', 'record', 'get', wid_of('Invoices'), docs[ref], '-a', APP)['data'].get('state')
+        if option_label(status) != 'Cancelled':
+            hap.run('workflow', 'trigger', hap.ids()['workflows']['Invoices: Cancel'], '-s', docs[ref])
+            for _ in range(30):
+                status = hap.run('worksheet', 'record', 'get', wid_of('Invoices'), docs[ref], '-a',
+                                 APP)['data'].get('state')
+                if option_label(status) == 'Cancelled':
+                    break
+                time.sleep(1)
+        check(f'{ref!r} cancelled through the Cancel workflow, so Purchases holds no new draft',
+              option_label(status) == 'Cancelled', option_label(status))
+    b_expect(controls, 'selfcheck-b (no control may change)')
+    print('  TEST records: ' + json.dumps({**{f'Invoices: {k}': v for k, v in docs.items()},
+                                          **{f'Invoice Lines: {k}': v for k, v in rows.items()}}, ensure_ascii=False))
+    print('  selfcheck-b: ' + ('OK' if not problems else 'DIFFERENCES\n    ' + '\n    '.join(problems)))
+    print(f'  platform limits recorded: {len(limits)}')
+    return len(problems)
+
+
+# ── B10 · checks ────────────────────────────────────────────────────────────
+
+def step_b_check():
+    """Part B's configuration read back against §1, exiting non-zero on a difference: each worksheet's accounts
+    (type, target, alias, help, placeholder, place, tab, one-way dropdown, picker, default) and new tab, every
+    control where its owner puts it and the owners' own layout checks, the Contacts tab rule, the five Journals rules
+    and both Journals views' columns, the Invoice Lines rule, its Lines view and the Invoices subtable's columns,
+    automation B's two workflows, the roles' per-field hiding (roles.py check), and a Chart of Accounts that gained
+    nothing."""
+    import invlines as L
+    import journals as J
+    import prodcat as P
+    import roles
+    problems = []
+    for worksheet in B_FIELDS:
+        problems += b_field_differences(worksheet)
+        moves = owner_place_differences(worksheet)
+        if moves:
+            problems.append(f'{worksheet}: out of the place its script gives it: {moves}')
+    problems += [f'prodcat.py layout: {n} {d}' for n, d in P.layout_differences(hap.controls(P.ws())).items()]
+    problems += [f'journals.py layout: {n} {d}' for n, d in J.layout_differences(hap.controls(J.WORKSHEET)).items()]
+    problems += [f'invlines.py layout: {n} {d}' for n, d in L.layout_differences(hap.controls(L.ws())).items()]
+    problems += contacts_rule_differences() + journals_rule_differences() + lines_rule_differences()
+    want = list(J.COLUMNS)
+    for view, cols in columns_of('Journals', ('Journals', 'Archived')).items():
+        if cols != (want, want):
+            problems.append(f'Journals / {view}: columns {cols}')
+    if columns_of('Invoice Lines', ('Lines',))['Lines'] != (list(L.VIEW_COLUMNS),) * 2:
+        problems.append(f"Invoice Lines / Lines: columns {columns_of('Invoice Lines', ('Lines',))['Lines']}")
+    if subtable_columns() != (list(L.SUBTABLE_COLUMNS),) * 2:
+        problems.append(f'Invoices / {L.LINES_FIELD}: columns {subtable_columns()}')
+    x = b_ids()
+    for workflow in (B_NEW_LINE, B_PRODUCT_CHANGED):
+        problems += automation_b_differences(workflow, x)
+    coa = hap.by_name(hap.controls(ws()))
+    if set(coa) != set(PLACE):
+        problems.append(f'Chart of Accounts controls {sorted(set(coa) ^ set(PLACE))} — part B adds nothing there')
+    tabs = [(c['controlName'], c['row'], (c.get('advancedSetting') or {}).get('showtype'))
+            for c in hap.controls(wid_of('Product Categories'))
+            if c['type'] == C.TAB or (c['type'] == RELATION and (c.get('advancedSetting') or {}).get('showtype') in ('2', '6'))]
+    bar = [n for _, n in sorted((row, n) for n, row, show in tabs if show != '2')] + \
+          [n for n, _, show in sorted(tabs, key=lambda t: t[1]) if show == '2']
+    print(f"  Product Categories' tab bar, as pd-openweb orders it: {' · '.join(bar)}")
+    problems += [f'roles: {n} difference(s) — see above' for n in [roles.step_check()] if n]
+    print('  check-b: ' + ('OK — the accounts on Contacts, Products, Product Categories, Journals and Invoice Lines '
+                           'with their tabs, places, pickers and defaults; the rules, columns and subtable; automation '
+                           'B published with its guarded paths, the journal\'s Default Account only on an empty Account; '
+                           'the roles\' per-field hiding; Chart of Accounts '
+                           'unchanged' if not problems else 'DIFFERENCES\n    ' + '\n    '.join(problems)))
+    return len(problems)
+
+
+def step_b_runs():
+    """Automation B's run history: per workflow, the runs by status and by the step they took."""
+    for workflow in (B_NEW_LINE, B_PRODUCT_CHANGED):
+        rows = all_runs(b_workflow_id(workflow))
+        statuses, steps = {}, {}
+        for r in rows:
+            statuses[r.get('status')] = statuses.get(r.get('status'), 0) + 1
+            key = (r.get('status'), b_run_steps(r['id']) or ((r.get('instanceLog') or {}).get('causeMsg') or 'no step'))
+            steps.setdefault(key, []).append(r.get('title'))
+        print(f'  {workflow}: {len(rows)} run(s), status counts {statuses} (2 completed · 3 stopped · 4 failed)')
+        for (status, step), titles in sorted(steps.items(), key=lambda kv: str(kv[0])):
+            print(f'    {len(titles):>2}  [{status}] {step}  {sorted(set(titles))}')
+
+
+def step_b_rerun():
+    """The owning scripts' steps whose tables this bundle extended, run again: each must write nothing — every
+    control, and the rules and views of its own worksheet, compared before and after — and then check-b passes."""
+    guard()
+    import contacts as K
+    import invlines as L
+    import journals as J
+    import prodcat as P
+    import products as PR
+    import roles
+    steps = [('contacts.py layout', 'Contacts', K.step_layout), ('contacts.py rules', 'Contacts', K.step_rules),
+             ('products.py layout', 'Products', PR.step_layout), ('prodcat.py layout', 'Product Categories', P.step_layout),
+             ('journals.py layout', 'Journals', J.step_layout), ('journals.py rules', 'Journals', J.step_rules),
+             ('journals.py views', 'Journals', J.step_views), ('invlines.py layout', 'Invoice Lines', L.step_layout),
+             ('invlines.py rules', 'Invoice Lines', L.step_rules), ('invlines.py views', 'Invoice Lines', L.step_views),
+             ('roles.py create', None, roles.step_create)]
+    for label, worksheet, run in steps:
+        print(f'\n  ── {label}')
+        controls = b_snapshot()
+        rules = rule_snapshot(worksheet) if worksheet else None
+        views = view_snapshot(worksheet) if worksheet else None
+        run()
+        b_expect(controls, f'{label}, run again')
+        if worksheet:
+            rules_expect(rules, worksheet, f'{label}, run again')
+            views_expect(views, worksheet, f'{label}, run again')
+    print()
+    return step_b_check()
+
+
+def latest_baseline():
+    found = sorted(Path(hap.BACKUPS).glob('partb_snapshot_baseline_*.json'))
+    return found[-1] if found else None
+
+
+def step_b_records(path=None):
+    """Every record of the nine worksheets against the snapshot taken before part B (`backups/partb_snapshot_
+    baseline_*.json`, not committed), field by field through `record get`: nothing may differ but the account fields
+    this bundle seeds (verify-b reads those), and the only new records must be TEST ones."""
+    path = Path(path) if path else latest_baseline()
+    if not path or not path.exists():
+        sys.exit('no baseline snapshot: backups/partb_snapshot_baseline_*.json')
+    snap = json.loads(path.read_text(encoding='utf-8'))
+    seeded = {alias for fields in B_FIELDS.values() for _, alias, _, _ in fields}
+    bad = 0
+    for worksheet, entry in snap['worksheets'].items():
+        live = {}
+        for r in C.records(entry['id'], APP):
+            live[r['rowid']] = hap.run('worksheet', 'record', 'get', entry['id'], r['rowid'], '-a', APP)['data']
+        gone = sorted(set(entry['records']) - set(live))
+        added = sorted(set(live) - set(entry['records']))
+        changed = {}
+        for rowid, before in entry['records'].items():
+            after = live.get(rowid)
+            if after is None:
+                continue
+            # A control added since the snapshot reads back as a key of its own — a tab as "" — so a key that did not
+            # exist before and holds nothing now is not a change to the record.
+            keys = [k for k in sorted(set(before) | set(after)) if not k.startswith('_') and k not in seeded
+                    and before.get(k) != after.get(k) and not (k not in before and after.get(k) in ('', None, [], 0))]
+            if keys:
+                changed[rowid] = {k: (before.get(k), after.get(k)) for k in keys}
+        # A new record is a TEST one when any of its names says so: an Invoices document's title is its Number
+        # ("Draft"), and its Customer Reference (`ref`) carries the TEST name.
+        names = {r: [str(live[r].get(k) or '') for k in ('name', 'ref', 'display_name', 'complete_name')] for r in added}
+        titles = [next((n for n in names[r] if n.startswith('TEST')), names[r][0] or r) for r in added]
+        strays = [t for t in titles if not str(t).startswith('TEST')]
+        bad += len(gone) + len(changed) + len(strays)
+        print(f"  {'OK  ' if not (gone or changed or strays) else 'DIFF'}  {worksheet:<20} {len(entry['records'])} "
+              f"before, {len(live)} now; {len(changed)} changed beyond the account references; gone {gone}; "
+              f"new {titles}")
+        for rowid, diff in changed.items():
+            print(f'        {rowid}: ' + json.dumps(diff, ensure_ascii=False)[:600])
+    print(f'  records-b against {path.name}: {bad} difference(s)')
+    return bad
+
+
+def read_line_product(rowid):
+    d = hap.run('worksheet', 'record', 'get', wid_of('Invoice Lines'), rowid, '-a', APP)['data']
+    linked = relation(d.get('product_id'))
+    return linked[0][1] if linked else None
+
+
+def step_b_all():
+    for name in ('contacts', 'products', 'categories', 'journals', 'lines', 'automation-b', 'visibility',
+                 'references'):
+        print(f'\n── {name} ' + '─' * 60)
+        STEPS[name]()
+    print('\n── check-b ' + '─' * 60)
+    return step_b_check()
+
+
 def show():
     C.show(ws())
 
@@ -1742,6 +3626,22 @@ STEPS = {
     'account': step_account,
     'untouched': step_untouched,
     'show': show,
+    # part B
+    'contacts': step_b_contacts,
+    'products': step_b_products,
+    'categories': step_b_categories,
+    'journals': step_b_journals,
+    'lines': step_b_lines,
+    'automation-b': step_b_automation,
+    'visibility': step_b_visibility,
+    'references': step_b_references,
+    'verify-b': verify_b_references,
+    'selfcheck-b': step_b_selfcheck,
+    'check-b': step_b_check,
+    'runs-b': step_b_runs,
+    'rerun-b': step_b_rerun,
+    'records-b': step_b_records,
+    'all-b': step_b_all,
 }
 
 if __name__ == '__main__':
@@ -1749,5 +3649,6 @@ if __name__ == '__main__':
     if step not in STEPS:
         raise SystemExit(f"Unknown step {step!r}; choose from {', '.join(STEPS)}")
     result = STEPS[step](*sys.argv[2:])
-    if step in ('verify', 'check', 'all', 'selfcheck', 'roles', 'seed', 'runs') and result:
+    if step in ('verify', 'check', 'all', 'selfcheck', 'roles', 'seed', 'runs', 'visibility', 'references',
+                'verify-b', 'selfcheck-b', 'check-b', 'rerun-b', 'records-b', 'all-b') and result:
         sys.exit(1)

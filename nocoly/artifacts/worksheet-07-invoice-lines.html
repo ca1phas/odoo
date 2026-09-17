@@ -23,8 +23,8 @@
       <div><dt>Built and tested</dt><dd>16 September 2026</dd></div>
     </dl>
     <div class="scoreline">
-      <span class="chip pass">18 of 20 tests pass</span>
-      <span class="chip note">1 partly · 1 not run</span>
+      <span class="chip pass">19 of 20 tests pass</span>
+      <span class="chip note">1 not run</span>
       <span class="chip note">11 differences, 1 resolved</span>
       <span class="chip note">8 tenant lines seeded</span>
     </div>
@@ -66,6 +66,7 @@
           </tbody>
         </table>
       </div>
+      <p class="aside"><strong>Added since by bundles:</strong> Account, after Label on the form, the Lines view and inside each invoice, hidden on a section or a note and filled by the bundle's automation — bundle 2, Chart of Accounts, 17 September 2026.</p>
       <p class="aside"><code>account.move.line</code> has <strong>no <code>active</code> field</strong> either, so — as on Invoices — there is no Active checkbox, no Archived view and no Archive / Unarchive buttons.</p>
     </div>
 
@@ -91,16 +92,16 @@
         <table>
           <thead><tr><th>Rule</th><th>When</th><th>Effect</th><th>Odoo source</th></tr></thead>
           <tbody>
-            <tr><td class="label">A section or a note carries no figures</td><td>Display Type is Section, Subsection or Note</td><td>hide Product, Quantity, Unit, Unit Price, Discount (%) and Subtotal</td><td>SQL <code>check_non_accountable_fields_null</code> — “Forbidden balance or account on non-accountable line”</td></tr>
+            <tr><td class="label">A section or a note carries no figures</td><td>Display Type is Section, Subsection or Note</td><td>hide Product, Account, Quantity, Unit, Unit Price, Discount (%) and Subtotal</td><td>SQL <code>check_non_accountable_fields_null</code> — “Forbidden balance or account on non-accountable line”</td></tr>
           </tbody>
         </table>
       </div>
-      <p class="aside">Odoo's other three constraints are accounting-side and need the Chart of Accounts.</p>
+      <p class="aside">Odoo's other three constraints are accounting-side. The account arrived with the Chart of Accounts bundle; the debit-and-credit checks did not.</p>
     </div>
 
     <div class="block">
       <h3>Views</h3>
-      <p class="prose"><strong>Lines</strong>, the only view: every line, columns <strong>Number · Label · Product · Quantity · Unit · Unit Price · Discount (%) · Subtotal</strong>, sorted Accounting Date descending, then Number descending, then Sequence ascending — Odoo's <code>date desc, move_name desc, id</code>. Quick filter on Display Type. Inside an invoice the subtable shows Odoo's own column order: <strong>Sequence · Display Type · Product · Label · Quantity · Unit · Unit Price · Discount (%) · Subtotal</strong>.</p>
+      <p class="prose"><strong>Lines</strong>, the only view: every line, columns <strong>Number · Label · Account · Product · Quantity · Unit · Unit Price · Discount (%) · Subtotal</strong>, sorted Accounting Date descending, then Number descending, then Sequence ascending — Odoo's <code>date desc, move_name desc, id</code>. Quick filter on Display Type. Inside an invoice the subtable shows Odoo's own column order: <strong>Sequence · Display Type · Product · Label · Account · Quantity · Unit · Unit Price · Discount (%) · Subtotal</strong>.</p>
     </div>
 
     <div class="block">
@@ -110,7 +111,7 @@
           <thead><tr><th>Odoo 19.4 field or feature</th><th>Why not now</th></tr></thead>
           <tbody>
             <tr><td><strong>Taxes</strong> (<code>tax_ids</code>) and the tax-inclusive Amount (<code>price_total</code>)</td><td>The <strong>Taxes</strong> bundle. Bundles are recorded and ignored — nothing they bring gets a stand-in (owner, 16 Sep)</td></tr>
-            <tr><td><strong>Account</strong> and everything double-entry — debit, credit, balance, residual</td><td>The <strong>Chart of Accounts</strong> bundle</td></tr>
+            <tr><td><s><strong>Account</strong></s> and everything double-entry — debit, credit, balance, residual</td><td><strong>Account was built on 17 September 2026</strong> by the Chart of Accounts bundle; double entry was not</td></tr>
             <tr><td>The tax lines and the payment-term line Odoo writes itself, and the due date on them</td><td>Computed from taxes and payment terms; neither is a line a person edits</td></tr>
             <tr><td>Reconciliation, payments, statement lines</td><td>The <strong>Payments</strong> bundle</td></tr>
             <tr><td>Analytic distribution, early-payment discount, deferred dates, follow-up, consolidation, storno</td><td>Each its own bundle or module</td></tr>
@@ -161,7 +162,7 @@
         <tbody>
           <tr><td class="num">1</td><td class="label">Menu and the sidebar</td><td>Journals · Invoices · Invoice Lines; the mounted worksheet still its own entry</td><td><div class="result"><span class="chip pass small">Pass</span></div></td></tr>
           <tr><td class="num">2</td><td class="label">The Lines table</td><td>Eight columns in order, three-level sort</td><td><div class="result"><span class="chip pass small">Pass</span></div></td></tr>
-          <tr><td class="num">3</td><td class="label">Quick filter · Display Type</td><td>Product, then Section, then cleared</td><td><div class="result"><span class="chip note small">Partly</span>The filter and its four options are there, but no selection would stick through automation. The same control narrows the table on 06 — worth one click from you</div></td></tr>
+          <tr><td class="num">3</td><td class="label">Quick filter · Display Type</td><td>Product, then Section, then cleared</td><td><div class="result"><span class="chip pass small">Pass</span>Section narrows the table to the one section line, and Section with Product shows all ten — re-run on 17 September</div></td></tr>
           <tr><td class="num">4</td><td class="label">A seeded line, field by field</td><td>All 13 fields with the tenant's values</td><td><div class="result"><span class="chip pass small">Pass</span>Read on INV/2026/00001's chair line</div></td></tr>
           <tr><td class="num">5</td><td class="label">Read-only fields</td><td>Subtotal, Number, Accounting Date, Status refuse input</td><td><div class="result"><span class="chip pass small">Pass</span>Subtotal renders as a formula with a recompute icon</div></td></tr>
           <tr><td class="num">6</td><td class="label">The chair and desk lines point at the single variant</td><td>Product is the single variant; the Label keeps <code>[FURN-000x]</code></td><td><div class="result"><span class="chip pass small">Pass</span></div></td></tr>
@@ -188,7 +189,7 @@
       <ol class="differences">
         <li><span class="n">1</span><div class="head"><strong>No drag handle</strong><span class="chip note small">HAP behaviour</span></div><p>Odoo reorders lines by dragging; a HAP subtable has none, so <strong>Sequence</strong> is an editable number and the first column — the same decision as Journals' Sequence.</p></li>
         <li><span class="n">2</span><div class="head"><strong>No Taxes column, and no tax-inclusive Amount</strong><span class="chip note small">Bundle</span></div><p>A line has a subtotal and no tax, and the invoice's Tax stays the tenant's seeded figure. Nothing here stands in for either.</p></li>
-        <li><span class="n">3</span><div class="head"><strong>No Account column</strong><span class="chip note small">Bundle</span></div><p>Nothing double-entry — the Chart of Accounts. Odoo's “Missing required account on accountable line” cannot be built without it.</p></li>
+        <li><span class="n">3</span><div class="head"><strong><s>No Account column</s></strong><span class="chip pass small">Resolved</span></div><p>The Chart of Accounts bundle added Account on 17 September, filled by its automation. Double entry is still not built.</p></li>
         <li><span class="n">4</span><div class="head"><strong>Odoo nulls a section's figures; here a rule hides them</strong><span class="chip note small">Note</span></div><p>A value typed before the Display Type changed stays on the record, which is why the roll-up filters on Display Type as well as hiding.</p></li>
         <li><span class="n">5</span><div class="head"><strong>Every unit is offered</strong><span class="chip note small">HAP behaviour</span></div><p>Odoo restricts Unit to the product's own unit and packagings; that domain needs a lookup of a relation, which HAP stores as a title.</p></li>
         <li><span class="n">6</span><div class="head"><strong>Picking a product fills nothing in</strong><span class="chip note small">Note</span></div><p>Odoo's onchange writes the Label, the Unit and the Price; here all three are typed or seeded.</p></li>

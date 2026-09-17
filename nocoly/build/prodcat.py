@@ -77,16 +77,31 @@ PRODUCTS_REL = 'Products'                         # the reverse of Category on P
 COUNT = '# Products'
 PARENT_COMPLETE = 'Parent Complete Name'          # hidden; Complete Name is built on it
 CATEGORY = 'Category'                             # the control this bundle adds to Products
+# The Chart of Accounts bundle (09-chart-of-accounts.md, built by accounts.py `categories`) brings Odoo's page
+# Accounting and its two accounts. accounts.py adds them with `add-fields`, which parks a control at row 9999; this
+# script's `layout` places them, as products.py places Products' Category.
+ACCOUNTING, INCOME, EXPENSE = 'Accounting', 'Income Account', 'Expense Account'
+BUNDLE_2 = (ACCOUNTING, INCOME, EXPENSE)
 
 # §1's form layout: Name; Parent Category | Complete Name; Child Categories | # Products; Products. The hidden
 # lookup sits under them all — a hidden control still needs a place.
+#
+# Bundle 2's tab Accounting (Income Account | Expense Account) goes in at row 2, and the rows under it moved down
+# two. The row decides where the tab sits in the bar HAP draws at the foot of the record: pd-openweb's
+# getControlsByTab lists the type-52 tabs and the showtype-6 relation lists together in row order — Child
+# Categories is one — and the showtype-2 lists after all of them — Products is one. At row 2 the bar reads
+# Accounting · Child Categories · Products: Odoo's own page first, HAP's two lists together. (At a row under the
+# lists it would split them: Child Categories · Accounting · Products.)
 PLACE = {
     NAME: (0, 0, 12),
     PARENT: (1, 0, 6), COMPLETE: (1, 1, 6),
-    CHILDREN: (2, 0, 6), COUNT: (2, 1, 6),
-    PRODUCTS_REL: (3, 0, 12),
-    PARENT_COMPLETE: (4, 0, 6),
+    ACCOUNTING: (2, 0, 12),
+    INCOME: (3, 0, 6), EXPENSE: (3, 1, 6),
+    CHILDREN: (4, 0, 6), COUNT: (4, 1, 6),
+    PRODUCTS_REL: (5, 0, 12),
+    PARENT_COMPLETE: (6, 0, 6),
 }
+TAB_OF = {INCOME: ACCOUNTING, EXPENSE: ACCOUNTING}   # the controls that sit inside a tab
 HINTS = {NAME: 'e.g. Lamps'}                      # Odoo's placeholder; every other control gets none
 DESC = {  # Odoo's field help where it has one (product_category.py), how a helper is computed otherwise
     COMPLETE: "The Parent Category's Complete Name, ' / ' and this name, down the whole tree — Odoo "
@@ -96,6 +111,11 @@ DESC = {  # Odoo's field help where it has one (product_category.py), how a help
                   'the product.',
     COUNT: 'The number of products under this category (Does not consider the children categories)',
     PARENT_COMPLETE: "The Parent Category's Complete Name (a stored lookup), which Complete Name is built on.",
+    # bundle 2: Odoo's help on property_account_income_categ_id / property_account_expense_categ_id (product.py)
+    INCOME: 'This account will be used when validating a customer invoice.',
+    EXPENSE: 'The expense is accounted for when a vendor bill is validated, except in anglo-saxon accounting with '
+             'perpetual inventory valuation in which case the expense (Cost of Goods Sold account) is recognized at '
+             'the customer invoice validation.',
 }
 REQUIRED = {NAME}
 # A hidden field never shows as a table column, so Complete Name — the title, and a view column — is read-only
@@ -117,6 +137,10 @@ NEW = {
     COUNT: (ROLLUP, 'product_count', {}),
     CHILDREN: (None, 'child_id', {}),             # the reverse of Parent Category
     PRODUCTS_REL: (None, 'product_ids', {}),      # the reverse of Category on Products; not an Odoo field
+    # bundle 2, added by accounts.py: a tab, and two one-way Relations to Chart of Accounts
+    ACCOUNTING: ('SECTION', '', {}),
+    INCOME: ('RELATE_SHEET', 'property_account_income_categ_id', {}),
+    EXPENSE: ('RELATE_SHEET', 'property_account_expense_categ_id', {}),
 }
 ALIASES = {name: alias for name, (_, alias, _) in NEW.items()}
 
@@ -253,7 +277,7 @@ def step_fields():
     name['controlId'] = next(c for c in existing if c.get('attribute') == 1)['controlId']
     parent = C.control('RELATE_SHEET', PARENT, PLACE[PARENT], alias=ALIASES[PARENT], hint='', data_source=ws(),
                        multi=False, advanced_setting={'showtype': '3', 'bidirectional': '1'})   # 3 = dropdown
-    hap.run('worksheet', 'update-fields', ws(), '--controls', json.dumps([name, parent], ensure_ascii=False))
+    C.save_controls(ws(), [name, parent])
     ensure_reverses()
     C.show(ws())
 
@@ -360,8 +384,7 @@ def ensure_reverses():
               f"({forward['controlId']})")
     if new:
         before = signatures()
-        hap.run('worksheet', 'update-fields', ws(), '--controls',
-                json.dumps(ctrls + new, ensure_ascii=False))
+        C.save_controls(ws(), ctrls + new)
         check_untouched(before)
     for name, forward, _ in reverse_pairs():
         reverse = next((c for c in hap.controls(ws()) if c['controlId'] == forward.get('sourceControlId')), None)
@@ -431,7 +454,7 @@ def step_computed():
         ctrls.append(lookup)
         f[PARENT_COMPLETE] = lookup
         f[COMPLETE]['dataSource'] = function_source(complete_name_expression(f))
-        hap.run('worksheet', 'update-fields', ws(), '--controls', json.dumps(ctrls, ensure_ascii=False))
+        C.save_controls(ws(), ctrls)
         print(f'  {PARENT_COMPLETE} added and {COMPLETE} rewritten to read it')
     f = C.fields(ws())
     if COUNT not in f:
@@ -446,7 +469,7 @@ def step_computed():
     if json.loads(f[COMPLETE].get('dataSource') or '{}').get('expression') != expression:
         print(f"  {COMPLETE}: read back {f[COMPLETE].get('dataSource')!r}; rewriting")
         f[COMPLETE]['dataSource'] = function_source(expression)
-        hap.run('worksheet', 'update-fields', ws(), '--controls', json.dumps(ctrls, ensure_ascii=False))
+        C.save_controls(ws(), ctrls)
     print('  ' + json.dumps(computed_state(), ensure_ascii=False))
     C.show(ws())
 
@@ -517,25 +540,28 @@ def list_columns(name):
     return _list_columns[name]
 
 
-def desired(c):
-    """The attributes `layout` owns on control c, as they should read back."""
+def desired(c, tab_ids):
+    """The attributes `layout` owns on control c, as they should read back. A tab owns its place only."""
     name = c['controlName']
     row, col, size = PLACE[name]
-    out = {'row': row, 'col': col, 'size': size, 'sectionId': '', 'alias': ALIASES[name],
-           'hint': HINTS.get(name, ''), 'desc': DESC.get(name, ''), 'required': name in REQUIRED,
-           'fieldPermission': PERMISSION.get(name, '111'),
-           'attribute': 1 if name == COMPLETE else 0}
+    out = {'row': row, 'col': col, 'size': size, 'sectionId': tab_ids.get(TAB_OF[name], '') if name in TAB_OF else ''}
+    if c['type'] == C.TAB:
+        return out
+    out.update({'alias': ALIASES[name], 'hint': HINTS.get(name, ''), 'desc': DESC.get(name, ''),
+                'required': name in REQUIRED, 'fieldPermission': PERMISSION.get(name, '111'),
+                'attribute': 1 if name == COMPLETE else 0})
     if name in LIST_COLUMNS:
         out['showControls'] = list_columns(name)
     return out
 
 
 def layout_differences(ctrls):
+    tab_ids = {c['controlName']: c['controlId'] for c in ctrls if c['type'] == C.TAB}
     out = {}
     for c in ctrls:
         if c['controlName'] not in PLACE:
             continue
-        diff = {k: (c.get(k), v) for k, v in desired(c).items()
+        diff = {k: (c.get(k), v) for k, v in desired(c, tab_ids).items()
                 if (c.get(k) or (0 if k == 'attribute' else '' if isinstance(v, str) else False)) != v}
         if diff:
             out[c['controlName']] = diff
@@ -559,17 +585,21 @@ def step_layout():
         reverse = next(c for c in ctrls if c['controlId'] == forward['sourceControlId'])
         print(f"  {reverse['controlName']!r} ({reverse['controlId']}) renamed to {control_name!r}")
         reverse['controlName'] = control_name
-    missing = [n for n in PLACE if n not in {c['controlName'] for c in ctrls}]
+    # Bundle 2's tab and accounts are placed when they are there; accounts.py adds them.
+    missing = [n for n in PLACE if n not in {c['controlName'] for c in ctrls} and n not in BUNDLE_2]
     if missing:
         sys.exit(f'controls missing — run the earlier steps first: {missing}')
     changed = layout_differences(ctrls)
     # `f` was read before the renames above, so a control whose name is not in it is one this step just renamed
     if changed or any(c['controlName'] not in f for c in ctrls):
+        tab_ids = {c['controlName']: c['controlId'] for c in ctrls if c['type'] == C.TAB}
         for c in ctrls:
             if c['controlName'] in PLACE:
-                c.update(desired(c))
+                c.update(desired(c, tab_ids))
         before = signatures()
-        hap.run('worksheet', 'update-fields', ws(), '--controls', json.dumps(ctrls, ensure_ascii=False))
+        # Through the CLI's session: the account Relations' snapshots of Chart of Accounts put the control list past
+        # the kernel's argument limit, and common.save_controls keeps their static defaults (BUILDING.md).
+        C.save_controls(ws(), ctrls)
         check_untouched(before)
     left = layout_differences(hap.controls(ws()))
     if left:
@@ -971,7 +1001,8 @@ def step_check():
     if hap.listing('worksheet', 'rules', ws()):
         problems.append('this worksheet has a rule; §1 gives it none')
     problems += products_differences()
-    print('  check: ' + ('OK — seven controls with their places and permissions, Complete Name the title and '
+    print('  check: ' + ('OK — the controls with their places and permissions (bundle 2\'s Accounting tab and its '
+                         'two accounts among them), Complete Name the title and '
                          'built on the lookup, the roll-up over Products, the Categories view, and Products\' '
                          'Category with a quick filter on both its views'
                          if not problems else 'DIFFERENCES\n    ' + '\n    '.join(problems)))

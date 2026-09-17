@@ -22,6 +22,7 @@ import json, subprocess, sys, uuid
 from hap_cli.core import worksheet_templates as wt
 from hap_cli.core.app_creator.fields import bidirectional_relation_control, field_permission_str
 
+import common as C
 import hap
 
 WS = hap.ids()['worksheets']['Contacts']
@@ -44,12 +45,17 @@ PLACE = {
     'Contacts': (12, 0, 12, 'Contacts'),
     'Sales': (14, 0, 12, 'Sales & Purchase'), 'Salesperson': (15, 0, 6, 'Sales & Purchase'),
     'Misc': (16, 0, 12, 'Sales & Purchase'), 'Reference': (17, 0, 6, 'Sales & Purchase'),
-    'Notes': (19, 0, 12, 'Notes'),
-    'Active': (20, 0, 6, None),
-    'Display Name': (21, 0, 12, None),
-    'Parent name': (22, 0, 6, None),
+    # The tab Invoicing and its two accounts belong to the Chart of Accounts bundle (09-chart-of-accounts.md,
+    # built by accounts.py `contacts`), which adds them with `add-fields` — that parks a new control at row 9999,
+    # and only a full save moves it. This step is that save, so they are placed here, between Sales & Purchase and
+    # Notes where Odoo has the page; Notes and everything under it moved down two rows to make room.
+    'Account Receivable': (19, 0, 6, 'Invoicing'), 'Account Payable': (19, 1, 6, 'Invoicing'),
+    'Notes': (21, 0, 12, 'Notes'),
+    'Active': (22, 0, 6, None),
+    'Display Name': (23, 0, 12, None),
+    'Parent name': (24, 0, 6, None),
 }
-TABS = {'Contacts': 11, 'Sales & Purchase': 13, 'Notes': 18}
+TABS = {'Contacts': 11, 'Sales & Purchase': 13, 'Invoicing': 18, 'Notes': 20}
 HINTS = {'Name': 'Name (company or person)', 'Company': 'Company Employer', 'Email': 'Email', 'Phone': 'Phone',
          'Job Position': 'e.g. Sales Director', 'Website': 'e.g. https://www.odoo.com', 'Tax ID': 'Tax ID',
          'Company ID': 'Company ID', 'DUNS': 'DUNS', 'Street': 'Street...', 'Street 2': 'Street 2...',
@@ -116,7 +122,7 @@ def step_fields():
          ctl('SPLIT_LINE', 'Misc'), ctl('TEXT', 'Reference', alias='ref'),
          ctl('RICH_TEXT', 'Notes', alias='comment'),
          active]
-    hap.run('worksheet', 'update-fields', WS, '--controls', json.dumps(c, ensure_ascii=False))
+    C.save_controls(WS, c)
     step_display()
     step_layout()
 
@@ -153,7 +159,7 @@ def step_layout():
     ctrls = hap.controls(WS)
     hap.backup('contacts_controls_pre_layout', ctrls)
     arrange(ctrls)
-    hap.run('worksheet', 'update-fields', WS, '--controls', json.dumps(ctrls, ensure_ascii=False))
+    C.save_controls(WS, ctrls)
     show()
 
 
@@ -162,6 +168,11 @@ DESC = {
     'Parent name': "The Company's Name, a stored lookup read by Display Name. Odoo parent_name.",
     'Display Name': 'How this contact appears in lists and pickers: the Company\'s name, a comma and the Name — '
                     'or the Address Type for a nameless address.',
+    # The Chart of Accounts bundle's two accounts (09 §1; Odoo has no help on either field). accounts.py writes
+    # and checks them; `display` and `layout` here never rewrite a description.
+    'Account Receivable': "Odoo reads the company's default, 124000 Account Receivable, until a contact is given "
+                          'its own.',
+    'Account Payable': "Odoo reads the company's default, 221100 Account Payable, until a contact is given its own.",
 }
 # A hidden field drops out of table columns (cards and pickers still get the title), so Display Name is shown
 # read-only, once the record exists; Parent name is hidden.
@@ -196,7 +207,7 @@ def step_display():
         # add-fields keeps the client-side id, and a formula saved under it computes nothing; a full save of
         # the control set re-mints it
         hap.run('worksheet', 'add-fields', WS, '--controls', json.dumps([control], ensure_ascii=False))
-        hap.run('worksheet', 'update-fields', WS, '--controls', json.dumps(hap.controls(WS), ensure_ascii=False))
+        C.save_controls(WS, hap.controls(WS))
 
     hap.backup('contacts_controls_pre_display', hap.controls(WS))
     f = fields()
@@ -225,7 +236,7 @@ def step_display():
     for c in ctrls:
         c['attribute'] = want[c['controlId']]           # one title field: Display Name, no longer Name
     if stale:
-        hap.run('worksheet', 'update-fields', WS, '--controls', json.dumps(ctrls, ensure_ascii=False))
+        C.save_controls(WS, ctrls)
         print(f'  updated: {stale}')
     show()
 
@@ -268,8 +279,13 @@ def item(kind, *ctrls, message=''):
                           'permission': [], 'type': '', 'value': ''} for c in ctrls]}
 
 
+RULE_INVOICING = 'Invoicing hidden for a contact under a company'   # bundle 2, Chart of Accounts
+
+
 def step_rules():
-    f = hap.by_name(c for c in hap.controls(WS) if c['type'] != 52)
+    ctrls = hap.controls(WS)
+    f = hap.by_name(c for c in ctrls if c['type'] != 52)
+    tab = {c['controlName']: c for c in ctrls if c['type'] == 52}   # "Contacts" and "Notes" are a tab and a field
     contact = next(o['key'] for o in f['Address Type']['options'] if o['value'] == 'Contact')
     rules = [  # (name, type 0=interaction 1=validation, filters, items)
         ('Address Type only under a company', 0,        # Odoo edits `type` only in a sub-contact's form
@@ -280,6 +296,11 @@ def step_rules():
          any_of([cond(f['Address Type'], EQ, contact), cond(f['Name'], EMPTY)]),
          [item(ERROR, f['Name'], message='Contacts require a name')]),
     ]
+    if 'Invoicing' in tab:
+        # <page name="accounting" invisible="not is_company and parent_id">: a contact under a company posts through
+        # the company's accounts. Written as a hide while Company is set, so a new contact — no Company yet — shows
+        # the tab, as Odoo does. The tab arrives with the Chart of Accounts bundle (accounts.py `contacts`).
+        rules.append((RULE_INVOICING, 0, any_of([cond(f['Company'], NOT_EMPTY)]), [item(HIDE, tab['Invoicing'])]))
     live = {r['name']: r for r in hap.listing('worksheet', 'rules', WS)}
     hap.backup('contacts_rules_pre_rules', list(live.values()))
     for name, kind, filters, items in rules:
@@ -579,7 +600,7 @@ def step_to194():
     if not any(c['controlName'] == 'DUNS' for c in ctrls):
         ctrls.append(ctl('TEXT', 'DUNS', alias='duns'))
     arrange(ctrls)
-    hap.run('worksheet', 'update-fields', WS, '--controls', json.dumps(ctrls, ensure_ascii=False))
+    C.save_controls(WS, ctrls)
     show()
     step_rules()
     step_views()
