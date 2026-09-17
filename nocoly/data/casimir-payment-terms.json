@@ -1,0 +1,313 @@
+{
+ "extracted": "2026-09-17, casimir.odoo.com (Odoo saas~19.4+e), read-only",
+ "labels": {
+  "value": {
+   "percent": "Percent",
+   "fixed": "Fixed"
+  },
+  "delay_type": {
+   "days_after": "Days after invoice date",
+   "days_after_end_of_month": "Days after end of month",
+   "days_after_end_of_next_month": "Days after end of next month",
+   "days_end_of_month_on_the": "Days end of month on the"
+  },
+  "early_pay_discount_computation": {
+   "included": "On early payment",
+   "excluded": "Never",
+   "mixed": "Always (upon invoice)"
+  }
+ },
+ "payment_terms": [
+  {
+   "id": 1,
+   "name": "Immediate Payment",
+   "active": true,
+   "sequence": 10,
+   "company_id": false,
+   "note": "<p>Payment terms: Immediate Payment</p>",
+   "display_on_invoice": true,
+   "early_discount": false,
+   "discount_percentage": 2,
+   "discount_days": 10,
+   "early_pay_discount_computation": "included",
+   "lines": [
+    {
+     "value": "percent",
+     "value_amount": 100,
+     "delay_type": "days_after",
+     "days_next_month": "10",
+     "nb_days": 0
+    }
+   ]
+  },
+  {
+   "id": 2,
+   "name": "15 Days",
+   "active": true,
+   "sequence": 10,
+   "company_id": false,
+   "note": "<p>Payment terms: 15 Days</p>",
+   "display_on_invoice": true,
+   "early_discount": false,
+   "discount_percentage": 2,
+   "discount_days": 10,
+   "early_pay_discount_computation": "included",
+   "lines": [
+    {
+     "value": "percent",
+     "value_amount": 100,
+     "delay_type": "days_after",
+     "days_next_month": "10",
+     "nb_days": 15
+    }
+   ]
+  },
+  {
+   "id": 3,
+   "name": "21 Days",
+   "active": true,
+   "sequence": 10,
+   "company_id": false,
+   "note": "<p>Payment terms: 21 Days</p>",
+   "display_on_invoice": true,
+   "early_discount": false,
+   "discount_percentage": 2,
+   "discount_days": 10,
+   "early_pay_discount_computation": "included",
+   "lines": [
+    {
+     "value": "percent",
+     "value_amount": 100,
+     "delay_type": "days_after",
+     "days_next_month": "10",
+     "nb_days": 21
+    }
+   ]
+  },
+  {
+   "id": 4,
+   "name": "30 Days",
+   "active": true,
+   "sequence": 10,
+   "company_id": false,
+   "note": "<p>Payment terms: 30 Days</p>",
+   "display_on_invoice": true,
+   "early_discount": false,
+   "discount_percentage": 2,
+   "discount_days": 10,
+   "early_pay_discount_computation": "included",
+   "lines": [
+    {
+     "value": "percent",
+     "value_amount": 100,
+     "delay_type": "days_after",
+     "days_next_month": "10",
+     "nb_days": 30
+    }
+   ]
+  },
+  {
+   "id": 5,
+   "name": "45 Days",
+   "active": true,
+   "sequence": 10,
+   "company_id": false,
+   "note": "<p>Payment terms: 45 Days</p>",
+   "display_on_invoice": true,
+   "early_discount": false,
+   "discount_percentage": 2,
+   "discount_days": 10,
+   "early_pay_discount_computation": "included",
+   "lines": [
+    {
+     "value": "percent",
+     "value_amount": 100,
+     "delay_type": "days_after",
+     "days_next_month": "10",
+     "nb_days": 45
+    }
+   ]
+  },
+  {
+   "id": 6,
+   "name": "End of Following Month",
+   "active": true,
+   "sequence": 10,
+   "company_id": false,
+   "note": "<p>Payment terms: End of Following Month</p>",
+   "display_on_invoice": true,
+   "early_discount": false,
+   "discount_percentage": 2,
+   "discount_days": 10,
+   "early_pay_discount_computation": "included",
+   "lines": [
+    {
+     "value": "percent",
+     "value_amount": 100,
+     "delay_type": "days_after_end_of_next_month",
+     "days_next_month": "10",
+     "nb_days": 0
+    }
+   ]
+  },
+  {
+   "id": 7,
+   "name": "10 Days after End of Next Month",
+   "active": true,
+   "sequence": 10,
+   "company_id": false,
+   "note": "<p>Payment terms: 10 Days after End of Next Month</p>",
+   "display_on_invoice": true,
+   "early_discount": false,
+   "discount_percentage": 2,
+   "discount_days": 10,
+   "early_pay_discount_computation": "included",
+   "lines": [
+    {
+     "value": "percent",
+     "value_amount": 100,
+     "delay_type": "days_after_end_of_next_month",
+     "days_next_month": "10",
+     "nb_days": 10
+    }
+   ]
+  },
+  {
+   "id": 8,
+   "name": "30% Now, Balance 60 Days",
+   "active": true,
+   "sequence": 10,
+   "company_id": false,
+   "note": "<p>Payment terms: 30% Now, Balance 60 Days</p>",
+   "display_on_invoice": true,
+   "early_discount": false,
+   "discount_percentage": 2,
+   "discount_days": 10,
+   "early_pay_discount_computation": "included",
+   "lines": [
+    {
+     "value": "percent",
+     "value_amount": 30,
+     "delay_type": "days_after",
+     "days_next_month": "10",
+     "nb_days": 0
+    },
+    {
+     "value": "percent",
+     "value_amount": 70,
+     "delay_type": "days_after",
+     "days_next_month": "10",
+     "nb_days": 60
+    }
+   ]
+  },
+  {
+   "id": 9,
+   "name": "2/7 Net 30",
+   "active": true,
+   "sequence": 10,
+   "company_id": false,
+   "note": "<p>Payment terms: 30 Days, 2% Early Payment Discount under 7 days</p>",
+   "display_on_invoice": true,
+   "early_discount": true,
+   "discount_percentage": 2,
+   "discount_days": 7,
+   "early_pay_discount_computation": "included",
+   "lines": [
+    {
+     "value": "percent",
+     "value_amount": 100,
+     "delay_type": "days_after",
+     "days_next_month": "10",
+     "nb_days": 30
+    }
+   ]
+  },
+  {
+   "id": 10,
+   "name": "90 days, on the 10th",
+   "active": true,
+   "sequence": 10,
+   "company_id": false,
+   "note": "<p>Payment terms: 90 days, on the 10th</p>",
+   "display_on_invoice": true,
+   "early_discount": false,
+   "discount_percentage": 2,
+   "discount_days": 10,
+   "early_pay_discount_computation": "included",
+   "lines": [
+    {
+     "value": "percent",
+     "value_amount": 100,
+     "delay_type": "days_end_of_month_on_the",
+     "days_next_month": "10",
+     "nb_days": 90
+    }
+   ]
+  }
+ ],
+ "invoices": [
+  {
+   "move": "INV/2026/00001",
+   "state": "posted",
+   "partner": "Klinik Kesihatan Damansara",
+   "ref": "KKD-2026-009",
+   "invoice_date": "2026-09-11",
+   "date": "2026-09-11",
+   "invoice_date_due": "2026-10-02",
+   "invoice_payment_term_id": "21 Days"
+  },
+  {
+   "move": "draft",
+   "state": "draft",
+   "partner": "Sunway Construction Group",
+   "ref": "SCG-PO-88213",
+   "invoice_date": false,
+   "date": "2026-09-09",
+   "invoice_date_due": "2026-10-09",
+   "invoice_payment_term_id": "30 Days"
+  },
+  {
+   "move": "draft",
+   "state": "draft",
+   "partner": "Sarawak Timber Logistics",
+   "ref": "STL-2026-0042",
+   "invoice_date": false,
+   "date": "2026-09-14",
+   "invoice_date_due": "2026-10-29",
+   "invoice_payment_term_id": "45 Days"
+  },
+  {
+   "move": "INV/2026/00002",
+   "state": "posted",
+   "partner": "Casimir",
+   "invoice_date": "2026-09-14",
+   "date": "2026-09-14",
+   "invoice_date_due": "2026-09-14",
+   "invoice_payment_term_id": false
+  },
+  {
+   "move": "INV/2026/00003",
+   "state": "posted",
+   "partner": "Casimir",
+   "invoice_date": "2026-09-14",
+   "date": "2026-09-14",
+   "invoice_date_due": "2026-09-14",
+   "invoice_payment_term_id": false
+  }
+ ],
+ "partners": {
+  "property_payment_term_id": {
+   "Bumi Retail Ventures": "2/7 Net 30",
+   "Klinik Kesihatan Damansara": "21 Days",
+   "Nasi Kandar Pelita Holdings": "15 Days",
+   "Petronas Digital Sdn Bhd": "45 Days",
+   "Sarawak Timber Logistics": "45 Days",
+   "Sunway Construction Group": "30 Days",
+   "TechBridge Distributors": "30 Days",
+   "Universiti Teknologi Malaysia": "30 Days"
+  },
+  "property_supplier_payment_term_id": {},
+  "note": "every other partner (Casimir, General Public, Odoo AI, OdooBot, Portal User Template, Public user, casimir) has neither; no ir.default on either field"
+ }
+}
