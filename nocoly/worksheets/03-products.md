@@ -39,6 +39,8 @@ Odoo's field help where it has one.
 | 15 | Volume | `volume` | Number, 2 decimals, suffix m³ | no | 0 | Tab Inventory. Odoo precision "Volume" = 2; unit label m³ |
 | 16 | Active | `active` | Checkbox | — | checked | Hidden. Set by Archive / Unarchive |
 
+**Added since by bundles:** **Category** (`categ_id`), a relation to Product Categories on General Information between Cost and Internal Reference — bundle 1, `08-product-categories.md`.
+
 ### Form layout
 
 | Odoo 19.4 | Nocoly |
@@ -94,7 +96,7 @@ None.
 
 | Odoo 19.4 field / feature | Why not now |
 |---|---|
-| Product Category (`categ_id`) | Product Categories bundle — excluded for now |
+| ~~Product Category (`categ_id`)~~ | **Built on 16 Sep 2026 by the Product Categories bundle** — a Category relation on General Information between Cost and Internal Reference, and a quick filter on the Products and List views. See `worksheets/08-product-categories.md` |
 | Tags (`product_tag_ids`) | Product Tags bundle — excluded |
 | Sales Taxes, Purchase Taxes (`taxes_id`, `supplier_taxes_id`, `tax_string`) | Taxes bundle; module `account` |
 | Income and Expense Accounts (`property_account_income_id`, `property_account_expense_id`), Account Tags | Chart of Accounts bundle; module `account` |

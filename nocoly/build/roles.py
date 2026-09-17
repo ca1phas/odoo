@@ -58,8 +58,8 @@ STOCK = [  # (English name, the Chinese name HAP ships, roleType)
 
 FULL, EDIT, VIEW = 'full', 'view · add · edit', 'view'
 
-ORDER = ['Contacts', 'Units & Packagings', 'Products', 'Product Variants', 'Product Categories', 'Journals',
-         'Invoices', 'Invoice Lines']
+ORDER = ['Contacts', 'Units & Packagings', 'Products', 'Product Variants', 'Product Categories',
+         'Chart of Accounts', 'Journals', 'Invoices', 'Invoice Lines']
 
 ROLES = {
     'Accounting Administrator': (
@@ -73,13 +73,15 @@ ROLES = {
         'Odoo group account.group_account_user — "Show Full Accounting Features". The accountant: can do '
         'everything except advanced configuration.',
         {'Contacts': EDIT, 'Units & Packagings': VIEW, 'Products': VIEW, 'Product Variants': VIEW,
-         'Product Categories': VIEW, 'Journals': EDIT, 'Invoices': EDIT, 'Invoice Lines': EDIT},
+         'Product Categories': VIEW, 'Chart of Accounts': VIEW, 'Journals': EDIT, 'Invoices': EDIT,
+         'Invoice Lines': EDIT},
     ),
     'Invoicing': (
         'Odoo group account.group_account_invoice — "Invoicing". Invoices, payments and basic invoice '
         'reporting; cannot see accounting configuration, so Journals is read-only.',
         {'Contacts': EDIT, 'Units & Packagings': VIEW, 'Products': VIEW, 'Product Variants': VIEW,
-         'Product Categories': VIEW, 'Journals': VIEW, 'Invoices': EDIT, 'Invoice Lines': EDIT},
+         'Product Categories': VIEW, 'Chart of Accounts': VIEW, 'Journals': VIEW, 'Invoices': EDIT,
+         'Invoice Lines': EDIT},
     ),
     'Accounting Read-only': (
         'Odoo group account.group_account_readonly — "Show Accounting Features - Readonly". Can see (and '

@@ -141,6 +141,18 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   `record create` through the API and workflows still create records.
 - The Phone control validates numbers (libphonenumber): an unallocated number such as 03-1234 5678, or a placeholder
   like "NA", is refused.
+- **`hap app sort-worksheets <app> <section> <every worksheet id, in order>`** reorders a menu group
+  (`HomeApp/UpdateSectionChildSort`); `worksheet create --section-id` always appends. Read the order back from
+  `app info` (Chart of Accounts, moved in front of Journals).
+- **A text control can carry a format check**: `advancedSetting.filterregex`, the field editor's 限定输入格式 — a
+  JSON list of at most five `{name, value, err}`, `value` the regular expression and `err` the message
+  (pd-openweb `TextVerify.jsx`). hap-cli has no builder for it; send it in a full save. **It is the form's check
+  only**: the form tests `new RegExp(value, 'gm')` and lets an empty value through (`checkValueByFilterRegex`),
+  and `record update` stored the Code `TEST-01` against `^[A-Za-z0-9.]+$` without complaint (Chart of
+  Accounts). Import scripts have to check the format themselves, as they do a maximum length.
+- **The server re-serialises some JSON-valued `advancedSetting` keys on save**: `filterregex` comes back compact
+  with `"filters": null` added to each entry, and a Relation's picker `filters` in its own key order, while
+  `defsource` is stored byte for byte. Compare those two parsed, never as strings (`accounts.setting_state`).
 - `hap worksheet update --alias` answers `参数错误` unless `-a/--app-id` is passed. `common.ensure_worksheet` calls it
   without one and works there because the worksheet is being created in the same breath; re-aliasing an existing
   worksheet needs the app id (Invoices, `invoices` → `account_move`).
@@ -225,6 +237,11 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   `eq` to 51 (EQ_FOR_SINGLE) only when the condition carries `dataType` 9 or 11, and to 2 without it. 51 with several
   option keys means "is any of" (Invoices' Reset to Draft: Status is Posted or Cancelled). A **business rule's**
   filter is the other enum, where the same "is any of" is filterType 2.
+- **The view and filter editors treat a function formula as its result type** (pd-openweb
+  `redefineComplexControl`: a type 53 becomes its `enumDefault2`). A **text** formula's quick filter is therefore a
+  *text* filter — `dataType` 2, `filterType` 1 ("contains", the editor's default), no option list — and a picker
+  filter comparing a text formula is saved with `dataType` 2 too. Both are stored as sent; what the browser draws
+  for the quick filter is for the UI pass to confirm (Chart of Accounts' Internal Group).
 - `--view-spec` `tableFields` sets only `displayControls`, and the table then shows every field. A table's columns are
   `showControls` plus `advancedSetting.customShowControls`:
   `view update --view-json '{"showControls":[…],"advancedSetting":{"customdisplay":"1","customShowControls":"[…]"}}'
@@ -240,6 +257,15 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
 - A validation rule with `--check-type 1` is enforced on API writes too — but the server checks it **only when one
   of its condition fields is in the write**. A rule that tests only a lookup or formula never fires on the API; add
   the field being edited as a condition. A refused write returns `resultCode 32` naming `<ruleId>:<rowid>`.
+- **…and only on an update.** `record create` (`AddWorksheetRow`) is not checked: Chart of Accounts' *A receivable
+  or payable account must be reconcilable* (check type 1) refused two `record update`s (`UpdateWorksheetRow`) —
+  one sending Type, one sending the box, with the same `0` encoding — and **accepted a `record create` of a Payable
+  account with the box unchecked**, both condition fields in the write. The form enforces it; seed and import
+  scripts that create records have to check the rule themselves.
+- **A validation rule is checked before the save, and a worksheet-event workflow runs after it**, so a workflow
+  can never make a write pass a rule. Odoo recomputes a field before its constraint; HAP refuses the write and the
+  workflow that would have fixed the value never starts (Chart of Accounts: re-typing a Current Assets account
+  as Receivable without ticking Payment Reconciliation is refused, and automation A never runs).
 - A rule condition can compare with the record id (`dynamicSource: [{cid: "rowid"}]`).
 - A rule **applies its action while its condition holds and the opposite when it does not**, so show and hide are two
   ways of writing the same toggle — except on an empty field. "Show when Type is Sales" keeps the field hidden on a
@@ -358,11 +384,21 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   share a trigger, so a roll-up that must survive a deletion is two workflows with the same body.
   `node batch-add --trigger-worksheet … --trigger-event …` configures a `--type worksheet` workflow's trigger in
   the same call; without it the trigger stays unconfigured and the workflow cannot publish.
+- **新增或更新 ('2') narrowed to fields (`assignFieldIds`) fires on every create**, whatever the fields, and on an
+  update **whenever one of those fields is in the write — changed or not**. A `record update` sending Type
+  unchanged together with a real change to Non Trade started Chart of Accounts' Type-narrowed automation, and
+  the record log shows the entry as `Type: 'Current Assets'->'Current Assets'`; a write of Non Trade alone started
+  nothing. So a script that re-sends every field re-runs every field-narrowed workflow — as Odoo does for a stored
+  compute, since its `write` calls `modified(vals)` on every field written, changed or not (`odoo/orm/models.py`).
 - **A `record update` that changes nothing fires no worksheet-event workflow** — so a check that writes back the
   value a record already holds and then re-reads is testing nothing.
 - `hap workflow list` takes the **app id as an argument**, not as `-a`.
 - `batch-add` in a **second** call drops a branch path's name as well as its condition. `node save --type 2` with
   `operateCondition` sets the condition but not the name even with `-n`; the name needs `workflow node rename`.
+- Even in a **first** call, `batch-add` returns the **two paths it reuses from a new gateway's default items with no
+  name**, while the paths it adds beyond those two keep theirs. The order holds: the gateway's `flowIds` list the
+  paths as given. Re-save every path's condition, rename every path, and read both back (Chart of Accounts'
+  four-path automation).
 - **A record written by a workflow starts that worksheet's event workflows** (a variant's Unarchive button writing its
   product started the product's archive workflow). Design cascades so the second run finds nothing to change.
 - Give a worksheet-event trigger a condition when most records cannot need the run — every run counts against the
@@ -372,6 +408,14 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   "the steps are wrong", and it is what proved that Invoice Lines' delete roll-up had never once been reached.
   `hap approval history-detail <instanceId>` then lists **every node one run passed through**, in order, each with
   its own status — the only way to show that a step was *not* reached.
+- **`approval history`'s `count` is the number of rows on the page it returned, not the total**: `-n 50` gives 50,
+  then 37 on page 2, for 87 runs. Count by paging. And tell a new run apart **by its instance id**, never by
+  position or by how long the list is: a run registers about **5 s after the write** that starts it, and the
+  listing has been seen to lag by a row, which once pinned a run on the write before it (`accounts.wait_new_runs`).
+- **A run's detail never lists a branch path node** — only the trigger, the gateway and the steps that ran. A path
+  with no step leaves no trace, so which path such a run took can only be inferred. A run that matches **no** path
+  of an exclusive gateway is different: it stops there with `status` **3** and `instanceLog.cause` **40002**,
+  `causeMsg` **"未通过分支"** (Chart of Accounts' automation on an emptied Type).
 - **A branch converges**, so an empty path is not a stop: both paths run into the gateway's `nextId` and carry on
   to whatever follows the branch. To stop a run before a later step, a path must end in an **abort node**.
 - **Node type 30 is 中止流程, the abort**, and it is the only way to stop a workflow from inside. It must be last
@@ -428,6 +472,11 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   field*, not its name: a product's Category reads back "Goods / IT Equipment" (the Complete Name), never
   "IT Equipment".
 - `record get` returns a record's creation time as `_createdAt`; `record list` returns `ctime` empty.
+- **`hap worksheet record logs <ws> <rowid>` is the record's change log**: every write with its time and each
+  field's old → new value, including the formulas it recomputed, and a `requestType` — seen as **1** for a
+  `record update`, **2** for a workflow's step (button and worksheet-event workflows alike) and **8**
+  for the reverse half of a Relation being paired. Set beside `approval history`'s run times it ties each run to
+  the write that started it, which is how the Type-narrowed trigger was caught firing on an unchanged Type.
 - Value formats differ by field type and a wrong one is accepted silently — see `hap guide record` before writing.
 
 ### Roles
@@ -486,7 +535,14 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
 
 - An open record can keep a *Modifying form data — Cancel / Save* bar after a relation or member change that is
   already stored; Save clears it.
-- A dropdown opens reliably by typing into it; clicking the arrow sometimes does nothing.
+- A dropdown opens reliably by typing into it; clicking the arrow sometimes does nothing. **To choose an option from
+  browser automation, open the dropdown, type the option's label and press Enter** — a click on an option in the
+  list does not register, and a quick-filter dropdown behaves the same way (Chart of Accounts' Type filter). A
+  **Relation picker does not take Enter**: its list can be read, but choosing needs a real click.
+- A validation rule's message shows **while the form is being edited**, the moment its condition holds — before any
+  save (Chart of Accounts: Type set to Receivable with the box unticked). No duplicates shows the same way.
+- **Escape inside a Create Record dialog closes it and asks "Save the filled content as a draft?"** — close that
+  prompt with its ×, not Discard, to get back to the form.
 - A Relation shown as a dropdown lists record titles only, never its `showControls`; its search still matches
   those fields ("Hours" finds Minutes and Days on a unit picker). It also **offers archived records** — the
   Invoices Journal picker lists the archived TEST Sales journal beside Sales — so a worksheet that must hide them
