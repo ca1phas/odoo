@@ -58,6 +58,15 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   Archived. Test records are named `TEST …`.
 - **Read back every write.** Several HAP writes return success and store nothing, or store a malformed value.
 
+### CRM Phase 2 additions (18 Sep 2026)
+
+- Personal MCP `update_worksheet` is unsafe for a default-only Relation edit in this environment: it returned success while clearing label/alias metadata, changing single to multi and dropping required state. Send the complete raw control through the CLI and read it back.
+- A static Relation default must keep `staticValue` as a JSON array string (`["<rowid>"]`) and include the related worksheet name. A plain row id rendered as **Associate with current Record**.
+- `worksheet record create` does not apply form defaults. It cannot validate Stage, Sales Team, current-user Member, Status or Active defaults; inspect stored controls and a genuinely fresh Web form.
+- Personal MCP returned success for changing an existing worksheet's `sectionId`, but ERP Master navigation did not move. Treat the rendered sidebar as authoritative and report the manual move/hide.
+- Personal MCP `get_workflow_list` returned no processes while CLI `workflow list` returned the published Won and Lost workflows. For this CRM hand-off, workflow existence requires CLI plus rendered-button evidence.
+- A relation to CRM Tags keeps the data model correct, but does not inherit the lookup's coloured Select pill in the Leads form. Do not replace it with a Select merely for colour unless the owner accepts losing the Relation.
+
 ## HAP and hap-cli traps (verified 15–17 Sep 2026, hap-cli 0.8.31)
 
 ### Worksheets and fields
