@@ -7,7 +7,7 @@
 | Odoo model | `res.country.state` |
 | Reference | **casimir.odoo.com — Odoo saas~19.4+e**: the *Fed. States* screen, the model, its three views, the access list, `name_search` under three contexts, all 2 102 states and the state of every contact, extracted read-only to `nocoly/reference/odoo-19.4/res.country.state.md`; the records are `nocoly/data/casimir-states.json`. Behaviour the tenant cannot show is read from the Odoo 19.0 source in this repo: `odoo/addons/base/models/res_country.py`, `res_country_views.xml`, `res_partner.py`, `ir.model.access.csv` |
 | Phase | 1 — **bundle 5 of 6** (Product Categories · Chart of Accounts · Payment Terms · Countries · **States** · Taxes) |
-| Status | §1 written 18 Sep 2026; **§2 built 18 Sep 2026**; UI test pending |
+| Status | §1 written 18 Sep 2026 · built and self-checked 18 Sep 2026 (`nocoly/build/states.py`) · **the duplicate check dropped and rebuilt the same day at the owner's word** (§1 › Rules, §2 › *The duplicate check, rebuilt*) · **UI-tested 18 Sep 2026: 20 pass, 1 not isolated** (§3) · ready for review |
 
 The second half of an address. Odoo ships 2 102 states in 74 of its 251 countries — Malaysia's sixteen among them
 — and a contact points at one. This bundle adds the worksheet, seeds all 2 102, gives **Countries** the list Odoo
@@ -28,6 +28,8 @@ Labels are Odoo 19.4's; aliases are Odoo field names on `res.country.state`.
 | 3 | Country | `country_id` | Relation → Countries (single, **two-way**), dropdown | yes | — | The reverse is field 5 on **Countries**. The picker lists all 251 countries by name |
 | 4 | Display Name | `display_name` | Function formula, text · **title field** | — | — | **"Selangor (MY)"** — State Name, a space, the country's code in brackets, which is exactly Odoo's `_compute_display_name` and what every picker shows. **Read-only and hidden on create** (`fieldPermission` "100"), as 04's and 09's Display Name are |
 | — | Country Code | *(helper)* `country_id.code` | Lookup through Country, stored | — | — | Hidden. Feeds field 4, the way 08's Parent Complete Name feeds its Complete Name |
+| 5 | Duplicate code | — | Checkbox, read-only, hidden on create | — | — | **Not an Odoo field.** Ticked by workflow G when another state already holds this state's key — what a person sees in place of Odoo's refusal. Added 18 Sep 2026 with the rebuilt check below |
+| — | State key | — | **Text**, hidden and read-only, **No duplicates** | — | — | `<country code>\|<state code>` — *MY\|MY-10*. Written by G, never typed. It replaced the function formula of the first build, which took the switch and enforced nothing |
 
 **No Active field, so no Archive and no Unarchive** — `res.country.state` has none, as `res.country` has none.
 
@@ -55,11 +57,39 @@ Odoo's state form is one group of three fields.
 
 None. All three fields are required on the control itself.
 
-**Odoo's one constraint is not built.** `unique(country_id, code)` — *"The code of the state must be unique by
-country!"* — is a pair, and HAP's *No duplicates* is a single field. Putting it on State Code would refuse
-Portugal's 01 because Mongolia already has one. §2 should **try *No duplicates* on a hidden formula of
-`country code + "|" + state code`** and say whether HAP allows the switch on a formula control; if it does not,
-this is a difference, and nothing stops two states of one country sharing a code.
+**Odoo's one constraint, and how it is enforced here — revised 18 Sep 2026, after the first build.**
+`unique(country_id, code)` — *"The code of the state must be unique by country!"* — is a pair, and HAP's *No
+duplicates* is a single field. Putting it on State Code would refuse Portugal's 01 because Mongolia already has
+one. The first build tried the obvious thing: *No duplicates* on a hidden **formula** of `country code + "|" +
+state code`. **HAP accepts the switch on a formula and enforces it nowhere** — not through the API and not in the
+form (§3 test 7). The owner's answer: *"Drop it. Enforce uniqueness via other methods."*
+
+So the formula goes, and the pair is enforced the only way HAP can — on a **Text** control, where *No duplicates*
+is real (bundle 4 proved it refuses both an API write and a form save), with a workflow keeping it true:
+
+| | What | Detail |
+|---|---|---|
+| **State key** | Text, hidden, **No duplicates**, read-only | `<country code>|<state code>` — *MY\|MY-10*. Written by workflow **G**, never typed |
+| **Duplicate code** | Checkbox, read-only, on the form | Ticked by **G** when another state already holds that key. What a person actually sees |
+| **G** | *States: the key and the duplicate check* | On create, and when **Country** or **State Code** changes: work out the key, look for another state that already has it, **tick Duplicate code** if there is one, and write the key. Quiet (`triggerType` 2) |
+
+**What this does and does not do — rewritten 18 Sep 2026 against what HAP was measured doing, not what the switch
+promised.** Two of this section's first guesses were wrong, and §2 has the transcripts:
+
+- **A workflow's write ignores *No duplicates*.** The same value HAP refuses through the open API with
+  `resultCode` 11 is **accepted** from a workflow's update step, silently, run status 2. So the key write cannot
+  be the check.
+- **Bundle 4's proof does not transfer.** There the unique control is one a person types into; here it is hidden,
+  read-only and written by a workflow, and neither half of that carries over.
+
+So **G does the checking itself**, and the shape is: work out the key → search for another state holding it,
+excluding this record → if one exists, **tick Duplicate code, clear the key and stop the flow**; otherwise untick
+and write the key. A duplicate therefore ends with **no key and a tick**, and its workflow run ends at the stop
+node — `status` 3, `cause` 6666 — which is the visible mark in the run history. The invariant to test against is
+**a state holds the key its code implies, or holds none and is ticked**.
+
+HAP still cannot *refuse* the save: a workflow runs after it, so the duplicate is created and then marked a few
+seconds later. That is the ceiling, and it is the reason Duplicate code exists at all.
 
 ### Buttons
 
@@ -69,7 +99,9 @@ None — there is no Active field to archive.
 
 | View | Type | Shows | Odoo 19.4 |
 |---|---|---|---|
-| States | table — the only view | Every state. Columns **State Name · State Code · Country**, sorted **State Code A→Z**, then Country Name. Quick filter **Country** | `base.view_country_state_tree`, the same three columns, `_order = 'code, id'` — so Odoo's list reads Aveiro (PT) 01, Архангай (MN) 01, Amazonas (PE) 01, Azuay (EC) 01, Beja (PT) 02 …, states of different countries interleaved. Its search view offers Name and Country and **one group-by, Country**, which is what the quick filter stands for |
+| States | table — opens first | Every state. Columns **State Name · State Code · Country**, sorted **State Code A→Z**, then Country Name. Quick filter **Country** | `base.view_country_state_tree`, the same three columns, `_order = 'code, id'` — so Odoo's list reads Aveiro (PT) 01, Архангай (MN) 01, Amazonas (PE) 01, Azuay (EC) 01, Beja (PT) 02 …, states of different countries interleaved. Its search view offers Name and Country and **one group-by, Country**, which is what the quick filter stands for |
+
+| Duplicate codes | table | The states Duplicate code is ticked on — nothing, unless something went in twice. The same three columns, plus **Duplicate code** | **Ours, not Odoo's.** Odoo has no such view because its database refuses the second state; this is where the check the owner asked for can actually be read |
 
 Odoo's list is **editable in place** and carries a **New** button; ours is a table like every other worksheet's.
 The tie at equal code is Odoo's record id and ours is the Country name — the same class of difference as 02's and
@@ -130,7 +162,7 @@ answers, both of them Odoo's.
 
 | Odoo 19.4 field / feature | Why not now |
 |---|---|
-| The constraint `unique(country_id, code)` | A pair; HAP's *No duplicates* is one field. §2 tries it on a composite formula — see *Rules* |
+| The constraint `unique(country_id, code)` **as a refusal** | A pair, and HAP's *No duplicates* is one field — and on a formula it is decoration, on a workflow's write it is ignored. What is built instead is the catch-and-mark above: a duplicate saves, then loses its key and gains a tick. Odoo refuses it outright |
 | The **editable list** and its **New** button on Odoo's own screen | A HAP table edits in a record, not in the row |
 | `formatted_display_name` — *"Selangor \t --MY--"* | One Display Name for everyone, as 09's accounts have |
 | The state picker narrowed by the contact's country | Odoo does not narrow it either on the partner form (above). A HAP relation *can* be filtered by another control, so this is a deliberate no, not a limit — it would diverge from Odoo |
@@ -154,37 +186,43 @@ No `TEST …` record is needed to seed; the test list adds its own.
 
 ## 2 · Build
 
-Built by `nocoly/build/states.py` — steps `create → fields → reverse → views → roles → unique → seed →
-contacts → carry → retire → automations`, or `all` for every one of them followed by `check`. Each step reads
-the live state first, refuses to run unless the profile reaches ERP Master › Contacts › States and the
-worksheet holds only this script's own work, reads back what it wrote, and is safe to re-run: **a second run of
-every step created nothing, wrote no record, rewrote no workflow node, changed no role and changed no control**
-(`0 states written`, `check: OK`). Helpers: `check` reads the controls, the view, the roles' entry, the reverse
-on Countries and everything this bundle put on Contacts back against §1; `verify` compares all 2 102 states
-with the 19.4 extract field by field and prints §1's digests; `selfcheck` drives *No duplicates* and then E and
-F through the CLI; `unique` reports where §1's *Rules* question stands; `order` prints the view's records in
-the view's own order; `state MY-10` one state's stored values; `deadrefs` scans every view, rule, button,
-control and workflow node of the app for the deleted control's id; `untouched` every other worksheet's control
-count and digest; `show` the control list. The profile comes from `$HAP_PROFILE` and otherwise from hap-cli's
-active profile; **nothing in `common.py` changed**.
+Built by `nocoly/build/states.py` — steps `create → fields → key → reverse → views → dupview → roles → unique
+→ seed → contacts → carry → retire → automations → duplicates → backfill`, or `all` for every one of them
+followed by `check`. Each step reads the live state first, refuses to run unless the profile reaches ERP Master
+› Contacts › States and the worksheet holds only this script's own work, reads back what it wrote, and is safe
+to re-run:
+**a second run of every step created nothing, wrote no record, rewrote no workflow node, changed no role and
+changed no control** (`0 states written`, `0 keys written, 0 duplicates marked`, no republish of G,
+`check: OK`). Helpers: `check` reads the controls, **both views and their order**,
+the roles' entry, the reverse on Countries, workflow G and everything this bundle put on Contacts against §1;
+`verify` compares all 2 102 states with the 19.4 extract field by field and prints §1's digests; `keys` reads
+every State key back one record at a time and lists what carries Duplicate code; `selfcheck` drives the
+duplicate check and then E and F through the CLI; `unique` reports where §1's *Rules* question stands; `order`
+prints each view's records in its own order; `state MY-10` one state's stored values; `deadrefs` scans
+every view, rule, button, control and workflow node of the app for a deleted control's id; `untouched` every
+other worksheet's control count and digest; `show` the control list. The profile comes from `$HAP_PROFILE` and
+otherwise from hap-cli's active profile; **nothing in `common.py` changed**.
 
 | Element | Built | Id |
 |---|---|---|
 | App | ERP Master | `6cb4d051-a33c-4bf9-b56f-5f47f0e85dc9` |
 | Menu group | Contacts — Contacts, Countries, **States** (after it) | `6aa8a3a93e5e4ad5b852a6d3` |
 | Worksheet | States, alias **`res_country_state`**, icon `sys_9_2_map` | `6aace374805aef7032869ec9` |
-| Controls | 6 — four fields and two hidden helpers; no tab, no divider, no remark block | — |
+| Controls | **7** — four fields, the Duplicate code checkbox and two hidden helpers; no tab, no divider, no remark block | — |
 | Fields | State Name (required, Odoo's help) · State Code (required, Odoo's help, **no** No duplicates) | `6aace374805aef7032869eca` · `6aace384bd43f55762c74890` |
 | | Country (required, Relation → Countries, single, **two-way**, `showtype` "3" a dropdown) · **Display Name** (function formula, text, **title**, `fieldPermission` "100") | `6aace384bd43f55762c74891` · `6aace39fe43d174ab374eeac` |
-| Hidden helpers | Country Code (stored lookup of Countries' Country Code through Country, `strDefault` "00", "011") · **State key** (function formula, "011", carrying **No duplicates** — §1's *Rules*, below) | `6aace392bd43f55762c7489d` · `6aace4a47d58b0f4493134f4` |
-| View | States (the stock *All* view, renamed) — the only view | `6aace374805aef7032869ecd` |
+| | **Duplicate code** (checkbox, read-only and hidden on create — `fieldPermission` "100"; written only by **G**) | `6aacf930805aef703286a8ce` |
+| Hidden helpers | Country Code (stored lookup of Countries' Country Code through Country, `strDefault` "00", "011") · **State key** (**Text**, `fieldPermission` "001" — hidden *and* read-only — carrying **No duplicates**) | `6aace392bd43f55762c7489d` · `6aacf923e43d174ab374f7c9` |
+| Deleted on **States** | the **State key function formula** — the bundle's second owner-approved deletion, 18 Sep (DECISIONS.md) | `6aace4a47d58b0f4493134f4` |
+| Views | States (the stock *All* view, renamed) — opens first · **Duplicate codes**, §1's second view | `6aace374805aef7032869ecd` · `6aad02af805aef703286ab80` |
 | Rules · Buttons | **none**, as §1 says | — |
 | On **Countries** | the reverse **States** (`state_ids`), read-only, a list at the foot of the form | `6aace384bd43f55762c74892` |
 | On **Contacts** | the new **State** relation (`state_id`), single one-way → States, dropdown, row 8 col 1 | `6aace6c3e54d2a34fa4e530c` |
 | Deleted on **Contacts** | the State **text** control, the owner-approved deletion | `6aa8a452f363582dd37a50e5` |
 | Workflow **E** | *Contacts: the Country follows the State* — published, **quiet** | `6aace7dfa1c923a16e17e49a` |
 | Workflow **F** | *Contacts: a State that belongs elsewhere is cleared* — published, **quiet** | `6aace7ec16473257ad6b77cc` |
-| Records | the tenant's **2 102 states**, plus `TEST State One` and `TEST State Two` (§3) | — |
+| Workflow **G** | *States: the key and the duplicate check* — published, **quiet**, 16 nodes | `6aacf9524f2a99acac2c1fff` |
+| Records | the tenant's **2 102 states**, every one carrying its **State key**, plus the four `TEST` states (below) | — |
 
 Every id is in `nocoly/build/ids.json`: the six controls and the view under `"States: …"`, Malaysia's sixteen
 states under `"States: MY|<state code>"` — Odoo's own natural key, the pair its constraint is on — with
@@ -197,18 +235,18 @@ existing key was renamed.
 `res.country.state` has **no `active` field**, so — as §1 says — there is no Active checkbox, no *Archived*
 view and no Archive / Unarchive buttons. There are no rules either.
 
-The form reads **State Name | State Code · Country | Display Name**, with the two hidden helpers under them —
-§1's layout exactly:
+The form reads **State Name | State Code · Country | Display Name**, then the read-only **Duplicate code**
+checkbox, with the two hidden helpers under them — §1's layout with the checkbox §1's revised *Rules* added:
 
 ```
-r0  c0 s6   2 State Name     6aace374805aef7032869eca  name          required
-r0  c1 s6   2 State Code     6aace384bd43f55762c74890  code          required
-r1  c0 s6  29 Country        6aace384bd43f55762c74891  country_id    required ds=Countries src=…4892
-r1  c1 s6  53 Display Name   6aace39fe43d174ab374eeac  display_name  title perm=100
-              ds={"expression": "CONCAT($State Name$,\" (\",$Country Code$,\")\")"}
-r2  c0 s6  30 Country Code   6aace392bd43f55762c7489d  country_code  perm=011 ds=$Country$ src=Countries/Country Code
-r2  c1 s6  53 State key      6aace4a47d58b0f4493134f4  state_key     perm=011 unique
-              ds={"expression": "CONCAT($Country Code$,\"|\",$State Code$)"}
+r0  c0 s6   2 State Name      6aace374805aef7032869eca  name            required
+r0  c1 s6   2 State Code      6aace384bd43f55762c74890  code            required
+r1  c0 s6  29 Country         6aace384bd43f55762c74891  country_id      required ds=Countries src=…4892
+r1  c1 s6  53 Display Name    6aace39fe43d174ab374eeac  display_name    title perm=100
+               ds={"expression": "CONCAT($State Name$,\" (\",$Country Code$,\")\")"}
+r2  c0 s6  36 Duplicate code  6aacf930805aef703286a8ce  duplicate_code  perm=100
+r3  c0 s6  30 Country Code    6aace392bd43f55762c7489d  country_code    perm=011 ds=$Country$ src=Countries/Country Code
+r3  c1 s6   2 State key       6aacf923e43d174ab374f7c9  state_key       perm=001 unique
 ```
 
 **The controls went in in four saves, not one.** A formula saved under a client-side id computes nothing until
@@ -220,6 +258,12 @@ re-save for the Country Code lookup; (3) the same for Display Name; (4) the same
 placing save for rows, sizes, permissions and the title. **Display Name was the only control carrying
 `attribute` 1 in that save**, so the title was not the coin toss `BUILDING.md` warns of, and both formulas
 computed on the first record written.
+
+**Two more saves followed on 18 September**, when the State key formula was dropped: one full save of States
+leaving it out, then the Text State key and the Duplicate code checkbox appended (`add-fields`, no controlId,
+so the server mints them) and one placing save that gave them their rows, aliases, descriptions and
+permissions and moved Country Code down a row. `fields` and `key` share that placing save
+(`states.place_controls`), which is driven by `PLACE` and writes only what differs.
 
 ### The reverse on Countries
 
@@ -244,10 +288,10 @@ the form are here, at the foot of this one". `countries.py` was updated to match
 text, so a re-run does not put the old line back, and a new `BUNDLE_5` tuple keeps its `guard` and `check` from
 calling the reverse control unknown. **`countries.py check` and `verify` both still pass unchanged.**
 
-### The States view
+### The two views
 
-One view, the stock *All* renamed. Columns **State Name · State Code · Country**, sorted **State Code A→Z then
-Country**, quick filter **Country**.
+**States**, the stock *All* renamed, which opens first. Columns **State Name · State Code · Country**, sorted
+**State Code A→Z then Country**, quick filter **Country**.
 
 ```
 States  6aace374805aef7032869ecd  type=0  sortCid=State Code/2
@@ -273,31 +317,163 @@ control id — the way `contacts.py` names its three — it is stored with an **
 "dropdown"}` it lowers to `allowitem` "2" and `direction` "2", the shape Products' Category filter carries, and
 the step is idempotent.
 
-### §1's *Rules*: HAP takes *No duplicates* on a formula and never applies it
+**Duplicate codes**, §1's second view, built by `states.py dupview` on 18 September with the rebuilt check —
+the only place the tick can be read without opening a record:
 
-§1 asked §2 to try *No duplicates* on a hidden formula of `country code + "|" + state code` and say whether HAP
-allows the switch. **It does — and the switch does nothing.**
+```
+Duplicate codes  6aad02af805aef703286ab80  type=0  sortCid=State Code/2
+                 moreSort=[(State Code, asc), (Country, asc)]
+                 columns=[State Name, State Code, Country, Duplicate code]
+                 filters=[(Duplicate code, filterType 2, ['1'])]
+                 fastFilters=[]
+```
+
+The filter is the spec adapter's switch condition — `common.switch_filter(Duplicate code, 'eq')`, the shape
+02's *Archived* view uses on Active — and it lowers to **filterType 2** (equals) with the switch's `"1"`.
+The view carries no quick filter of its own.
+
+**The *States* view is not touched by this step**, and that is checked rather than assumed: `dupview` names
+only its own view to `upsert_views`, names the pair to `sort_views` (which leaves every view it is not given
+where it is, so States keeps opening first), and then **compares States' `showControls`, `sortCid`,
+`sortType`, `moreSort`, `filters`, `fastFilters` and `advancedSetting` before and after**, stopping if any of
+the seven moved. A second run reports `States: unchanged` and writes nothing.
+
+It lists **two** records: **`TEST State Duplicate`** — the browser's, the one the backfill marked — and
+**`TEST State Duplicate Two`**, `selfcheck`'s own. Both are Malaysian `ZZ-01`; **no seeded state appears**,
+which is the point of it.
+
+### §1's *Rules*, first cut: HAP takes *No duplicates* on a formula and never applies it
+
+§1 first asked §2 to try *No duplicates* on a hidden formula of `country code + "|" + state code` and say
+whether HAP allows the switch. **It does — and the switch does nothing.**
 
 1. **The switch is accepted.** Tried first on the **empty** worksheet, on the Display Name formula (itself
    unique across all 2 102 states) so that nothing had to be created and deleted: `SaveWorksheetControls`
    returned success and `unique` read back `True`. The probe was reverted in the same run.
-2. **So the composite key was built**, as §1 says it should be: **State key** `6aace4a47d58b0f4493134f4`, a
-   hidden function formula `CONCAT($Country Code$,"|",$State Code$)` with `unique` true. It computes: every
-   seeded state holds its pair, Selangor reads `MY|MY-10`.
-3. **And it refuses nothing.** Two states of the same country with the same code were created — `TEST State
-   One` and `TEST State Two`, both Malaysian, both `ZZ-01` — and the **second `record create` was accepted**,
-   `resultCode` 1. Both then read `State key` `MY|ZZ-01`. The same on an update: moving TEST State Two's code
-   onto TEST State One's is accepted too, where **the identical write on a Text field carrying the switch is
-   refused with `resultCode 11`** (11 §2 proved that on Countries' Country Code). `selfcheck` re-runs the
-   update half of this and restores the code, so nothing duplicate is left behind.
+2. **So the composite key was built**, as §1 then said it should be: **State key** `6aace4a47d58b0f4493134f4`,
+   a hidden function formula `CONCAT($Country Code$,"|",$State Code$)` with `unique` true. It computed: every
+   seeded state held its pair, Selangor read `MY|MY-10`.
+3. **And it refused nothing.** Two Malaysian states with the same code were created — `TEST State One` and
+   `TEST State Two`, both moved onto `ZZ-01` — and the second write was accepted, `resultCode` 1; both read
+   `State key` `MY|ZZ-01`. **§3 test 7 then showed the form accepts one too.**
 
-So *No duplicates* on a **function formula** is stored and never enforced through the API, and Odoo's
-`unique(country_id, code)` is **not built** in any sense the API respects. The field is kept, read-only to
-nobody and hidden from everybody, for one reason only: HAP's *No duplicates* is drawn **in the form while a
-record is being edited**, the way a validation rule is (`BUILDING.md`), and if it fires there it would still
-stop a person creating a duplicate state on the screen where states are actually created. **Whether it does is
-the first thing §3 must test**; if the form ignores it too, the field is doing nothing and the owner should
-drop it.
+So *No duplicates* on a **function formula** is stored and never enforced anywhere. The owner's ruling, the
+same day: *"Drop it. Enforce uniqueness via other methods, maybe code+country_code or something else."*
+
+### The duplicate check, rebuilt — 18 September 2026
+
+§1's *Rules* was rewritten and this is what was built against it. `states.py key`, `duplicates` and `backfill`
+own it; `check` reads it all back.
+
+| | What | Id |
+|---|---|---|
+| **Deleted** | the State key **function formula**, the owner-approved deletion (DECISIONS.md, 18 Sep) — a full save of States leaving it out; the worksheet went 6 → 5 controls | `6aace4a47d58b0f4493134f4` |
+| **State key** | a **Text** control, hidden *and* read-only (`fieldPermission` "001"), carrying **No duplicates**, holding `<country code>\|<state code>`. Nothing computes it: **G** writes it | `6aacf923e43d174ab374f7c9` |
+| **Duplicate code** | a checkbox, read-only and hidden on create ("100"), `duplicate_code`. Written only by **G**. What a person actually sees | `6aacf930805aef703286a8ce` |
+| **G** | *States: the key and the duplicate check* — worksheet event 新增或更新 on States narrowed to **Country and State Code**, no trigger condition, **quiet** (`triggerType` 2), 16 nodes | `6aacf9524f2a99acac2c1fff` |
+
+**The new control took the deleted one's alias in the same run.** `state_key` was free the moment the formula
+was saved away, even though the old control is still listed in the field recycle bin holding it — so the bin
+reserves nothing (`BUILDING.md`). The ids.json key `States: State key` now holds the **Text** control's id;
+no key was renamed. The bin reads
+
+```
+6aace4a47d58b0f4493134f4  State key      type 53  alias 'state_key'   ← the deletion
+c7b7d5f2ef1f4a6fa5f4a3811f76fbbd  State key      type 53  alias 'state_key'
+8a627637ed2e4e4287e63a637086f8cd  Display Name   type 53  alias 'display_name'
+bcabc96a36694735873827cc5b260ba5  Country Code   type 30  alias 'country_code'
+6aace374805aef7032869ecb  Description    type 2   ·  6aace374805aef7032869ecc  Attachment  type 14
+```
+
+— and only the first of those was ever deleted on purpose. The three 32-hex entries are **client-side ids left
+by `add-fields` plus a re-save**, the pattern every formula on this worksheet was built with: the re-save mints
+a server id and the client-side one lands in the bin. Anyone reading the bin should expect them, and **restore
+nothing** — the live Text control already carries that name and alias.
+
+**G, node by node.**
+
+```
+trigger  When a state's Country or State Code is written   assignFieldIds=[State Code, Country], no condition
+  1      Get the country              get-related-record from the trigger's Country, on Countries
+  2      Work out the key             function formula, text: CONCAT($country-Country Code$,"|",$trigger-State Code$)
+  3      Another state with this key? search of States: State key = $key$ AND Record ID ≠ the trigger,
+                                      oldest first (ctime), executeType 2 — carry on when nothing is found
+  4      Is there one?                exclusive gateway
+  4a       Yes — another state already holds this key   (the found state's State key is not empty)
+             Tick Duplicate code  →  Clear the State key  →  Stop — a duplicate gets no key   (中止流程)
+  4b       No — this key is free    (no condition: the default path)
+             Untick Duplicate code
+  5      Write the State key          the trigger record's State key ← $key-string_fx_id$
+```
+
+Three things about that shape are the answers to §1's open questions, and two of them are not what §1 expected.
+
+1. **A workflow's write is not checked against *No duplicates*.** The first cut of G had no clear and no stop:
+   the gateway ticked and both paths ran on into *Write the State key*. Driven onto a Malaysian `ZZ-01` that
+   `TEST State One` already held, G **wrote the duplicate key and HAP took it** — two records then read
+   `MY|ZZ-01` — while the *identical* value written through the open API a minute earlier was refused
+   `resultCode 11`. Same control, same value, two write paths, two answers.
+2. **So the run does not fail — there is nothing to fail.** Every run of that first cut came back `status` **2**
+   (完成) with **every node at status 2**, *Write the State key* included. §1's "the key write is refused by
+   *No duplicates* (the run fails, visibly)" is wrong in both halves.
+3. **The shape is what enforces the pair, not the switch.** So the duplicate path was given *Clear the State
+   key* (`isClear`) and a **中止流程 abort** (node type 30, `workflow node add --type 30 --after …`; hap-cli's
+   DSL cannot build one). A branch converges, so an empty path is not a stop — only the abort keeps the run
+   away from the write. A duplicate's run now comes back **`status` 3, `cause` 6666, `causeMsg` 中止**, naming
+   the stop node, which is the visible mark §1 wanted, one step further down than it expected it.
+
+**What *No duplicates* on the Text control is still worth.** It refuses a duplicate written through the **open
+API** — which is how the backfill and any later import write, and it is what refused `TEST State Duplicate`'s
+key while the other 2 103 went in. It is a backstop on that one path, not the mechanism; the invariant is kept
+by G's shape. Anyone reading the control list and seeing the switch should read this paragraph — it does
+nothing to a workflow's write and (below) nothing to a form save either — and so should anyone reading the
+control's own **description**, which now says the same thing in the field editor.
+
+**What the form will do is not measured here, and it is a structural answer rather than a guess.** The key is
+hidden and read-only, so the browser neither renders it, nor types into it, nor recomputes it — and the
+duplicate value does not exist at save time anyway, because G computes it afterwards. So a duplicate state
+saved in the form should be **accepted silently**, with *Duplicate code* appearing on the record a few seconds
+later. The API stands in for the form exactly here: a `record create` carrying Country and State Code and **no
+State key** — the same fields a form sends — was accepted, and G ticked the record. §3 has the browser.
+
+**The measurements, in one table** (`states.py selfcheck`, 18 Sep; every one re-runnable):
+
+| | What was done | What HAP did |
+|---|---|---|
+| 0a | a State key another state holds, written through the **open API** | **refused**, `resultCode 11`, the control id in `badData`, nothing stored |
+| 0b | a second Malaysian `ZZ-01` **created** through the API with no State key in the write | **accepted** — nothing refuses the record itself; G ran on the create and ticked it |
+| 0c | its code moved to a **free** code | G unticked Duplicate code and wrote `MY|ZZ-09`; run `status` 2 |
+| 0d | its code moved **back onto** `ZZ-01` | G ticked Duplicate code, cleared the key and **stopped**: run `status` **3**, `causeMsg` 中止, State key empty |
+| 0e | an **unchanged** State Code re-sent together with a new State Name | Duplicate code stayed **off** — the search excludes the record that started the run |
+
+0e is not a nicety. A field-narrowed trigger fires whenever one of its fields is in the write, **changed or
+not** (`BUILDING.md`), so without `Record ID ≠ the trigger` in the search — `filedId` "rowid", conditionId
+**10** (不等于), `conditionValues` `[{nodeId: <trigger>, controlId: "rowid"}]` — every ordinary form save of a
+state would have found the record's own key and marked it as its own duplicate.
+
+**The backfill.** `states.py backfill` gave all 2 102 seeded states their key through the API, in creation
+order, marking a collision rather than writing one:
+
+```
+  2105 states; 2104 without a key; 0 already ticked; 2104 to write
+  … 2000/2104 (332s)
+  DUPLICATE 'TEST State Duplicate' (2026-09-18 16:00:32) holds MY|ZZ-01, which TEST State One already has
+            — Duplicate code ticked (ok)
+            the key write on it: refused, resultCode 11
+  backfill: 2103 keys written, 1 duplicates marked
+  2105 states: 2104 carry a State key, 1 do not, 1 carry Duplicate code
+  2104 keys read back one by one: 0 differing {}
+```
+
+**Not one of the 2 102 seeded states came out ticked**, and every one of their keys reads back exactly
+`<country code>|<state code>` — checked one record at a time, because a hidden control is blanked in the list
+call. The one ticked record is **`TEST State Duplicate`**, the state §3 test 7 created in the browser: it is
+the *second* Malaysian `ZZ-01`, `TEST State One` being the first, so it is the one that loses. `TEST State
+One` keeps `MY|ZZ-01` and is not ticked; `TEST State Two` holds `MY|ZZ-02`. (A fourth, `TEST State Duplicate
+Two`, is `selfcheck`'s own and ends every run ticked with no key.)
+
+The invariant the whole thing keeps, and what `keys` asserts: **a state holds the key its own State Code
+implies, or holds none and carries Duplicate code.**
 
 Nothing else on this worksheet is unique. **State Code deliberately is not**: 01 belongs to Portugal, Mongolia,
 Peru and Ecuador at once, and the switch there would have refused three of them.
@@ -332,7 +508,9 @@ wrote nothing.
 Every digest is checked **three ways** — what is live, the number §1 records, and the number computed from the
 extract — and all three agree on every one. Malaysia's sixteen are in Odoo's own order, MY-01 to MY-16. The two
 records "outside the extract" are the uniqueness probe's `TEST State One` and `TEST State Two`, so the States
-view shows **2 104 rows** and the 2 102 are the ones the digests count.
+view showed **2 104 rows** and the 2 102 are the ones the digests count. (§3 test 7 and the rebuild's
+self-check have since added two more `TEST` states, so the view reads **2 106**; the digests are unmoved
+because they count the extract's keys.)
 
 Every state's **Display Name** is compared too, against `"<name> (<country code>)"` computed from the extract:
 0 differing. So the function formula over the stored lookup is right on all 2 102, with no `refresh` pass — the
@@ -396,12 +574,16 @@ exactly as §1 describes.
 (`b64b011f-2294-490f-af46-16fa014b335a`), which is left in Contacts:
 
 ```
-  KNOWN   0. State key No duplicates on a second state of the same country: ACCEPTED
+  OK      0a-0e. the duplicate check (above)
   OK      1. E writes the Country from a new State:            state 'Selangor (MY)'  country 'Malaysia'
   OK      2. E leaves a State of the same country alone:       state 'Johor (MY)'     country 'Malaysia'
   OK      3. F clears a State that belongs elsewhere:          state None             country 'Singapore'
   OK      4. E moves the contact to the state's country:       state 'Aceh (ID)'      country 'Indonesia'
+  selfcheck: OK
 ```
+
+The whole of it was re-run after the duplicate check was rebuilt — nine checks, all OK — so **E and F are
+unchanged by it**: G is on States, they are on Contacts, and G's writes start nothing (it is quiet).
 
 Test 2 is the one that proves the gateway rather than the step: Johor is Malaysian and the contact was already
 Malaysian, so E ran, took the *they already agree* path and wrote nothing. Test 3 is F on its own — the
@@ -444,14 +626,38 @@ printed as not-owned and left exactly as they were. `roles.py check` passes.
 
 | §1 says | What was built, and why |
 |---|---|
-| Five controls (four fields and one hidden lookup) | **Six.** §1's *Rules* asks §2 to build the composite key if HAP takes the switch, and it does — so **State key** is a sixth control. It is hidden, and it enforces nothing (above) |
+| Five controls (four fields and one hidden lookup) | **Seven**, after the rebuild: the four fields, the hidden Country Code lookup, the hidden Text **State key** and the **Duplicate code** checkbox §1's revised *Rules* asks for |
+| "the key write is refused by *No duplicates* (the run fails, visibly)" | **Neither happens.** A workflow's update step is not checked against the switch at all, so there is nothing to refuse and no run to fail (above). The visible mark is there, but it comes from an **abort node** the build added: `status` 3, 中止 |
+| **G** *"work out the key, look for another state that already has it, tick Duplicate code if there is one, and write the key"* | Also **unticks** it when the key is free, **clears** the key on the duplicate path, and **stops** there. The untick is what keeps the checkbox honest when a duplicate is fixed by re-coding; the clear and the stop are what keep the key unique now that the switch is known not to bite |
+| The search "look for another state that already has it" | needs `Record ID ≠ the trigger` as well, or a save that re-sends an unchanged State Code marks the record as its own duplicate (above) |
 | "the deletion, then re-point" | Re-pointed **first**, as bundle 4 did: a deleted control stays in every view, rule and workflow step that names it and nothing cleans it up, so this is the order in which nothing is ever broken |
 | The eight contacts are "TEST QA Trading Sdn Bhd and its four people" | Exactly right, once the fourth person is read as **TEST UI Country Person**, the contact bundle 4's UI test created. Seven Selangor, one Sarawak |
 | Nothing | The **quick filter** had to be written as the spec adapter's object rather than a bare control id, or every run rewrote it (above) |
+| "which a view filter can list" | Nothing listed them at first — §1's *Views* table had one row. The owner added a second the same day and **Duplicate codes** is built (above), so the tick is now readable without opening a record. The *States* view is untouched, as asked |
 
 ### Found while building
 
 - **HAP stores *No duplicates* on a function formula and never applies it** (above). New in `BUILDING.md`.
+- **…and a *workflow's* update step is not checked against it either**, on a control type where the open API
+  is: the same duplicate value was refused `resultCode 11` through `record update` and accepted from a step,
+  leaving two states holding one key (above). `BUILDING.md` now carries the whole question — where *No
+  duplicates* is real and where it is decoration — as a section of its own.
+- **A deleted control's alias is free at once.** The Text State key took `state_key` from the formula deleted
+  in the previous call of the same run; the recycle bin holds the old control and reserves nothing. New in
+  `BUILDING.md`.
+- **The field recycle bin fills with controls nobody deleted**: `add-fields` plus a re-save leaves the
+  **client-side id** of every formula and lookup in it, under the same name and alias. Three of States' six
+  entries are those ghosts and only one is a real deletion (above). New in `BUILDING.md`.
+- **A hidden control is blanked in `GetFilterRows` — but a *filter* on it still works.** Every State key read
+  back empty from the list call, while `filterControls` "State key is empty" returned exactly the records
+  without one. So a hidden field's values can be **found** in one call even though they can only be **read**
+  one record at a time (`states.key_column`; 2 104 `GetRowDetail` reads took 274 s, about eight a second).
+  New in `BUILDING.md`.
+- **A search step can exclude the record that started the run** — Record ID *不等于* the trigger, conditionId
+  **10** — which a field-narrowed trigger makes necessary. New in `BUILDING.md`.
+- **A step that writes nothing still reports `status` 2**, so a run's detail cannot tell a skipped write from a
+  done one; an **abort** is the only thing that marks a run — `status` 3, `cause` **6666**, `causeMsg` 中止,
+  naming the node. `BUILDING.md`'s abort bullet gained the cause code and that consequence.
 - **A two-way Relation created in the first full save of an empty worksheet behaves like one added with
   `add-fields`**: the server reserves the reverse id in `sourceControlId` and creates nothing on the target.
   `BUILDING.md` had this for `add-fields`; it is the general rule for a relation to *another* worksheet.
@@ -466,11 +672,32 @@ printed as not-owned and left exactly as they were. `roles.py check` passes.
 
 ### For the UI test (§3)
 
-1. **Does the form refuse a duplicate?** Create a Malaysian state with State Code `ZZ-01` — `TEST State One`
-   already has it. If the form draws *No duplicates* on the hidden State key the save is stopped; if it does
-   not, the field is doing nothing and should be dropped. This is the one open question of the build.
-2. The **States list at the foot of a country's form**: open Malaysia and check the tab shows eighteen rows
-   with the two columns State Name · State Code, and that it is read-only (no *+ Record*).
+The first seven ran on 18 September and are §3's tests 1 to 17. **The rebuilt duplicate check needs a pass of
+its own** — five tests, numbered 18 to 22 so they append to §3's list:
+
+18. **A duplicate in the form, end to end.** Create a Malaysian state with State Code `ZZ-01` — three states
+    already hold it. The save is expected to be **accepted quietly**: the key is hidden and read-only, the
+    browser neither renders nor computes it, and the duplicate value does not exist until G runs. Then wait a
+    few seconds, reload the record and expect **Duplicate code ticked**, read-only, with no State key. If the
+    form *does* refuse the save, that is news and §2's paragraph above is wrong.
+19. **An ordinary save does not tick.** Open **Selangor**, change nothing but the State Name, save, wait, and
+    check Duplicate code is still **off** — the form re-sends State Code unchanged, which fires G (0e proves
+    the case through the API; the browser is what proves what a form actually sends).
+20. **Fixing a duplicate unticks it.** On the state made in test 18, change the code to something free
+    (`ZZ-07`) and expect Duplicate code to clear itself a few seconds later, with a State key appearing.
+21. **What a person sees of the key.** On any state's form: **Duplicate code** is visible and cannot be
+    clicked, and **State key** is not on the form at all — nor is it a column of the States table, a hidden
+    control never being one.
+22. **The Duplicate codes view.** Open it from the view bar, after *States*: four columns — State Name · State
+    Code · Country · Duplicate code — and the two `TEST` duplicates, with **no seeded state**. Then tick
+    nothing and change nothing: the test is that the view is a list you can hand someone. Test 18's new state
+    should appear in it a few seconds after it is saved, and leave it again after test 20.
+
+And the seven the first build left, for reference — 1 is superseded by 18 above:
+
+1. ~~Does the form refuse a duplicate?~~ — **test 18**.
+2. The **States list at the foot of a country's form**: open Malaysia and check the tab shows the Malaysian
+   states with the two columns State Name · State Code, and that it is read-only (no *+ Record*).
 3. The **State picker on a contact**: it should offer every state in the world by Display Name — type "Sel" and
    expect Basel-Landschaft (CH), Kalimantan Selatan (ID), Selangor (MY), Overijssel (NL) — **not** narrowed to
    the contact's country, and with no *+ Record* for a role that cannot create a state.
@@ -481,8 +708,8 @@ printed as not-owned and left exactly as they were. `roles.py check` passes.
 5. **What happens when one save changes both** — §1's open question. Set Country and State together, to a
    country and a state that disagree, and record what the record ends up holding. Both triggers match, both
    workflows are quiet, HAP does not order them, and the racing seen in `selfcheck` says the later run wins.
-6. The **States table**: 2 104 rows, three columns, sorted by code with countries interleaved, and the Country
-   quick filter as a dropdown.
+6. The **States table**: **2 106** rows now, three columns, sorted by code with countries interleaved, and the
+   Country quick filter as a dropdown.
 7. **Role visibility** with Select Role: Accountant and Invoicing should now see **+ Record** on States (they
    may create one) and not on Countries.
 
@@ -490,14 +717,16 @@ printed as not-owned and left exactly as they were. `roles.py check` passes.
 
 | Record | Where | Why |
 |---|---|---|
-| `TEST State One` — ZZ-01, Malaysia | States | the uniqueness probe's first record; §3 test 1 tries to duplicate its code |
-| `TEST State Two` — ZZ-02, Malaysia | States | its second; its code is moved onto ZZ-01 and back by every `selfcheck` |
+| `TEST State One` — ZZ-01, Malaysia, key `MY\|ZZ-01` | States | the first uniqueness probe's first record, and the **first holder** of `MY\|ZZ-01`, so it keeps the key and is not ticked |
+| `TEST State Two` — ZZ-02, Malaysia, key `MY\|ZZ-02` | States | its second; `selfcheck` renames it and re-sends its unchanged code (test 0e) and puts the name back |
+| `TEST State Duplicate` — ZZ-01, Malaysia, **no key, Duplicate code ticked** | States | §3 test 7's record, made in the browser. The second Malaysian `ZZ-01`, so it is the one the backfill marked — the only ticked record among the 2 102 seeded states and the build's own |
+| `TEST State Duplicate Two` — ZZ-01, Malaysia, **no key, Duplicate code ticked** | States | `selfcheck`'s own: created through the API with no key in the write (0b), driven onto a free code and back (0c, 0d), and left ticked |
 | `TEST State Contact` — Aceh (ID), Indonesia | Contacts | the self-check's contact for E and F |
 
 ## 3 · Test list
 
 Run on 18 September 2026 in Chrome against the live app, with the stored values read back through the CLI where
-the browser's own panel went stale. **15 pass, 1 fails, 1 not isolated.** Records made here are named `TEST …`.
+the browser's own panel went stale. **20 pass and 1 not isolated** — test 7 failed on the first build, the owner had the field dropped, and tests 18–22 cover what replaced it. Records made here are named `TEST …`.
 
 | # | Test | Steps | Expected | Result |
 |---|---|---|---|---|
@@ -507,7 +736,7 @@ the browser's own panel went stale. **15 pass, 1 fails, 1 not isolated.** Record
 | 4 | A state's form | Open **Selangor** | State Name *Selangor* \| State Code *MY-10* · Country *Malaysia* \| Display Name *Selangor (MY)*, read-only; the record's title is the Display Name | **Pass** |
 | 5 | The create form | + Record | Three required fields with Odoo's help under each; **no Display Name, no State key** | **Pass** — "Administrative divisions of a country. E.g. Fed. State, Department, Canton" and "The state code." |
 | 6 | Display Name on a new state | Save one | Display Name reads *Name (CC)* without a refresh pass | **Pass** — the build computed all 2 102 at create time, and test 7's record got its own |
-| 7 | **Two states of one country with the same code** | + Record → *TEST State Duplicate*, code **ZZ-01**, Country Malaysia — the build's `TEST State One` already holds ZZ-01 in Malaysia | Odoo refuses: *"The code of the state must be unique by country!"* | **Fails.** *Submitted successfully*, and Malaysia now has two ZZ-01. The hidden **State key** carries HAP's *No duplicates* and enforces **nothing** — not through the API (§2) and not in the form (here). See difference 2 |
+| 7 | **Two states of one country with the same code** | + Record → *TEST State Duplicate*, code **ZZ-01**, Country Malaysia — the build's `TEST State One` already holds ZZ-01 in Malaysia | Odoo refuses: *"The code of the state must be unique by country!"* | **Failed on the first build** — *Submitted successfully*, and the hidden State key **formula** carrying *No duplicates* refused nothing, in the API or the form. The owner had it dropped and the check rebuilt; **tests 18–21 are the replacement, and they pass** |
 | 8 | No archiving | The view list and a form | No Archive / Unarchive and no *Archived* view | **Pass** |
 | 9 | Countries: the States list | Open **Malaysia** on Countries | A **States** tab at the foot, columns State Name · State Code, and the remark block's last line now says the States are here | **Pass** — *States (19)*, newest first (a HAP relation list's order) |
 | 10 | Contacts: the field | Open **Klinik Kesihatan Damansara** | **State · Selangor (MY)** beside City, where the text control was | **Pass** — Country · Malaysia beside it |
@@ -518,16 +747,27 @@ the browser's own panel went stale. **15 pass, 1 fails, 1 not isolated.** Record
 | 15 | F on its own, through the form | Change only the Country on a contact holding a foreign state | The state is cleared | **Not isolated.** The one run ended with E's write winning — Country back to *Indonesia*, Aceh kept — and the browser could not be driven cleanly enough to repeat it. What a form sends decides which workflows match; test 13 and 14 pin the two ends. **Worth a reviewer's minute** |
 | 16 | The address push carries the State | Set **TEST QA Trading Sdn Bhd**'s State to *Johor (MY)*, wait, read its contacts; then set it back | Its **Contact-type** contacts follow; the Invoice and Delivery addresses do not | **Pass** — the company and its four people read *Johor (MY)*, the two addresses nothing; all five back to *Selangor (MY)* afterwards |
 | 17 | Roles | **Role debugging** as *Invoicing* | States offers **+ Record** (view · add · edit) where **Countries does not** | **Pass** — the two worksheets differ on screen exactly as Odoo's access list has them |
+| 18 | **A duplicate made in the form** | + Record → *TEST State Duplicate Three*, code **ZZ-01**, Country Malaysia — a third Malaysian ZZ-01 | The record saves (HAP cannot refuse), then G marks it | **Pass** — *Submitted successfully*, and within seconds `duplicate_code` **1** with **no key**, exactly the invariant |
+| 19 | The seeded states are clean | The backfill's read-back and the view below | All 2 102 hold the key their code implies, none ticked | **Pass** — 2 103 keys written, 0 differing, no seeded state ticked |
+| 20 | **Fixing a duplicate** | Change that record's code to **ZZ-03** | The tick clears and the key is written | **Pass** — `state_key` *MY\|ZZ-03*, `duplicate_code` **0**, and it leaves the view |
+| 21 | The **Duplicate codes** view | Open it | Only the ticked states | **Pass** — three while test 18 stood, two after test 20: `TEST State Duplicate` and `TEST State Duplicate Two`, both Malaysian ZZ-01, with a Duplicate code column |
+| 22 | A hidden control in the two read paths | Read a ticked record with `record list`, then with `record get` | — | **Worth knowing**: `record list` returns a hidden control **blank** — Duplicate code read empty on a record the view was listing — while `record get` shows `1`. The view filters the stored value, so the view is right and the list is misleading (`BUILDING.md`) |
 
 ### Differences from Odoo seen in testing
 
 1. **The tie at equal code.** Odoo orders `code, id`, so its list runs in the tenant's creation order within a
    code; ours breaks the tie on Country Name. The same class of difference as 02's and 05's.
-2. **Nothing enforces one code per country.** Odoo's `unique(country_id, code)` has no HAP equivalent: *No
-   duplicates* is a single field, and although HAP **accepts** the switch on the hidden **State key** formula
-   (`country code|state code`), it enforces it in neither the API nor the form. The field is built and inert —
-   **the owner's call is whether to drop it**; a hidden field that promises a check it does not make is worse
-   than none.
+2. **A duplicate code is caught after the save, not refused at it.** Odoo's `unique(country_id, code)` is a
+   database constraint and HAP has no equivalent: *No duplicates* covers one field, is **decoration on a
+   formula**, and is **ignored on a workflow's write** — §2 measured both, on the same control, minutes apart.
+   What is built instead catches every duplicate a second later: the record ends with **no key and Duplicate code
+   ticked**, its workflow run stops at the abort node, and the **Duplicate codes** view lists it until someone
+   mends the code — at which point the tick clears and the key is written (tests 18–21).
+   **Answered the same day.** The owner dropped it, and §2 › *The duplicate check, rebuilt* replaced it with a
+   Text key, a **Duplicate code** checkbox and workflow **G**. The difference from Odoo stands and is now
+   narrower: the duplicate record is still **created** — a workflow runs after the save — but it is caught,
+   ticked on the record and its run ends in an abort. Tests 18 to 21 of §2's list are the browser pass this
+   still needs.
 3. **A save that changes both fields does both things.** Odoo's onchanges fire one at a time in the form, so you
    never get both; here E writes the Country from the state and F clears the state in the same save, and the
    contact ends in the state's country with no state (test 14).
@@ -538,7 +778,9 @@ the browser's own panel went stale. **15 pass, 1 fails, 1 not isolated.** Record
 
 ### Test records left in the worksheet
 
-On States: **TEST State One** (ZZ-01) and **TEST State Two** (ZZ-02) from the build, and **TEST State Duplicate**
-(ZZ-01 again) from test 7 — the three that prove difference 2, and the reason Malaysia reads 19 instead of 16.
-On Contacts: **TEST State Contact** from the build. All go after sign-off, with the owner's approval; the 2 102
-states stay.
+On States: **TEST State One** (ZZ-01) and **TEST State Two** (ZZ-02) from the first build; **TEST State
+Duplicate** (ZZ-01 again) from test 7 and **TEST State Duplicate Two** from the rebuilt check's self-check — the
+two the *Duplicate codes* view lists; and **TEST State Duplicate Three**, which test 18 made a duplicate and
+test 20 mended (ZZ-03). On Contacts: **TEST State Contact** from the build. All go after sign-off, with the owner's approval; the 2 102
+states stay. *The rebuild of 18 Sep added a fourth, **TEST State Duplicate Two** (ZZ-01 as well), so Malaysia
+now reads 20; §2's table says what each one is for.*

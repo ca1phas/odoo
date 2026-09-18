@@ -323,9 +323,9 @@ state picker on a contact, tested three ways over RPC.
 | A country's states | The editable list at the foot of the country form, State Name · State Code | The **States** tab at the foot of a country, the same two columns, newest first |
 | The picker on a contact | **Every state in the world**, labelled *Selangor (MY)* — the partner form passes `default_country_id`, which `name_search` does not narrow on | The same: typing *Aceh* on a Malaysian contact offers **Aceh (ID)** |
 | Country and state in step | Two onchanges: a state sets the country, a country clears a state that belongs elsewhere | Workflows E and F, both proved — and a save that changes **both** does both things at once, which Odoo's form never does (§3, difference 3) |
-| One code per country | `unique(country_id, code)` — *"The code of the state must be unique by country!"* | **Nothing enforces it.** HAP's *No duplicates* is one field, and the hidden composite formula the build tried takes the switch but enforces it nowhere |
+| One code per country | `unique(country_id, code)` — *"The code of the state must be unique by country!"*, refused by the database | **Caught, not refused.** HAP has no pair constraint, so a duplicate saves and is then marked: no key, a ticked *Duplicate code*, a workflow run stopped at its abort node, and a row in the *Duplicate codes* view until the code is mended |
 | Access | `base.group_partner_manager` — a **contact manager** — creates, edits and deletes; every internal user reads | Each role's Contacts cell: Accountant and Invoicing add and edit, Read-only reads, Accounting Administrator deletes. Seen with role debugging: as *Invoicing*, States offers **+ Record** where **Countries does not** |
 
-**No surprises.** The four differences are the ones §3 records, and every one of them is HAP's shape rather than a
+**No surprises.** The differences are the ones §3 records, and every one of them is HAP's shape rather than a
 misreading of Odoo: the tie-break at equal code, the composite constraint, both workflows firing in one save, and
 the relation list's newest-first order.

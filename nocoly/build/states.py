@@ -20,13 +20,20 @@ CLI's interpreter:
     ~/.hap-venv/bin/python nocoly/build/states.py reverse   # 2. Countries gains **States** — the reverse of the
                                                             #    two-way relation — and its remark block's last
                                                             #    line is rewritten
-    ~/.hap-venv/bin/python nocoly/build/states.py views     # 3. States — the only view: three columns, State
-                                                            #    Code A→Z then Country, quick filter Country
+    ~/.hap-venv/bin/python nocoly/build/states.py views     # 3. States — the view that opens first: three
+                                                            #    columns, State Code A→Z then Country, quick
+                                                            #    filter Country
+    ~/.hap-venv/bin/python nocoly/build/states.py dupview   # 3b. Duplicate codes — §1's second view: the same
+                                                            #    three columns plus Duplicate code, filtered
+                                                            #    to the states it is ticked on
     ~/.hap-venv/bin/python nocoly/build/states.py roles     # 4. roles.py's create step, which now carries this
                                                             #    worksheet into the four business roles
-    ~/.hap-venv/bin/python nocoly/build/states.py unique    # 5. §1's Rules question: HAP takes *No duplicates*
-                                                            #    on a formula control and never applies it —
-                                                            #    `selfcheck` is what proves the second half
+    ~/.hap-venv/bin/python nocoly/build/states.py key       # 1b. the State key **function formula** deleted
+                                                            #    (owner-approved, 18 Sep) and rebuilt as a Text
+                                                            #    control carrying No duplicates, beside the
+                                                            #    read-only Duplicate code checkbox
+    ~/.hap-venv/bin/python nocoly/build/states.py unique     # 5. where §1's Rules question stands: the switch
+                                                            #    is on a Text control now, where HAP enforces it
     ~/.hap-venv/bin/python nocoly/build/states.py seed      # 6. the 2 102 states, every one read back, and §1's
                                                             #    digests
     ~/.hap-venv/bin/python nocoly/build/states.py contacts  # 7. the relation State on Contacts, in the text
@@ -36,6 +43,14 @@ CLI's interpreter:
     ~/.hap-venv/bin/python nocoly/build/states.py retire    # 9. re-point the two address automations, delete the
                                                             #    text control, scan for the dead id
     ~/.hap-venv/bin/python nocoly/build/states.py automations # 10. workflows E and F on Contacts, both quiet
+    ~/.hap-venv/bin/python nocoly/build/states.py duplicates # 11. workflow G on States: work the key out, look
+                                                            #    for another state holding it, tick Duplicate
+                                                            #    code, write the key. Quiet
+    ~/.hap-venv/bin/python nocoly/build/states.py backfill  # 12. every state's key, and Duplicate code on the
+                                                            #    ones that collide
+    ~/.hap-venv/bin/python nocoly/build/states.py keys      # what the worksheet holds: keys, duplicates, and
+                                                            #    every key read back one record at a time
+                                                            #    (`keys sample` reads a dozen)
     ~/.hap-venv/bin/python nocoly/build/states.py all       # every step above, then check
 
     ~/.hap-venv/bin/python nocoly/build/states.py verify    # the 2 102 live states against the extract, with
@@ -56,7 +71,10 @@ reads back from the relation. Nothing else is deleted and the Sales app is never
 
 The order matters: `fields` before `reverse` (the reverse carries the id the relation reserved), `seed` before
 `carry` (the relation needs Selangor and Sarawak to point at), `carry` before `retire`, and `retire` before
-`automations` — E and F resolve "State" by name, and until the stand-in is gone that name is ambiguous.
+`automations` — E and F resolve "State" by name, and until the stand-in is gone that name is ambiguous. And
+**`seed` before `duplicates`**: G fires on every create that carries a Country or a State Code, so building it
+first would put 2 102 workflow runs through the organisation's quota to write keys that `backfill` writes
+through the API in six minutes.
 
 Records are created through the CLI's own session — `hap worksheet record batch-create` is one `AddWorksheetRow`
 per row *and* one GetWorksheetControls per row, which is 4 204 HTTP calls for this seed; `batch` below is the
@@ -131,15 +149,20 @@ CODE = 'State Code'
 COUNTRY = 'Country'
 DISPLAY = 'Display Name'
 COUNTRY_CODE = 'Country Code'                     # the hidden stored lookup Display Name is built on
-STATE_KEY = 'State key'                           # §1 › Rules: Odoo's unique(country_id, code) as one field
+STATE_KEY = 'State key'                           # §1 › Rules: Odoo's unique(country_id, code) as one field —
+                                                  # a **Text** control since 18 Sep 2026 (the formula that held
+                                                  # the switch before it enforced nothing; the owner dropped it)
+DUPLICATE = 'Duplicate code'                      # what a person actually sees: workflow G ticks it
 
-# §1's form layout: State Name | State Code · Country | Display Name, with the two hidden controls under them
-# (a hidden control still needs a place, as 08's Parent Complete Name has one). HAP puts the title field at the
-# top of the record, so Display Name shows twice there, as Complete Name does on a category.
+# §1's form layout: State Name | State Code · Country | Display Name, then the read-only Duplicate code
+# checkbox, with the two hidden controls under them (a hidden control still needs a place, as 08's Parent
+# Complete Name has one). HAP puts the title field at the top of the record, so Display Name shows twice
+# there, as Complete Name does on a category.
 PLACE = {
     NAME: (0, 0, 6), CODE: (0, 1, 6),
     COUNTRY: (1, 0, 6), DISPLAY: (1, 1, 6),
-    COUNTRY_CODE: (2, 0, 6), STATE_KEY: (2, 1, 6),
+    DUPLICATE: (2, 0, 6),
+    COUNTRY_CODE: (3, 0, 6), STATE_KEY: (3, 1, 6),
 }
 HINTS = {}                                        # Odoo's state form has no placeholder on any field
 DESC = {  # Odoo's field help where it has one (res_country.py); how a helper is computed otherwise
@@ -149,20 +172,30 @@ DESC = {  # Odoo's field help where it has one (res_country.py); how a helper is
              '— Odoo display_name, "Selangor (MY)".',
     COUNTRY_CODE: "The Country's Country Code (a stored lookup), which Display Name is built on.",
     STATE_KEY: "Odoo's constraint unique(country_id, code) as one field: the country's code, a bar and the "
-               'State Code. Hidden, and it exists only to carry No duplicates.',
+               'State Code — "MY|MY-10". Hidden and read-only, and written only by the workflow "States: the '
+               'key and the duplicate check", which writes it after proving no other state holds it. No '
+               'duplicates on this control refuses an API write of a key another state already has '
+               '(resultCode 11) and is not applied to a workflow\'s own write, so it is a backstop on '
+               'imports rather than what keeps the key unique.',
+    DUPLICATE: 'Another state of the same country already has this State Code. Ticked by the workflow States: '
+               "the key and the duplicate check — Odoo refuses such a record outright (unique(country_id, "
+               'code)); HAP runs its workflow after the save, so here the duplicate is created and named.',
 }
 REQUIRED = {NAME, CODE, COUNTRY}                  # Odoo: all three required on the model
 UNIQUE = {STATE_KEY}                              # §1 › Rules; nothing else, and *not* State Code
 # A hidden field never shows as a table column, so Display Name — the title — is read-only and hidden on create
-# ("100") rather than hidden, as 01's, 04's, 08's and 09's are. The two helpers are hidden outright.
-PERMISSION = {DISPLAY: '100', COUNTRY_CODE: '011', STATE_KEY: '011'}
+# ("100") rather than hidden, as 01's, 04's, 08's and 09's are; Duplicate code is read-only the same way, and
+# hidden on create because nothing has computed it yet. Country Code is hidden outright ("011"), and State key
+# is hidden **and** read-only ("001"): nobody types a key.
+PERMISSION = {DISPLAY: '100', DUPLICATE: '100', COUNTRY_CODE: '011', STATE_KEY: '001'}
 ALIASES = {NAME: 'name', CODE: 'code', COUNTRY: 'country_id', DISPLAY: 'display_name',
            COUNTRY_CODE: 'country_code',          # country_code is a helper, not a field of res.country.state
-           STATE_KEY: 'state_key'}                # and so is state_key
+           STATE_KEY: 'state_key',                # and so is state_key
+           DUPLICATE: 'duplicate_code'}           # and so is duplicate_code
 ADVANCED = {  # the advancedSetting keys this script owns
     COUNTRY: {'bidirectional': '1', 'showtype': '3'},        # two-way; 3 = a dropdown
     DISPLAY: {'analysislink': '1', 'sorttype': 'en'},
-    STATE_KEY: {'analysislink': '1', 'sorttype': 'en'},
+    DUPLICATE: {'showtype': '0'},                            # 0 = a checkbox, as Countries' two switches
 }
 
 # On Countries: the reverse of Country, the list Odoo draws at the foot of the country form.
@@ -196,13 +229,7 @@ def display_expression(f):
     return f"CONCAT(${f[NAME]['controlId']}$,\" (\",${f[COUNTRY_CODE]['controlId']}$,\")\")"
 
 
-def key_expression(f):
-    """§1 › Rules: Odoo's `unique(country_id, code)` reduced to one value — the country's code, a bar and the
-    state's code. The bar cannot occur in either half, so two different pairs cannot collide."""
-    return f"CONCAT(${f[COUNTRY_CODE]['controlId']}$,\"|\",${f[CODE]['controlId']}$)"
-
-
-EXPRESSION = {DISPLAY: display_expression, STATE_KEY: key_expression}
+EXPRESSION = {DISPLAY: display_expression}
 
 
 def desired(c):
@@ -294,7 +321,7 @@ def guard(fresh=False):
     if len(hap.by_name(ctrls)) != len(ctrls):
         problems.append(f'two controls share a name: {sorted(c["controlName"] for c in ctrls)}')
     views = {v['name'] for v in hap.listing('worksheet', 'view', 'list', worksheet, '-a', APP)}
-    problems += [f'unknown view {n!r}' for n in views - {VIEW, 'All', '全部'}]
+    problems += [f'unknown view {n!r}' for n in views - {VIEW, DUP_VIEW, 'All', '全部'}]
     buttons = {b['name'] for b in hap.listing('worksheet', 'custom-actions', worksheet)}
     problems += [f'unknown button {n!r}' for n in buttons]          # §1: this worksheet has no buttons
     rules = {r['name'] for r in hap.listing('worksheet', 'rules', worksheet)}
@@ -386,20 +413,19 @@ def step_fields():
                                              'dataSource': function_source(display_expression(f))})])
         expect(before, f'{WORKSHEET}: the {DISPLAY} formula added', new={WORKSHEET: {DISPLAY}})
         print(f'  added: {DISPLAY}')
-        f = fields_of(ws())
-    if STATE_KEY not in f:
-        # §1 › Rules, answered by `unique`: HAP does take *No duplicates* on a function formula, so Odoo's
-        # `unique(country_id, code)` is built as one — the switch goes on in the placing save below, after the
-        # formula has been minted and can compute.
-        before = snap()
-        C.add_fields(ws(), [C.control('FORMULA_FUNC', STATE_KEY, PLACE[STATE_KEY], alias=ALIASES[STATE_KEY],
-                                      hint='', desc=DESC[STATE_KEY],
-                                      advanced_setting=dict(ADVANCED[STATE_KEY]),
-                                      extra={'enumDefault2': 2,
-                                             'dataSource': function_source(key_expression(f))})])
-        expect(before, f'{WORKSHEET}: the {STATE_KEY} formula added', new={WORKSHEET: {STATE_KEY}})
-        print(f'  added: {STATE_KEY}')
-    ctrls = hap.controls(ws())
+    # **State key and Duplicate code are `key`'s**, not this step's: the key was a function formula until
+    # 18 Sep 2026, when the owner ruled that the formula be dropped because *No duplicates* on one enforces
+    # nothing, and it is a Text control now (§1 › Rules, rewritten). `key` deletes the formula and builds the
+    # two controls; both steps share the placing save below, which is driven by PLACE and reaches whatever is
+    # live.
+    return place_controls('places, permissions, descriptions and the title')
+
+
+def place_controls(label):
+    """One full save bringing every control that exists into PLACE's rows, aliases, descriptions, permissions
+    and switches, and the title onto Display Name. Shared by `fields` and `key`: a control either step added
+    arrives at row 9999 (`add-fields`) and only a full save places it."""
+    ctrls, version = C.controls_with_version(ws())
     changed = layout_differences(ctrls)
     if changed:
         f = hap.by_name(ctrls)
@@ -412,8 +438,8 @@ def step_fields():
         for c in ctrls:                            # the title moves in one save: 1 on Display Name, 0 elsewhere
             c['attribute'] = 1 if c['controlName'] == DISPLAY else 0
         before = snap()
-        C.save_controls(ws(), ctrls)
-        expect(before, f'{WORKSHEET}: places, permissions, descriptions and the title')
+        C.save_controls(ws(), ctrls, version=version)
+        expect(before, f'{WORKSHEET}: {label}')
         print('  updated:', json.dumps(changed, ensure_ascii=False))
     left = layout_differences(hap.controls(ws()))
     if left:
@@ -425,6 +451,75 @@ def step_fields():
 
 def fields_of(worksheet_id):
     return hap.by_name(c for c in hap.controls(worksheet_id) if c['type'] != C.TAB)
+
+
+# ── 1b · State key as a Text control, and the Duplicate code checkbox ────────
+
+KEY_FORMULA = '6aace4a47d58b0f4493134f4'          # the function formula the owner dropped, 18 Sep 2026
+
+
+def step_key():
+    """§1's *Rules*, rewritten on 18 Sep 2026 after §3 test 7: **drop the State key function formula and build
+    the pair that can actually do something.**
+
+    The formula `6aace4a47d58b0f4493134f4` carried HAP's *No duplicates* and enforced nothing — not through
+    the API (`selfcheck`) and not in the form (§3 test 7, in the browser). The owner's ruling was to drop it
+    and enforce the pair some other way, and **this deletion is the owner's approval** (the second of this
+    bundle, after Contacts' text stand-in); nothing else on this worksheet is ever deleted.
+
+    In its place:
+
+    * **State key**, a **Text** control — hidden and read-only ("001"), carrying *No duplicates*, holding
+      `<country code>|<state code>`. On a Text control the switch is real: bundle 4 saw both a form save and
+      an API write refused (`resultCode 11`). Nothing computes it; workflow **G** writes it (`duplicates`).
+    * **Duplicate code**, a read-only checkbox on the form — what a person actually sees when G finds that
+      another state of the same country already holds this code.
+
+    Re-runnable: the deletion happens only while the formula is still there, each control is added only when
+    it is missing, and the placing save writes only what differs."""
+    guard()
+    ctrls, version = C.controls_with_version(ws())
+    old = next((c for c in ctrls if c['controlId'] == KEY_FORMULA), None)
+    if old:
+        if old['type'] != FORMULA or old['controlName'] != STATE_KEY:
+            sys.exit(f'{KEY_FORMULA} is {old["controlName"]!r} type {old["type"]}, not the {STATE_KEY} formula '
+                     f'— refusing to delete it')
+        print('  backup:', hap.backup('states_controls_pre_key_deletion', ctrls))
+        print(f'  deleting the {STATE_KEY} **function formula** {KEY_FORMULA} (type {old["type"]}, alias '
+              f'{old.get("alias")!r}) — the owner-approved deletion of 18 Sep 2026: No duplicates on a formula '
+              f'enforces nothing')
+        before = snap()
+        C.save_controls(ws(), [c for c in ctrls if c['controlId'] != KEY_FORMULA], version=version)
+        expect(before, f'{WORKSHEET}: the {STATE_KEY} formula deleted (no other worksheet may change)')
+        if next((c for c in hap.controls(ws()) if c['controlId'] == KEY_FORMULA), None):
+            sys.exit('the formula is still there after the save')
+        print(f'  deleted; {WORKSHEET} now has {len(hap.controls(ws()))} controls')
+    f = fields_of(ws())
+    if STATE_KEY not in f:
+        # A Text control, appended without a controlId so the server mints one. `unique` — HAP's No duplicates
+        # — is set here and read back by `check`; on a Text control it is enforced on API writes too.
+        before = snap()
+        C.append_controls(ws(), [C.control('TEXT', STATE_KEY, PLACE[STATE_KEY], alias=ALIASES[STATE_KEY],
+                                           hint='', desc=DESC[STATE_KEY], unique=True)])
+        expect(before, f'{WORKSHEET}: the {STATE_KEY} Text control added', new={WORKSHEET: {STATE_KEY}})
+        print(f'  added: {STATE_KEY} (Text, No duplicates)')
+    if DUPLICATE not in fields_of(ws()):
+        before = snap()
+        C.append_controls(ws(), [C.control('SWITCH', DUPLICATE, PLACE[DUPLICATE], alias=ALIASES[DUPLICATE],
+                                           hint='', desc=DESC[DUPLICATE],
+                                           advanced_setting=dict(ADVANCED[DUPLICATE]))])
+        expect(before, f'{WORKSHEET}: the {DUPLICATE} checkbox added', new={WORKSHEET: {DUPLICATE}})
+        print(f'  added: {DUPLICATE} (a checkbox, read-only on the form)')
+    place_controls(f'{STATE_KEY} and {DUPLICATE} placed')
+    f = fields_of(ws())
+    key = f[STATE_KEY]
+    if key['type'] != TEXT or not key.get('unique'):
+        sys.exit(f'{STATE_KEY} read back type {key["type"]} unique {key.get("unique")!r}')
+    print(f"  {STATE_KEY}: {key['controlId']} type {key['type']} (Text), unique {key.get('unique')!r}, "
+          f"perm {key.get('fieldPermission')}, alias {key.get('alias')!r}")
+    dup = f[DUPLICATE]
+    print(f"  {DUPLICATE}: {dup['controlId']} type {dup['type']} (checkbox), perm "
+          f"{dup.get('fieldPermission')}, alias {dup.get('alias')!r}")
 
 
 # ── 2 · the reverse on Countries ────────────────────────────────────────────
@@ -502,12 +597,17 @@ def step_reverse():
 
 VIEW = 'States'
 COLUMNS = (NAME, CODE, COUNTRY)                   # base.view_country_state_tree, the same three columns
+DUP_VIEW = 'Duplicate codes'                      # §1's second view, added 18 Sep with the rebuilt check
+DUP_COLUMNS = (NAME, CODE, COUNTRY, DUPLICATE)    # the same three, plus the tick itself
 
 
 def step_views():
-    """States, the only view: every state, State Name · State Code · Country, sorted **State Code A→Z then
-    Country** — Odoo's `_order = 'code, id'` with the country name standing in for the record id — and a
-    **Country quick filter**, which is what Odoo's one group-by stands for.
+    """States, the view that opens first: every state, State Name · State Code · Country, sorted **State Code
+    A→Z then Country** — Odoo's `_order = 'code, id'` with the country name standing in for the record id —
+    and a **Country quick filter**, which is what Odoo's one group-by stands for.
+
+    §1's second view is `dupview`'s and this step never touches it: it names only *States* to `upsert_views`
+    and only *States* to `sort_views`, which leaves every view it is not given where it is.
 
     A view sorts on a Relation by the related record's title, and Countries' title is Country Name, so the
     second key reads as §1's "then Country Name". There is no Archived view: res.country.state has no active
@@ -535,6 +635,56 @@ def step_views():
         print(f"  quick filters: {[(names.get(q['controlId']), q.get('advancedSetting')) for q in info.get('fastFilters') or []]}")
 
 
+# ── 3b · the Duplicate codes view ───────────────────────────────────────────
+
+def step_dupview():
+    """§1's second view: **Duplicate codes** — the states *Duplicate code* is ticked on.
+
+    Odoo has no such view because its database refuses the second state outright; here the duplicate is
+    created and then named by workflow **G**, and until this view there was nowhere to read the tick but the
+    record itself. Columns are the States view's three plus the checkbox, sorted the same way, with the
+    view's own filter **Duplicate code is checked** — the spec adapter's switch condition, the shape 02's
+    *Archived* view uses on Active (`common.switch_filter`).
+
+    It carries **no quick filter**, and the *States* view is not named here at all: this step sends only its
+    own view to `upsert_views` and only the pair to `sort_views`, which keeps States opening first and leaves
+    its columns, its sort and its Country quick filter exactly as `views` wrote them."""
+    guard()
+    f = fields_of(ws())
+    if DUPLICATE not in f:
+        sys.exit(f'{DUPLICATE} is not built — run `key` first')
+    columns = [f[n]['controlId'] for n in DUP_COLUMNS]
+    spec = dict(viewType='table', tableFields=columns, filter=C.switch_filter(f[DUPLICATE], 'eq'))
+    views = {DUP_VIEW: (spec, C.sort_spec([f[CODE], f[COUNTRY]]), columns)}
+    before = {v['name']: C.view_info(ws(), APP, v['viewId'])
+              for v in hap.listing('worksheet', 'view', 'list', ws(), '-a', APP)}
+    for name, vid in C.upsert_views(ws(), APP, views, 'states_views_pre_dupview').items():
+        C.remember('views', KEY + name, vid)
+    print('  order:', C.sort_views(ws(), APP, [VIEW, DUP_VIEW]))
+    # the States view may not move: same columns, same sort, same quick filter, same filter
+    after = {v['name']: C.view_info(ws(), APP, v['viewId'])
+             for v in hap.listing('worksheet', 'view', 'list', ws(), '-a', APP)}
+    keys = ('showControls', 'sortCid', 'sortType', 'moreSort', 'filters', 'fastFilters', 'advancedSetting')
+    moved = [k for k in keys if (before.get(VIEW) or {}).get(k) != after[VIEW].get(k)]
+    if VIEW in before and moved:
+        sys.exit(f'the {VIEW} view changed: {moved}')
+    print(f'  {VIEW}: unchanged ({len(keys)} attributes compared)')
+    C.print_views(ws(), APP)
+    names = {c['controlId']: c['controlName'] for c in hap.controls(ws())}
+    v = after[DUP_VIEW]
+    print(f"  {DUP_VIEW}: {v.get('viewId')} columns "
+          f"{[names.get(x) for x in v.get('showControls') or []]} "
+          f"filter {[(names.get(x['controlId']), x['filterType'], x.get('values')) for x in v.get('filters') or []]} "
+          f"quick {[names.get(q['controlId']) for q in v.get('fastFilters') or []]}")
+    listed = hap.run('worksheet', 'record', 'list', ws(), '-a', APP, '-n', '50', '--view-id', v['viewId'],
+                     '--use-field-id-as-key')
+    d = listed.get('data', listed) if isinstance(listed, dict) else listed
+    rows_ = (d.get('rows') if isinstance(d, dict) else d) or []
+    print(f'  it lists {len(rows_)}: ' + ', '.join(f"{r.get(f[NAME]['controlId'])!r} "
+                                                   f"({r.get(f[CODE]['controlId'])})" for r in rows_))
+    return 0
+
+
 # ── 4 · roles ───────────────────────────────────────────────────────────────
 
 def step_roles():
@@ -551,33 +701,46 @@ def step_roles():
 # ── 5 · §1's Rules question ─────────────────────────────────────────────────
 
 def step_unique():
-    """§1's *Rules*: **does HAP take *No duplicates* on a formula control?**
+    """§1's *Rules*: where Odoo's `unique(country_id, code)` stands here.
 
-    Odoo's constraint is `unique(country_id, code)`, a pair; HAP's *No duplicates* is one field, and §1 asks
-    whether the pair can be reached through a hidden formula of `country code + "|" + state code`. Whether the
-    switch may be sent at all was answered on the **empty** worksheet on 18 Sep 2026 by putting it on the
-    Display Name formula — itself unique across all 2 102 states — and reading it back: the save was accepted
-    and `unique` read back `True`. The probe was reverted in the same run and **State key** built instead,
-    which is the field `fields` now carries the switch on.
+    The first build put HAP's *No duplicates* on a hidden **function formula** of `country code + "|" + state
+    code`. HAP stored the switch and enforced it nowhere — not through the API and not in the form (§3 test
+    7) — and the owner ruled it out. It is a **Text** control now, written by workflow **G**.
 
-    This step reports where that stands. *Whether the switch is enforced* is a different question, and it is
-    `selfcheck` that answers it: the switch reading back True on a formula is not proof that the server
-    compares a value it computes after the write."""
+    On a Text control the switch is real **on the open API**: a write of a value another record holds is
+    refused with `resultCode 11` (bundle 4 on Countries' Country Code; `selfcheck` 0a here, and the backfill's
+    2 104th key). It is **not** applied to a workflow's own update step — measured 18 Sep — so the pair is
+    kept by G's shape rather than by the switch: the duplicate path ticks Duplicate code, clears the key and
+    ends in an abort.
+
+    This step reports what is stored; `selfcheck` drives what happens."""
     guard()
     f = fields_of(ws())
-    key = f.get(STATE_KEY)
-    if not key:
-        sys.exit(f'{STATE_KEY} is not built — run `fields` first')
-    print(f"  {STATE_KEY}: {key['controlId']} type {key['type']} (function formula), "
-          f"unique reads {key.get('unique')!r}, perm {key.get('fieldPermission')}, "
-          f"expression {json.loads(key.get('dataSource') or '{}').get('expression')}")
+    key, dup = f.get(STATE_KEY), f.get(DUPLICATE)
+    if not key or not dup:
+        sys.exit(f'{STATE_KEY} / {DUPLICATE} are not built — run `key` first')
+    print(f"  {STATE_KEY}: {key['controlId']} type {key['type']} "
+          f"({'Text' if key['type'] == TEXT else 'NOT a Text control'}), unique reads {key.get('unique')!r}, "
+          f"perm {key.get('fieldPermission')}, alias {key.get('alias')!r}")
+    print(f"  {DUPLICATE}: {dup['controlId']} type {dup['type']} "
+          f"({'a checkbox' if dup['type'] == SWITCH else 'NOT a checkbox'}), perm {dup.get('fieldPermission')}")
+    pid = hap.ids().get('workflows', {}).get(WF_G)
+    print(f"  workflow G {WF_G!r}: {pid or 'not built'}")
+    problems = []
+    if key['type'] != TEXT:
+        problems.append(f'{STATE_KEY} is type {key["type"]}, not a Text control (2)')
     if not key.get('unique'):
-        print(f'  DIFF  HAP did not keep No duplicates on {STATE_KEY}')
-        return 1
-    print(f'  HAP takes No duplicates on a function formula: the switch was accepted on the empty worksheet '
-          f'(the Display Name probe, reverted) and is stored on {STATE_KEY}. Whether it is **enforced** is '
-          f'`selfcheck`.')
-    return 0
+        problems.append(f'{STATE_KEY} does not carry No duplicates')
+    if any(c['controlId'] == KEY_FORMULA for c in hap.controls(ws())):
+        problems.append(f'the old {STATE_KEY} formula {KEY_FORMULA} is still on the worksheet')
+    for p in problems:
+        print(f'  DIFF  {p}')
+    if not problems:
+        print(f'  Odoo unique(country_id, code) is carried by a **Text** control, written only by workflow G. '
+              f'No duplicates on it refuses an **API** write ({STATE_KEY} resultCode 11) and is not applied to '
+              f"G's own update step at all, so what keeps the key unique is G's shape — the duplicate path "
+              f'ticks {DUPLICATE}, clears the key and ends in an abort, and never reaches the write.')
+    return len(problems)
 
 
 # ── 6 · the 2 102 states ────────────────────────────────────────────────────
@@ -1162,18 +1325,24 @@ def step_state_of(pid, node_id):
     d = node_get(pid, node_id)
     return dict(selectNodeId=d.get('selectNodeId'), appId=d.get('appId'), isException=bool(d.get('isException')),
                 fields=[(x.get('fieldId'), x.get('nodeId') or '', x.get('fieldValueId') or '',
-                         bool(x.get('isClear'))) for x in d.get('fields') or []])
+                         bool(x.get('isClear')), x.get('fieldValue') or '') for x in d.get('fields') or []])
 
 
-def save_update(pid, node_id, name, select_node, fields):
-    """An update step writing exactly `fields` on the record `select_node` produced (payterms.save_update)."""
-    want = (select_node, con_ws(), False, [(x['fieldId'], x.get('nodeId') or '', x.get('fieldValueId') or '',
-                                            bool(x.get('isClear'))) for x in fields])
+def save_update(pid, node_id, name, select_node, fields, worksheet=None):
+    """An update step writing exactly `fields` on the record `select_node` produced (payterms.save_update).
+
+    A **text** entry taken from another node is stored as the template `$<nodeId>-<fieldId>$` in `fieldValue`
+    with `nodeId` emptied, whichever shape it was sent in (BUILDING.md), so `fieldValue` is part of what is
+    compared — otherwise a wrong template would read back as agreement."""
+    worksheet = worksheet or con_ws()
+    want = (select_node, worksheet, False,
+            [(x['fieldId'], x.get('nodeId') or '', x.get('fieldValueId') or '', bool(x.get('isClear')),
+              x.get('fieldValue') or '') for x in fields])
     s = step_state_of(pid, node_id)
     if (s['selectNodeId'], s['appId'], s['isException'], s['fields']) == want:
         return False
     hap.run('workflow', 'node', 'save', pid, node_id, '--type', '6', '-n', name, '-c', json.dumps(
-        {'actionId': '2', 'appId': con_ws(), 'appType': 1, 'selectNodeId': select_node, 'fields': fields},
+        {'actionId': '2', 'appId': worksheet, 'appType': 1, 'selectNodeId': select_node, 'fields': fields},
         ensure_ascii=False))
     s = step_state_of(pid, node_id)
     if (s['selectNodeId'], s['appId'], s['isException'], s['fields']) != want:
@@ -1347,6 +1516,449 @@ def wire(label, name, desc, trigger_name, trigger_field, state_rel, state_countr
     return changed
 
 
+# ── 11 · workflow G: the key and the duplicate check ────────────────────────
+
+WF_G = 'States: the key and the duplicate check'
+G_TRIGGER = "When a state's Country or State Code is written"
+GET_COUNTRY = 'Get the country'
+KEY_STEP = 'Work out the key'
+FIND_STEP = 'Another state with this key?'
+DUP_GATEWAY = 'Is there one?'
+PATH_DUP = 'Yes — another state already holds this key'
+PATH_FREE = 'No — this key is free'
+TICK_STEP = f'Tick {DUPLICATE}'
+UNTICK_STEP = f'Untick {DUPLICATE}'
+CLEAR_STEP = f'Clear the {STATE_KEY}'
+STOP_STEP = 'Stop — a duplicate gets no key'
+WRITE_KEY_STEP = f'Write the {STATE_KEY}'
+G_NODES = (GET_COUNTRY, KEY_STEP, FIND_STEP, DUP_GATEWAY, PATH_DUP, PATH_FREE, TICK_STEP, UNTICK_STEP,
+           CLEAR_STEP, STOP_STEP, WRITE_KEY_STEP)
+ABORT = 30                                        # flowNodeType 中止流程 — the only way to stop a run inside
+STRING_FX = 'string_fx_id'                        # a function formula node's own text result
+EQ, NE, NOT_EMPTY = '9', '10', '7'                # workflow conditionIds: 等于 · 不等于 · 不为空
+
+
+def key_formula(f, cty_f):
+    """`<country code>|<state code>` — Odoo's own natural key, the pair `unique(country_id, code)` is on.
+
+    The country's code is read from the **country record** the first step fetched rather than from the hidden
+    stored lookup on the state: the lookup is a value HAP recomputes on save and the run would be reading it
+    at the moment it is being written, where the country record is simply there. A workflow formula compares
+    with `==` and concatenates with CONCAT (`+` would concatenate as text and then read the result as octal —
+    BUILDING.md), and neither half can contain a bar, so two different pairs cannot collide."""
+    return (f"CONCAT($country-{cty_f['Country Code']['controlId']}$,\"|\",$trigger-{f[CODE]['controlId']}$)")
+
+
+def g_nodes(f):
+    """The chain `batch-add` makes. Its search filter and sort and its branch-path conditions are written
+    again afterwards: batch-add sends `operateCondition`, which the UI never reads, and no sort at all.
+
+    **The tick comes before the key write, and they are two steps** — §1 asks for the split, so that a
+    refused key write cannot take the tick with it.
+
+    **And the duplicate path ends in an abort** (中止流程, node type 30), so the run never reaches the key
+    write at all. That is not belt and braces: a workflow's update step is **not** subject to *No duplicates*
+    — measured on 18 Sep, the same write the open API refuses with `resultCode 11` is accepted from a step,
+    and two states were left holding `MY|ZZ-01` — so nothing but this workflow's own shape keeps the key
+    unique. A branch converges, so an empty path is not a stop (BUILDING.md); only the abort is. The
+    duplicate path therefore reads **tick · clear the key · stop**, and the invariant it keeps is: *a state
+    holds the key its own code implies, or holds none and carries Duplicate code.*"""
+    tick = lambda alias, name, value: {
+        'nodeAlias': alias, 'nodeType': 'update_record', 'name': name,
+        'config': {'target': {'node': {'nodeAlias': 'trigger'}}, 'worksheet': ws(),
+                   'fields': [{'fieldId': f[DUPLICATE]['controlId'], 'type': SWITCH, 'value': value}]}}
+    clear = {'nodeAlias': 'clear', 'nodeType': 'update_record', 'name': CLEAR_STEP,
+             'config': {'target': {'node': {'nodeAlias': 'trigger'}}, 'worksheet': ws(), 'fields': []}}
+    return [
+        {'nodeAlias': 'country', 'nodeType': 'get_relation', 'name': GET_COUNTRY,
+         'config': {'target': {'node': {'nodeAlias': 'trigger'}},
+                    'fields': [{'fieldId': f[COUNTRY]['controlId']}], 'worksheet': cty_ws()}},
+        {'nodeAlias': 'key', 'nodeType': 'compute', 'name': KEY_STEP,
+         'config': {'mode': 'function', 'output_type': 'text', 'formula': 'CONCAT("","")'}},
+        {'nodeAlias': 'found', 'nodeType': 'get_single', 'name': FIND_STEP,
+         'config': {'worksheet': ws(), 'execute_type': 2}},          # 2 = carry on when nothing is found
+        {'nodeAlias': 'gate', 'nodeType': 'branch', 'name': DUP_GATEWAY, 'config': {'mode': 'exclusive',
+         'paths': [{'alias': 'dup', 'name': PATH_DUP, 'nodes': [tick('tick', TICK_STEP, '1'), clear]},
+                   {'alias': 'free', 'name': PATH_FREE, 'nodes': [tick('untick', UNTICK_STEP, '0')]}]}},
+        {'nodeAlias': 'write', 'nodeType': 'update_record', 'name': WRITE_KEY_STEP,
+         'config': {'target': {'node': {'nodeAlias': 'trigger'}}, 'worksheet': ws(), 'fields': []}},
+    ]
+
+
+def key_search_filter(node_id, key_field, key_node, trigger):
+    """The search step's filter: a state whose **State key** is the key just worked out and which is **not**
+    the record that started the run.
+
+    The self-exclusion is what makes the check safe to re-run: a field-narrowed trigger fires whenever one of
+    its fields is in the write, changed or not (BUILDING.md), so a save that re-sends an unchanged State Code
+    would otherwise find the record's own key and call it a duplicate. `conditionId` 10 is 不等于, and Record
+    ID is a text field (`filedId` "rowid", `filedTypeId` 2), the same shape as the Record-ID *equals* every
+    other search step here uses."""
+    return [
+        {'nodeId': node_id, 'nodeType': 7, 'actionId': '406', 'filedId': key_field['controlId'],
+         'filedValue': STATE_KEY, 'filedTypeId': TEXT, 'enumDefault': 0, 'conditionId': EQ, 'sourceType': 0,
+         'conditionValues': [{'nodeId': key_node, 'controlId': STRING_FX, 'value': ''}]},
+        {'nodeId': node_id, 'nodeType': 7, 'actionId': '406', 'filedId': 'rowid', 'filedValue': 'Record ID',
+         'filedTypeId': TEXT, 'enumDefault': 0, 'conditionId': NE, 'sourceType': 0,
+         'conditionValues': [{'nodeId': trigger, 'controlId': 'rowid', 'value': '', 'sureNodeId': trigger}]},
+    ]
+
+
+def save_search(pid, node, worksheet, conditions, execute_type=2, sorts=None):
+    """A search node's filter and sort the way the UI stores them — `filters`, not the `operateCondition`
+    batch-add sends and the UI never reads (invlines.save_search)."""
+    got = node_get(pid, node['id'])
+    shape = lambda groups: [[{k: c.get(k) for k in ('filedId', 'conditionId')} for c in g] for g in groups]
+    live = shape([g for flt in got.get('filters') or [] for g in flt.get('conditions') or []])
+    want_sorts = sorts or [{'controlId': 'ctime', 'controlType': 16, 'isAsc': True}]
+    if (got.get('appId') == worksheet and live == shape([conditions])
+            and [(s.get('controlId'), s.get('isAsc')) for s in got.get('sorts') or []]
+            == [(s['controlId'], s['isAsc']) for s in want_sorts]):
+        return False
+    hap.run('workflow', 'node', 'save', pid, node['id'], '--type', '7', '-n', node['name'], '-c', json.dumps(
+        {'actionId': '406', 'appId': worksheet, 'selectNodeId': '',
+         'filters': [{'spliceType': 2, 'conditions': [conditions]}], 'sorts': want_sorts,
+         'executeType': execute_type}, ensure_ascii=False))
+    got = node_get(pid, node['id'])
+    if shape([g for flt in got.get('filters') or [] for g in flt.get('conditions') or []]) != shape([conditions]):
+        sys.exit(f"{node['name']}: the filter read back {got.get('filters')}")
+    return True
+
+
+def set_formula(pid, node, expression):
+    """A function formula node's expression, read back — a wrong one is stored and computes empty
+    (invoices.set_formula; `type` 2 is a text result)."""
+    if node_get(pid, node['id']).get('formulaValue') == expression:
+        return False
+    hap.run('workflow', 'node', 'save', pid, node['id'], '--type', '9', '-n', node['name'], '-c', json.dumps(
+        {'actionId': '106', 'name': node['name'], 'execute': True, 'formulaValue': expression, 'type': 2},
+        ensure_ascii=False))
+    if node_get(pid, node['id']).get('formulaValue') != expression:
+        sys.exit(f"{node['name']}: expression read back "
+                 f"{node_get(pid, node['id']).get('formulaValue')!r}, want {expression!r}")
+    return True
+
+
+def save_path(pid, path, name, conditions):
+    """A branch path's name and condition (invoices.save_path): `node get` answers `conditions`, `node save
+    --type 2` wants `operateCondition`, and batch-add drops the name."""
+    got = node_get(pid, path['id'])
+    changed = condition_shape(got.get('conditions')) != condition_shape(conditions)
+    if changed:
+        hap.run('workflow', 'node', 'save', pid, path['id'], '--type', '2', '-n', name,
+                '-c', json.dumps({'operateCondition': conditions}, ensure_ascii=False))
+        if condition_shape(node_get(pid, path['id']).get('conditions')) != condition_shape(conditions):
+            sys.exit(f'{name}: the condition read back {node_get(pid, path["id"]).get("conditions")}')
+    if path.get('name') != name:
+        hap.run('workflow', 'node', 'rename', pid, path['id'], '-n', name)
+        changed = True
+    return changed
+
+
+def step_duplicates():
+    """**G** — *States: the key and the duplicate check*, §1's *Rules* as a workflow.
+
+    On create, and whenever **Country** or **State Code** is in a write, G works the key out, looks for
+    another state that already holds it, ticks (or unticks) **Duplicate code**, and writes the key:
+
+      1. **Get the country** — the trigger's Country, so the country's own code is read from the country;
+      2. **Work out the key** — a text function formula, `<country code>|<state code>`;
+      3. **Another state with this key?** — a search of States, State key = that, Record ID ≠ the trigger,
+         oldest first, carrying on when nothing is found;
+      4. **Is there one?** — an exclusive gateway. The conditioned path is *yes* (the found state's State key
+         is not empty) and ticks Duplicate code; the default path unticks it. A branch converges, so both run
+         on into
+      5. **Write the State key** — which HAP refuses when the key is a duplicate, *after* the tick is in.
+
+    §1 asks only for the tick; the untick is this build's addition, and it is what makes the pair honest when
+    a duplicate is fixed by re-coding the state. G is **quiet** (`triggerType` 2): it writes Duplicate code
+    and State key on its own worksheet, and neither is one of its trigger fields, but a quiet workflow starts
+    nothing anywhere and that is the standing rule for a workflow writing its own record."""
+    guard()
+    f = fields_of(ws())
+    cty_f = hap.by_name(hap.controls(cty_ws()))
+    for name in (STATE_KEY, DUPLICATE):
+        if name not in f:
+            sys.exit(f'{name} is not built — run `key` first')
+    ids = hap.ids()
+    pid = ids.setdefault('workflows', {}).get(WF_G)
+    if not pid:
+        live = {w.get('name'): (w.get('id') or w.get('processId')) for w in hap.listing('workflow', 'list', APP)}
+        pid = live.get(WF_G)          # `workflow create` can time out having created it (BUILDING.md)
+    desc = ("Odoo's constraint unique(country_id, code) on res.country.state, as far as HAP can carry it: the "
+            'key is worked out and written to the hidden State key, which carries No duplicates, and a state '
+            'whose key another state already holds is marked with Duplicate code. HAP runs a workflow after '
+            'the save, so the duplicate is created and then named — Odoo refuses it outright.')
+    if not pid:
+        out = hap.run('workflow', 'create', '-c', ids['org'], '-n', WF_G, '-a', APP, '--type', 'worksheet',
+                      '-d', desc)
+        d = out.get('data', out) if isinstance(out, dict) else out
+        pid = d if isinstance(d, str) else (d.get('id') or d.get('processId'))
+        print(f'  G: workflow created {pid}')
+    C.remember('workflows', WF_G, pid)
+    proc = hap.run('workflow', 'node', 'list', pid)
+    start = proc['startEventId']
+    by_name = {n['name']: n for n in proc['flowNodeMap'].values()}
+    changed = False
+    if GET_COUNTRY not in by_name:
+        hap.run('workflow', 'node', 'batch-add', pid, '--nodes', json.dumps(g_nodes(f), ensure_ascii=False),
+                '--trigger-worksheet', ws(), '--trigger-event', 'create_or_update',
+                '--trigger-fields', ','.join([f[COUNTRY]['controlId'], f[CODE]['controlId']]),
+                '--trigger-alias', 'trigger')
+        print('  G: steps added')
+        changed = True
+        proc = hap.run('workflow', 'node', 'list', pid)
+        by_name = {n['name']: n for n in proc['flowNodeMap'].values()}
+    if CLEAR_STEP not in by_name and TICK_STEP in by_name:
+        # Added after the first cut, inside the duplicate path and after the tick: `batch-add` appends to an
+        # existing chain when it is given that chain's last node (BUILDING.md).
+        hap.run('workflow', 'node', 'batch-add', pid, '--trigger-node-id', by_name[TICK_STEP]['id'],
+                '--trigger-alias', 'tick', '--nodes', json.dumps(
+                    [{'nodeAlias': 'clear', 'nodeType': 'update_record', 'name': CLEAR_STEP,
+                      'config': {'target': {'node': {'nodeAlias': 'tick'}}, 'worksheet': ws(),
+                                 'fields': []}}], ensure_ascii=False))
+        print(f'  G: {CLEAR_STEP!r} added after {TICK_STEP!r}')
+        changed = True
+        proc = hap.run('workflow', 'node', 'list', pid)
+        by_name = {n['name']: n for n in proc['flowNodeMap'].values()}
+    if STOP_STEP not in by_name and CLEAR_STEP in by_name:
+        # 中止流程 has no builder in hap-cli's DSL (`batch-add` cannot make one): add it by hand, last in the
+        # duplicate path, so the run stops before the key write a duplicate must never reach.
+        hap.run('workflow', 'node', 'add', pid, '--type', str(ABORT), '-n', STOP_STEP,
+                '--after', by_name[CLEAR_STEP]['id'])
+        print(f'  G: {STOP_STEP!r} (中止流程) added after {CLEAR_STEP!r}')
+        changed = True
+        proc = hap.run('workflow', 'node', 'list', pid)
+        by_name = {n['name']: n for n in proc['flowNodeMap'].values()}
+    for name in (GET_COUNTRY, KEY_STEP, FIND_STEP, DUP_GATEWAY, TICK_STEP, UNTICK_STEP, CLEAR_STEP,
+                 STOP_STEP, WRITE_KEY_STEP):
+        if name not in by_name:
+            sys.exit(f'G: the workflow has no node {name!r} — {sorted(by_name)}')
+    # 1 · the trigger: States, 新增或更新, narrowed to Country and State Code, no condition
+    want_fields = sorted([f[COUNTRY]['controlId'], f[CODE]['controlId']])
+    want_trigger = dict(name=G_TRIGGER, appId=ws(), fields=want_fields, condition=[])
+    if trigger_state(pid, start) != want_trigger:
+        trig = node_get(pid, start)
+        hap.run('workflow', 'node', 'save', pid, start, '--type', '0', '-n', G_TRIGGER, '-c', json.dumps(
+            {'appId': ws(), 'appType': 1, 'triggerId': trig.get('triggerId'), 'assignFieldIds': want_fields,
+             'operateCondition': [], 'returns': []}, ensure_ascii=False))
+        if trigger_state(pid, start)['name'] != G_TRIGGER:
+            hap.run('workflow', 'node', 'rename', pid, start, '-n', G_TRIGGER)
+        got = trigger_state(pid, start)
+        if got != want_trigger:
+            sys.exit(f'G: trigger read back {got}, want {want_trigger}')
+        print('  G: trigger rewritten')
+        changed = True
+    # 2 · the key formula, over the country step and the trigger record
+    node_ids = {'trigger': start, 'country': by_name[GET_COUNTRY]['id'], 'key': by_name[KEY_STEP]['id']}
+    expression = key_formula(f, cty_f).replace('$trigger-', f"${node_ids['trigger']}-") \
+                                      .replace('$country-', f"${node_ids['country']}-")
+    changed |= set_formula(pid, by_name[KEY_STEP], expression)
+    # 3 · the search: another state holding that key, oldest first
+    changed |= save_search(pid, by_name[FIND_STEP], ws(),
+                           key_search_filter(by_name[FIND_STEP]['id'], f[STATE_KEY], node_ids['key'], start))
+    # 4 · the gateway's two paths: the condition on the duplicate one, none on the default
+    gate = by_name[DUP_GATEWAY]
+    nodes = proc['flowNodeMap']
+    paths = [nodes[i] for i in gate.get('flowIds') or []]
+    if len(paths) != 2:
+        sys.exit(f'G: the gateway has {len(paths)} paths, want 2')
+    dup_path = next((p for p in paths if nodes.get(p.get('nextId') or '', {}).get('name') == TICK_STEP), None)
+    free_path = next((p for p in paths if p is not dup_path), None)
+    if not dup_path or nodes.get(free_path.get('nextId') or '', {}).get('name') != UNTICK_STEP:
+        sys.exit(f'G: the gateway paths do not lead to {TICK_STEP!r} and {UNTICK_STEP!r}')
+    found_key = [[{'nodeId': by_name[FIND_STEP]['id'], 'filedId': f[STATE_KEY]['controlId'],
+                   'filedValue': STATE_KEY, 'filedTypeId': TEXT, 'enumDefault': 0, 'conditionId': NOT_EMPTY,
+                   'sourceType': 0, 'conditionValues': []}]]
+    changed |= save_path(pid, dup_path, PATH_DUP, found_key)
+    changed |= save_path(pid, free_path, PATH_FREE, [])
+    if node_get(pid, free_path['id']).get('conditions'):
+        sys.exit(f'G: the else path {PATH_FREE!r} carries a condition; it must have none')
+    # 5 · the two ticks and the key write
+    for node_name, value in ((TICK_STEP, '1'), (UNTICK_STEP, '0')):
+        changed |= save_update(pid, by_name[node_name]['id'], node_name, start,
+                               [{'fieldId': f[DUPLICATE]['controlId'], 'type': SWITCH, 'addType': 0,
+                                 'fieldValue': value, 'fieldValueId': '', 'nodeId': ''}], worksheet=ws())
+    # `isClear` is the editor's 清空: sent as a plain empty value the entry is dropped on save (BUILDING.md)
+    changed |= save_update(pid, by_name[CLEAR_STEP]['id'], CLEAR_STEP, start,
+                           [{'fieldId': f[STATE_KEY]['controlId'], 'type': TEXT, 'addType': 0,
+                             'fieldValue': '', 'fieldValueId': '', 'nodeId': '', 'isClear': True}],
+                           worksheet=ws())
+    changed |= save_update(pid, by_name[WRITE_KEY_STEP]['id'], WRITE_KEY_STEP, start,
+                           [{'fieldId': f[STATE_KEY]['controlId'], 'type': TEXT, 'addType': 0,
+                             'fieldValue': f"${node_ids['key']}-{STRING_FX}$", 'fieldValueId': '',
+                             'nodeId': ''}], worksheet=ws())
+    # 6 · quiet, then publish
+    changed |= ensure_quiet(pid, 'G')
+    info = read('workflow', 'get', pid)
+    if (info.get('explain') or '') != desc:
+        hap.run('workflow', 'update', pid, '-n', WF_G, '-d', desc)
+        changed = True
+    if changed or not info.get('enabled') or info.get('publishStatus') != 2:
+        result = C.publish(pid)
+        print(f'  G: published {result}')
+        if not result.get('isPublish'):
+            sys.exit(f'G: publish failed: {result}')
+    print(C.structure(pid))
+    print(f"  G {WF_G}: {pid} — trigger {trigger_state(pid, start)}, quiet "
+          f"{read('workflow', 'config-get', pid).get('triggerType')}")
+    return 0
+
+
+# ── 12 · the backfill ───────────────────────────────────────────────────────
+
+def key_column():
+    """State key and Duplicate code by rowid, for every state.
+
+    A **hidden** control comes back from `GetFilterRows` as the empty string whatever it holds — the hidden
+    Country Code lookup does, and State key is hidden too — so the keys cannot be read from the list. What
+    the list *can* do is answer a filter, which is how the backfill finds its work in one call: the states
+    whose State key **is empty**. Duplicate code is a switch and the list returns it."""
+    f = fields_of(ws())
+    from hap_cli.core import record as rec
+    s = session()
+    empty, page = set(), 1
+    while True:
+        got = rec.get_records(s, ws(), page_size=1000, page_index=page,
+                              filters=[C.cond(f[STATE_KEY], C.EMPTY)])['data'] or []
+        empty |= {r['rowid'] for r in got}
+        if len(got) < 1000:
+            break
+        page += 1
+    ticked, page = set(), 1
+    while True:
+        got = rec.get_records(s, ws(), page_size=1000, page_index=page,
+                              filters=[C.cond(f[DUPLICATE], C.EQ, 1)])['data'] or []
+        ticked |= {r['rowid'] for r in got}
+        if len(got) < 1000:
+            break
+        page += 1
+    return empty, ticked
+
+
+def wanted_keys():
+    """{rowid: (key, ctime, name)} for every live state — the key Odoo's natural key gives it."""
+    f = fields_of(ws())
+    by_rowid, _ = countries()
+    out = {}
+    for r in rows(ws()):
+        linked = relation(r.get(f[COUNTRY]['controlId']))
+        code = by_rowid.get(linked[0][0], {}).get('code') if linked else None
+        out[r['rowid']] = (f"{code}|{r.get(f[CODE]['controlId']) or ''}" if code else None,
+                           r.get('ctime') or '', r.get(f[NAME]['controlId']) or '')
+    return out
+
+
+def write_field(rowid, control, value):
+    """One `record update` through the session; returns (ok, resultCode, message)."""
+    from hap_cli.core import record as rec
+    try:
+        rec.update_record(session(), ws(), rowid,
+                          [{'controlId': control['controlId'], 'value': value}], trigger_workflow=True)
+        return True, 1, ''
+    except Exception as error:                      # hap_cli raises APIError on resultCode != 1
+        return False, getattr(error, 'code', None), str(error)[:200]
+
+
+def step_backfill(*only):
+    """Give all 2 102 seeded states their **State key**, and tick **Duplicate code** on the ones that collide.
+
+    The keys are written through the API rather than by re-saving every state and waiting for G: a write of
+    State key alone carries neither of G's trigger fields, so it starts nothing, and 2 100 workflow runs
+    would be an hour of quota. What G does on one record is proved in `selfcheck`.
+
+    The order is Odoo's: the **oldest** state holding a key keeps it, and a state created later with a key
+    another already holds is the duplicate. Nothing is ever written twice — a state that already holds its
+    key is skipped, so a second run writes nothing at all."""
+    guard()
+    f = fields_of(ws())
+    want, (empty, ticked) = wanted_keys(), key_column()
+    bad = sorted(r for r, (k, _, _) in want.items() if not k)
+    if bad:
+        print(f'  {len(bad)} states have no country and so no key: {bad[:5]}')
+    claimed = {}                                    # key -> the rowid that holds it
+    for rowid, (key, _, _) in want.items():
+        if key and rowid not in empty:
+            claimed.setdefault(key, rowid)
+    todo = sorted((r for r in empty if want.get(r, (None,))[0]), key=lambda r: (want[r][1], want[r][2]))
+    if only:
+        todo = [r for r in todo if want[r][0].split('|')[0] in only]
+    print(f'  {len(want)} states; {len(empty)} without a key; {len(ticked)} already ticked; '
+          f'{len(todo)} to write')
+    wrote, marked, refused = 0, [], []
+    started = time.time()
+    for i, rowid in enumerate(todo, 1):
+        key, ctime, name = want[rowid]
+        if key in claimed:                          # an older state already holds it: this one is the duplicate
+            if rowid in ticked:
+                print(f'  DUPLICATE {name!r} ({key}) is already marked — nothing to write')
+                continue
+            ok, code, message = write_field(rowid, f[DUPLICATE], 1)
+            marked.append((name, key, claimed[key]))
+            if name.startswith('TEST'):            # a marked TEST record is worth pointing at from §2
+                C.remember('records', KEY + name, rowid)
+            print(f'  DUPLICATE {name!r} ({ctime}) holds {key}, which {claimed[key]} already has — '
+                  f'{DUPLICATE} ticked ({"ok" if ok else f"REFUSED {code} {message}"})')
+            probe = write_field(rowid, f[STATE_KEY], key)
+            refused.append((name, key, probe))
+            print(f'            the key write on it: '
+                  f'{"ACCEPTED — No duplicates did not fire" if probe[0] else f"refused, resultCode {probe[1]}"}')
+            continue
+        ok, code, message = write_field(rowid, f[STATE_KEY], key)
+        if not ok:
+            sys.exit(f'{name!r}: the key {key} was refused (resultCode {code}) although nothing claims it — '
+                     f'{message}')
+        claimed[key] = rowid
+        wrote += 1
+        if i % 200 == 0 or i == len(todo):
+            print(f'  {i}/{len(todo)} ({time.time() - started:.0f}s)')
+    print(f'  backfill: {wrote} keys written, {len(marked)} duplicates marked')
+    for name, key, holder in marked:
+        print(f'    {DUPLICATE} ticked on {name!r} ({key}; first holder {holder})')
+    for name, key, (ok, code, message) in refused:
+        print(f'    the API on {name!r}: writing {key} a second time was '
+              f'{"ACCEPTED — No duplicates did not fire" if ok else f"refused, resultCode {code}"}')
+    return step_keys()
+
+
+def step_keys(*only):
+    """What the worksheet holds: how many states carry a key, which carry Duplicate code, and — read one
+    record at a time, because a hidden control is blanked in the list — that every key is
+    `<country code>|<state code>`. `keys sample` checks a handful instead of all 2 100."""
+    f = fields_of(ws())
+    want = wanted_keys()
+    empty, ticked = key_column()
+    print(f'  {len(want)} states: {len(want) - len(empty)} carry a {STATE_KEY}, {len(empty)} do not, '
+          f'{len(ticked)} carry {DUPLICATE}')
+    for rowid in sorted(empty, key=lambda r: want.get(r, ('', '', ''))[2]):
+        key, ctime, name = want.get(rowid, (None, '', '?'))
+        print(f'    no key:  {name!r} ({key}) created {ctime} — ticked={rowid in ticked}')
+    for rowid in sorted(ticked, key=lambda r: want.get(r, ('', '', ''))[2]):
+        key, ctime, name = want.get(rowid, (None, '', '?'))
+        print(f'    ticked:  {name!r} ({key}) created {ctime} — key stored='
+              f'{row_detail(ws(), rowid).get(f[STATE_KEY]["controlId"])!r}')
+    sample = 'sample' in only
+    check = [r for r in want if r not in empty]
+    if sample:
+        check = sorted(check, key=lambda r: want[r][2])[:12]
+    bad, started = {}, time.time()
+    for i, rowid in enumerate(check, 1):
+        got = row_detail(ws(), rowid).get(f[STATE_KEY]['controlId'])
+        if got != want[rowid][0]:
+            bad[want[rowid][2]] = (got, want[rowid][0])
+        if not sample and (i % 400 == 0 or i == len(check)):
+            print(f'    read {i}/{len(check)} ({time.time() - started:.0f}s)')
+    print(f'  {len(check)} keys read back one by one{" (sample)" if sample else ""}: '
+          f'{len(bad)} differing {json.dumps(bad, ensure_ascii=False)[:300]}')
+    unmarked = sorted(want.get(r, (None, '', '?'))[2] for r in empty if r not in ticked)
+    if unmarked:                                    # a state with no key that nobody calls a duplicate
+        print(f'  DIFF  {len(unmarked)} states carry neither a key nor {DUPLICATE}: {unmarked[:10]}')
+    keyed_but_ticked = sorted(want.get(r, (None, '', '?'))[2] for r in ticked if r not in empty)
+    if keyed_but_ticked:                            # the original of a pair, wrongly marked
+        print(f'  DIFF  {len(keyed_but_ticked)} states carry both a key and {DUPLICATE}: {keyed_but_ticked}')
+    return len(bad) + len(unmarked) + len(keyed_but_ticked)
+
+
 # ── self-check ──────────────────────────────────────────────────────────────
 
 TEST_CONTACT = 'TEST State Contact'                # selfcheck's own contact; left in Contacts
@@ -1365,38 +1977,141 @@ def attempt(*args):
     return code not in (None, 1), json.dumps(out, ensure_ascii=False)[:200]
 
 
-def unique_probe():
-    """§1's *Rules*, proved on the two TEST states: is `State key`'s No duplicates enforced?
+TEST_DUP = 'TEST State Duplicate Two'              # selfcheck's own duplicate; created once, left in States
+FREE_CODE = 'ZZ-09'                                # a code no state holds: the "this key is free" half of G
 
-    TEST State Two's State Code is set to TEST State One's — both Malaysian, so both keys become `MY|ZZ-01` —
-    and the answer is read back. The code is restored in the same run, so nothing duplicate is left behind."""
+
+def runs_since(pid, known, want=1, seconds=90, settle=4):
+    """The runs of `pid` that started since `known` (a set of instance ids), once `want` of them have finished.
+
+    A run registers about five seconds after the write that starts it, and the listing lags, so runs are told
+    apart by **instance id** and never by position (accounts.wait_new_runs)."""
+    deadline = time.time() + seconds
+    while True:
+        got = (hap.run('approval', 'history', '--process-id', pid, '-n', '20') or {}).get('data') or []
+        new = [r for r in got if r['id'] not in known]
+        if (len(new) >= want and all(r.get('status') != 1 for r in new)) or time.time() > deadline:
+            if new and settle:
+                time.sleep(settle)
+                got = (hap.run('approval', 'history', '--process-id', pid, '-n', '20') or {}).get('data') or []
+                new = [r for r in got if r['id'] not in known]
+            return new
+        time.sleep(3)
+
+
+def run_report(runs):
+    """What each run did, node by node — the only way to see that a step was reached and what it answered."""
+    out = []
+    for r in runs:
+        d = hap.run('approval', 'history-detail', r['id'])
+        d = d.get('data', d) if isinstance(d, dict) else {}
+        nodes = [((w.get('flowNode') or {}).get('name'), w.get('status'))
+                 for w in d.get('works') or []]
+        out.append(f"status {r.get('status')} cause {(r.get('instanceLog') or {}).get('cause')} "
+                   f"{(r.get('instanceLog') or {}).get('causeMsg') or ''} :: "
+                   + ' → '.join(f'{n}[{s}]' for n, s in nodes))
+    return out
+
+
+def duplicate_probe():
+    """§1's rewritten *Rules*, driven through the CLI: **what HAP does with a duplicate now.**
+
+    Five questions, in the order they matter:
+
+    0a. the **API** refuses a duplicate written into the unique Text control (`resultCode 11`), where the
+        formula it replaced accepted everything;
+    0b. a **create** that does not send the key — the shape of a form save, since the form never renders a
+        hidden read-only control — is **accepted**, so the duplicate record still exists, and G runs on it;
+    0c. a free code: G unticks Duplicate code and writes the key, and the run completes (status 2);
+    0d. a code another state holds: G ticks Duplicate code, clears the key and **stops** (status 3, 中止).
+        The stop is what keeps the key unique — a workflow's update step is *not* checked against No
+        duplicates (the first cut of G wrote `MY|ZZ-01` onto a second state and HAP took it, 18 Sep), so the
+        run must never reach the write rather than rely on being refused;
+    0e. a save that re-sends an **unchanged** State Code does **not** mark the record as its own duplicate —
+        the search step excludes the record that started the run.
+    """
     f = fields_of(ws())
-    by_code = {}
-    for r in rows(ws()):
-        name = r.get(f[NAME]['controlId'])
-        if name in TEST_STATES:
-            by_code[name] = r['rowid']
-    missing = [n for n in TEST_STATES if n not in by_code]
-    if missing:
-        print(f'  0. the TEST states {missing} are gone — the No-duplicates probe is skipped')
-        return []
-    one, two = by_code['TEST State One'], by_code['TEST State Two']
-    key = lambda rowid: row_detail(ws(), rowid).get(f[STATE_KEY]['controlId'])
+    pid = hap.ids().get('workflows', {}).get(WF_G)
+    if not pid:
+        return [f'workflow G {WF_G!r} is not built']
+    live = {r.get(f[NAME]['controlId']): r['rowid'] for r in rows(ws())}
+    problems = []
+    state = lambda rowid: (lambda d: (d.get(f[STATE_KEY]['controlId']) or '',
+                                      str(d.get(f[DUPLICATE]['controlId']) or '0') in ('1', 'true')))(
+        row_detail(ws(), rowid))
+    one = live.get('TEST State One')
+    two = live.get('TEST State Two')
+    if not one or not two:
+        return ['the TEST states of the build are gone — the duplicate probe is skipped']
+    # 0a · the API refuses a duplicate key on the Text control
+    one_key, _ = state(one)
     refused, message = attempt('worksheet', 'record', 'update', ws(), two, '-a', APP, '--fields-json',
-                               json.dumps([{'id': f[CODE]['controlId'], 'value': TEST_STATES['TEST State One']}]))
-    after = (key(one), key(two))
+                               json.dumps([{'id': f[STATE_KEY]['controlId'], 'value': one_key}]))
+    print(f"  {'OK  ' if refused else 'DIFF'}  0a. a {STATE_KEY} another state holds, written through the API: "
+          f"{'refused' if refused else 'ACCEPTED'} — {message[:150]}")
+    if not refused:
+        problems.append(f'0a. No duplicates on the {STATE_KEY} Text control did not refuse an API write')
+    # 0b · a create that does not carry the key — what a form save sends — is accepted
+    known = {r['id'] for r in (hap.run('approval', 'history', '--process-id', pid, '-n', '20')
+                               or {}).get('data') or []}
+    dup = live.get(TEST_DUP)
+    if not dup:
+        by_rowid, by_name = countries()
+        created = hap.run('worksheet', 'record', 'create', ws(), '-a', APP, '--fields-json', json.dumps(
+            [{'id': f[NAME]['controlId'], 'value': TEST_DUP},
+             {'id': f[CODE]['controlId'], 'value': TEST_STATES['TEST State One']},
+             {'id': f[COUNTRY]['controlId'], 'value': [by_name['Malaysia']['rowid']]}]))
+        dup = C.row_id(created)
+        print(f'  OK    0b. a second Malaysian {TEST_STATES["TEST State One"]} **created** through the API '
+              f'with no {STATE_KEY} in the write: accepted, {dup} — nothing in HAP refuses the record itself, '
+              f'and a form sends no hidden read-only control either')
+        for line in run_report(runs_since(pid, known, want=1)):
+            print(f'        G on the create: {line}')
+    else:
+        print(f'  OK    0b. {TEST_DUP} is already there ({dup}) — the create was accepted on an earlier run')
+    C.remember('records', KEY + TEST_DUP, dup)
+    # 0c/0d · drive G over it: a free code, then back onto the duplicate
+    for label, code, want_dup, want_key, want_status in (
+            (f'0c. a free code ({FREE_CODE}) unticks {DUPLICATE} and the key is written', FREE_CODE, False,
+             f'MY|{FREE_CODE}', 2),
+            (f'0d. back onto {TEST_STATES["TEST State One"]}: {DUPLICATE} is ticked, the key is cleared and '
+             f'the run stops before the key write', TEST_STATES['TEST State One'], True, '', 3)):
+        known = {r['id'] for r in (hap.run('approval', 'history', '--process-id', pid, '-n', '20')
+                                   or {}).get('data') or []}
+        hap.run('worksheet', 'record', 'update', ws(), dup, '-a', APP, '--fields-json',
+                json.dumps([{'id': f[CODE]['controlId'], 'value': code}]))
+        runs = runs_since(pid, known, want=1)
+        got = quiesce(lambda: state(dup))
+        # status 2 is 完成, 3 is a run that ended in an abort node (中止) — the visible mark on a duplicate
+        status = [r.get('status') for r in runs]
+        ok = got == (want_key, want_dup) and want_status in status
+        print(f"  {'OK  ' if ok else 'DIFF'}  {label}: {STATE_KEY} {got[0]!r} {DUPLICATE} {got[1]}, run "
+              f"status {status}" + ('' if ok else f' — want {(want_key, want_dup)} and status {want_status}'))
+        for line in run_report(runs):
+            print(f'        G: {line}')
+        if not ok:
+            problems.append(f'{label}: {got} status {status} != {(want_key, want_dup)} status {want_status}')
+    # 0e · a save that re-sends an unchanged State Code must not mark the record as its own duplicate
+    known = {r['id'] for r in (hap.run('approval', 'history', '--process-id', pid, '-n', '20')
+                               or {}).get('data') or []}
     hap.run('worksheet', 'record', 'update', ws(), two, '-a', APP, '--fields-json',
-            json.dumps([{'id': f[CODE]['controlId'], 'value': TEST_STATES['TEST State Two']}]))
-    # The write being **accepted** is the recorded answer (§2, and BUILDING.md): the switch is stored on a
-    # formula control and never applied. It is printed as a known difference rather than a failure — what
-    # would be news is HAP starting to enforce it, and that is what returns a problem.
-    print(f"  {'CHANGED' if refused else 'KNOWN  '} 0. {STATE_KEY} No duplicates on a second state of the same "
-          f"country: {'refused' if refused else 'ACCEPTED'} — {message[:110]}")
-    print(f'        the two keys then read {after}; restored to {key(two)!r}. HAP stores No duplicates on a '
-          f'function formula and never applies it (a Text field carrying the same switch refuses this write '
-          f'with resultCode 11 — 11 §2)')
-    return [] if not refused else [f'0. No duplicates on the {STATE_KEY} formula **refused** the write — HAP '
-                                   f'now enforces the switch on a formula control; 12 §2 says it does not']
+            json.dumps([{'id': f[NAME]['controlId'], 'value': 'TEST State Two (renamed)'},
+                        {'id': f[CODE]['controlId'], 'value': TEST_STATES['TEST State Two']}]))
+    runs = runs_since(pid, known, want=1)
+    got = quiesce(lambda: state(two))
+    ok = got == (f'MY|{TEST_STATES["TEST State Two"]}', False)
+    print(f"  {'OK  ' if ok else 'DIFF'}  0e. an unchanged State Code re-sent with a new State Name: "
+          f"{STATE_KEY} {got[0]!r} {DUPLICATE} {got[1]} — the search excludes the record that started the run"
+          + ('' if ok else f" — want ('MY|{TEST_STATES['TEST State Two']}', False)"))
+    for line in run_report(runs):
+        print(f'        G: {line}')
+    if not ok:
+        problems.append(f'0e. re-sending an unchanged State Code gave {got}')
+    hap.run('worksheet', 'record', 'update', ws(), two, '-a', APP, '--fields-json',
+            json.dumps([{'id': f[NAME]['controlId'], 'value': 'TEST State Two'},
+                        {'id': f[CODE]['controlId'], 'value': TEST_STATES['TEST State Two']}]))
+    quiesce(lambda: state(two))
+    return problems
 
 
 def quiesce(fn, quiet_for=10, limit=90):
@@ -1447,7 +2162,7 @@ def step_selfcheck():
     keyed = by_key(read_states(), by_rowid)
     live = read_contacts()
     problems = []
-    problems += unique_probe()
+    problems += duplicate_probe()
     contact = live.get(TEST_CONTACT)
     if not contact:
         kind = next(o['key'] for o in f['Address Type']['options'] if o['value'] == 'Contact')
@@ -1570,6 +2285,67 @@ def con_differences():
     return out
 
 
+def g_differences(f):
+    """Workflow G read back: its nodes, its trigger, its search filter, its gateway and its two writes."""
+    out = []
+    pid = hap.ids().get('workflows', {}).get(WF_G)
+    if not pid:
+        return [f'workflow {WF_G!r} is not in ids.json']
+    info = read('workflow', 'get', pid)
+    cfg = read('workflow', 'config-get', pid)
+    if not info.get('enabled') or info.get('publishStatus') != 2:
+        out.append(f'{WF_G}: enabled={info.get("enabled")} publishStatus={info.get("publishStatus")}')
+    if cfg.get('triggerType') != NO_OTHER_WORKFLOWS:
+        out.append(f'{WF_G}: triggerType {cfg.get("triggerType")}, want {NO_OTHER_WORKFLOWS} (quiet)')
+    proc = hap.run('workflow', 'node', 'list', pid)
+    by_name = {n['name']: n for n in proc['flowNodeMap'].values()}
+    for wanted in G_NODES:
+        if wanted not in by_name:
+            out.append(f'{WF_G}: no node {wanted!r}')
+    if any(n not in by_name for n in G_NODES):
+        return out
+    trig = trigger_state(pid, proc['startEventId'])
+    if trig['fields'] != sorted([f[COUNTRY]['controlId'], f[CODE]['controlId']]):
+        out.append(f'{WF_G}: trigger fields {trig["fields"]}, want Country and State Code')
+    if trig['condition']:
+        out.append(f'{WF_G}: the trigger carries a condition {trig["condition"]}; every state needs a key')
+    if trig['appId'] != ws():
+        out.append(f'{WF_G}: the trigger is on {trig["appId"]}, not {WORKSHEET}')
+    search = node_get(pid, by_name[FIND_STEP]['id'])
+    conditions = [(c.get('filedId'), str(c.get('conditionId')))
+                  for flt in search.get('filters') or [] for g in flt.get('conditions') or [] for c in g]
+    if conditions != [(f[STATE_KEY]['controlId'], EQ), ('rowid', NE)]:
+        out.append(f'{WF_G} / {FIND_STEP}: filter {conditions}')
+    if str(search.get('executeType')) != '2':
+        out.append(f'{WF_G} / {FIND_STEP}: executeType {search.get("executeType")}, want 2 (carry on when '
+                   f'nothing is found)')
+    key_node = by_name[KEY_STEP]['id']
+    write = step_state_of(pid, by_name[WRITE_KEY_STEP]['id'])
+    if write['fields'] != [(f[STATE_KEY]['controlId'], '', '', False, f'${key_node}-{STRING_FX}$')]:
+        out.append(f'{WF_G} / {WRITE_KEY_STEP}: writes {write["fields"]}')
+    for node_name, value in ((TICK_STEP, '1'), (UNTICK_STEP, '0')):
+        s = step_state_of(pid, by_name[node_name]['id'])
+        if s['fields'] != [(f[DUPLICATE]['controlId'], '', '', False, value)]:
+            out.append(f'{WF_G} / {node_name}: writes {s["fields"]}')
+    clear = step_state_of(pid, by_name[CLEAR_STEP]['id'])
+    if clear['fields'] != [(f[STATE_KEY]['controlId'], '', '', True, '')]:
+        out.append(f'{WF_G} / {CLEAR_STEP}: writes {clear["fields"]}, want one isClear entry')
+    # The shape is what keeps the key unique: a workflow's write is **not** checked against No duplicates, so
+    # the duplicate path must stop before the key write rather than rely on it being refused.
+    nodes = {n['id']: n for n in proc['flowNodeMap'].values()}
+    after_gate = nodes.get(by_name[DUP_GATEWAY].get('nextId') or '', {}).get('name')
+    if after_gate != WRITE_KEY_STEP:
+        out.append(f'{WF_G}: {WRITE_KEY_STEP!r} does not follow the gateway (it is {after_gate!r})')
+    if nodes.get(by_name[TICK_STEP].get('nextId') or '', {}).get('name') != CLEAR_STEP:
+        out.append(f'{WF_G}: {CLEAR_STEP!r} does not follow {TICK_STEP!r}')
+    if nodes.get(by_name[CLEAR_STEP].get('nextId') or '', {}).get('name') != STOP_STEP:
+        out.append(f'{WF_G}: the duplicate path does not end in {STOP_STEP!r} — a branch converges, so the '
+                   f'run would reach {WRITE_KEY_STEP!r} and write a key another state holds')
+    if by_name[STOP_STEP].get('typeId') != ABORT:
+        out.append(f'{WF_G} / {STOP_STEP}: node type {by_name[STOP_STEP].get("typeId")}, want {ABORT} (中止流程)')
+    return out
+
+
 def cty_differences():
     """The reverse on Countries and the rewritten remark block."""
     ctrls = hap.controls(cty_ws())
@@ -1617,9 +2393,14 @@ def step_check():
         problems.append('the title field is '
                         f'{next((c["controlName"] for c in ctrls if c.get("attribute") == 1), None)!r}')
     for name, kind in ((NAME, TEXT), (CODE, TEXT), (COUNTRY, RELATION), (DISPLAY, FORMULA),
-                       (COUNTRY_CODE, LOOKUP), (STATE_KEY, FORMULA)):
+                       (COUNTRY_CODE, LOOKUP), (STATE_KEY, TEXT), (DUPLICATE, SWITCH)):
         if f.get(name, {}).get('type') != kind:
             problems.append(f'{name} is type {f.get(name, {}).get("type")}, want {kind}')
+    if not f.get(STATE_KEY, {}).get('unique'):
+        problems.append(f'{STATE_KEY} does not carry No duplicates')
+    if any(c['controlId'] == KEY_FORMULA for c in ctrls):
+        problems.append(f'the dropped {STATE_KEY} formula {KEY_FORMULA} is still on the worksheet')
+    problems += g_differences(f)
     if f.get(COUNTRY, {}).get('dataSource') != cty_ws():
         problems.append(f'{COUNTRY} points at {f.get(COUNTRY, {}).get("dataSource")}, want {COUNTRIES}')
     if f.get(COUNTRY_CODE, {}).get('dataSource') != f"${f[COUNTRY]['controlId']}$":
@@ -1629,18 +2410,25 @@ def step_check():
                         '(stored)')
     views = {v['name']: C.view_info(ws(), APP, v['viewId'])
              for v in hap.listing('worksheet', 'view', 'list', ws(), '-a', APP)}
-    if list(views) != [VIEW]:
-        problems.append(f'views {list(views)}')
-    v = views.get(VIEW, {})
-    got = dict(columns=[names.get(x) for x in v.get('showControls', [])],
-               sort=[(names.get(s['controlId']), s['isAsc']) for s in v.get('moreSort', [])],
-               sortCid=names.get(v.get('sortCid')), sortType=v.get('sortType'),
-               filters=[(names.get(x['controlId']), x['filterType']) for x in v.get('filters', [])],
-               quick=[names.get(q['controlId']) for q in v.get('fastFilters', [])])
-    want = dict(columns=list(COLUMNS), sort=[(CODE, True), (COUNTRY, True)], sortCid=CODE, sortType=2,
-                filters=[], quick=[COUNTRY])
-    if got != want:
-        problems.append(f'view {VIEW}: {got} != {want}')
+    if list(views) != [VIEW, DUP_VIEW]:            # in order: States opens first
+        problems.append(f'views {list(views)}, want {[VIEW, DUP_VIEW]}')
+    state = lambda v: dict(columns=[names.get(x) for x in v.get('showControls', [])],
+                           sort=[(names.get(s['controlId']), s['isAsc']) for s in v.get('moreSort', [])],
+                           sortCid=names.get(v.get('sortCid')), sortType=v.get('sortType'),
+                           filters=[(names.get(x['controlId']), x['filterType'], tuple(x.get('values') or []))
+                                    for x in v.get('filters', []) if x.get('controlId')],
+                           quick=[names.get(q['controlId']) for q in v.get('fastFilters', [])])
+    wanted = {
+        VIEW: dict(columns=list(COLUMNS), sort=[(CODE, True), (COUNTRY, True)], sortCid=CODE, sortType=2,
+                   filters=[], quick=[COUNTRY]),
+        # Duplicate code is checked: filterType 2 (equals) with the switch's "1". No quick filter.
+        DUP_VIEW: dict(columns=list(DUP_COLUMNS), sort=[(CODE, True), (COUNTRY, True)], sortCid=CODE,
+                       sortType=2, filters=[(DUPLICATE, C.EQ, ('1',))], quick=[]),
+    }
+    for name, want in wanted.items():
+        got = state(views.get(name, {}))
+        if got != want:
+            problems.append(f'view {name}: {got} != {want}')
     if hap.listing('worksheet', 'custom-actions', ws()):
         problems.append('this worksheet has a button; §1 gives it none')
     if hap.listing('worksheet', 'rules', ws()):
@@ -1648,19 +2436,22 @@ def step_check():
     problems += roles_differences()
     problems += cty_differences()
     problems += con_differences()
-    print('  check: ' + ('OK — the six controls with their places, descriptions and permissions, Display Name '
-                         'the title, the States view sorted State Code then Country with a Country quick '
-                         'filter, the four business roles carrying States at their Contacts cell, Countries '
-                         'holding the reverse list and the rewritten remark block, State key carrying No '
-                         'duplicates (stored, never applied), and Contacts carrying the one-way relation in '
-                         'place of the deleted text control with E and F published and quiet'
+    print('  check: ' + ('OK — the seven controls with their places, descriptions and permissions, Display '
+                         'Name the title, the States view sorted State Code then Country with a Country quick '
+                         'filter and the Duplicate codes view after it filtered to the ticked states, '
+                         'the four business roles carrying States at their Contacts cell, Countries '
+                         'holding the reverse list and the rewritten remark block, State key a hidden Text '
+                         'control carrying No duplicates with the dropped formula gone, workflow G published '
+                         'and quiet with its duplicate path ticking, clearing and ending in an abort before '
+                         'the key write, and Contacts carrying the one-way relation in place of the deleted '
+                         'text control with E and F published and quiet'
                          if not problems else 'DIFFERENCES\n    ' + '\n    '.join(problems)))
     return len(problems)
 
 
 def step_all():
-    for name in ('create', 'fields', 'reverse', 'views', 'roles', 'unique', 'seed', 'contacts', 'carry',
-                 'retire', 'automations'):
+    for name in ('create', 'fields', 'key', 'reverse', 'views', 'dupview', 'roles', 'unique', 'seed',
+                 'contacts', 'carry', 'retire', 'automations', 'duplicates', 'backfill'):
         print(f'\n── {name} ' + '─' * 60)
         STEPS[name]()
     print('\n── check ' + '─' * 60)
@@ -1674,8 +2465,10 @@ def show():
 STEPS = {
     'create': step_create,
     'fields': step_fields,
+    'key': step_key,
     'reverse': step_reverse,
     'views': step_views,
+    'dupview': step_dupview,
     'roles': step_roles,
     'unique': step_unique,
     'seed': step_seed,
@@ -1683,6 +2476,9 @@ STEPS = {
     'carry': step_carry,
     'retire': step_retire,
     'automations': step_automations,
+    'duplicates': step_duplicates,
+    'backfill': step_backfill,
+    'keys': step_keys,
     'all': step_all,
     'verify': step_verify,
     'check': step_check,
@@ -1700,5 +2496,5 @@ if __name__ == '__main__':
         raise SystemExit(f"Unknown step {step!r}; choose from {', '.join(STEPS)}")
     result = STEPS[step](*sys.argv[2:])
     if step in ('verify', 'check', 'all', 'selfcheck', 'roles', 'carry', 'retire', 'deadrefs',
-                'automations') and result:
+                'automations', 'duplicates', 'backfill', 'keys', 'unique') and result:
         sys.exit(1)

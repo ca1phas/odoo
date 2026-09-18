@@ -172,16 +172,8 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   internal label, and `size` 12 for full width. `worksheet_templates` has no builder for type 10010 — send the control
   JSON through `add-fields` and read it back. Both take a `sectionId`, so both can sit inside a tab (Journals' two
   tabs). Note that `common.fields` returns them, since it only filters out type 52.
-- A field's **No duplicates** (`unique`) holds on API writes too: the write is refused with `resultCode 11` naming the
-  field. Empty values are never compared.
-- **…but on a *function formula* (type 53) the switch is stored and never applied.** `SaveWorksheetControls`
-  accepts `unique` on a type 53 and it reads back `True`, and nothing is ever refused: two Malaysian states
-  built to compute the same hidden key `MY|ZZ-01` were both **created** (`resultCode` 1), and moving one
-  state's code onto the other's by `record update` was accepted as well — where the identical update on a
-  **Text** field carrying the switch is refused with `resultCode 11` (Countries' Country Code, bundle 4). So a
-  composite key cannot be enforced by computing it into one formula field: Odoo's `unique(country_id, code)` on
-  `res.country.state` has no API-side equivalent here (States' *State key*, 12 §2). Whether the **form** draws
-  it while a record is being edited, as it draws a text field's, is a browser question and is not answered.
+- A field's **No duplicates** (`unique`) is real on some control types and inert on others, and the control list
+  cannot tell them apart — see *No duplicates: where it is real* below.
 - A text field's **maximum length does not**. `advancedSetting` `checkrange` "1" with `min` / `max` is a form-side
   check: `record create` and `record update` store a longer value without complaint (a 6-character value on Journals'
   Sequence Prefix, limited to 5). No filter operator measures length either, so a validation rule cannot stand in —
@@ -269,6 +261,56 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   `Modified worksheet` entry in `hap app logs`, and the control-set `version` does not move. Products' digest
   shifted when Invoice Lines was seeded with eight lines pointing at the `Units` unit. Compare a worksheet
   control by control, by id, as the build scripts do.
+- **A deleted control's alias is free again at once.** The formula State key was deleted and a **Text** control
+  carrying the same name and the same alias `state_key` was added in the next call of the same run: accepted,
+  and the alias reads back on the new control. The old one is still listed in the field recycle bin with that
+  alias, so the bin reserves nothing — which is the other half of the warning above: **never restore it**, or the
+  worksheet carries two controls with one name and one alias (12 §2, 18 Sep).
+- **…and the recycle bin fills up with controls nobody deleted.** `add-fields` plus a re-save — the way every
+  formula and lookup here is built — mints a server id for the control and drops its **client-side 32-hex id**
+  into the bin under the same name and alias. States' bin lists six entries of which one is a real deletion:
+  the other five are the two stock controls a first save left out and three client-side ghosts of Display Name,
+  Country Code and State key. So the bin is not a list of mistakes, and **restoring from it is almost always
+  wrong** — read the live control list first.
+
+### *No duplicates*: where it is real, and where it is decoration
+
+HAP offers **No duplicates** (`unique` on the control) on field types where it does nothing, and the control list
+is no guide: `SaveWorksheetControls` accepts the switch wherever it is sent and it reads back `True` everywhere.
+What decides is **whether the value being compared is in the write**.
+
+- **Real on a value a write carries — a Text control.** The server compares it against every other record and
+  refuses: `record create` and `record update` come back **`resultCode 11`** with the control id in `badData`,
+  and nothing is stored. The **form** draws *Duplicates are not allowed* while the field is being edited, as it
+  draws a validation rule's message (Countries' Country Code, bundle 4). Empty values are never compared. States'
+  *State key* is the same control type and behaves the same way: 2 103 keys written through the API, and the
+  one that would have been a second Malaysian `MY|ZZ-01` refused 11 (12 §2, 18 Sep).
+- **Decoration on a value the server computes — a function formula (type 53).** Nothing is ever refused: two
+  Malaysian states computing the same hidden key `MY|ZZ-01` were both **created** (`resultCode` 1), moving one
+  state's code onto the other's by `record update` was accepted, and **the form saved the duplicate too** (12 §3
+  test 7, in the browser). The reason is the order of events — the formula is computed *after* the write the
+  check would have refused, so at the moment of comparison there is nothing to compare. Read the same argument
+  across to a stored lookup and a 汇总: assume the switch there is decoration until something refuses a write.
+- **Decoration again on a *workflow's* own write — even on that same Text control.** The switch is applied to
+  the open API and **not** to a workflow update step: G's first cut wrote `MY|ZZ-01` onto a second state and HAP
+  stored it, a minute after the identical value had been refused 11 through `record update`. Nothing marks it —
+  the run came back `status` **2** with every node **2**. Same control, same value, two write paths, two
+  answers (12 §2, 18 Sep).
+- **So a composite key — Odoo's `unique(country_id, code)` — has to be a Text control something writes**, and in
+  HAP that something is a worksheet-event workflow (12's *State key*, written by workflow G). Three consequences,
+  all structural:
+  - the duplicate **record is still created**. A workflow runs after the save, so no save can be refused for a
+    value only the workflow computes;
+  - the **workflow's shape is the whole of the enforcement**, since its own write is not checked: it must look
+    for a record already holding the key (a search step, excluding the trigger record) and its duplicate path
+    must **end in an abort** before the write, not merely rely on being refused;
+  - and it must write something **visible** — 12 pairs the key with a read-only *Duplicate code* checkbox —
+    **in a step of its own, before** the key, so that whatever happens to the key write the mark stands.
+- **A hidden field's No duplicates can never reach the form.** The browser checks what it renders; a hidden or
+  read-only computed control is never typed into and never recomputed in the form, so its switch cannot fire on
+  a form save whatever the control type. (Reasoned from the two measurements above rather than observed — 12 §3
+  is where the browser settles it.) The refusal a person actually sees comes from a field they fill in
+  themselves.
 
 ### Formulas and lookups
 
@@ -483,6 +525,18 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   the greatest X" needs no extra field — sort descending and read the first (Invoices' highest-number step).
   `batch-add` writes neither the filter (it sends `operateCondition`) nor the sort; both go in with
   `node save --type 7`.
+- **…and its filter can exclude the record that started the run**: `filedId` **"rowid"**, `filedValue` "Record
+  ID", `filedTypeId` 2, conditionId **10** (不等于 — the opposite of the 9 every Record-ID *equals* uses), with
+  `conditionValues: [{nodeId: <the trigger>, controlId: "rowid"}]`. A field-narrowed trigger fires whenever one
+  of its fields is in the write, **changed or not**, so a workflow that searches its own worksheet for "another
+  record like this one" needs it: without it an ordinary re-save finds the record itself and the run draws the
+  wrong conclusion (States' workflow G, 18 Sep).
+- **A workflow's update step is not checked against a field's *No duplicates*.** The switch that refuses a
+  `record update` with `resultCode 11` is not applied to the same value written by a step: States' *State key*
+  refused the open API and accepted the workflow, leaving two records holding `MY|ZZ-01`. The run says nothing
+  about it either — `status` **2**, every node **2**. So a workflow cannot lean on a unique field to stop
+  itself: if a step must not write a value, the **path has to end before it**, in an abort node (below).
+  Whether a validation rule catches a step's write is a different question and is not answered.
 - **A code block (flowNodeType 14) is built with `node add`, `saveNode` and `codeTest`**, and the organisation runs
   it (bundle 3, automations C and D and Confirm):
   1. `hap workflow node add <pid> --type 14 -n … --after <node> -a 102` inserts it after that node (102 JavaScript ·
@@ -630,8 +684,10 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   `中止节点后面不允许有节点` — and it carries a **name and a description and nothing else**: no message, nothing
   a user ever sees. hap-cli's DSL has no builder for it (`batch-add` cannot make one), so add it with
   `workflow node add --type 30 -n … --after <the last node of that path>`. A run that ended in one comes back from
-  `approval history` with `status` **3** and `instanceLog.causeMsg` **"中止"**, naming the node (Journals' archive
-  guard).
+  `approval history` with `status` **3**, `instanceLog.cause` **6666** and `causeMsg` **"中止"**, naming the node
+  (Journals' archive guard; States' workflow G, whose duplicate path reads *tick · clear the key · stop*). That
+  status is also the only **visible** mark a run can leave on a record it deliberately did not finish — nothing
+  else distinguishes "the step was skipped" from "the step ran", since a step that writes nothing still reports 2.
 - **The only thing a button workflow can put in front of a user is a 站内通知** (notice, flowNodeType 27), and it
   is an **in-app notification**, not a dialog: it lands in the workflow channel of the notification list, reading
   **`【<the node's name>】<sendContent>`**. So the node's name is user-facing — name it as a heading. The button's
@@ -697,6 +753,13 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   fall back to a per-record read **only when a control it needs has no key in the first row**
   (`countries.read_countries`) — 251 rows come back in one call at 0.15 s, against 1.2 s of process start for each
   `record get`.
+- **A *hidden* control comes back from the list as the empty string — but a filter on it still works.** Every
+  State key read `""` from `GetFilterRows` while `filterControls` "State key **is empty**" returned exactly the
+  records that had none. So a hidden field's values can be **found** in one call even though they can only be
+  **read** one record at a time: ask the question as a filter (how many are empty, which are ticked) and keep
+  `GetRowDetail` for the values themselves — 2 104 of them took 274 s through the session, about eight a second
+  (`states.key_column`, `states.step_keys`, 18 Sep). It is part of the cost of hiding a computed key; a visible
+  read-only control would have read back from the list.
 - **The reverse half of a two-way Relation reads back from `record get` as a row count** — an integer, not the
   rows — exactly as a 子表 does; the forward half returns the usual `[{"sid": …, "name": …}]` (Goods' Child
   Categories is `4`).

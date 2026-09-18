@@ -18,16 +18,17 @@
       <div><dt>Built and tested</dt><dd>18 September 2026</dd></div>
     </dl>
     <div class="scoreline">
-      <span class="chip pass">15 of 17 tests pass</span>
-      <span class="chip decide">1 fails</span>
-      <span class="chip note">1 not isolated · 2,102 states · 1 field deleted</span>
+      <span class="chip pass">20 of 21 tests pass</span>
+      <span class="chip note">1 not isolated</span>
+      <span class="chip note">2,102 states · 2 fields deleted · a duplicate check rebuilt</span>
     </div>
   </header>
 
-  <aside class="callout decide" aria-labelledby="note-title">
-    <span class="chip decide small" style="justify-self:start">One thing needs your decision</span>
-    <h2 id="note-title">Nothing stops two states of one country sharing a code</h2>
-    <p>Odoo's constraint is a <em>pair</em> — <code>unique(country_id, code)</code>, <em>"The code of the state must be unique by country!"</em> — and HAP's <strong>No duplicates</strong> switch covers one field. Putting it on State Code would refuse Portugal's <em>01</em> because Mongolia already has one. The build tried the obvious trick: a hidden <strong>State key</strong> formula of <code>country code | state code</code> with the switch on. <strong>HAP accepts the switch on a formula and then enforces nothing</strong> — not through the API, and not in the form: a second Malaysian <em>ZZ-01</em> saved without a murmur. The field is built and inert, so the question is whether to keep it or drop it. A hidden field that promises a check it does not make is arguably worse than none.</p>
+  <aside class="callout" aria-labelledby="note-title">
+    <span class="chip note small" style="justify-self:start">Worth knowing before you review</span>
+    <h2 id="note-title">A duplicate state code is caught a second after the save, not refused at it</h2>
+    <p>Odoo's constraint is a <em>pair</em> — <code>unique(country_id, code)</code> — and HAP has no equivalent. The first build put HAP's <strong>No duplicates</strong> on a hidden composite <em>formula</em>; it refused nothing, in the API or the form, so the owner had it dropped. Measuring the alternatives turned up something worth knowing on its own: <strong>the same switch that refuses an API write with <code>resultCode 11</code> is simply ignored when a workflow does the writing</strong> — same control, same value, minutes apart.</p>
+    <p>So the workflow does the checking itself. A state that repeats a code its country already uses is <strong>saved</strong> — nothing in HAP can refuse it — and then, within seconds, <strong>loses its key, gains a ticked <em>Duplicate code</em>, and appears in the <em>Duplicate codes</em> view</strong>, while its workflow run stops at an abort node. Mend the code and the tick clears and the key is written. The invariant is: <strong>a state holds the key its code implies, or holds none and is ticked</strong>. All 2,102 seeded states hold theirs; none is ticked.</p>
   </aside>
 
   <nav class="toc" aria-label="Sections">
@@ -82,7 +83,8 @@
             <tr><td class="label">Worksheet States</td><td class="id"><code>6aace374805aef7032869ec9</code></td></tr>
             <tr><td class="label">State Name · State Code</td><td class="id"><code>…869eca</code> · <code>…74890</code></td></tr>
             <tr><td class="label">Country · Display Name</td><td class="id"><code>…74891</code> · <code>…4eeac</code></td></tr>
-            <tr><td class="label">Country Code (lookup) · State key (inert)</td><td class="id"><code>…7489d</code> · <code>…134f4</code></td></tr>
+            <tr><td class="label">Country Code (lookup) · State key (Text, unique)</td><td class="id"><code>…7489d</code> · <code>6aacf923e43d174ab374f7c9</code></td></tr>
+            <tr><td class="label">Duplicate code · workflow G · the Duplicate codes view</td><td class="id"><code>…6a8ce</code> · <code>…c1fff</code> · <code>6aad02af805aef703286ab80</code></td></tr>
             <tr><td class="label">Countries → States reverse</td><td class="id"><code>6aace384bd43f55762c74892</code></td></tr>
             <tr><td class="label">Contacts → State relation</td><td class="id"><code>6aace6c3e54d2a34fa4e530c</code></td></tr>
             <tr><td class="label">Workflows E · F</td><td class="id"><code>…7e49a</code> · <code>…b77cc</code></td></tr>
@@ -100,13 +102,13 @@
     <div class="block">
       <h3>Seventeen checks in the browser</h3>
       <p class="prose"><strong>Fifteen pass.</strong> The view, its three columns and the Country filter (Malaysia 18); Selangor field by field with its <em>Selangor (MY)</em> title; the create form with Odoo's help under each field; a country's States list; the relation on a contact; the picker offering <em>Aceh (ID)</em> to a Malaysian contact; and the address push carrying the state down to a company's people and not to its invoice and delivery addresses.</p>
-      <p class="prose"><strong>Workflow E was proved in the form</strong> — setting a contact's state to Aceh moved its country to Indonesia — and <strong>workflow F through the API</strong>: writing only the country cleared the foreign state. <strong>One test failed</strong>: the duplicate state code above. <strong>One could not be isolated</strong>: changing only the country <em>in the form</em>, where what the form sends decides which workflows match — the single run ended with E's write winning. It is worth a reviewer's minute.</p>
+      <p class="prose"><strong>Workflow E was proved in the form</strong> — setting a contact's state to Aceh moved its country to Indonesia — and <strong>workflow F through the API</strong>: writing only the country cleared the foreign state. The rebuilt duplicate check was then run end to end: a third Malaysian <em>ZZ-01</em> typed into the form <strong>saved, then lost its key and gained the tick</strong>; mending its code <strong>cleared the tick and wrote the key</strong>; the <em>Duplicate codes</em> view listed exactly the offenders and nothing else; and not one of the 2,102 seeded states is ticked. <strong>One test could not be isolated</strong>: changing only the country <em>in the form</em>, where what the form sends decides which workflows match — the single run ended with E's write winning. It is worth a reviewer's minute.</p>
     </div>
 
     <div class="block">
       <h3>Differences from Odoo</h3>
       <ol class="differences">
-        <li><span class="n">1</span><div class="head"><strong>Nothing enforces one code per country</strong><span class="chip decide small">Open</span></div><p>Odoo's constraint is a pair; HAP's switch is one field, and on a composite formula it is accepted and inert. See the note at the top.</p></li>
+        <li><span class="n">1</span><div class="head"><strong>A duplicate code is caught after the save, not refused at it</strong><span class="chip note small">HAP behaviour</span></div><p>Odoo's database refuses the second state. Here it saves, then loses its key, gains a tick and lands in the <em>Duplicate codes</em> view until someone mends it. See the note at the top.</p></li>
         <li><span class="n">2</span><div class="head"><strong>A save that changes both fields does both things</strong><span class="chip note small">HAP behaviour</span></div><p>Odoo's onchanges fire one at a time, so you never get both. Here the country is written from the state <em>and</em> the state is cleared, and the contact ends in the state's country with no state.</p></li>
         <li><span class="n">3</span><div class="head"><strong>The tie at equal code</strong><span class="chip note small">Sorting</span></div><p>Odoo orders <code>code, id</code> — creation order within a code; ours breaks the tie on Country Name.</p></li>
         <li><span class="n">4</span><div class="head"><strong>A country's States list is newest first</strong><span class="chip note small">HAP behaviour</span></div><p>Odoo's list at the foot of a country is in code order.</p></li>
@@ -116,7 +118,7 @@
 
     <div class="block">
       <h3>Test records left for you</h3>
-      <p class="prose">On States: <strong>TEST State One</strong> (ZZ-01), <strong>TEST State Two</strong> (ZZ-02) and <strong>TEST State Duplicate</strong> (ZZ-01 again) — the three that prove the duplicate-code difference, and the reason Malaysia reads 19 instead of 16. On Contacts: <strong>TEST State Contact</strong>. All go after sign-off, with your approval; the 2,102 states stay.</p>
+      <p class="prose">On States: <strong>TEST State One</strong> (ZZ-01) and <strong>TEST State Two</strong> (ZZ-02) from the first build; <strong>TEST State Duplicate</strong> and <strong>TEST State Duplicate Two</strong>, the two the <em>Duplicate codes</em> view lists; and <strong>TEST State Duplicate Three</strong>, which was made a duplicate and then mended, so you can see both halves. On Contacts: <strong>TEST State Contact</strong>. All go after sign-off, with your approval; the 2,102 states stay.</p>
     </div>
   </section>
 

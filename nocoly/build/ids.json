@@ -53,7 +53,8 @@
   "Invoices: Payment Terms follow the Customer / Vendor": "6aab8f1016473257ad5c91e0",
   "Invoices: Due Date of a new invoice with no Customer / Vendor": "6aab9e0d87707da9d61d3b82",
   "Contacts: the Country follows the State": "6aace7dfa1c923a16e17e49a",
-  "Contacts: a State that belongs elsewhere is cleared": "6aace7ec16473257ad6b77cc"
+  "Contacts: a State that belongs elsewhere is cleared": "6aace7ec16473257ad6b77cc",
+  "States: the key and the duplicate check": "6aacf9524f2a99acac2c1fff"
  },
  "buttons": {
   "Archive": "6aa8a5654720c515252bda3d",
@@ -95,7 +96,8 @@
   "Payment Terms: Archived": "6aab8a7ce43d174ab374ce6e",
   "Payment Term Lines: Lines": "6aab89417d58b0f449311709",
   "Countries: Countries": "6aacb572805aef703286963b",
-  "States: States": "6aace374805aef7032869ecd"
+  "States: States": "6aace374805aef7032869ecd",
+  "States: Duplicate codes": "6aad02af805aef703286ab80"
  },
  "controls": {
   "Journals: Journal Name": "6aa8f6c81204328eb1af1676",
@@ -231,8 +233,9 @@
   "States: Display Name": "6aace39fe43d174ab374eeac",
   "States: Country Code": "6aace392bd43f55762c7489d",
   "Countries: States": "6aace384bd43f55762c74892",
-  "States: State key": "6aace4a47d58b0f4493134f4",
-  "Contacts: State": "6aace6c3e54d2a34fa4e530c"
+  "States: State key": "6aacf923e43d174ab374f7c9",
+  "Contacts: State": "6aace6c3e54d2a34fa4e530c",
+  "States: Duplicate code": "6aacf930805aef703286a8ce"
  },
  "rules": {
   "Journals: Payment Communications only for Sales": "6aa9dae5e54d2a34fa4dfde2",
@@ -723,7 +726,9 @@
   "States: MY|MY-14": "4fed2d91-b97d-46f9-9af7-cc5f2ddb6f5f",
   "States: MY|MY-15": "85856b27-4aaa-4a9e-9b7b-2f8eae74d6d9",
   "States: MY|MY-16": "0b3d73a8-b990-4ceb-a714-d881e0f492eb",
-  "Contacts: TEST State Contact": "b64b011f-2294-490f-af46-16fa014b335a"
+  "Contacts: TEST State Contact": "b64b011f-2294-490f-af46-16fa014b335a",
+  "States: TEST State Duplicate Two": "cbca93b1-ebe1-4857-97ab-817321a77d33",
+  "States: TEST State Duplicate": "672622ca-b224-4360-8400-95fe589b5e73"
  },
  "roles": {
   "Administrator": "25ef76ef-5538-4779-a5e6-ab1fbce9dcfe",
