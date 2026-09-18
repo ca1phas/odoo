@@ -573,6 +573,11 @@ documents, no two sharing a number. The next Sales invoice confirmed will be **I
    nor *Batch Operation*, while the Sunway draft offers both. A posted document's lines are closed for editing,
    as in Odoo, and 07's difference 11 is resolved with it.
 
+13. **The list's untaxed column, and what sits beside it.** Seen on screen 18 Sep 2026 (`CROSSCHECK.md`): Odoo's
+   list heads `amount_untaxed` **Tax Excluded** where ours uses Odoo's own field label, *Untaxed Amount*; ours
+   carries a **Journal** column where Odoo's list carries **Last Reminder** and keeps Journal hidden; and Odoo
+   **totals** Tax Excluded, Total and Amount Due at the foot of the list, which ours does not.
+
 ### Test records left in the worksheet
 
 Eleven, as the worksheet stands after the UI test and the two fixes that followed it. `invoices.py selfcheck`

@@ -174,7 +174,7 @@ Run in the Nocoly UI in Chrome on 15 Sep 2026; stored values read back with
 | 16 | Archived out of the picker | New record → Reference Unit | TEST Crate not listed | **Pass** — searching "TEST" offers TEST Half and TEST Box of 10 only |
 | 17 | Unarchive | Archived → TEST Crate → Unarchive | No confirmation; back in Units & Packagings | **Pass** |
 | 18 | Standard data | `~/.hap-venv/bin/python nocoly/build/units.py verify` | Every standard unit OK; "0 differing from the extract; 0 with stale lookups"; the TEST units listed as not in the extract | **Pass** — 30 OK, 0 differing, 0 stale; TEST Box of 10, TEST Crate, TEST Half listed |
-| 19 | Odoo side by side | casimir.odoo.com Units & Packagings vs Nocoly | Same fields as §1 apart from the "Not built now" list; the same 30 units, Active flags, Contains and Reference Units | **Pass** — through the extract and test 18: the tenant does not show a Units & Packagings menu (its units setting is off), so there is no screen to compare |
+| 19 | Odoo side by side | casimir.odoo.com Units & Packagings vs Nocoly | Same fields as §1 apart from the "Not built now" list; the same 30 units, Active flags, Contains and Reference Units | **Pass** — through the extract and test 18. **Re-run on screen 18 Sep 2026** (`CROSSCHECK.md`): the tenant *does* have the menu — *Sales › Products › Units & Packagings*, `group_uom` on — and the two screens match field for field and unit for unit. What had hidden it is that Odoo does not render in a background browser tab. One new difference: Odoo's **form** labels Contains *Quantity* (only its list header says Contains) |
 
 ### Differences from Odoo seen in testing
 
@@ -182,6 +182,9 @@ Run in the Nocoly UI in Chrome on 15 Sep 2026; stored values read back with
    only. The ratio shows once a unit is picked, in the Contains and Reference Unit fields.
 2. **New records sit at the top of the open view** until it is refreshed, whatever their Sequence — HAP behaviour.
 3. **Archive / Unarchive.** The button that does not apply is greyed out rather than hidden, as on Contacts.
+4. **The ratio's label.** Odoo's *form* calls it **Quantity** and only its list header calls it *Contains*; ours
+   says Contains in both places. Seen on screen 18 Sep 2026 in the cross-check pass (`CROSSCHECK.md`) — the field,
+   its help and its value are the same, so this is a one-word rename whenever the owner wants Odoo's wording.
 
 ### Test records left in the worksheet
 

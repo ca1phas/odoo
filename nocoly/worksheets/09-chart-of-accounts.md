@@ -657,9 +657,10 @@ nothing wrote to Products here.)
    (the API ignores form events).
 2. **The rule is not checked on API creates (difference 2).** Nothing in part A creates a receivable or payable
    account unticked, but any future import should check it — or the rule could be accepted as form-only.
-3. **Internal Group's quick filter is a search box**, not a list of groups (pending the UI). If that reads badly,
-   the Type quick filter alone covers all of Odoo's seven search filters, since Odoo's group filters are sets of
-   types.
+3. **Internal Group's quick filter is a search box**, not a list of groups — **seen on screen 18 Sep 2026** in
+   the cross-check pass (`CROSSCHECK.md`): Type renders as a dropdown reading *Please select*, Internal Group as a
+   text box reading *Search*. If that reads badly, the Type quick filter alone covers all of Odoo's seven search
+   filters, since Odoo's group filters are sets of types.
 4. **The picker's self-exclusion compares Display Names** and runs in the browser only; until the UI pass proves
    it, an account may be offered as its own parent.
 

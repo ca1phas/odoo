@@ -18,6 +18,7 @@ everything a reviewer needs.
 | What a worksheet must do, what was built, and the test results | `worksheets/NN-name.md`, or the same content as a web page (link in the table below) |
 | What Odoo itself looks like for that model | `reference/odoo-19.4/<model>.md` — fields, form, list, search and records, extracted from the tenant |
 | Why something was done a certain way | `DECISIONS.md` |
+| How each worksheet compares to Odoo's own screen, side by side | `CROSSCHECK.md` — the pass of 18 Sep 2026 |
 | How the worksheet was built, to rebuild or change it | `BUILDING.md` and `build/<worksheet>.py` |
 
 ## How to review
@@ -31,6 +32,10 @@ everything a reviewer needs.
    saw. Re-running every test is ideal; at least spot-check the automations — they are the easiest to get subtly
    wrong. Name any records you create `TEST …`.
 4. **Read "Differences from Odoo seen in testing".** These are known; say if you disagree with how one is handled.
+   `CROSSCHECK.md` adds the screen-by-screen comparison of every worksheet against the tenant, made on 18 Sep 2026.
+   Two things it tells you before you start: **Odoo does not render in a background browser tab** — click into its
+   window before reading a page — and the tenant's own user, being an Invoicing administrator rather than an
+   accounting one, **cannot see any account field on its screens**, so several fields we built are invisible there.
 5. **Report back** to Casimir: the worksheet number, the test number or field, what you saw, and what Odoo does.
    A reply of "reviewed, no findings" matters too — it is what marks the worksheet done.
 

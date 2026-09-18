@@ -745,3 +745,23 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   re-sorts only after Refresh; a record that leaves the open view (Archive) closes itself.
 - An unsubmitted Create Record form is kept as a local draft and offered back ("Restored to the last interrupted
   content"); clear it before a clean test.
+
+### Reading Odoo in the browser (18 Sep 2026)
+
+- **Odoo does not render in a background tab.** Its client waits for an animation frame and Chrome gives none to a
+  tab whose `document.visibilityState` is *hidden*, so the page stops after the top bar and the control panel:
+  `main.o_content` is empty and every screenshot is a dark rectangle. **A screenshot forces one frame**, so read
+  an Odoo page as *navigate → wait → screenshot → screenshot*: the first screenshot is blank and pays for the
+  paint, the second is the page. Nocoly's own app renders while hidden, which is why only the Odoo side ever
+  looked broken — and why three worksheets carried a false "the tenant has no screen for this".
+- The reference tenant's admin is an **Invoicing** administrator: it holds `account.group_account_invoice`,
+  `account.group_account_manager` and `account.group_account_basic`, but **not** `account.group_account_readonly`
+  or `account.group_account_user`. Every field Odoo puts behind those two groups — a journal's five accounts, a
+  product's and a category's income and expense accounts, an invoice line's account and date, a contact's
+  receivable and payable — is therefore **invisible on the tenant's own screens**, though `fields_get` and a
+  record read return it. Read `ir.ui.view.arch_db` when you need the real form, not `get_views`, which is already
+  filtered by the caller's groups.
+- Reading the raw arch over RPC in the page: `ir.ui.view.search_read([('model','=',…),('type','in',['form','list'])], ['name','arch_db'])`
+  and pull field names with a regex. Return **only what you need** — a whole arch trips the session's
+  "cookie/query string data" guard and the call comes back blocked, and anything over ~1,900 characters is
+  truncated. `res.groups.search_read([('all_user_ids','in',[uid])])` answers what the tenant's user can see.
