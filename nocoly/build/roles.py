@@ -11,7 +11,10 @@ Two things:
      owner's call. The Chart of Accounts bundle added per-field hiding: the account fields Odoo keeps from its
      Invoicing and Read-only groups are hidden from those roles, field by field (HIDDEN_FIELDS). The Payment Terms
      bundle added Payment Terms and Payment Term Lines: Accounting Administrator full, the other three view — Odoo
-     gives write, create and delete on both models to account.group_account_manager alone.
+     gives write, create and delete on both models to account.group_account_manager alone. The Countries bundle
+     added Countries as the first worksheet **no** business role may write: Odoo's `ir.model.access.csv` reads
+     res.country to everyone and writes it from `base.group_system` alone, which none of the four stands for
+     (11-countries.md §1 › Roles), so only the app Administrator creates, edits or deletes a country.
 
 Run from the repo root with the CLI's interpreter:
 
@@ -61,28 +64,35 @@ STOCK = [  # (English name, the Chinese name HAP ships, roleType)
 
 FULL, EDIT, VIEW = 'full', 'view · add · edit', 'view'
 
-ORDER = ['Contacts', 'Units & Packagings', 'Products', 'Product Variants', 'Product Categories',
+ORDER = ['Contacts', 'Countries', 'Units & Packagings', 'Products', 'Product Variants', 'Product Categories',
          'Chart of Accounts', 'Journals', 'Payment Terms', 'Payment Term Lines', 'Invoices', 'Invoice Lines']
+
+# Worksheets no business role may write, whatever its accounting level: Odoo keeps them behind a group none of
+# the four stands for. Countries is the first (base.group_system writes res.country; everybody else reads it).
+VIEW_ONLY = {'Countries'}
 
 ROLES = {
     'Accounting Administrator': (
         'Odoo group account.group_account_manager — "Administrator". Full access, including configuration '
         'rights. The only role here that may delete a record, and the only one that may export: Odoo keeps '
         'exporting behind its own group, base.group_allow_export, which is granted deliberately rather than '
-        'implied by an accounting level.',
-        {name: FULL for name in ORDER},
+        'implied by an accounting level. Countries is the exception to "full": Odoo writes res.country from '
+        'base.group_system, the settings administrator, and this role is not that.',
+        {name: VIEW if name in VIEW_ONLY else FULL for name in ORDER},
     ),
     'Accountant': (
         'Odoo group account.group_account_user — "Show Full Accounting Features". The accountant: can do '
         'everything except advanced configuration.',
-        {'Contacts': EDIT, 'Units & Packagings': VIEW, 'Products': VIEW, 'Product Variants': VIEW,
+        {'Contacts': EDIT, 'Countries': VIEW, 'Units & Packagings': VIEW, 'Products': VIEW,
+         'Product Variants': VIEW,
          'Product Categories': VIEW, 'Chart of Accounts': VIEW, 'Journals': EDIT, 'Payment Terms': VIEW,
          'Payment Term Lines': VIEW, 'Invoices': EDIT, 'Invoice Lines': EDIT},
     ),
     'Invoicing': (
         'Odoo group account.group_account_invoice — "Invoicing". Invoices, payments and basic invoice '
         'reporting; cannot see accounting configuration, so Journals is read-only.',
-        {'Contacts': EDIT, 'Units & Packagings': VIEW, 'Products': VIEW, 'Product Variants': VIEW,
+        {'Contacts': EDIT, 'Countries': VIEW, 'Units & Packagings': VIEW, 'Products': VIEW,
+         'Product Variants': VIEW,
          'Product Categories': VIEW, 'Chart of Accounts': VIEW, 'Journals': VIEW, 'Payment Terms': VIEW,
          'Payment Term Lines': VIEW, 'Invoices': EDIT, 'Invoice Lines': EDIT},
     ),
@@ -210,15 +220,30 @@ def members(r):
     return sorted(u.get('fullName') or u.get('fullname') or u['accountId'] for u in r.get('users') or [])
 
 
+def unowned():
+    """Worksheets of the app that the owner's table does not name — another administrator's, mid-build.
+
+    They are reported and never written to: `reconcile` walks the role's matrix, so a sheet outside ORDER is
+    read from the role model and posted back exactly as it was. Worth printing, because HAP adds every new
+    worksheet to every fine-grained role on its own, at its own defaults — own records only, no create, and
+    **export on** — so whoever owns them has the same reconciling to do (BUILDING.md)."""
+    app = hap.run('app', 'info', '-a', APP).get('data', {})
+    live = {i['name'] for s in app.get('sections', []) for i in s['items'] if i['type'] == 0}
+    return sorted(live - set(ORDER)), live
+
+
 def guard():
-    """Stop unless the profile reaches ERP Master and the app holds exactly the worksheets in ORDER."""
+    """Stop unless the profile reaches ERP Master and the app holds every worksheet in ORDER."""
     who = hap.run('auth', 'whoami')
     app = hap.run('app', 'info', '-a', APP).get('data', {})
     if app.get('name') != 'ERP Master':
         sys.exit(f"profile {who.get('profile')!r} does not reach ERP Master (found {app.get('name')!r})")
-    live = {i['name'] for s in app.get('sections', []) for i in s['items'] if i['type'] == 0}
-    if live != set(ORDER):
-        sys.exit(f'ERP Master holds {sorted(live)}, not the worksheets in ORDER ({sorted(ORDER)})')
+    extra, live = unowned()
+    if not set(ORDER) <= live:
+        sys.exit(f'ERP Master holds {sorted(live)}, and the worksheets in ORDER '
+                 f'{sorted(set(ORDER) - live)} are missing')
+    if extra:
+        print(f"  guard: {extra} are in the app and not in the owner's table — left exactly as they are")
     stock = {r['name'] for r in roles()}
     unknown = stock - {n for n, _, _ in STOCK} - {c for _, c, _ in STOCK} - set(ROLES)
     if unknown:
@@ -401,9 +426,16 @@ def permissions(role_id):
     return out.get('data', out) if isinstance(out, dict) else {}
 
 
+def live_names():
+    """{worksheetId: name} for every worksheet of the app — ids.json knows only the ones this build owns, and
+    another administrator's new worksheet joins every fine-grained role on its own."""
+    app = hap.run('app', 'info', '-a', APP).get('data', {})
+    return {i['id']: i['name'] for s in app.get('sections', []) for i in s['items'] if i['type'] == 0}
+
+
 def scopes(role_id):
     """{worksheet name: (recordDataScope, add)} for a role, worksheets not in the role left out."""
-    names = {wid: name for name, wid in WORKSHEETS.items()}
+    names = {**live_names(), **{wid: name for name, wid in WORKSHEETS.items()}}
     out = {}
     for w in permissions(role_id).get('worksheetPermissions') or []:
         out[names.get(w['id'], w['id'])] = (w.get('recordDataScope'), (w.get('recordActions') or {}).get('add'))
@@ -459,13 +491,19 @@ def step_check():
         if (detail.get('description') or '') != description:
             problems.append(f'{name}: description {detail.get("description")!r}')
         got = scopes(r['roleId'])
-        if set(got) != set(ORDER):
-            problems.append(f'{name}: worksheets {sorted(set(got) ^ set(ORDER))}')
+        if not set(ORDER) <= set(got):
+            problems.append(f'{name}: worksheets missing {sorted(set(ORDER) - set(got))}')
+        for ws in sorted(set(got) - set(ORDER)):     # another administrator's, mid-build: reported, not owned
+            s, add = got[ws]
+            print(f"  note: {name} / {ws} is not in the owner's table — HAP put it there at {cell(s, add)!r}")
         for ws in ORDER:
             s, add = got.get(ws, (None, None))
             if cell(s, add) != matrix[ws]:
                 problems.append(f'{name} / {ws}: {cell(s, add)!r}, want {matrix[ws]!r}')
+        owned = {WORKSHEETS[n] for n in ORDER}
         for w in detail.get('worksheetPermissions') or []:
+            if w['id'] not in owned:
+                continue
             actions = {k: v for k, v in (w.get('worksheetActions') or {}).items()}
             record = {k: v for k, v in (w.get('recordActions') or {}).items() if k != 'add'}
             if actions != worksheet_actions(name):
@@ -475,7 +513,8 @@ def step_check():
         # The same switch in the model the Roles page itself edits, so a difference between the two shows up
         # rather than hiding behind whichever call is read.
         model = role_model(r['roleId'])
-        stored = {bool((s.get(EXPORT_KEY) or {}).get('enable')) for s in model['sheets']}
+        stored = {bool((s.get(EXPORT_KEY) or {}).get('enable')) for s in model['sheets']
+                  if s['sheetId'] in owned}
         if stored != {name in EXPORTERS}:
             problems.append(f'{name}: {EXPORT_KEY}.enable {stored}, want {name in EXPORTERS}')
         # the account fields: hidden where 09 §1 hides them, visible everywhere else — read in the Roles page's own

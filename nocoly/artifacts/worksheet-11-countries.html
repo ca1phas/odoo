@@ -1,0 +1,138 @@
+<title>ERP Master Countries</title>
+<meta name="description" content="Review pack for worksheet 11 of the Odoo-to-Nocoly build, the fourth feature bundle: requirements, build ids and UI test results.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<link rel="stylesheet" href="review.css">
+
+<main class="page">
+
+  <header class="identity">
+    <div class="eyebrow"><span>ERP Master</span><span>Phase 1</span><span>Bundle 4 of 6</span></div>
+    <h1>Countries <span class="model">res.country</span></h1>
+    <p class="lede">The list a contact's address hangs on. Odoo ships <strong>251 countries</strong> with their ISO code, calling code, VAT label and two switches that say whether an address needs a state or a postcode — and every partner points at one. All 251 are here, and <strong>Contacts' Country text is replaced by the relation</strong>: the values were carried across, read back, and the text field deleted. State stays Text until the next bundle.</p>
+    <dl class="meta">
+      <div><dt>Reference</dt><dd>casimir.odoo.com — Odoo saas~19.4+e</dd></div>
+      <div><dt>Records verified against</dt><dd>the tenant, by digest — count, hash, calling-code sum and the two switch counts</dd></div>
+      <div><dt>Nocoly</dt><dd>App ERP Master · menu group Contacts, after Contacts</dd></div>
+      <div><dt>Built and tested</dt><dd>18 September 2026</dd></div>
+    </dl>
+    <div class="scoreline">
+      <span class="chip pass">21 of 23 tests pass</span>
+      <span class="chip note">1 fixed during the test · 1 not run</span>
+      <span class="chip note">251 countries · 8 contacts carried · 1 field deleted</span>
+    </div>
+  </header>
+
+  <aside class="callout" aria-labelledby="note-title">
+    <span class="chip note small" style="justify-self:start">Worth knowing before you review</span>
+    <h2 id="note-title">This is the one worksheet an Accounting Administrator does not own</h2>
+    <p>Odoo's own access list reads countries to <em>everyone</em> and writes them from <code>base.group_system</code> alone — the settings administrator, which none of the four accounting groups stands for. Odoo's Countries list even ships with <strong>New and Delete switched off</strong>. So all four business roles have <strong>view</strong> here, and only an app <strong>Administrator</strong> creates, edits or deletes a country. The owner chose this deliberately over the app's usual pattern. Note that <code>res.country.state</code> is <em>not</em> the same — the States bundle will not inherit it.</p>
+  </aside>
+
+  <nav class="toc" aria-label="Sections">
+    <a href="#requirements"><span>1</span>Requirements</a>
+    <a href="#build"><span>2</span>Build</a>
+    <a href="#tests"><span>3</span>Tests and differences</a>
+  </nav>
+
+  <section id="requirements" aria-labelledby="req-title">
+    <div class="section-head"><span class="n">1</span><h2 class="section" id="req-title">Requirements</h2></div>
+
+    <div class="block">
+      <h3>The country</h3>
+      <p class="aside">Labels are Odoo 19.4's; aliases are Odoo's field names.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th class="num">#</th><th>Field</th><th>Odoo field</th><th>Nocoly type</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td class="num">1</td><td class="label">Country Name</td><td><code>name</code></td><td>Text · required · <strong>title</strong> · no duplicates</td><td>Odoo's <em>"The name of the country must be unique!"</em></td></tr>
+            <tr><td class="num">2</td><td class="label">Country Code</td><td><code>code</code></td><td>Text · required · no duplicates · 2 characters</td><td>The ISO two-letter code; Odoo's help kept as the description</td></tr>
+            <tr><td class="num">3</td><td class="label">Country Calling Code</td><td><code>phone_code</code></td><td>Number, 0 decimals</td><td>No thousands separator — 1264, not 1,264, as Odoo draws it</td></tr>
+            <tr><td class="num">4</td><td class="label">Vat Label</td><td><code>vat_label</code></td><td>Text</td><td>54 of the 251 have one: VAT, GST No., TRN, CUIT …</td></tr>
+            <tr><td class="num">5</td><td class="label">Zip Required</td><td><code>zip_required</code></td><td>Checkbox, ticked</td><td>Ten countries have it clear</td></tr>
+            <tr><td class="num">6</td><td class="label">State Required</td><td><code>state_required</code></td><td>Checkbox</td><td>Fifteen have it set</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="prose"><strong>No Active field, so no Archive and no Unarchive</strong> — <code>res.country</code> has none, as Product Categories has none. <strong>No reverse field either</strong>: Odoo's country form does not list the partners in that country, so the relation is one-way. What Odoo's form <em>does</em> show at the foot is the country's <strong>States</strong>, and that is the next bundle.</p>
+    </div>
+
+    <div class="block">
+      <h3>What it changed on Contacts</h3>
+      <ul class="plain">
+        <li><strong>Country became a relation</strong> (<code>country_id</code>), in the text control's place beside ZIP. The stand-in held the alias <code>country</code> while Odoo's field is <code>country_id</code>, so the relation claimed the real name from the start.</li>
+        <li><strong>Eight contacts carried</strong> — every one whose Country text read <em>Malaysia</em> — read back, and then the text control was deleted.</li>
+        <li><strong>The Country column, the Country quick filter, the Kanban card's country and both address automations</strong> were re-pointed at the relation before the deletion, not after: a deleted control stays named in every view and workflow step that used it.</li>
+        <li><strong>State stays Text.</strong> Odoo's rule that changing a country clears a state belonging elsewhere needs states, so it belongs to the next bundle.</li>
+      </ul>
+    </div>
+
+    <div class="block">
+      <h3>Not built now</h3>
+      <p class="prose">Named on the form itself, in a remark block at its foot: the <strong>Currency</strong> (<code>res.currency</code> is not among the six bundles), the <strong>flag</strong> (a computed URL to an image on the Odoo server), the three <strong>Advanced Address Formatting</strong> fields that Odoo shows only in developer mode, the <strong>Country Groups</strong>, and the <strong>States</strong>. Also left out: the code forced upper-case on save (a HAP rule compares values, it cannot transform one), the two-letter search that jumps to the code, and the VAT label renaming a contact's <em>Tax ID</em> field.</p>
+    </div>
+  </section>
+
+  <section id="build" aria-labelledby="build-title">
+    <div class="section-head"><span class="n">2</span><h2 class="section" id="build-title">Build</h2></div>
+
+    <div class="block">
+      <h3>What exists now</h3>
+      <div class="table-wrap">
+        <table class="narrow">
+          <thead><tr><th>Thing</th><th>Id</th></tr></thead>
+          <tbody>
+            <tr><td class="label">Worksheet Countries</td><td class="id"><code>6aacb572805aef7032869637</code></td></tr>
+            <tr><td class="label">Country Name · Country Calling Code</td><td class="id"><code>…869638</code> · <code>…312e3c</code></td></tr>
+            <tr><td class="label">Country Code · Vat Label</td><td class="id"><code>…312e3d</code> · <code>…312e3e</code></td></tr>
+            <tr><td class="label">Zip Required · State Required</td><td class="id"><code>…312e3f</code> · <code>…312e40</code></td></tr>
+            <tr><td class="label">Remark block · view Countries</td><td class="id"><code>…312e41</code> · <code>…69963b</code></td></tr>
+            <tr><td class="label">Contacts → Country relation</td><td class="id"><code>6aacb7e2e54d2a34fa4e42a4</code></td></tr>
+            <tr><td class="label">Contacts → the deleted text control</td><td class="id"><code>6aa8a452f363582dd37a50e7</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="prose">Built by <code>nocoly/build/countries.py</code>. The 251 records were rebuilt from this repo's own Odoo base data and <strong>verified against the tenant by digest</strong> rather than copied through the browser — count, an FNV-1a hash, the sum of the calling codes and the state and ZIP counts all matched; only three VAT labels differed (Hong Kong, the United States, Indonesia) and the tenant's values won. Every one was then read back field by field: <strong>0 missing, 0 differing</strong>.</p>
+    </div>
+
+    <div class="block">
+      <h3>Two things the build found</h3>
+      <ul class="plain">
+        <li><strong>The API does not enforce what the form does.</strong> <em>No duplicates</em> is refused on API writes on both fields — but the two-character limit is form-side only, and Zip Required's default is not applied through the API. The seed checks the length itself.</li>
+        <li><strong>Section 1 missed two automations.</strong> Four workflow nodes named the Country text control: both of Contacts' address syncs, a branch, and a trigger's field list. Odoo syncs <code>country_id</code> with the other five address fields, so they were re-pointed at the relation rather than losing Country — and test 19 and 20 below prove both still work.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="tests" aria-labelledby="tests-title">
+    <div class="section-head"><span class="n">3</span><h2 class="section" id="tests-title">Tests and differences</h2></div>
+
+    <div class="block">
+      <h3>Twenty-three tests in the browser</h3>
+      <p class="prose">Run on 18 September 2026 with Odoo open beside the app. <strong>Twenty-one pass.</strong> One failed and was fixed during the test: the calling code drew as <em>1,264</em> because HAP's <code>thousandth</code> setting reads the opposite way round from its name — "0", the platform default, draws the separator and "1" hides it. Anguilla now reads <strong>1264</strong>, as Odoo does. One was not run: the role check needs a role with a member, and none has one.</p>
+      <p class="prose">What the tests cover: the view and its two columns; Malaysia, the United States and Angola field by field against Odoo's own screens; both uniqueness refusals, the length limit and the two required fields; Zip Required's default on a new record; search by name and by code; and on Contacts — the relation in the text field's place, the column, the quick filter, the Kanban card, the Archived view, and <strong>both address automations end to end</strong>: a new contact under a company inherits the company's address and its Country, and changing the company's Country to Singapore carried to its four people and back to Malaysia again, while the Invoice and Delivery addresses stayed put, exactly as Odoo's <code>_children_sync</code> behaves.</p>
+    </div>
+
+    <div class="block">
+      <h3>Differences from Odoo</h3>
+      <ol class="differences">
+        <li><span class="n">1</span><div class="head"><strong>Åland Islands sorts second here and last in Odoo</strong><span class="chip note small">Sorting</span></div><p>Ours puts Å beside A; the tenant's database collation puts it after Z, so Odoo's list ends <em>Zambia · Zimbabwe · Åland Islands</em>. The only row of 251 where the two orders disagree.</p></li>
+        <li><span class="n">2</span><div class="head"><strong>The picker offers + Record</strong><span class="chip note small">HAP behaviour</span></div><p>Odoo's country field is <code>no_create</code>: a contact cannot invent a country. HAP has no such switch, so what stops it is Roles — the four business roles have view, and only an administrator sees the link.</p></li>
+        <li><span class="n">3</span><div class="head"><strong>A two-letter search does not jump to the code</strong><span class="chip note small">Search</span></div><p>Odoo matches a 2-character search against the code first. Here <em>MY</em> returns Malaysia, Myanmar and Saint Barthélemy, in name order.</p></li>
+        <li><span class="n">4</span><div class="head"><strong>The picker lists the newest record first</strong><span class="chip note small">HAP behaviour</span></div><p>As on Payment Terms — with 252 countries that means the tail of the alphabet at the top. Odoo's picker is in name order.</p></li>
+        <li><span class="n">5</span><div class="head"><strong>Clicking a country chip opens the country</strong><span class="chip note small">HAP behaviour</span></div><p>Odoo's field carries <code>no_open: True</code>.</p></li>
+        <li><span class="n">6</span><div class="head"><strong>No flag, no currency, no address layout, no states</strong><span class="chip note small">Scope</span></div><p>All in <em>Not built now</em>, and all named in the remark block at the foot of the form.</p></li>
+      </ol>
+    </div>
+
+    <div class="block">
+      <h3>Test records left for you</h3>
+      <p class="prose"><strong>TEST Country</strong> (code ZZZ) on Countries — the build's own self-check record, and the proof that the two-character limit is a form check rather than a stored one — and <strong>TEST UI Country Person</strong> on Contacts, under TEST QA Trading Sdn Bhd, from the automation test. Both go after sign-off, with the owner's approval; the 251 countries stay.</p>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <p>Bundle 4 of 6 · <code>nocoly/worksheets/11-countries.md</code> · reference <code>nocoly/reference/odoo-19.4/res.country.md</code> · build <code>nocoly/build/countries.py</code>. Next is <strong>States</strong>, which replaces Contacts' State text and gives each country the list Odoo shows at the foot of its form, and then <strong>Taxes</strong>.</p>
+  </footer>
+</main>

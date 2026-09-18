@@ -40,12 +40,13 @@
     <b>1</b> 开始。</p>
     <p>现正按此顺序为第 1 阶段补上六张功能包工作表：<b>Product Categories</b> · <b>Chart of Accounts</b> ·
     <b>Payment Terms</b> · <b>Countries</b> · <b>States</b> · <b>Taxes</b> —— 即核心七表最依赖的几张。它们已在上方开启。
-    <b>已建成三个。</b><b>Product Categories</b> —— 导入租户自身的七个分类，界面测试 17/18 —— 为 Products 补上了此前一直缺失的
+    <b>已建成四个。</b><b>Product Categories</b> —— 导入租户自身的七个分类，界面测试 17/18 —— 为 Products 补上了此前一直缺失的
     Category 字段。<b>Chart of Accounts</b> —— 导入租户的 87 个会计科目，界面测试 27/28 —— 同时把应用里所有指向科目的字段带了进来：
     Contacts、Products、Product Categories、Journals 与 Invoice Lines，并按角色隐藏，与 Odoo 一致。<b>Payment Terms</b> ——
     导入租户的十个付款条件及其分期行，界面测试 21/22 —— 是第一个<b>替换占位字段</b>的功能包：发票上的 Payment Terms 文本字段先把值
-    迁入真正的关联字段，读回核对后删除；发票现在会从客户带出付款条件，并据此算出到期日。Countries、States 与 Taxes 尚未开工。
-    本页其余内容仍属计划。</p>
+    迁入真正的关联字段，读回核对后删除；发票现在会从客户带出付款条件，并据此算出到期日。<b>Countries</b> —— 导入 Odoo 的 251 个
+    国家/地区，界面测试 23 项通过 21 项 —— 以同样方式替换了第二个占位字段：联系人的 Country 文本字段变成指向真实国家的关联，
+    并带上国际区号、税号标签，以及决定地址是否必须填写州属与邮编的两个开关。States 与 Taxes 尚未开工。本页其余内容仍属计划。</p>
   </div>
 </section>
 

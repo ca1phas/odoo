@@ -16,6 +16,15 @@ Requirements: nocoly/worksheets/01-contacts.md.
 
 `fields` replaces the whole control set, so it only runs on a worksheet that has
 no records yet. After that, append with `hap worksheet add-fields`.
+
+**Countries (bundle 4, 18 Sep 2026).** The text control Country (`6aa8a452f363582dd37a50e7`) was replaced by a
+one-way relation to the Countries worksheet and **deleted**, with the owner's approval, once every contact's
+value had been carried across and read back (`11-countries.md`). `countries.py` creates, aliases and places the
+relation; everything here that names Country resolves it **by name**, so `layout` keeps it in its old cell
+(row 9, right half), `views` points the Country column, the Country quick filter and the Kanban card field at
+it, and `automations` copies it between a company and its contacts as one of the six address fields. What
+changed in this file is `ADDRESS_TEXT` — the five address fields that are still Text — and `address_nodes`,
+which re-points the two address-sync workflows the way `term_nodes` re-points bundle 3's.
 """
 import json, subprocess, sys, uuid
 
@@ -27,7 +36,14 @@ import hap
 
 WS = hap.ids()['worksheets']['Contacts']
 MALAYSIA = json.dumps({'name': 'Malaysia', 'iso2': 'my', 'dialCode': '60'})
+# Odoo res.partner._address_fields: the six a company shares with its contacts. Both sync automations copy all
+# six, and every one of them is looked up by name — so Country here is the **relation to Countries** that
+# bundle 4 put in the text control's place (11-countries.md, countries.py).
 ADDRESS = ['Street', 'Street 2', 'City', 'State', 'ZIP', 'Country']
+# …and these five are the ones still built here as Text. Country is not: countries.py adds it as a Relation,
+# with no hint — HINTS therefore no longer carries one for it, and `arrange` never writes a hint on a Relation.
+ADDRESS_TEXT = [('Street', 'street'), ('Street 2', 'street2'), ('City', 'city'), ('State', 'state'),
+                ('ZIP', 'zip')]
 
 # Odoo saas~19.4 view_partner_form on HAP's 12-column grid: name -> (row, col, size, tab)
 PLACE = {
@@ -40,6 +56,7 @@ PLACE = {
     'Address': (6, 0, 12, None),
     'Street': (7, 0, 6, None), 'Street 2': (7, 1, 6, None),
     'City': (8, 0, 6, None), 'State': (8, 1, 6, None),
+    # Country is a Relation → Countries since bundle 4; it keeps the cell the text control had (11 §1)
     'ZIP': (9, 0, 6, None), 'Country': (9, 1, 6, None),
     'Image': (10, 0, 12, None),
     'Contacts': (12, 0, 12, 'Contacts'),
@@ -64,7 +81,7 @@ TABS = {'Contacts': 11, 'Sales & Purchase': 13, 'Invoicing': 19, 'Notes': 21}
 HINTS = {'Name': 'Name (company or person)', 'Company': 'Company Employer', 'Email': 'Email', 'Phone': 'Phone',
          'Job Position': 'e.g. Sales Director', 'Website': 'e.g. https://www.odoo.com', 'Tax ID': 'Tax ID',
          'Company ID': 'Company ID', 'DUNS': 'DUNS', 'Street': 'Street...', 'Street 2': 'Street 2...',
-         'City': 'City', 'State': 'State', 'ZIP': 'ZIP', 'Country': 'Country', 'Image': 'Upload an image',
+         'City': 'City', 'State': 'State', 'ZIP': 'ZIP', 'Image': 'Upload an image',
          'Salesperson': 'Salesperson', 'Reference': 'Reference', 'Notes': 'Internal notes...'}
 OBSOLETE_RULES = ['Company is hidden on companies', 'Job Position only for persons',
                   'Company ID only on stand-alone companies']       # 19.0 rules; 19.4 has no Person/Company switch
@@ -120,7 +137,7 @@ def step_fields():
          ctl('TEXT', 'Company ID', alias='company_registry'),       # 19.4: additional identifier "Company ID"
          ctl('TEXT', 'DUNS', alias='duns'),                         # 19.4: additional identifier "DUNS"
          ctl('SPLIT_LINE', 'Address'),
-         *[ctl('TEXT', n, alias=a) for n, a in zip(ADDRESS, ['street', 'street2', 'city', 'state', 'zip', 'country'])],
+         *[ctl('TEXT', n, alias=a) for n, a in ADDRESS_TEXT],      # Country is countries.py's Relation
          image,
          ctl('SECTION', 'Contacts'), ctl('SECTION', 'Sales & Purchase'), ctl('SECTION', 'Notes'),
          ctl('SPLIT_LINE', 'Sales'), ctl('USER_PICKER', 'Salesperson', alias='user_id'),
@@ -450,6 +467,14 @@ TERM_BRANCHES = {'Customer Payment Terms': ('customer_terms', 'The company has C
                  'Vendor Payment Terms': ('vendor_terms', 'The company has Vendor Payment Terms?',
                                           'Copy the Vendor Payment Terms')}
 PUSH_TERMS_STEP = 'Copy the Payment Terms to them'
+# The two nodes that name all six address fields, and the branch in front of the first of them. Both were
+# written once by `batch-add`, which never rewrites a step it already made — so when one of the six changes
+# control, as Country did in bundle 4, `address_nodes` below re-points them in place.
+COPY_ADDRESS_STEP = 'Copy the company address'
+COPY_ADDRESS_BRANCH = 'Contact-type, and the company has an address?'
+PUSH_ADDRESS_STEP = 'Copy the address to them'
+GET_COMPANY = 'Get the company'
+GET_CONTACT_TYPE = 'Get its Contact-type contacts'
 
 
 def step_automations():
@@ -602,9 +627,10 @@ def step_automations():
                                           'returns': []}, ensure_ascii=False))
                 print(f"{wf['name']}: trigger fields/condition rewritten")
             proc = hap.run('workflow', 'node', 'list', pid)
+        address_nodes(pid, wf['name'], f, option)
         if terms:
             term_nodes(pid, wf['name'], terms, fid)
-            proc = hap.run('workflow', 'node', 'list', pid)
+        proc = hap.run('workflow', 'node', 'list', pid)
         # batch-add names the trigger in Chinese and drops branch path names
         hap.run('workflow', 'node', 'rename', pid, proc['startEventId'], '-n', wf['trigger_name'])
         for n in proc['flowNodeMap'].values():
@@ -615,6 +641,78 @@ def step_automations():
     for name in (COPY_DETAILS, PUSH_DETAILS):
         print(subprocess.run(['hap', 'workflow', 'structure', ids['workflows'][name]],
                              capture_output=True, text=True).stdout)
+
+
+def node_fields(pid, workflow, node_id, name, select, source, f, names):
+    """Bring an update step's `fields` up to the controls `names` now are, taken from node `source`.
+
+    `batch-add` writes a step once and never again, so a step built from a control that has since been replaced
+    keeps the dead id: it stays published, `isException` stays false, and the only sign is the server's
+    `fieldValueName` reading "" (BUILDING.md). Sent back with `node save --type 6`, the whole list at once."""
+    get = lambda: (lambda d: d.get('data', d))(hap.run('workflow', 'node', 'get', pid, node_id))
+    want = [{'fieldId': f[n]['controlId'], 'type': f[n]['type'], 'addType': 0, 'fieldValue': '',
+             'fieldValueId': f[n]['controlId'], 'nodeId': source, 'sureNodeId': source, 'nodeAppType': 1}
+            for n in names]
+
+    def source_of(x):
+        """Which node an entry takes its value from. Sent as `nodeId` + `fieldValueId`, a **text** field comes
+        back as the template `$<nodeId>-<fieldId>$` with `nodeId` emptied — the same binding written the other
+        way (BUILDING.md), so it is read out of the template rather than compared as a difference for ever."""
+        value = x.get('fieldValue') or ''
+        if not x.get('nodeId') and value.startswith('$') and value.endswith('$') and '-' in value:
+            return value[1:-1].split('-')[0]
+        return x.get('nodeId')
+
+    shape = lambda xs: [(x.get('fieldId'), source_of(x), x.get('fieldValueId')) for x in xs]
+    d = get()
+    if d.get('selectNodeId') != select or d.get('isException') or shape(d.get('fields') or []) != shape(want):
+        hap.run('workflow', 'node', 'save', pid, node_id, '--type', '6', '-n', name, '-c', json.dumps(
+            {'actionId': '2', 'appId': WS, 'appType': 1, 'selectNodeId': select, 'fields': want}))
+        d = get()
+        print(f'  {workflow}: {name!r} fields rewritten ({names})')
+    if d.get('selectNodeId') != select or d.get('isException') or shape(d.get('fields') or []) != shape(want):
+        sys.exit(f"{workflow}: {name!r} read back {d.get('selectNodeId')} {d.get('isException')} "
+                 f"{shape(d.get('fields') or [])}")
+
+
+def address_nodes(pid, workflow, f, option):
+    """Re-point the nodes that name the six address fields, when one of them has changed control.
+
+    Bundle 4 replaced Contacts' Country **text** with a relation to Countries, and `ADDRESS` is looked up by
+    name — so this brings the two copy steps and the branch in front of the first of them to whatever the six
+    names resolve to now. It writes nothing when they already agree."""
+    proc = hap.run('workflow', 'node', 'list', pid)
+    nodes, start = proc['flowNodeMap'], proc['startEventId']
+    by_name = {n['name']: n for n in nodes.values()}
+    get = lambda node_id: (lambda d: d.get('data', d))(hap.run('workflow', 'node', 'get', pid, node_id))
+    if workflow == COPY_DETAILS:
+        company = by_name[GET_COMPANY]['id']
+        gateway = by_name[COPY_ADDRESS_BRANCH]
+        yes = next(nodes[i] for i in gateway.get('flowIds') or []
+                   if nodes[i].get('nextId') not in ('', None, '99'))
+        kind = option('Address Type', 'Contact')
+        # one AND-group per address field: the contact is Contact-type **and** the company has that field
+        condition = [[{'nodeId': start, 'filedId': f['Address Type']['controlId'], 'filedValue': 'Address Type',
+                       'filedTypeId': f['Address Type']['type'], 'enumDefault': 0, 'conditionId': '9',
+                       'sourceType': 0,
+                       'conditionValues': [{'value': {**kind, 'score': None, 'index': None}}]},
+                      {'nodeId': company, 'filedId': f[n]['controlId'], 'filedValue': n,
+                       'filedTypeId': f[n]['type'], 'enumDefault': f[n].get('enumDefault'), 'conditionId': '7',
+                       'sourceType': 0, 'conditionValues': []}] for n in ADDRESS]
+        shape = lambda groups: [[(c.get('nodeId'), c.get('filedId'), str(c.get('conditionId'))) for c in g]
+                                for g in groups or []]
+        if shape(get(yes['id']).get('conditions')) != shape(condition):
+            hap.run('workflow', 'node', 'save', pid, yes['id'], '--type', '2', '-n', 'Yes',
+                    '-c', json.dumps({'operateCondition': condition}, ensure_ascii=False))
+            print(f'  {workflow}: {COPY_ADDRESS_BRANCH!r} condition rewritten')
+            if shape(get(yes['id']).get('conditions')) != shape(condition):
+                sys.exit(f"{workflow}: {COPY_ADDRESS_BRANCH!r} read back "
+                         f"{shape(get(yes['id']).get('conditions'))}")
+        node_fields(pid, workflow, by_name[COPY_ADDRESS_STEP]['id'], COPY_ADDRESS_STEP, start, company, f,
+                    ADDRESS)
+    else:
+        node_fields(pid, workflow, by_name[PUSH_ADDRESS_STEP]['id'], PUSH_ADDRESS_STEP,
+                    by_name[GET_CONTACT_TYPE]['id'], start, f, ADDRESS)
 
 
 def term_nodes(pid, workflow, terms, fid):

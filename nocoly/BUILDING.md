@@ -180,6 +180,12 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
 - **`hap app sort-worksheets <app> <section> <every worksheet id, in order>`** reorders a menu group
   (`HomeApp/UpdateSectionChildSort`); `worksheet create --section-id` always appends. Read the order back from
   `app info` (Chart of Accounts, moved in front of Journals).
+- **`common.ensure_section` re-sorts the app's menu groups**, and that is only safe while this build owns them
+  all. It puts the group it is given straight after `after`, or **last** when `after` is None, and calls
+  `app sort-sections` whenever the result differs from what is live — so calling it for the existing *Contacts*
+  group with no `after` would have moved Contacts to the end of the sidebar, behind the CRM group another
+  administrator had just added. A builder adding a worksheet to a group that already exists should look the group
+  up **by id** and re-sort nothing (`countries.step_create`, 18 Sep).
 - **A worksheet is hidden from the sidebar with `HomeApp/SetWorksheetStatus`** `{appId, worksheetId, status}` —
   status **1** shown · **2** hidden everywhere (全隐藏) · 3 hidden on PC · 4 hidden on mobile (pd-openweb
   `api/homeApp.js`). hap-cli has no command for it; call it through the session (`payterms.step_create`). The status
@@ -444,6 +450,13 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   other type from a node is `nodeId` + `fieldValueId`; from the fixed 系统 node (`5d39140d381d42d20db0c4da`,
   `nowTime` = current time) add `nodeTypeId` 100 and **`nodeAppType`** 100 — send `appType` and the server rewrites
   it, so a step comparing what it sent with what came back re-saves for ever.
+- **…and the server converts a text field to that template itself, whichever shape it was sent in.** Sent as
+  `nodeId` + `fieldValueId` — what `batch-add` leaves behind, and what a Relation in the same `fields` list keeps —
+  a **text** entry reads back with `nodeId` **emptied** and `fieldValue` holding `$<nodeId>-<fieldId>$`. It is the
+  same binding written the other way and the step works, but a step that compares what it sent with what came back
+  re-saves for ever unless it reads the node id out of the template (`contacts.node_fields.source_of`; Contacts'
+  *Copy the company address* shows five templates and one Relation side by side, 18 Sep). `fieldValueName` reading
+  `""` on an entry is still the sign of a **dead** field id, whichever shape the entry is in.
 - **A search step (flowNodeType 7, actionId 406) returns one record and can be sorted**: `sorts`
   `[{controlId, controlType, isAsc}]` on the node, a filter whose comparison value may be an **earlier formula
   node's** result (`conditionValues: [{nodeId, controlId: "string_fx_id"}]`), and `$<searchNodeId>-<controlId>$`
@@ -630,10 +643,19 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   `hap worksheet record delete <ws> --row-ids <rowid> -a <app> --trigger-workflow -y`. (Invoice Lines' delete
   roll-up looked broken for exactly this reason; the workflow was right all along.) The two record-delete tools
   are the only v3 schemas in the CLI carrying a boolean that defaults to `true`.
-- **`hap worksheet record list` returns only the default view's columns** — every other field comes back as an
-  empty string, hidden or not (Product Categories' Name came back empty from every row because the Categories view
-  shows Complete Name, Parent Category and # Products; Units looked like "hidden fields are blanked" for the same
-  reason). `record get` always returns everything.
+- **`hap worksheet record list` returns the default view's columns — and some of the rest, never all of it.**
+  A field the view does not show comes back as an empty string, hidden or not (Product Categories' Name came back
+  empty from every row because the Categories view shows Complete Name, Parent Category and # Products; Units
+  looked like "hidden fields are blanked" for the same reason). But the cut is by **control type**, not by the
+  view alone: with `--use-field-id-as-key`, a **Text or Number the view does not show has no key in the row at
+  all** — absent, not empty, which is how a reader can tell "not returned" from "no value" — while relations,
+  dropdowns, member fields, switches, lookups and formulas come back whether the view shows them or not. Countries'
+  view shows Country Name and Country Code, and the rows also carried Zip Required and State Required (switches)
+  while Country Calling Code (a Number) and Vat Label (a Text) were missing entirely; Contacts behaves the same
+  way (18 Sep). `record get` always returns everything. A reader over many records can therefore page the list and
+  fall back to a per-record read **only when a control it needs has no key in the first row**
+  (`countries.read_countries`) — 251 rows come back in one call at 0.15 s, against 1.2 s of process start for each
+  `record get`.
 - **The reverse half of a two-way Relation reads back from `record get` as a row count** — an integer, not the
   rows — exactly as a 子表 does; the forward half returns the usual `[{"sid": …, "name": …}]` (Goods' Child
   Categories is `4`).
@@ -695,6 +717,11 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   switch on** — share view, import, **export**, batch operation, record share, printing, logging, payment. So a
   fine-grained role silently gains the most permissive entry it has, and every new bundle has to bring its worksheet
   back to the owner's table (`roles.reconcile`, which now takes the role's matrix as well as its description).
+  **Including a worksheet that is not this build's**: another administrator's new worksheet joins the business roles
+  the same way, and nobody watching this repo will notice. So a roles builder must not insist that the app hold
+  exactly the worksheets it owns — it stops only when one of **its own** is missing, leaves every other sheet in
+  the role model exactly as it read it, and **prints** the ones it does not own so the gap is visible
+  (`roles.unowned`; ERP Master's CRM worksheets Stages and Lost Reasons, 18 Sep, still at 20/20/20 with export on).
 - **A role's sheet entry whose views are all unreadable is dropped on save, silently.** `AppManagement/EditAppRole`
   answers `1` and stores nothing — levels, `canAdd` and switches all read back unchanged — until
   `views[].canRead` / `canEdit` / `canRemove` are set true in the same post, which is what every sheet an existing
@@ -745,6 +772,12 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   re-sorts only after Refresh; a record that leaves the open view (Archive) closes itself.
 - An unsubmitted Create Record form is kept as a local draft and offered back ("Restored to the last interrupted
   content"); clear it before a clean test.
+
+- A Number's **`thousandth` reads the opposite way round from its name**: `"0"` — the platform default every
+  Number in this app carries — *draws* the thousands separator, and `"1"` hides it. Countries' Country Calling
+  Code showed *1,264* for Anguilla until it was set to `"1"`, and *1264* after. Nothing in the control's other
+  keys says so, and `worksheet fields` does not print `advancedSetting` at all, so read it back from the raw
+  control.
 
 ### Reading Odoo in the browser (18 Sep 2026)
 

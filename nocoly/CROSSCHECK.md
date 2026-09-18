@@ -292,3 +292,21 @@ Three behaviours could **not** be compared, and none of them is a gap in the bui
 (Odoo's refusal message is copied from its source; firing it on the tenant would mean writing there), the invoice
 **line account fill** (automation B, same reason), and the **role-by-role field hiding**, which needs a second
 Odoo user — casimir is the only one, and the groups it lacks are exactly what the top of this page describes.
+
+## 11 · Countries — `res.country`
+
+Checked 18 Sep 2026, the day it was built — the first worksheet compared against Odoo as part of its own UI test
+rather than afterwards. Odoo: *Contacts › Configuration › Localization › Countries*; the form of **Malaysia**.
+
+| | Odoo's screen | ERP Master |
+|---|---|---|
+| List | **Country Name · Country Code**, 251 rows, name order, and **no New button** — the list carries `create="0" delete="0"` | The same two columns and the same 251 countries (plus the build's `TEST Country`); New belongs to the app Administrator alone, which is how Roles says the same thing |
+| Order | Afghanistan … Zambia, Zimbabwe, **Åland Islands** — the tenant's collation sorts Å after Z | Afghanistan, **Åland Islands**, Albania … — the one row of 251 where the two disagree |
+| Form | Country Name · **Currency** · Country Code on the left; Country Calling Code · Vat Label · Zip Required · State Required on the right; the **flag**; *Advanced Address Formatting* (Input View · Layout in Reports · Customer Name Position), which shows here only because the tenant's user holds `base.group_no_one`; then the **States** list | Country Name \| Country Calling Code · Country Code \| Vat Label · Zip Required \| State Required, then the remark block naming every one of those |
+| Malaysia | *Malaysia · MYR · MY · 60 · no VAT label · ZIP required · state not required*, sixteen states from Johor | The same six values |
+| On a contact | Country is a dropdown, `no_open` and `no_create`, and setting it **clears a State** that belongs elsewhere | A dropdown that **does** open the country and **does** offer + Record; State is still Text, so nothing to clear until bundle 5 |
+
+**No surprises.** Everything of Odoo's that is missing is in *Not built now* — the currency, the flag, the three
+address-formatting fields, the country groups and the states. The four differences the UI test found are in §3 of
+the worksheet; the sharpest is that Odoo's picker cannot invent a country and HAP's can, which Roles rather than
+the field is what settles here.

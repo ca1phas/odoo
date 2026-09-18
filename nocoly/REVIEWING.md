@@ -56,6 +56,7 @@ record was seeded from the Odoo tenant.
 | 08 | Product Categories | `product.category` | **Bundle 1 of 6.** Built, seeded (7 categories, all 14 products categorised), UI-tested 17/18 + 1 caveat (test 8 re-run on 17 Sep); Products gained the Category it never had, between Cost and Internal Reference — ready for review | [md](worksheets/08-product-categories.md) · [page](https://claude.ai/artifact/5RbMmEJKXzV2Vf3QEdmz99) |
 | 09 | Chart of Accounts | `account.account` | **Bundle 2 of 6.** The worksheet with the tenant's 87 accounts, and every account field on Contacts, Products, Product Categories, Journals and Invoice Lines, seeded with the tenant's values and hidden by role as Odoo hides them. UI-tested 27/28 + 1 not run (the role check: no members) — ready for review | [md](worksheets/09-chart-of-accounts.md) · [page](https://claude.ai/artifact/5boffeaSTZzPnY7xsvjWtN) |
 | 10 | Payment Terms | `account.payment.term` (+ `account.payment.term.line`) | **Bundle 3 of 6.** The tenant's ten terms with their lines, as a worksheet and a *Due Terms* table; Invoices' **text stand-in replaced by the relation** (values carried, then the text field deleted), the Due Date computed from the term, the term taken from the customer or vendor; Contacts gained Customer and Vendor Payment Terms. UI-tested 21/22, 1 fails (the two roll-up rules, built and disabled) — ready for review | [md](worksheets/10-payment-terms.md) · [page](https://claude.ai/artifact/Vi6EAAxNgZ9nDiGya4qjh4) |
+| 11 | Countries | `res.country` | **Bundle 4 of 6.** Odoo's 251 countries with their ISO code, calling code, VAT label and the two address switches; Contacts' **Country text replaced by the relation** (8 contacts carried, then the text field deleted) and its column, quick filter, Kanban field and both address automations re-pointed. UI-tested 21 pass, 1 fixed during the test, 1 not run | [md](worksheets/11-countries.md) · [page](https://claude.ai/artifact/Cjkq8eoykwMX7L6mshQnUT) |
 
 ## Phase 1 · Roles
 
@@ -79,12 +80,12 @@ group it stands for is written in its description, checked against
 `addons/account/security/account_security.xml` in this checkout. **None of them has a member** — who belongs in
 which role is the owner's call, and the two people above stay app administrators as they were.
 
-| Role | Odoo group (and Odoo's own name for it) | Contacts | Units & Packagings | Products | Product Variants | Product Categories | Chart of Accounts | Payment Terms | Payment Term Lines | Journals | Invoices | Invoice Lines |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| Accounting Administrator | `account.group_account_manager` — *Administrator*, plus `base.group_allow_export` | full | full | full | full | full | full | full | full | full | full | full |
-| Accountant | `account.group_account_user` — *Show Full Accounting Features* | view · add · edit | view | view | view | view | view | view | view | view · add · edit | view · add · edit | view · add · edit |
-| Invoicing | `account.group_account_invoice` — *Invoicing* | view · add · edit | view | view | view | view | view | view | view | **view** | view · add · edit | view · add · edit |
-| Accounting Read-only | `account.group_account_readonly` — *Show Accounting Features - Readonly* | view | view | view | view | view | view | view | view | view | view | view |
+| Role | Odoo group (and Odoo's own name for it) | Contacts | Countries | Units & Packagings | Products | Product Variants | Product Categories | Chart of Accounts | Payment Terms | Payment Term Lines | Journals | Invoices | Invoice Lines |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Accounting Administrator | `account.group_account_manager` — *Administrator*, plus `base.group_allow_export` | full | view | full | full | full | full | full | full | full | full | full | full |
+| Accountant | `account.group_account_user` — *Show Full Accounting Features* | view · add · edit | view | view | view | view | view | view | view | view | view · add · edit | view · add · edit | view · add · edit |
+| Invoicing | `account.group_account_invoice` — *Invoicing* | view · add · edit | view | view | view | view | view | view | view | view | **view** | view · add · edit | view · add · edit |
+| Accounting Read-only | `account.group_account_readonly` — *Show Accounting Features - Readonly* | view | view | view | view | view | view | view | view | view | view | view | view |
 
 Read the three words as HAP stores them, per worksheet:
 
@@ -93,6 +94,8 @@ Read the three words as HAP stores them, per worksheet:
 | **full** | every record | every record | every record | yes | Accounting Administrator only |
 | **view · add · edit** | every record | every record | — | yes | — |
 | **view** | every record | — | — | no | — |
+
+**Countries is the one worksheet Accounting Administrator does not own (18 Sep 2026).** Odoo's own access list reads `res.country` to everyone and writes it from `base.group_system` alone — the settings administrator, which none of the four accounting groups stands for — and Odoo's Countries list ships with New and Delete switched off. So all four business roles have **view**, and only the app **Administrator** creates, edits or deletes a country (`DECISIONS.md`, 18 Sep). `res.country.state` is not the same: there `group_partner_manager` has all four rights, so the States bundle will not inherit this.
 
 **Chart of Accounts added the first per-field hiding (17 Sep 2026).** Odoo shows account fields only to some
 accounting groups, and a HAP role can hide a single field, so the roles now do the same: **Invoicing** does not see
