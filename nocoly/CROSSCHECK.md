@@ -310,3 +310,22 @@ rather than afterwards. Odoo: *Contacts › Configuration › Localization › C
 address-formatting fields, the country groups and the states. The four differences the UI test found are in §3 of
 the worksheet; the sharpest is that Odoo's picker cannot invent a country and HAP's can, which Roles rather than
 the field is what settles here.
+
+## 12 · States — `res.country.state`
+
+Checked 18 Sep 2026, the day it was built. Odoo: *Contacts › Configuration › Localization › **Fed. States***; the
+state picker on a contact, tested three ways over RPC.
+
+| | Odoo's screen | ERP Master |
+|---|---|---|
+| List | **State Name · State Code · Country**, 2 102 rows, 80 to a page, **editable in place** with a *New* button; ordered `code, id`, so it reads Aveiro (PT) 01, Архангай (MN) 01, Amazonas (PE) 01, Azuay (EC) 01, Beja (PT) 02 … | The same three columns and the same 2 102 states (plus three `TEST` ones), sorted State Code then **Country Name**, with a *Country* quick filter; a state is edited in its own record |
+| Form | One group: State Name · State Code · Country (`no_open`, `no_create`) | State Name \| State Code · Country \| **Display Name** — *Selangor (MY)*, Odoo's own `_compute_display_name`, read-only |
+| A country's states | The editable list at the foot of the country form, State Name · State Code | The **States** tab at the foot of a country, the same two columns, newest first |
+| The picker on a contact | **Every state in the world**, labelled *Selangor (MY)* — the partner form passes `default_country_id`, which `name_search` does not narrow on | The same: typing *Aceh* on a Malaysian contact offers **Aceh (ID)** |
+| Country and state in step | Two onchanges: a state sets the country, a country clears a state that belongs elsewhere | Workflows E and F, both proved — and a save that changes **both** does both things at once, which Odoo's form never does (§3, difference 3) |
+| One code per country | `unique(country_id, code)` — *"The code of the state must be unique by country!"* | **Nothing enforces it.** HAP's *No duplicates* is one field, and the hidden composite formula the build tried takes the switch but enforces it nowhere |
+| Access | `base.group_partner_manager` — a **contact manager** — creates, edits and deletes; every internal user reads | Each role's Contacts cell: Accountant and Invoicing add and edit, Read-only reads, Accounting Administrator deletes. Seen with role debugging: as *Invoicing*, States offers **+ Record** where **Countries does not** |
+
+**No surprises.** The four differences are the ones §3 records, and every one of them is HAP's shape rather than a
+misreading of Odoo: the tie-break at equal code, the composite constraint, both workflows firing in one save, and
+the relation list's newest-first order.

@@ -1,0 +1,126 @@
+<title>ERP Master States</title>
+<meta name="description" content="Review pack for worksheet 12 of the Odoo-to-Nocoly build, the fifth feature bundle: requirements, build ids and UI test results.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<link rel="stylesheet" href="review.css">
+
+<main class="page">
+
+  <header class="identity">
+    <div class="eyebrow"><span>ERP Master</span><span>Phase 1</span><span>Bundle 5 of 6</span></div>
+    <h1>States <span class="model">res.country.state</span></h1>
+    <p class="lede">The second half of an address. Odoo ships <strong>2,102 states in 74 of its 251 countries</strong> — Malaysia's sixteen among them — and a contact points at one. All 2,102 are here, <strong>Countries gained the list Odoo shows at the foot of its form</strong>, and Contacts' <strong>State text is replaced by the relation</strong>. With it come the two rules Odoo runs when the fields disagree: a state sets its country, and a country clears a state that belongs elsewhere.</p>
+    <dl class="meta">
+      <div><dt>Reference</dt><dd>casimir.odoo.com — Odoo saas~19.4+e</dd></div>
+      <div><dt>Records reconciled</dt><dd>per country, by digest — ten countries differed and were read from the tenant</dd></div>
+      <div><dt>Nocoly</dt><dd>App ERP Master · menu group Contacts, after Countries</dd></div>
+      <div><dt>Built and tested</dt><dd>18 September 2026</dd></div>
+    </dl>
+    <div class="scoreline">
+      <span class="chip pass">15 of 17 tests pass</span>
+      <span class="chip decide">1 fails</span>
+      <span class="chip note">1 not isolated · 2,102 states · 1 field deleted</span>
+    </div>
+  </header>
+
+  <aside class="callout decide" aria-labelledby="note-title">
+    <span class="chip decide small" style="justify-self:start">One thing needs your decision</span>
+    <h2 id="note-title">Nothing stops two states of one country sharing a code</h2>
+    <p>Odoo's constraint is a <em>pair</em> — <code>unique(country_id, code)</code>, <em>"The code of the state must be unique by country!"</em> — and HAP's <strong>No duplicates</strong> switch covers one field. Putting it on State Code would refuse Portugal's <em>01</em> because Mongolia already has one. The build tried the obvious trick: a hidden <strong>State key</strong> formula of <code>country code | state code</code> with the switch on. <strong>HAP accepts the switch on a formula and then enforces nothing</strong> — not through the API, and not in the form: a second Malaysian <em>ZZ-01</em> saved without a murmur. The field is built and inert, so the question is whether to keep it or drop it. A hidden field that promises a check it does not make is arguably worse than none.</p>
+  </aside>
+
+  <nav class="toc" aria-label="Sections">
+    <a href="#requirements"><span>1</span>Requirements</a>
+    <a href="#build"><span>2</span>Build</a>
+    <a href="#tests"><span>3</span>Tests and differences</a>
+  </nav>
+
+  <section id="requirements" aria-labelledby="req-title">
+    <div class="section-head"><span class="n">1</span><h2 class="section" id="req-title">Requirements</h2></div>
+
+    <div class="block">
+      <h3>The state</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th class="num">#</th><th>Field</th><th>Odoo field</th><th>Nocoly type</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td class="num">1</td><td class="label">State Name</td><td><code>name</code></td><td>Text · required</td><td>Odoo's help: "Administrative divisions of a country. E.g. Fed. State, Department, Canton"</td></tr>
+            <tr><td class="num">2</td><td class="label">State Code</td><td><code>code</code></td><td>Text · required</td><td><strong>Not</strong> no-duplicates: the same code belongs to many countries — 01 is Portugal's, Mongolia's, Peru's and Ecuador's at once</td></tr>
+            <tr><td class="num">3</td><td class="label">Country</td><td><code>country_id</code></td><td>Relation → Countries · required · two-way</td><td>Its reverse is the States list on a country</td></tr>
+            <tr><td class="num">4</td><td class="label">Display Name</td><td><code>display_name</code></td><td>Formula · <strong>title</strong></td><td><strong>"Selangor (MY)"</strong> — Odoo's own computation, read-only and hidden on create</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="prose">No Active field, so no Archive and no Unarchive — as with Countries and Product Categories.</p>
+    </div>
+
+    <div class="block">
+      <h3>What it changed elsewhere</h3>
+      <ul class="plain">
+        <li><strong>Countries</strong> gained <strong>States</strong>, the reverse relation, read-only, as a list at the foot of the country form with the same two columns Odoo shows there. Its remark block no longer says the states are still to come.</li>
+        <li><strong>Contacts</strong>: State became a relation (<code>state_id</code>) in the text field's place beside City, <strong>eight contacts carried</strong> — seven in Selangor, one in Sarawak — read back, and then the text control deleted. The two address automations were re-pointed at the relation first, in the four places that named it.</li>
+        <li><strong>The picker is not narrowed by the contact's country</strong>, because Odoo's is not: its partner form passes <code>default_country_id</code>, which <code>name_search</code> does not narrow on. Typing <em>Aceh</em> on a Malaysian contact offers <em>Aceh (ID)</em>, and picking it moves the contact to Indonesia.</li>
+      </ul>
+    </div>
+
+    <div class="block">
+      <h3>Roles — Odoo's answer, and it differs from Countries</h3>
+      <p class="prose">Odoo puts <code>res.country.state</code> behind <strong><code>base.group_partner_manager</code></strong> — a <em>contact manager</em> — with read, write, create and delete, where <code>res.country</code> needs a settings administrator; its own Fed. States list even carries a <strong>New</strong> button where the Countries list does not. So States takes each role's <strong>Contacts</strong> cell: Accounting Administrator full, <strong>Accountant and Invoicing add and edit</strong>, Accounting Read-only reads. Delete stays with Accounting Administrator, the standing rule. Seen on screen: as <em>Invoicing</em>, States offers <strong>+ Record</strong> and Countries does not.</p>
+    </div>
+  </section>
+
+  <section id="build" aria-labelledby="build-title">
+    <div class="section-head"><span class="n">2</span><h2 class="section" id="build-title">Build</h2></div>
+
+    <div class="block">
+      <h3>What exists now</h3>
+      <div class="table-wrap">
+        <table class="narrow">
+          <thead><tr><th>Thing</th><th>Id</th></tr></thead>
+          <tbody>
+            <tr><td class="label">Worksheet States</td><td class="id"><code>6aace374805aef7032869ec9</code></td></tr>
+            <tr><td class="label">State Name · State Code</td><td class="id"><code>…869eca</code> · <code>…74890</code></td></tr>
+            <tr><td class="label">Country · Display Name</td><td class="id"><code>…74891</code> · <code>…4eeac</code></td></tr>
+            <tr><td class="label">Country Code (lookup) · State key (inert)</td><td class="id"><code>…7489d</code> · <code>…134f4</code></td></tr>
+            <tr><td class="label">Countries → States reverse</td><td class="id"><code>6aace384bd43f55762c74892</code></td></tr>
+            <tr><td class="label">Contacts → State relation</td><td class="id"><code>6aace6c3e54d2a34fa4e530c</code></td></tr>
+            <tr><td class="label">Workflows E · F</td><td class="id"><code>…7e49a</code> · <code>…b77cc</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="prose">Built by <code>nocoly/build/states.py</code>; the 2,102 records went in in under five minutes and every one was read back. The data was reconciled with the tenant <strong>per country, by digest</strong> rather than copied through the browser: ten countries differed — six the Odoo checkout lacks entirely and four whose contents differ, Saudi Arabia 13 against the checkout's 93 — and after those were read out of the tenant, both sides agreed exactly: 2,102 states in 74 countries, Malaysia 16, every country's hash identical.</p>
+      <p class="prose">Two things the build learned: <strong>HAP has no "a Relation is not" operator</strong>, so E and F are built with the condition inverted — the conditioned path carries nothing and the write hangs off the else path; and <strong>two writes seconds apart race the workflow runs they start</strong>, which produced a false failure before the test, not the build, turned out to be wrong.</p>
+    </div>
+  </section>
+
+  <section id="tests" aria-labelledby="tests-title">
+    <div class="section-head"><span class="n">3</span><h2 class="section" id="tests-title">Tests and differences</h2></div>
+
+    <div class="block">
+      <h3>Seventeen checks in the browser</h3>
+      <p class="prose"><strong>Fifteen pass.</strong> The view, its three columns and the Country filter (Malaysia 18); Selangor field by field with its <em>Selangor (MY)</em> title; the create form with Odoo's help under each field; a country's States list; the relation on a contact; the picker offering <em>Aceh (ID)</em> to a Malaysian contact; and the address push carrying the state down to a company's people and not to its invoice and delivery addresses.</p>
+      <p class="prose"><strong>Workflow E was proved in the form</strong> — setting a contact's state to Aceh moved its country to Indonesia — and <strong>workflow F through the API</strong>: writing only the country cleared the foreign state. <strong>One test failed</strong>: the duplicate state code above. <strong>One could not be isolated</strong>: changing only the country <em>in the form</em>, where what the form sends decides which workflows match — the single run ended with E's write winning. It is worth a reviewer's minute.</p>
+    </div>
+
+    <div class="block">
+      <h3>Differences from Odoo</h3>
+      <ol class="differences">
+        <li><span class="n">1</span><div class="head"><strong>Nothing enforces one code per country</strong><span class="chip decide small">Open</span></div><p>Odoo's constraint is a pair; HAP's switch is one field, and on a composite formula it is accepted and inert. See the note at the top.</p></li>
+        <li><span class="n">2</span><div class="head"><strong>A save that changes both fields does both things</strong><span class="chip note small">HAP behaviour</span></div><p>Odoo's onchanges fire one at a time, so you never get both. Here the country is written from the state <em>and</em> the state is cleared, and the contact ends in the state's country with no state.</p></li>
+        <li><span class="n">3</span><div class="head"><strong>The tie at equal code</strong><span class="chip note small">Sorting</span></div><p>Odoo orders <code>code, id</code> — creation order within a code; ours breaks the tie on Country Name.</p></li>
+        <li><span class="n">4</span><div class="head"><strong>A country's States list is newest first</strong><span class="chip note small">HAP behaviour</span></div><p>Odoo's list at the foot of a country is in code order.</p></li>
+        <li><span class="n">5</span><div class="head"><strong>No editable list, no New button on a country</strong><span class="chip note small">Scope</span></div><p>Odoo lets you type a state straight into the list at the foot of the country form; here a state is a record of its own.</p></li>
+      </ol>
+    </div>
+
+    <div class="block">
+      <h3>Test records left for you</h3>
+      <p class="prose">On States: <strong>TEST State One</strong> (ZZ-01), <strong>TEST State Two</strong> (ZZ-02) and <strong>TEST State Duplicate</strong> (ZZ-01 again) — the three that prove the duplicate-code difference, and the reason Malaysia reads 19 instead of 16. On Contacts: <strong>TEST State Contact</strong>. All go after sign-off, with your approval; the 2,102 states stay.</p>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <p>Bundle 5 of 6 · <code>nocoly/worksheets/12-states.md</code> · reference <code>nocoly/reference/odoo-19.4/res.country.state.md</code> · build <code>nocoly/build/states.py</code>. Next, and last of the six, is <strong>Taxes</strong> — which needs Countries, comes back to Chart of Accounts for each account's Default Taxes, and makes an invoice's Tax a real figure instead of a seeded one.</p>
+  </footer>
+</main>

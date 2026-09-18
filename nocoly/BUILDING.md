@@ -102,6 +102,11 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   controlId**, with `sourceControlId` = the forward control, `sourceControlType` **6** and `enumDefault` 2: the same
   handshake `mount-subtable` performs for a 子表's back-relation. It pairs properly — the forward write shows up in
   the reverse list and a 汇总 over it counts (Products' Category ↔ Product Categories' Products).
+  **…and the same is true of a two-way Relation created in the *first full save* of an empty worksheet.**
+  `update-fields` on a brand-new worksheet is not the exception it might look like: States' Country, saved that
+  way, came back with the reverse id reserved in `sourceControlId` and **no control on Countries** (18 Sep). The
+  rule is about the relation's *target* being another worksheet, not about which call created it — only a
+  **self**-relation's reverse is made by the server.
 - A **one-way Relation** to another worksheet: add it with `add-fields`, without a controlId, and
   `advancedSetting.bidirectional` "0". The target worksheet gets no reverse field.
 - A **汇总 (roll-up, control type 37)** has a hap-cli builder:
@@ -169,6 +174,14 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   tabs). Note that `common.fields` returns them, since it only filters out type 52.
 - A field's **No duplicates** (`unique`) holds on API writes too: the write is refused with `resultCode 11` naming the
   field. Empty values are never compared.
+- **…but on a *function formula* (type 53) the switch is stored and never applied.** `SaveWorksheetControls`
+  accepts `unique` on a type 53 and it reads back `True`, and nothing is ever refused: two Malaysian states
+  built to compute the same hidden key `MY|ZZ-01` were both **created** (`resultCode` 1), and moving one
+  state's code onto the other's by `record update` was accepted as well — where the identical update on a
+  **Text** field carrying the switch is refused with `resultCode 11` (Countries' Country Code, bundle 4). So a
+  composite key cannot be enforced by computing it into one formula field: Odoo's `unique(country_id, code)` on
+  `res.country.state` has no API-side equivalent here (States' *State key*, 12 §2). Whether the **form** draws
+  it while a record is being edited, as it draws a text field's, is a browser question and is not answered.
 - A text field's **maximum length does not**. `advancedSetting` `checkrange` "1" with `min` / `max` is a form-side
   check: `record create` and `record update` store a longer value without complaint (a 6-character value on Journals'
   Sequence Prefix, limited to 5). No filter operator measures length either, so a validation rule cannot stand in —
@@ -307,6 +320,12 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   {"allowitem": "2", "direction": "2"}} ]}' --edit-attrs fastFilters`. `allowitem` is "1" single · "2" any of;
   `direction` "2" a dropdown · "1" tiles. Sending only `fastFilters` leaves the view's filter, sort and columns
   alone (Products' Category quick filter, added beside the four that were already there).
+- **…and `--view-spec quickFilters` given a bare control id stores it with an empty `advancedSetting`** —
+  Contacts' three and Countries' were all written that way — so a step that then rewrites the settings with
+  `--edit-attrs fastFilters` rewrites them on **every** run, because the next `--view-spec` save wipes them
+  again. Name the filter as the spec adapter's own object instead: `{fieldId, selectionType: "single" |
+  "multiple", displayType: "dropdown" | "tile"}` lowers to `allowitem` and `direction` in the same save, and the
+  step is idempotent (States' Country quick filter, 18 Sep).
 - **Deleting a field leaves every view sorting on its id.** `sortCid` and `moreSort` keep the dead control id and
   nothing cleans them up (Journals' two views still pointed at a Sequence field removed on 15 Sep). Re-write the sort
   after a field goes. **A quick filter keeps it too** — Products' List still listed the deleted Favorite fourth among
@@ -600,6 +619,12 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   `causeMsg` **"未通过分支"** (Chart of Accounts' automation on an emptied Type).
 - **A branch converges**, so an empty path is not a stop: both paths run into the gateway's `nextId` and carry on
   to whatever follows the branch. To stop a run before a later step, a path must end in an **abort node**.
+- **A branch path with no condition is the default/else path** (hap-cli `_build_branch`), and that is how a
+  comparison HAP has no operator for is written: put the condition it *does* have on a path with no steps and
+  hang the work off the unconditioned one. A Relation compared with **another node's** Relation is `conditionId`
+  **33**, the filter's *is*, and hap-cli's operator table has no opposite for it — so "the state's Country is
+  **not** the contact's Country" is built as a path conditioned on *is*, carrying nothing, beside an else path
+  carrying the write (Contacts' workflows E and F, 12 §2; proved at runtime in both directions).
 - **Node type 30 is 中止流程, the abort**, and it is the only way to stop a workflow from inside. It must be last
   in its chain — inserting one in front of an existing node is refused outright with
   `中止节点后面不允许有节点` — and it carries a **name and a description and nothing else**: no message, nothing
@@ -633,6 +658,22 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
 
 ### Records
 
+- **`hap worksheet record batch-create` is one `AddWorksheetRow` per row *and* one `GetWorksheetControls` per
+  row.** Its own help says 每行一次调用, and `hap_cli.core.record.batch_create_rows` calls
+  `encode_controls_by_id` per row, which re-reads the worksheet's fields each time — 4 204 HTTP calls to seed
+  2 102 states — while `--rows-json` for that many rows is far past the kernel's 128 KiB limit for one
+  argument. There is no bulk endpoint behind it, so the saving to be had is the control read: fetch the
+  controls once, encode each row with the CLI's own `record._legacy_cell_entry` (so a Relation still becomes
+  `[{"sid": …}]` and nothing is sent raw) and call `record.create_record` through the session. **2 102 records
+  in 291 seconds**, about seven a second, against 251 countries in five minutes one process at a time
+  (`states.batch`, 18 Sep).
+- **Two writes a few seconds apart on one record race the workflow runs they start, and the later run wins.** A
+  worksheet-event workflow registers about five seconds after the write, so a script that writes, reads the
+  value it expects and writes again is racing a run still in flight: the first `states.py selfcheck` set a
+  State, then a Country one second later, and the State's workflow evaluated its condition **four seconds
+  after** that and wrote the Country back over it — both workflows correct, the test wrong. Wait for the record
+  to stop changing before the next write (`states.quiesce`: poll until the value has not moved for ten
+  seconds), not just for the value you expect.
 - `hap worksheet record delete` needs the rowId UUID; given `_id` it reports success and deletes nothing.
 - **`hap worksheet record delete` suppresses workflows unless `--trigger-workflow` is passed**, and **prompts
   unless `-y` is passed** (so it hangs when a script runs it). It is a v3 open-API command; `triggerWorkflow`

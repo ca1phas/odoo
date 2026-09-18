@@ -18,7 +18,8 @@
   "Chart of Accounts": "6aaa92ae805aef70328667da",
   "Payment Terms": "6aab893fe43d174ab374ce17",
   "Payment Term Lines": "6aab89417d58b0f449311705",
-  "Countries": "6aacb572805aef7032869637"
+  "Countries": "6aacb572805aef7032869637",
+  "States": "6aace374805aef7032869ec9"
  },
  "workflows": {
   "Archive": "6aa8a565e589b8933dd4cc6d",
@@ -50,7 +51,9 @@
   "Payment Terms: Unarchive": "6aab8a554f2a99acac142214",
   "Invoices: Due Date follows the Payment Terms": "6aab8d164f2a99acac144995",
   "Invoices: Payment Terms follow the Customer / Vendor": "6aab8f1016473257ad5c91e0",
-  "Invoices: Due Date of a new invoice with no Customer / Vendor": "6aab9e0d87707da9d61d3b82"
+  "Invoices: Due Date of a new invoice with no Customer / Vendor": "6aab9e0d87707da9d61d3b82",
+  "Contacts: the Country follows the State": "6aace7dfa1c923a16e17e49a",
+  "Contacts: a State that belongs elsewhere is cleared": "6aace7ec16473257ad6b77cc"
  },
  "buttons": {
   "Archive": "6aa8a5654720c515252bda3d",
@@ -91,7 +94,8 @@
   "Payment Terms: Payment Terms": "6aab893fe43d174ab374ce1b",
   "Payment Terms: Archived": "6aab8a7ce43d174ab374ce6e",
   "Payment Term Lines: Lines": "6aab89417d58b0f449311709",
-  "Countries: Countries": "6aacb572805aef703286963b"
+  "Countries: Countries": "6aacb572805aef703286963b",
+  "States: States": "6aace374805aef7032869ecd"
  },
  "controls": {
   "Journals: Journal Name": "6aa8f6c81204328eb1af1676",
@@ -220,7 +224,15 @@
   "Countries: Zip Required": "6aacb5ba7d58b0f449312e3f",
   "Countries: State Required": "6aacb5ba7d58b0f449312e40",
   "Countries: Country form note": "6aacb5ba7d58b0f449312e41",
-  "Contacts: Country": "6aacb7e2e54d2a34fa4e42a4"
+  "Contacts: Country": "6aacb7e2e54d2a34fa4e42a4",
+  "States: State Name": "6aace374805aef7032869eca",
+  "States: State Code": "6aace384bd43f55762c74890",
+  "States: Country": "6aace384bd43f55762c74891",
+  "States: Display Name": "6aace39fe43d174ab374eeac",
+  "States: Country Code": "6aace392bd43f55762c7489d",
+  "Countries: States": "6aace384bd43f55762c74892",
+  "States: State key": "6aace4a47d58b0f4493134f4",
+  "Contacts: State": "6aace6c3e54d2a34fa4e530c"
  },
  "rules": {
   "Journals: Payment Communications only for Sales": "6aa9dae5e54d2a34fa4dfde2",
@@ -692,7 +704,26 @@
   "Countries: YE": "c57b2ee3-5679-46e2-b12c-b6b74e28140e",
   "Countries: ZM": "320250db-ce9e-4b30-a71b-fab772265533",
   "Countries: ZW": "1b5ed112-9e76-4675-8420-73c66df92fbf",
-  "Countries: TEST Country": "5eff075a-a151-40fa-a4a5-f51e22a4fa20"
+  "Countries: TEST Country": "5eff075a-a151-40fa-a4a5-f51e22a4fa20",
+  "States: TEST State One": "2a633178-e2a1-48d9-9546-90a3bfc6b0a5",
+  "States: TEST State Two": "141e4f6a-2b8a-46ba-88a9-bac49488096c",
+  "States: MY|MY-01": "52db8ada-0e2a-49ef-b556-6b1a8012869e",
+  "States: MY|MY-02": "eaf192f6-12f3-47a7-83be-086978f112d3",
+  "States: MY|MY-03": "f8be9702-4f97-4049-8d1c-2601e9e6302c",
+  "States: MY|MY-04": "8db9e39a-10c2-471d-b59d-6bacf72793bf",
+  "States: MY|MY-05": "b564e55e-24fa-4e24-a289-54eba9bfe25b",
+  "States: MY|MY-06": "9cc67c87-ae8d-4182-abb3-fd470a0ff381",
+  "States: MY|MY-07": "1ae88c6c-6384-4d8f-92f7-4c594d45a675",
+  "States: MY|MY-08": "c2c991d7-f5f9-4554-a6ce-bd7654cc47d2",
+  "States: MY|MY-09": "86fe0bbf-aa5e-4222-ab9c-088eb4c60405",
+  "States: MY|MY-10": "9dcd5774-c1f2-47a0-b700-33534609d64c",
+  "States: MY|MY-11": "30a36d24-7de4-4b0b-9691-e7b725f19d4b",
+  "States: MY|MY-12": "8297e1e3-05e0-4cab-a173-4fdfa374dc74",
+  "States: MY|MY-13": "b9d10edf-f94d-4779-8f96-26489a904000",
+  "States: MY|MY-14": "4fed2d91-b97d-46f9-9af7-cc5f2ddb6f5f",
+  "States: MY|MY-15": "85856b27-4aaa-4a9e-9b7b-2f8eae74d6d9",
+  "States: MY|MY-16": "0b3d73a8-b990-4ceb-a714-d881e0f492eb",
+  "Contacts: TEST State Contact": "b64b011f-2294-490f-af46-16fa014b335a"
  },
  "roles": {
   "Administrator": "25ef76ef-5538-4779-a5e6-ab1fbce9dcfe",

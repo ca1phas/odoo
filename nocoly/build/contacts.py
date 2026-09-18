@@ -23,8 +23,16 @@ value had been carried across and read back (`11-countries.md`). `countries.py` 
 relation; everything here that names Country resolves it **by name**, so `layout` keeps it in its old cell
 (row 9, right half), `views` points the Country column, the Country quick filter and the Kanban card field at
 it, and `automations` copies it between a company and its contacts as one of the six address fields. What
-changed in this file is `ADDRESS_TEXT` — the five address fields that are still Text — and `address_nodes`,
+changed in this file is `ADDRESS_TEXT` — the address fields that are still Text — and `address_nodes`,
 which re-points the two address-sync workflows the way `term_nodes` re-points bundle 3's.
+
+**States (bundle 5, 18 Sep 2026).** The same again for State (`6aa8a452f363582dd37a50e5`): a one-way relation
+to the States worksheet in the text control's cell — row 8, right half, beside City — and the text control
+deleted once the eight contacts that had one had been carried across and read back (`12-states.md`,
+`states.py`). `ADDRESS_TEXT` is now the **four** address fields still built here as Text; `HINTS` lost its
+`State` entry as it lost `Country`, and `arrange` never writes a hint on a Relation. No view of Contacts ever
+named State, so `views` had nothing to re-point. `states.py` also adds workflows **E** and **F**, which keep a
+contact's Country and State in step (Odoo's two address onchanges) — they are not built here.
 """
 import json, subprocess, sys, uuid
 
@@ -40,10 +48,10 @@ MALAYSIA = json.dumps({'name': 'Malaysia', 'iso2': 'my', 'dialCode': '60'})
 # six, and every one of them is looked up by name — so Country here is the **relation to Countries** that
 # bundle 4 put in the text control's place (11-countries.md, countries.py).
 ADDRESS = ['Street', 'Street 2', 'City', 'State', 'ZIP', 'Country']
-# …and these five are the ones still built here as Text. Country is not: countries.py adds it as a Relation,
-# with no hint — HINTS therefore no longer carries one for it, and `arrange` never writes a hint on a Relation.
-ADDRESS_TEXT = [('Street', 'street'), ('Street 2', 'street2'), ('City', 'city'), ('State', 'state'),
-                ('ZIP', 'zip')]
+# …and these four are the ones still built here as Text. Country and State are not: countries.py and states.py
+# add them as Relations, with no hint — HINTS therefore no longer carries one for either, and `arrange` never
+# writes a hint on a Relation.
+ADDRESS_TEXT = [('Street', 'street'), ('Street 2', 'street2'), ('City', 'city'), ('ZIP', 'zip')]
 
 # Odoo saas~19.4 view_partner_form on HAP's 12-column grid: name -> (row, col, size, tab)
 PLACE = {
@@ -56,7 +64,8 @@ PLACE = {
     'Address': (6, 0, 12, None),
     'Street': (7, 0, 6, None), 'Street 2': (7, 1, 6, None),
     'City': (8, 0, 6, None), 'State': (8, 1, 6, None),
-    # Country is a Relation → Countries since bundle 4; it keeps the cell the text control had (11 §1)
+    # State is a Relation → States since bundle 5 and Country a Relation → Countries since bundle 4; each keeps
+    # the cell its text control had (12 §1, 11 §1)
     'ZIP': (9, 0, 6, None), 'Country': (9, 1, 6, None),
     'Image': (10, 0, 12, None),
     'Contacts': (12, 0, 12, 'Contacts'),
@@ -81,7 +90,7 @@ TABS = {'Contacts': 11, 'Sales & Purchase': 13, 'Invoicing': 19, 'Notes': 21}
 HINTS = {'Name': 'Name (company or person)', 'Company': 'Company Employer', 'Email': 'Email', 'Phone': 'Phone',
          'Job Position': 'e.g. Sales Director', 'Website': 'e.g. https://www.odoo.com', 'Tax ID': 'Tax ID',
          'Company ID': 'Company ID', 'DUNS': 'DUNS', 'Street': 'Street...', 'Street 2': 'Street 2...',
-         'City': 'City', 'State': 'State', 'ZIP': 'ZIP', 'Image': 'Upload an image',
+         'City': 'City', 'ZIP': 'ZIP', 'Image': 'Upload an image',
          'Salesperson': 'Salesperson', 'Reference': 'Reference', 'Notes': 'Internal notes...'}
 OBSOLETE_RULES = ['Company is hidden on companies', 'Job Position only for persons',
                   'Company ID only on stand-alone companies']       # 19.0 rules; 19.4 has no Person/Company switch
@@ -137,7 +146,7 @@ def step_fields():
          ctl('TEXT', 'Company ID', alias='company_registry'),       # 19.4: additional identifier "Company ID"
          ctl('TEXT', 'DUNS', alias='duns'),                         # 19.4: additional identifier "DUNS"
          ctl('SPLIT_LINE', 'Address'),
-         *[ctl('TEXT', n, alias=a) for n, a in ADDRESS_TEXT],      # Country is countries.py's Relation
+         *[ctl('TEXT', n, alias=a) for n, a in ADDRESS_TEXT],      # State and Country are Relations (bundles 5 and 4)
          image,
          ctl('SECTION', 'Contacts'), ctl('SECTION', 'Sales & Purchase'), ctl('SECTION', 'Notes'),
          ctl('SPLIT_LINE', 'Sales'), ctl('USER_PICKER', 'Salesperson', alias='user_id'),

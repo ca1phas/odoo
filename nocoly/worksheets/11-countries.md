@@ -35,7 +35,7 @@ Product Categories with none. The pair of buttons and the *Archived* view are de
 
 **No reverse field on Contacts' side.** Odoo's country form does not list the partners in that country, so the
 relation is **one-way**, as Products' Unit is. What the form does show is the country's **States**, which is
-bundle 5's reverse relation, not this one's.
+bundle 5's reverse relation, not this one's — built on 18 Sep 2026 (`worksheets/12-states.md`).
 
 ### Form layout
 
@@ -48,7 +48,7 @@ the top of the record, so Country Name appears twice there, as Complete Name doe
 | Group *country_details*: Country Name · Currency · Country Code | Country Name \| Country Calling Code |
 | Group *phone_vat_settings*: Country Calling Code · Vat Label · Zip Required · State Required | Country Code \| Vat Label |
 | Group *Advanced Address Formatting* (`groups="base.group_no_one"`): Input View · Layout in Reports · Customer Name Position | — (*Not built now*) |
-| Label *States* and the editable `state_ids` list: State Name · State Code | — (bundle 5) |
+| Label *States* and the editable `state_ids` list: State Name · State Code | **States**, a read-only list at the foot of the form, same two columns (bundle 5) |
 
 | Row | Left (6) | Right (6) |
 |---|---|---|
@@ -56,11 +56,14 @@ the top of the record, so Country Name appears twice there, as Complete Name doe
 | 2 | **Country Code** | Vat Label |
 | 3 | Zip Required | State Required |
 | 4 | **Remark block** *Also on Odoo's country form* (full width, 12) | |
+| — | **States**, the reverse list — a `showtype` "2" Relation renders as a tab at the foot of the record, not in the grid (bundle 5) | |
 
 Odoo's two columns become paired rows in a 12-column grid, as they do on Products. The remark block (type 10010,
 the pattern 05 set) names what Odoo shows and this worksheet does not: **Currency**, the **flag**, the three
-**Advanced Address Formatting** fields — which Odoo shows only in developer mode — the **Country Groups**, and the
-**States**, which arrive with bundle 5.
+**Advanced Address Formatting** fields — which Odoo shows only in developer mode — and the **Country Groups**. Its
+last line was rewritten by bundle 5 once the States arrived: it now reads "The **States** Odoo lists at the foot of
+the form are here, at the foot of this one; the currency, the flag and the address layout are not in Phase 1."
+`countries.py` carries the new text, so a re-run does not put the old line back.
 
 ### Rules
 
@@ -94,7 +97,7 @@ None. Nothing here is computed.
 | Deleted | The **Country text control** `6aa8a452f363582dd37a50e7`, once the values are carried and read back (`DECISIONS.md`, 17 Sep) |
 | Views | The **Country column** on the *Contacts* and *Archived* tables, the **Country quick filter** on *Contacts*, and the **country field on the Kanban card** are all re-pointed at the relation |
 | *Not built now* | 01's row "State and Country as dropdowns — Geography bundle" becomes a line pointing here for Country; **State stays Text** until bundle 5 |
-| Not built | Odoo's `country_code` (related `country_id.code`), and the onchange that **clears the State when the Country changes** — it needs States, so it belongs to bundle 5 |
+| Not built here | Odoo's `country_code` (related `country_id.code`), and the onchange that **clears the State when the Country changes** — both needed States and both arrived with bundle 5: the onchange as workflow **F** on Contacts, and `country_code` as the hidden stored lookup **Country Code** on States (`worksheets/12-states.md`) |
 
 ### Roles
 
@@ -114,7 +117,7 @@ Odoo's own access list; the owner can overturn it. `REVIEWING.md` › *Phase 1 �
 |---|---|
 | Currency (`currency_id`) | `res.currency` is not among the six bundles, and multi-currency is not in Phase 1 |
 | Flag (`image_url`) | A computed URL to a static image **on the Odoo server** — it would either point at a tenant that is about to disappear or mean 251 uploads. Named in the remark block |
-| States (`state_ids`) | **Bundle 5**, which adds the reverse relation and Odoo's *State Required* behaviour with it |
+| ~~States (`state_ids`)~~ | **Built on 18 Sep 2026 by the States bundle** (`worksheets/12-states.md`): the reverse half of the two-way Country relation on States, `6aace384bd43f55762c74892`, read-only, shown as a list at the foot of the country form with Odoo's own two columns State Name · State Code — Malaysia reads 18, Great Britain 119, Singapore 0. Odoo's *State Required* behaviour is **still not built**: the checkbox is stored on every country and nothing reads it |
 | Country Groups (`country_group_ids`, `res.country.group`) | Not among the six; on the tenant they feed tax and pricelist scoping, neither of which is built |
 | Input View (`address_view_id`), Layout in Reports (`address_format`), Customer Name Position (`name_position`) | Odoo hides all three behind `base.group_no_one`, developer mode. The address is six plain fields here and no report prints it yet. `_check_address_format` goes with them |
 | The code forced **upper-case** on save | Odoo's `create` and `write` do it in Python. A HAP rule compares values, it cannot transform one; only a workflow could, and a workflow for a list that is seeded once and rarely touched is not worth its weight. The seed is upper-case throughout |

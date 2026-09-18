@@ -14,7 +14,10 @@ Two things:
      gives write, create and delete on both models to account.group_account_manager alone. The Countries bundle
      added Countries as the first worksheet **no** business role may write: Odoo's `ir.model.access.csv` reads
      res.country to everyone and writes it from `base.group_system` alone, which none of the four stands for
-     (11-countries.md §1 › Roles), so only the app Administrator creates, edits or deletes a country.
+     (11-countries.md §1 › Roles), so only the app Administrator creates, edits or deletes a country. The States
+     bundle added **States**, and it does **not** follow Countries: `ir.model.access.csv` writes
+     res.country.state from `base.group_partner_manager` — a contact manager — so every role gets the same cell
+     on States that it already has on **Contacts** (owner, 18 Sep 2026; 12-states.md §1 › Roles).
 
 Run from the repo root with the CLI's interpreter:
 
@@ -64,11 +67,15 @@ STOCK = [  # (English name, the Chinese name HAP ships, roleType)
 
 FULL, EDIT, VIEW = 'full', 'view · add · edit', 'view'
 
-ORDER = ['Contacts', 'Countries', 'Units & Packagings', 'Products', 'Product Variants', 'Product Categories',
-         'Chart of Accounts', 'Journals', 'Payment Terms', 'Payment Term Lines', 'Invoices', 'Invoice Lines']
+ORDER = ['Contacts', 'Countries', 'States', 'Units & Packagings', 'Products', 'Product Variants',
+         'Product Categories', 'Chart of Accounts', 'Journals', 'Payment Terms', 'Payment Term Lines',
+         'Invoices', 'Invoice Lines']
 
 # Worksheets no business role may write, whatever its accounting level: Odoo keeps them behind a group none of
-# the four stands for. Countries is the first (base.group_system writes res.country; everybody else reads it).
+# the four stands for. Countries is the first and, so far, the only one (base.group_system writes res.country;
+# everybody else reads it). **States is deliberately not here**: Odoo writes res.country.state from
+# base.group_partner_manager, a contact manager, so each role has the same cell on States that it has on
+# Contacts (owner, 18 Sep 2026; 12-states.md §1 › Roles).
 VIEW_ONLY = {'Countries'}
 
 ROLES = {
@@ -83,7 +90,7 @@ ROLES = {
     'Accountant': (
         'Odoo group account.group_account_user — "Show Full Accounting Features". The accountant: can do '
         'everything except advanced configuration.',
-        {'Contacts': EDIT, 'Countries': VIEW, 'Units & Packagings': VIEW, 'Products': VIEW,
+        {'Contacts': EDIT, 'Countries': VIEW, 'States': EDIT, 'Units & Packagings': VIEW, 'Products': VIEW,
          'Product Variants': VIEW,
          'Product Categories': VIEW, 'Chart of Accounts': VIEW, 'Journals': EDIT, 'Payment Terms': VIEW,
          'Payment Term Lines': VIEW, 'Invoices': EDIT, 'Invoice Lines': EDIT},
@@ -91,7 +98,7 @@ ROLES = {
     'Invoicing': (
         'Odoo group account.group_account_invoice — "Invoicing". Invoices, payments and basic invoice '
         'reporting; cannot see accounting configuration, so Journals is read-only.',
-        {'Contacts': EDIT, 'Countries': VIEW, 'Units & Packagings': VIEW, 'Products': VIEW,
+        {'Contacts': EDIT, 'Countries': VIEW, 'States': EDIT, 'Units & Packagings': VIEW, 'Products': VIEW,
          'Product Variants': VIEW,
          'Product Categories': VIEW, 'Chart of Accounts': VIEW, 'Journals': VIEW, 'Payment Terms': VIEW,
          'Payment Term Lines': VIEW, 'Invoices': EDIT, 'Invoice Lines': EDIT},

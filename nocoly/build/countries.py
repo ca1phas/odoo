@@ -4,7 +4,13 @@
 Bundle 4 of the six that join Phase 1. It adds the worksheet to the **Contacts** menu group, seeds all 251
 countries, and then **replaces Contacts' Country text with a relation**: create it beside the stand-in, carry
 every contact's value across, read it back, re-point the three views that show Country, and only then delete
-the text control (owner-approved, `DECISIONS.md` 17 Sep 2026). State stays Text until bundle 5.
+the text control (owner-approved, `DECISIONS.md` 17 Sep 2026). State stayed Text until bundle 5.
+
+**States (bundle 5, 18 Sep 2026).** `states.py reverse` added the reverse control **States** to this worksheet
+— the other half of the two-way Country relation on States — and rewrote the last line of the remark block.
+Neither is owned here: `BUNDLE_5` below only keeps `guard` and `check` from calling the control unknown, and
+`HTML` carries the new text so a re-run does not put the old line back (12-states.md).
+
 Requirements: nocoly/worksheets/11-countries.md. Generic helpers: common.py. Run from the repo root with the
 CLI's interpreter:
 
@@ -73,8 +79,14 @@ CON_KEY = 'Contacts: '
 ALIAS = 'res_country'
 HERE = Path(__file__).resolve().parent
 DATA = HERE.parent / 'data' / 'casimir-countries.json'
-OTHERS = ('Contacts', 'Units & Packagings', 'Products', 'Product Variants', 'Product Categories',
+OTHERS = ('Contacts', 'States', 'Units & Packagings', 'Products', 'Product Variants', 'Product Categories',
           'Chart of Accounts', 'Journals', 'Payment Terms', 'Payment Term Lines', 'Invoices', 'Invoice Lines')
+# Controls on this worksheet that a **later** bundle owns. States (`state_ids`) is the reverse half of the
+# two-way Country relation on the States worksheet, saved there by `states.py reverse` (12 §1 › On Countries);
+# it is read-only here, shown as a list at the foot of the form, and nothing in this file places or checks it —
+# `guard` and `check` only have to stop calling it unknown. The remark block's last line was rewritten by the
+# same step and HTML below carries the new text.
+BUNDLE_5 = ('States',)
 
 # Contacts' text Country — the one approved deletion of this bundle (DECISIONS.md, 17 Sep 2026)
 TEXT_STANDIN = '6aa8a452f363582dd37a50e7'
@@ -143,8 +155,8 @@ HTML = {
                '<strong>flag</strong>, and — only in developer mode — the three <strong>Advanced Address '
                'Formatting</strong> fields: Input View, Layout in Reports and Customer Name Position. Odoo also '
                'keeps <strong>Country Groups</strong> on the model, on no view of the country.</p>'
-               '<p>The <strong>States</strong> Odoo lists at the foot of the form arrive with the States '
-               'bundle; the currency, the flag and the address layout are not in Phase 1.</p>',
+               '<p>The <strong>States</strong> Odoo lists at the foot of the form are here, at the foot of '
+               'this one; the currency, the flag and the address layout are not in Phase 1.</p>',
 }
 ADVANCED = {  # the advancedSetting keys this script owns
     # A form-side check, as 05's Sequence Prefix is: `record create` and `record update` store a longer value
@@ -314,7 +326,7 @@ def guard(fresh=False):
         sys.exit(f"profile {who.get('profile')!r} does not reach ERP Master › {SECTION} › {WORKSHEET}")
     problems, ctrls = [], hap.controls(worksheet)
     stock = {'Name', 'Description', 'Attachment', '名称', '描述', '附件'}
-    known = set(PLACE) | (stock if fresh else set())
+    known = set(PLACE) | set(BUNDLE_5) | (stock if fresh else set())
     problems += [f"unknown control {c['controlName']!r} ({c['controlId']})" for c in ctrls
                  if c['controlName'] not in known]
     if len(hap.by_name(ctrls)) != len(ctrls):
@@ -1026,8 +1038,8 @@ def step_check():
     f = hap.by_name(ctrls)
     names = {c['controlId']: c['controlName'] for c in ctrls}
     problems = []
-    if set(f) != set(PLACE):
-        problems.append(f'controls {sorted(set(f) ^ set(PLACE))}')
+    if set(f) != set(PLACE) | set(BUNDLE_5):
+        problems.append(f'controls {sorted(set(f) ^ (set(PLACE) | set(BUNDLE_5)))}')
     problems += [f'{n}: {d}' for n, d in layout_differences(ctrls).items()]
     if f.get(NAME, {}).get('attribute') != 1:
         problems.append('the title field is '

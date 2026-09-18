@@ -57,6 +57,7 @@ record was seeded from the Odoo tenant.
 | 09 | Chart of Accounts | `account.account` | **Bundle 2 of 6.** The worksheet with the tenant's 87 accounts, and every account field on Contacts, Products, Product Categories, Journals and Invoice Lines, seeded with the tenant's values and hidden by role as Odoo hides them. UI-tested 28/28 — the role check was run on 18 Sep with role debugging — ready for review | [md](worksheets/09-chart-of-accounts.md) · [page](https://claude.ai/artifact/5boffeaSTZzPnY7xsvjWtN) |
 | 10 | Payment Terms | `account.payment.term` (+ `account.payment.term.line`) | **Bundle 3 of 6.** The tenant's ten terms with their lines, as a worksheet and a *Due Terms* table; Invoices' **text stand-in replaced by the relation** (values carried, then the text field deleted), the Due Date computed from the term, the term taken from the customer or vendor; Contacts gained Customer and Vendor Payment Terms. UI-tested 21/22, 1 fails (the two roll-up rules, built and disabled) — ready for review | [md](worksheets/10-payment-terms.md) · [page](https://claude.ai/artifact/Vi6EAAxNgZ9nDiGya4qjh4) |
 | 11 | Countries | `res.country` | **Bundle 4 of 6.** Odoo's 251 countries with their ISO code, calling code, VAT label and the two address switches; Contacts' **Country text replaced by the relation** (8 contacts carried, then the text field deleted) and its column, quick filter, Kanban field and both address automations re-pointed. UI-tested 22 pass, 1 fixed during the test | [md](worksheets/11-countries.md) · [page](https://claude.ai/artifact/Cjkq8eoykwMX7L6mshQnUT) |
+| 12 | States | `res.country.state` | **Bundle 5 of 6.** Odoo's 2 102 states in 74 countries; **Countries** gained the States list Odoo shows at the foot of its form, and Contacts' **State text was replaced by the relation** (eight contacts carried, then the text field deleted), with Odoo's two onchanges as workflows — a state sets its country, a country clears a state that belongs elsewhere. UI-tested 15 pass, 1 fails (nothing enforces one code per country), 1 not isolated | [md](worksheets/12-states.md) · [page](https://claude.ai/artifact/4pAVaBa4GsmRWuumAAtHmL) |
 
 ## Phase 1 · Roles
 
@@ -80,12 +81,12 @@ group it stands for is written in its description, checked against
 `addons/account/security/account_security.xml` in this checkout. **None of them has a member** — who belongs in
 which role is the owner's call, and the two people above stay app administrators as they were.
 
-| Role | Odoo group (and Odoo's own name for it) | Contacts | Countries | Units & Packagings | Products | Product Variants | Product Categories | Chart of Accounts | Payment Terms | Payment Term Lines | Journals | Invoices | Invoice Lines |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| Accounting Administrator | `account.group_account_manager` — *Administrator*, plus `base.group_allow_export` | full | view | full | full | full | full | full | full | full | full | full | full |
-| Accountant | `account.group_account_user` — *Show Full Accounting Features* | view · add · edit | view | view | view | view | view | view | view | view | view · add · edit | view · add · edit | view · add · edit |
-| Invoicing | `account.group_account_invoice` — *Invoicing* | view · add · edit | view | view | view | view | view | view | view | view | **view** | view · add · edit | view · add · edit |
-| Accounting Read-only | `account.group_account_readonly` — *Show Accounting Features - Readonly* | view | view | view | view | view | view | view | view | view | view | view | view |
+| Role | Odoo group (and Odoo's own name for it) | Contacts | Countries | States | Units & Packagings | Products | Product Variants | Product Categories | Chart of Accounts | Payment Terms | Payment Term Lines | Journals | Invoices | Invoice Lines |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Accounting Administrator | `account.group_account_manager` — *Administrator*, plus `base.group_allow_export` | full | view | full | full | full | full | full | full | full | full | full | full | full |
+| Accountant | `account.group_account_user` — *Show Full Accounting Features* | view · add · edit | view | view · add · edit | view | view | view | view | view | view | view | view · add · edit | view · add · edit | view · add · edit |
+| Invoicing | `account.group_account_invoice` — *Invoicing* | view · add · edit | view | view · add · edit | view | view | view | view | view | view | view | **view** | view · add · edit | view · add · edit |
+| Accounting Read-only | `account.group_account_readonly` — *Show Accounting Features - Readonly* | view | view | view | view | view | view | view | view | view | view | view | view | view |
 
 Read the three words as HAP stores them, per worksheet:
 
@@ -104,6 +105,8 @@ as well as its form field**; and **a tab whose every field is hidden disappears 
 Invoicing. Accounting Read-only does see a journal's accounts, where Invoicing does not, which is the line Odoo
 draws with `account.group_account_readonly`. One caution for whoever repeats this: **while a role is being
 debugged the same account's API is restricted too**, so leave the role before running any build script.
+
+**States goes the other way (18 Sep 2026), and for the same reason.** Odoo puts `res.country.state` behind **`base.group_partner_manager`** — a contact manager — with all four rights, where `res.country` needs a settings administrator; its own Fed. States list even carries a *New* button where the Countries list does not. So States gets each role's **Contacts** cell: Accountant and Invoicing may add and edit a state, Accounting Read-only may not, and delete stays with Accounting Administrator. Seen on screen with role debugging: as *Invoicing*, States offers **+ Record** and Countries does not.
 
 **Countries is the one worksheet Accounting Administrator does not own (18 Sep 2026).** Odoo's own access list reads `res.country` to everyone and writes it from `base.group_system` alone — the settings administrator, which none of the four accounting groups stands for — and Odoo's Countries list ships with New and Delete switched off. So all four business roles have **view**, and only the app **Administrator** creates, edits or deletes a country (`DECISIONS.md`, 18 Sep). `res.country.state` is not the same: there `group_partner_manager` has all four rights, so the States bundle will not inherit this.
 
