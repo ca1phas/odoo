@@ -23,8 +23,8 @@
       <div><dt>Built and tested</dt><dd>16–17 September 2026</dd></div>
     </dl>
     <div class="scoreline">
-      <span class="chip pass">27 of 28 tests pass</span>
-      <span class="chip note">1 not run</span>
+      <span class="chip pass">28 of 28 tests pass</span>
+      <span class="chip note">the role check run 18 Sep with role debugging</span>
       <span class="chip note">87 accounts · 5 worksheets extended</span>
     </div>
   </header>
@@ -133,7 +133,7 @@
           <tr><td class="num">22–24</td><td class="label">Journals: accounts by type, required, the column</td><td><div class="result"><span class="chip pass small">Pass</span>A Sales journal without a Default Account is refused</div></td></tr>
           <tr><td class="num">25–26</td><td class="label">Invoice Lines: the column, and none on a section</td><td><div class="result"><span class="chip pass small">Pass</span>After Label in the list and inside the invoice; amounts unchanged</div></td></tr>
           <tr><td class="num">27</td><td class="label">Automation B</td><td><div class="result"><span class="chip pass small">Pass</span>Every case through the CLI, results read in the UI. Fixed after the first build: the journal's Default Account no longer overwrites an Account a line already has</div></td></tr>
-          <tr><td class="num">28</td><td class="label">Field visibility by role</td><td><div class="result"><span class="chip note small">Not run</span>The roles have no members, so nobody can see the app as one; the settings read back as built</div></td></tr>
+          <tr><td class="num">28</td><td class="label">Field visibility by role</td><td><div class="result"><span class="chip pass small">Pass</span>Run on 18 Sep with HAP's <strong>role debugging</strong>, which needs no member. As <strong>Invoicing</strong>: a contact's <em>Invoicing</em> tab is gone entirely, a journal shows no Default Account in the list or on the form, a product's and a category's <em>Accounting</em> tab is gone, and Invoice Lines has no Account column. As <strong>Accounting Read-only</strong>: the same contact tab is gone, but a journal <em>does</em> show its Default Account — the line Odoo draws with <code>group_account_readonly</code></div></td></tr>
           <tr><td class="num">—</td><td class="label">A line created from an invoice's own table</td><td><div class="result"><span class="chip note small">Not run</span>The browser went to the background; the same path is proved through the CLI</div></td></tr>
         </tbody>
       </table>

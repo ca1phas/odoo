@@ -7,7 +7,7 @@
 | Odoo model | `res.country` |
 | Reference | **casimir.odoo.com — Odoo saas~19.4+e**: fields, the raw arch of every view, the actions and their menus, the access list, all 251 countries and the country of every contact, extracted read-only to `nocoly/reference/odoo-19.4/res.country.md`; the records themselves are `nocoly/data/casimir-countries.json`. Behaviour the tenant cannot show is read from the Odoo 19.0 source in this repo: `odoo/addons/base/models/res_country.py`, `res_country_views.xml`, `res_partner.py`, `ir.model.access.csv` |
 | Phase | 1 — **bundle 4 of 6** (Product Categories · Chart of Accounts · Payment Terms · **Countries** · States · Taxes) |
-| Status | §1 written 18 Sep 2026 · built and self-checked 18 Sep 2026 (`nocoly/build/countries.py`) · **UI-tested 18 Sep 2026: 21 pass, 1 fixed during the test, 1 not run** (§3) · ready for review |
+| Status | §1 written 18 Sep 2026 · built and self-checked 18 Sep 2026 (`nocoly/build/countries.py`) · **UI-tested 18 Sep 2026: 22 pass, 1 fixed during the test** (§3) · ready for review |
 
 The list a contact's address hangs on. Odoo ships 251 countries with their calling codes, their VAT labels and
 two switches that say whether an address needs a state or a postcode, and every partner points at one. This bundle
@@ -383,8 +383,8 @@ Worth pointing a browser at, in rough order of risk:
 
 ## 3 · Test list
 
-Run in Chrome on 18 September 2026, against the live app, with casimir.odoo.com open beside it. **21 pass, 1 was
-fixed during the test, 1 not run.** Records made here are named `TEST …`.
+Run in Chrome on 18 September 2026, against the live app, with casimir.odoo.com open beside it. **22 pass and 1 was
+fixed during the test** — test 23 was run later the same day, once role debugging was switched on. Records made here are named `TEST …`.
 
 | # | Test | Steps | Expected | Result |
 |---|---|---|---|---|
@@ -410,16 +410,16 @@ fixed during the test, 1 not run.** Records made here are named `TEST …`.
 | 20 | The push automation | Set the company's Country to **Singapore**, wait, read its contacts; then set it back to Malaysia | Its **Contact-type** contacts follow; the Invoice and Delivery addresses do not | **Pass** — the four people took Singapore and returned to Malaysia; the two addresses never moved, as `_children_sync` has it |
 | 21 | The picker | Klinik → click the Country field | The 252 countries, searchable | **Pass**, with two differences: it offers **+ Record** (difference 2) and lists the **newest first** (difference 4) |
 | 22 | Opening a country from a contact | Click the *Malaysia* chip on a contact | Odoo's `no_open` keeps the country closed | **Difference 5** — ours opens the country's record |
-| 23 | Role visibility | Sign in as a member of each business role | The four business roles see Countries and cannot add, edit or delete | **Not run** — no role has a member (`REVIEWING.md` › Phase 1 · Roles) |
+| 23 | Role visibility | **Role debugging** — *Select Role* at the foot of the sidebar — as each business role in turn | The four see Countries and cannot add, edit or delete | **Pass — run 18 Sep 2026.** As **Invoicing** and as **Accounting Administrator** the Countries view has **no + Record**, a country's form is read-only, and — the point of difference 2 — **the Country picker on a contact offers no + Record**. Roles is what enforces Odoo's `no_create`, exactly as §3 claims |
 
 ### Differences from Odoo seen in testing
 
 1. **Åland Islands sorts second here and last in Odoo.** Ours sorts Country Name A→Z with Å beside A; the tenant's
    database collation puts Å after Z, so Odoo's own list ends *Zambia · Zimbabwe · Åland Islands*. It is the only
    row of 251 where the two orders disagree.
-2. **The picker offers + Record.** Odoo's country field is `no_create`: a partner's Country cannot invent a
-   country. HAP has no switch for it that the CLI can reach, so what stops it is Roles — the four business roles
-   have *view*, and only an app Administrator sees the link at all.
+2. **The picker offers + Record — to an administrator only.** Odoo's country field is `no_create`: a partner's
+   Country cannot invent a country. HAP has no switch for it that the CLI can reach, so what stops it is Roles —
+   and test 23 proved it: seen as **Invoicing**, the picker has no *+ Record* at all.
 3. **A two-letter search does not jump to the code.** Odoo's `name_search` matches a 2-character search against
    the code first and returns those countries ahead of the name matches. HAP searches name and code together, so
    *MY* returns Malaysia, Myanmar and Saint Barthélemy, in name order.

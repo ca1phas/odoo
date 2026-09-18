@@ -18,8 +18,8 @@
       <div><dt>Built and tested</dt><dd>18 September 2026</dd></div>
     </dl>
     <div class="scoreline">
-      <span class="chip pass">21 of 23 tests pass</span>
-      <span class="chip note">1 fixed during the test · 1 not run</span>
+      <span class="chip pass">22 of 23 tests pass</span>
+      <span class="chip note">1 fixed during the test</span>
       <span class="chip note">251 countries · 8 contacts carried · 1 field deleted</span>
     </div>
   </header>
@@ -110,7 +110,7 @@
 
     <div class="block">
       <h3>Twenty-three tests in the browser</h3>
-      <p class="prose">Run on 18 September 2026 with Odoo open beside the app. <strong>Twenty-one pass.</strong> One failed and was fixed during the test: the calling code drew as <em>1,264</em> because HAP's <code>thousandth</code> setting reads the opposite way round from its name — "0", the platform default, draws the separator and "1" hides it. Anguilla now reads <strong>1264</strong>, as Odoo does. One was not run: the role check needs a role with a member, and none has one.</p>
+      <p class="prose">Run on 18 September 2026 with Odoo open beside the app. <strong>Twenty-one pass.</strong> One failed and was fixed during the test: the calling code drew as <em>1,264</em> because HAP's <code>thousandth</code> setting reads the opposite way round from its name — "0", the platform default, draws the separator and "1" hides it. Anguilla now reads <strong>1264</strong>, as Odoo does. The last test was run later the same day, once the owner switched on HAP's <strong>role debugging</strong>: seen as <strong>Invoicing</strong> — and as <strong>Accounting Administrator</strong> — the Countries view has no <em>+ Record</em>, a country's form is read-only, and the Country picker on a contact offers no <em>+ Record</em> either. That is how Odoo's <code>no_create</code> is enforced here.</p>
       <p class="prose">What the tests cover: the view and its two columns; Malaysia, the United States and Angola field by field against Odoo's own screens; both uniqueness refusals, the length limit and the two required fields; Zip Required's default on a new record; search by name and by code; and on Contacts — the relation in the text field's place, the column, the quick filter, the Kanban card, the Archived view, and <strong>both address automations end to end</strong>: a new contact under a company inherits the company's address and its Country, and changing the company's Country to Singapore carried to its four people and back to Malaysia again, while the Invoice and Delivery addresses stayed put, exactly as Odoo's <code>_children_sync</code> behaves.</p>
     </div>
 
@@ -118,7 +118,7 @@
       <h3>Differences from Odoo</h3>
       <ol class="differences">
         <li><span class="n">1</span><div class="head"><strong>Åland Islands sorts second here and last in Odoo</strong><span class="chip note small">Sorting</span></div><p>Ours puts Å beside A; the tenant's database collation puts it after Z, so Odoo's list ends <em>Zambia · Zimbabwe · Åland Islands</em>. The only row of 251 where the two orders disagree.</p></li>
-        <li><span class="n">2</span><div class="head"><strong>The picker offers + Record</strong><span class="chip note small">HAP behaviour</span></div><p>Odoo's country field is <code>no_create</code>: a contact cannot invent a country. HAP has no such switch, so what stops it is Roles — the four business roles have view, and only an administrator sees the link.</p></li>
+        <li><span class="n">2</span><div class="head"><strong>The picker offers + Record</strong><span class="chip note small">HAP behaviour</span></div><p>Odoo's country field is <code>no_create</code>: a contact cannot invent a country. HAP has no such switch, so what stops it is Roles — and the role check proved it: seen as Invoicing, the picker has no <em>+ Record</em> at all.</p></li>
         <li><span class="n">3</span><div class="head"><strong>A two-letter search does not jump to the code</strong><span class="chip note small">Search</span></div><p>Odoo matches a 2-character search against the code first. Here <em>MY</em> returns Malaysia, Myanmar and Saint Barthélemy, in name order.</p></li>
         <li><span class="n">4</span><div class="head"><strong>The picker lists the newest record first</strong><span class="chip note small">HAP behaviour</span></div><p>As on Payment Terms — with 252 countries that means the tail of the alphabet at the top. Odoo's picker is in name order.</p></li>
         <li><span class="n">5</span><div class="head"><strong>Clicking a country chip opens the country</strong><span class="chip note small">HAP behaviour</span></div><p>Odoo's field carries <code>no_open: True</code>.</p></li>

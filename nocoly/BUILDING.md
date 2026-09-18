@@ -798,3 +798,23 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   and pull field names with a regex. Return **only what you need** — a whole arch trips the session's
   "cookie/query string data" guard and the call comes back blocked, and anything over ~1,900 characters is
   truncated. `res.groups.search_read([('all_user_ids','in',[uid])])` answers what the tenant's user can see.
+
+### Role debugging — testing a role without a member (18 Sep 2026)
+
+- **HAP can show the app as any role, with no member assigned.** The owner switched it on: **Select Role** sits at
+  the foot of the app's sidebar, lists System (Administrator · Operator · Developer) and Custom roles, and the
+  chosen one becomes a chip at the same place with an ✕ to leave. This is how every "role visibility" test that
+  had been parked — 09's test 28, 11's test 23 — was finally run.
+- **It applies to the account's API session too, not just the browser.** While a role is being debugged, the
+  `hap` CLI on the same account is refused with **`Insufficient permissions`** for anything that role cannot do
+  (`app role list` fails; worksheet reads still work). **Switch the role off before running a build script** —
+  the script will fail halfway otherwise, and the cause does not look like a permission at all.
+- What it proved, first time: a **tab whose every field is hidden from a role disappears with them** (a contact's
+  *Invoicing* tab for Invoicing and Accounting Read-only; a product's and a category's *Accounting* tab for
+  Invoicing); a hidden field **leaves the table column out as well as the form field** (Journals' Default
+  Account, Invoice Lines' Account); a view-only worksheet **has no + Record button**; a relation **picker offers
+  no + Record** when the role cannot create in the target worksheet — which is how Odoo's `no_create` is
+  enforced here; and a read-only record renders as plain text with no input boxes.
+- **Read the table in a wide window.** A narrow or zoomed window renders only the leftmost columns, and a missing
+  column then looks exactly like a hidden field — it cost a wrong finding on Journals before the same list, in a
+  wide window, showed the column it was supposed to.
