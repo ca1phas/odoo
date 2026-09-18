@@ -17,7 +17,8 @@ const BUNDLES=[
  ['bcat','Product Categories','—','product reporting and stock valuation',[
    ['categories','Product Categories','product.category',[]]]],
  ['bterm','Payment Terms','—','any due date beyond immediate payment',[
-   ['terms','Payment Terms','account.payment.term',[]]]],
+   ['terms','Payment Terms','account.payment.term',[]],
+   ['termlines','Payment Term Lines','account.payment.term.line',['terms']]]],
  ['bpay','Payments','—','receipts as records rather than a paid-amount field',[
    ['paymeth','Payment Methods','account.payment.method',[]],
    ['payments','Payments','account.payment',['invoices','contacts','journals','paymeth']]]],

@@ -370,7 +370,7 @@ figcaption b{color:var(--ink-2);font-weight:500}
   <h1>Nocoly Ground-Up Build</h1>
   <p class="lede">Eleven phases. One builds the worksheets every app relates into; the other ten are Odoo's own app groups, added whole. Within each phase, worksheets and their relations go in one at a time, in dependency order.</p>
   <div class="byline">
-    <span>11 phases</span><span>233 worksheets</span><span>~38 weeks at 40 h/wk</span><span>ca1phas/odoo @ 7bbce824</span><span>14 Sep 2026</span>
+    <span>11 phases</span><span>234 worksheets</span><span>~38 weeks at 40 h/wk</span><span>ca1phas/odoo @ 7bbce824</span><span>14 Sep 2026</span>
   </div>
 </header>
 
@@ -399,35 +399,38 @@ figcaption b{color:var(--ink-2);font-weight:500}
     <p><b>Point of Sale is the one phase that can't run in its numbered order.</b> <code>point_of_sale</code> hard-depends on <code>stock_account</code>, so it needs Inventory standing before it. Either build phase 5 before phase 4, or accept that phase 4 drags a subset of Inventory in with it. Every other phase in the plan is buildable in the order shown.</p>
   </div>
   <div class="note">
-    <p><b>Where the build actually is — 16 September 2026.</b> This page is the plan; the app is real. Phase 1's seven
-    core worksheets are built in the Nocoly app <b>ERP Master</b>, seeded from a live Odoo 19.4 tenant, UI-tested and out
-    for review: Contacts 13/13 · Units &amp; Packagings 18/19 · Products 15/17 · Product Variants 16/16 · Journals 20/21 ·
-    Invoices 25/25 · Invoice Lines 18/20. Roles are set — four accounting roles mapped onto Odoo's own groups, nobody
-    assigned yet. The slider therefore starts at <b>1</b>.</p>
-    <p>Six bundle worksheets are being added to Phase 1 now, in this order: <b>Product Categories</b> ·
-    <b>Chart of Accounts</b> · <b>Payment Terms</b> · <b>Countries</b> · <b>States</b> · <b>Taxes</b> — the ones the core
-    seven lean on hardest. They are switched on above. <b>All six are built.</b> <b>Product Categories</b> — the tenant's seven
-    categories, UI-tested 17/18 — gave Products the Category it never had. <b>Chart of Accounts</b> — the tenant's 87
-    accounts, UI-tested 27/28 — brought every account field in the app with it, on Contacts, Products, Product
-    Categories, Journals and Invoice Lines, hidden by role as Odoo hides them. <b>Payment Terms</b> — the tenant's ten
-    terms with their lines, UI-tested 21/22 — is the first that <b>replaced a stand-in</b>: an invoice's Payment Terms
-    text became a real link, the values carried over and the text field deleted, and an invoice now takes its term from
-    the customer and works its Due Date out from it. <b>Countries</b> — Odoo's 251, UI-tested 21 of 23 — replaced the
-    second stand-in the same way: a contact's Country text became a link to a real country, with its calling code, VAT
-    label and the two switches that say whether an address needs a state or a postcode. <b>States</b> — Odoo's 2,102 in
-    74 countries, UI-tested 15 of 17 — did the same for a contact's State, gave every country the list of its states, and
-    brought Odoo's two rules with it: a state sets its country, and a country clears a state that belongs elsewhere.
-    <b>Taxes</b> — Odoo's 35 Malaysian SST taxes, UI-tested 19 of 23 — is the last of the six, and the one that made the
-    arithmetic real: a product carries its sales and purchase taxes, a line carries the taxes it was given, and an
+    <p><b>Where the build actually is — 18 September 2026.</b> This page is the plan; the app is real. <b>Phase 1 is
+    built.</b> Fourteen worksheets stand in the Nocoly app <b>ERP Master</b>, seeded from a live Odoo 19.4 tenant,
+    UI-tested one at a time and out for review — the seven core, and seven more from six bundles the owner pulled
+    forward into Phase 1 rather than deferring. The slider therefore starts at <b>1</b>, with those six switched on.</p>
+    <p><b>The seven core.</b> Contacts 13/13 · Units &amp; Packagings 18 of 19 · Products 15 of 17 ·
+    Product Variants 16/16 · Journals 20 of 21 · Invoices 25/25 · Invoice Lines 19 of 20.</p>
+    <p><b>The six bundles, in build order.</b> <b>Product Categories</b> — the tenant's seven categories, 17 of 18 —
+    gave Products the Category it never had. <b>Chart of Accounts</b> — 87 accounts, 28/28 — brought every account
+    field in the app with it, on Contacts, Products, Product Categories, Journals and Invoice Lines, hidden by role
+    as Odoo hides them. <b>Payment Terms</b> — ten terms with their lines, 21 of 22 — is the first that
+    <b>replaced a stand-in</b>: an invoice's Payment Terms text became a real link, the values carried over and the
+    text field deleted, and an invoice now takes its term from the customer and works its Due Date out from it.
+    <b>Countries</b> — Odoo's 251, 22 of 23 — replaced the second stand-in the same way, bringing each country's
+    calling code, VAT label and the two switches that say whether an address needs a state or a postcode.
+    <b>States</b> — 2,102 in 74 countries, 20 of 21 — did the same for a contact's State, gave every country the list
+    of its states, and brought Odoo's two rules with it: a state sets its country, and a country clears a state that
+    belongs elsewhere. <b>Taxes</b> — 35 Malaysian SST taxes, 19 of 23 — is the last of the six and the one that made
+    the arithmetic real: a product carries its sales and purchase taxes, a line carries the taxes it was given, and an
     invoice's <b>Tax stopped being a figure copied from the tenant</b>. It is now the lines' total less their subtotal,
-    landing on the tenant's own 10,460.32, 1,143.20 and 14,400.00 to the cent. Everything else on this page is plan.</p>
+    landing on the tenant's own 10,460.32, 1,143.20 and 14,400.00 to the cent.</p>
+    <p><b>What Phase 1 still owes.</b> Roles are set — four accounting roles mapped one-to-one onto Odoo's own
+    accounting groups, each one's screens checked with HAP's role debugging — but <b>nobody is assigned to any of
+    them</b>; who belongs where is the owner's call. And <b>nothing has been signed off</b>: all thirteen hand-offs are
+    out for review and none has come back, so the <code>TEST</code> records each review page points at stay where they
+    are. Everything on this page after Phase 1 is still plan.</p>
   </div>
 </section>
 
 <section>
   <div class="pgroup">
-    <div class="phead found"><span class="pn">Phase 1</span><h3>Core Foundation</h3><span class="pc">7 core · 29 optional, deferred</span></div>
-    <p class="pintro">Seven worksheets are genuinely unavoidable. Everything else in the foundation — taxes, the chart of accounts, categories, payment terms, variants, pricelists — is a feature you switch on when you need it. The rule for deciding: <b>a worksheet is core only if Odoo enforces it with <code>required=True</code> from a model that is itself core, or the concept is unrepresentable without it.</b> Every other worksheet is a bundle, and the evidence for each call is in the table below.</p>
+    <div class="phead found"><span class="pn">Phase 1</span><h3>Core Foundation</h3><span class="pc">7 core · 7 bundle worksheets pulled in · 23 deferred</span></div>
+    <p class="pintro">Seven worksheets are genuinely unavoidable. Everything else in the foundation — taxes, the chart of accounts, categories, payment terms, variants, pricelists — is a feature you switch on when you need it. The rule for deciding: <b>a worksheet is core only if Odoo enforces it with <code>required=True</code> from a model that is itself core, or the concept is unrepresentable without it.</b> Every other worksheet is a bundle, and the evidence for each call is in the table below. <b>Six of those bundles were pulled into Phase 1 after the fact</b> — the ones the core seven lean on hardest — and they are listed under the core three blocks below.</p>
 
     <p class="blockh">Core · Identity</p>
     <div class="tw"><table>
@@ -448,7 +451,19 @@ figcaption b{color:var(--ink-2);font-weight:500}
       <thead><tr><th class="s">#</th><th>Worksheet</th><th>Relations to wire</th></tr></thead><tbody>
       <tr><td class="s">5</td><td class="w"><b>Journals</b><span>account.journal</span></td><td class="r"><i>Default Account → Chart of Accounts once that bundle is on</i></td></tr>
       <tr><td class="s">6</td><td class="w"><b>Invoices</b><span>account.move</span></td><td class="r"><em>Move Type Dropdown on day one</em> — Customer Invoice · Vendor Bill · Credit Note · Vendor Refund. Partner → Contacts · Journal → Journals · <i>Payment Terms once that bundle is on</i></td></tr>
-      <tr><td class="s">7</td><td class="w"><b>Invoice Lines</b><span>account.move.line</span></td><td class="r">Invoice → Invoices <i>(subtable)</i> · Product → Product Variants · Unit → Units · <i>Taxes and Account once those bundles are on</i></td></tr>
+      <tr><td class="s">7</td><td class="w"><b>Invoice Lines</b><span>account.move.line</span></td><td class="r">Invoice → Invoices <i>(subtable)</i> · Product → Product Variants · Unit → Units · Taxes → Taxes · Account → Chart of Accounts</td></tr>
+    </tbody></table></div>
+
+    <p class="blockh">Pulled in · Six bundles, seven worksheets</p>
+    <div class="tw"><table>
+      <thead><tr><th class="s">#</th><th>Worksheet</th><th>Relations wired, and what it changed</th></tr></thead><tbody>
+      <tr><td class="s">8</td><td class="w"><b>Product Categories</b><span>product.category</span></td><td class="r">Parent Category → Product Categories <i>(self)</i>. Products gained <b>Category</b>, between Cost and Internal Reference, where Odoo's form puts it.</td></tr>
+      <tr><td class="s">9</td><td class="w"><b>Chart of Accounts</b><span>account.account</span></td><td class="r">Parent Account → Chart of Accounts <i>(self)</i>. Brought <b>every account field in the app</b> with it: Contacts' receivable and payable, Products' and Product Categories' income and expense, Journals' five, and an Invoice Line's Account — each hidden from the roles Odoo hides it from.</td></tr>
+      <tr><td class="s">10</td><td class="w"><b>Payment Terms</b><span>account.payment.term</span></td><td class="r">Invoices' Payment Terms text <b>became a relation</b> and the text control was deleted. An invoice takes its term from the customer and works its Due Date out from it.</td></tr>
+      <tr><td class="s">11</td><td class="w"><b>Payment Term Lines</b><span>account.payment.term.line</span></td><td class="r">Payment Term → Payment Terms <i>(subtable)</i>. <b>Not in the original plan</b> — Odoo's due terms are rows of their own, so the bundle is two worksheets, not one.</td></tr>
+      <tr><td class="s">12</td><td class="w"><b>Countries</b><span>res.country</span></td><td class="r">Contacts' Country text <b>became a relation</b> and the text control was deleted. 251 countries with their calling code, VAT label and two address switches.</td></tr>
+      <tr><td class="s">13</td><td class="w"><b>States</b><span>res.country.state</span></td><td class="r">Country → Countries. Contacts' State text <b>became a relation</b> too, and Odoo's two address rules came with it as workflows.</td></tr>
+      <tr><td class="s">14</td><td class="w"><b>Taxes</b><span>account.tax</span></td><td class="r">Country → Countries <i>(required, as Odoo requires it)</i>. Products gained Sales and Purchase Taxes, Chart of Accounts gained Default Taxes, Invoice Lines gained Taxes and Total — and <b>an invoice's Tax became a computed figure</b>.</td></tr>
     </tbody></table></div>
   </div>
 </section>
@@ -488,10 +503,10 @@ figcaption b{color:var(--ink-2);font-weight:500}
   </div>
   <div class="tw"><table>
     <thead><tr><th>Bundle</th><th>Odoo toggle</th><th class="n">WS</th><th>Worksheets</th><th>Needed by</th></tr></thead><tbody>
-    <tr><td class="w"><b>Taxes</b></td><td class="m">—</td><td class="n">1</td><td class="r">Taxes</td><td class="r"><b>day one</b> in any real jurisdiction · <em>requires Geography</em></td></tr>
-    <tr><td class="w"><b>Chart of Accounts</b></td><td class="m">—</td><td class="n">1</td><td class="r">Chart of Accounts</td><td class="r"><b>Phase 8</b> Finance · real double-entry</td></tr>
-    <tr><td class="w"><b>Product Categories</b></td><td class="m">—</td><td class="n">1</td><td class="r">Product Categories</td><td class="r">product reporting · stock valuation</td></tr>
-    <tr><td class="w"><b>Payment Terms</b></td><td class="m">—</td><td class="n">1</td><td class="r">Payment Terms</td><td class="r">any due date beyond immediate</td></tr>
+    <tr><td class="w"><b>Taxes</b> <span class="pill have">built</span></td><td class="m">—</td><td class="n">1</td><td class="r">Taxes</td><td class="r"><b>Phase 1</b> — built sixth, and it did need Geography first</td></tr>
+    <tr><td class="w"><b>Chart of Accounts</b> <span class="pill have">built</span></td><td class="m">—</td><td class="n">1</td><td class="r">Chart of Accounts</td><td class="r"><b>Phase 1</b> — built second, well before Phase 8; every account field in the app came with it</td></tr>
+    <tr><td class="w"><b>Product Categories</b> <span class="pill have">built</span></td><td class="m">—</td><td class="n">1</td><td class="r">Product Categories</td><td class="r"><b>Phase 1</b> — built first of the six</td></tr>
+    <tr><td class="w"><b>Payment Terms</b> <span class="pill have">built</span></td><td class="m">—</td><td class="n">2</td><td class="r">Payment Terms · Payment Term Lines</td><td class="r"><b>Phase 1</b> — built third. <b>Two worksheets, not one</b>: Odoo's due terms are rows of their own</td></tr>
     <tr><td class="w"><b>Payments</b></td><td class="m">—</td><td class="n">2</td><td class="r">Payment Methods · Payments</td><td class="r">receipts as records rather than a field</td></tr>
     <tr><td class="w"><b>Product Variants</b></td><td class="m">product.group_product_variant</td><td class="n">4</td><td class="r">Attributes · Attribute Values · Product Attribute Lines · Template Attribute Values</td><td class="r">first product with options</td></tr>
     <tr><td class="w"><b>Pricelists</b></td><td class="m">product.group_product_pricelist</td><td class="n">2</td><td class="r">Pricelists · Price Rules</td><td class="r"><b>Phase 3</b> Sales</td></tr>
@@ -499,7 +514,7 @@ figcaption b{color:var(--ink-2);font-weight:500}
     <tr><td class="w"><b>Sales Teams</b></td><td class="m">—</td><td class="n">1</td><td class="r">Sales Teams</td><td class="r"><b>Phase 2</b> CRM</td></tr>
     <tr><td class="w"><b>Analytic Accounting</b></td><td class="m">analytic.group_analytic_accounting</td><td class="n">2</td><td class="r">Analytic Accounts · Analytic Lines</td><td class="r"><b>Phase 6</b> Services — Project and Timesheet both post here</td></tr>
     <tr><td class="w"><b>Activities</b></td><td class="m">—</td><td class="n">3</td><td class="r">Activity Types · Activity Plans · Plan Steps</td><td class="r">first scheduled follow-up</td></tr>
-    <tr><td class="w"><b>Geography</b></td><td class="m">—</td><td class="n">2</td><td class="r">Countries · States</td><td class="r">before Fiscal Positions; until then Contacts keeps Text</td></tr>
+    <tr><td class="w"><b>Geography</b> <span class="pill have">built</span></td><td class="m">—</td><td class="n">2</td><td class="r">Countries · States</td><td class="r"><b>Phase 1</b> — built fourth and fifth, because Taxes could not stand without it</td></tr>
     <tr><td class="w"><b>Fiscal Positions</b></td><td class="m">—</td><td class="n">1</td><td class="r">Fiscal Positions</td><td class="r">first exempt or cross-border customer · <em>requires Geography and Taxes</em></td></tr>
     <tr><td class="w"><b>Incoterms</b></td><td class="m">—</td><td class="n">1</td><td class="r">Incoterms</td><td class="r">first international shipment</td></tr>
     <tr><td class="w"><b>Multi-currency</b></td><td class="m">base.group_multi_currency</td><td class="n">1</td><td class="r">Currencies</td><td class="r">second currency · single-currency lives in the Currency control itself</td></tr>
@@ -517,7 +532,7 @@ figcaption b{color:var(--ink-2);font-weight:500}
   <div class="col">
     <p class="eyebrow">Verification</p>
     <h2>And every bundle, checked the same way</h2>
-    <p>A bundle is only honest if nothing structurally depends on it. Same test, run across all twenty-nine bundle worksheets — and it turned up two corrections to an earlier draft of this plan.</p>
+    <p>A bundle is only honest if nothing structurally depends on it. Same test, run across all thirty bundle worksheets — and it turned up two corrections to an earlier draft of this plan.</p>
   </div>
   <div class="tw"><table>
     <thead><tr><th>Bundle</th><th>Odoo toggle</th><th>Evidence</th></tr></thead><tbody>
@@ -540,7 +555,7 @@ figcaption b{color:var(--ink-2);font-weight:500}
     <tr><td class="w"><b>Contact Tags</b></td><td class="m">—</td><td class="r">Nothing requires it</td></tr>
   </tbody></table></div>
   <div class="note">
-    <p><b>Two corrections the check produced.</b> <em>Taxes needs Geography</em> — <code>account.tax.country_id</code> carries <code>required=True</code>, so a Taxes worksheet with no Countries behind it is incomplete; switch Taxes on in the wall above without Geography and it turns orange. <em>Multi-currency is the one bundle Odoo really does require</em>, and it only stays optional because a Nocoly Currency control carries its currency itself — a platform difference, not an Odoo one.</p>
+    <p><b>Three corrections now — two from the check, one from building.</b> <em>Taxes needs Geography</em> — <code>account.tax.country_id</code> carries <code>required=True</code>, so a Taxes worksheet with no Countries behind it is incomplete; switch Taxes on in the wall above without Geography and it turns orange. <em>Multi-currency is the one bundle Odoo really does require</em>, and it only stays optional because a Nocoly Currency control carries its currency itself — a platform difference, not an Odoo one. <em>Payment Terms is two worksheets</em>, not one: Odoo keeps a term's due rows in <code>account.payment.term.line</code>, and the bundle is not usable without them. Found by building it, which is the only way that kind of error surfaces. The bundle count is thirty, not twenty-nine.</p>
   </div>
 </section>
 
@@ -626,9 +641,18 @@ figcaption b{color:var(--ink-2);font-weight:500}
   </div>
   <div class="tw"><table class="tl">
     <thead><tr><th class="s">Ph</th><th>Phase</th><th class="n">WS</th><th class="n">Hours</th><th>At 40 h/week</th><th class="n">Cum wk</th></tr></thead>
-    <tbody><tr><td class="s">1</td><td class="w"><b>Core Foundation</b></td><td class="n">7</td><td class="n">48 h</td><td class="wk found"><i style="width:13%"></i>1.2 wk</td><td class="n">1</td></tr><tr><td class="s">1</td><td class="w"><b>Optional bundles — all 17</b></td><td class="n">29</td><td class="n">100 h</td><td class="wk found"><i style="width:27%"></i>2.5 wk</td><td class="n">4</td></tr><tr><td class="s">2</td><td class="w"><b>CRM</b></td><td class="n">4</td><td class="n">36 h</td><td class="wk "><i style="width:10%"></i>0.9 wk</td><td class="n">5</td></tr><tr><td class="s">3</td><td class="w"><b>Sales</b></td><td class="n">5</td><td class="n">73 h</td><td class="wk "><i style="width:20%"></i>1.8 wk</td><td class="n">6</td></tr><tr><td class="s">4</td><td class="w"><b>Point of Sale</b></td><td class="n">12</td><td class="n">77 h</td><td class="wk "><i style="width:21%"></i>1.9 wk</td><td class="n">8</td></tr><tr><td class="s">5</td><td class="w"><b>Inventory &amp; Manufacturing</b></td><td class="n">45</td><td class="n">288 h</td><td class="wk big"><i style="width:78%"></i>7.2 wk</td><td class="n">16</td></tr><tr><td class="s">6</td><td class="w"><b>Services</b></td><td class="n">12</td><td class="n">97 h</td><td class="wk "><i style="width:26%"></i>2.4 wk</td><td class="n">18</td></tr><tr><td class="s">7</td><td class="w"><b>Human Resources</b></td><td class="n">35</td><td class="n">184 h</td><td class="wk "><i style="width:50%"></i>4.6 wk</td><td class="n">23</td></tr><tr><td class="s">8</td><td class="w"><b>Finance</b></td><td class="n">4</td><td class="n">49 h</td><td class="wk "><i style="width:13%"></i>1.2 wk</td><td class="n">24</td></tr><tr><td class="s">9</td><td class="w"><b>Marketing</b></td><td class="n">28</td><td class="n">165 h</td><td class="wk "><i style="width:45%"></i>4.1 wk</td><td class="n">28</td></tr><tr><td class="s">10</td><td class="w"><b>Website</b></td><td class="n">49</td><td class="n">367 h</td><td class="wk big"><i style="width:100%"></i>9.2 wk</td><td class="n">37</td></tr><tr><td class="s">11</td><td class="w"><b>Productivity</b></td><td class="n">3</td><td class="n">20 h</td><td class="wk "><i style="width:5%"></i>0.5 wk</td><td class="n">38</td></tr></tbody>
-    <tfoot><tr><td class="s"></td><td class="w"><b>Everything</b></td><td class="n">233</td><td class="n">1502 h</td><td class="wk">38 weeks</td><td class="n">≈ 8.6 mo</td></tr></tfoot>
+    <tbody><tr><td class="s">1</td><td class="w"><b>Core Foundation</b></td><td class="n">7</td><td class="n">48 h</td><td class="wk found"><i style="width:13%"></i>1.2 wk</td><td class="n">1</td></tr><tr><td class="s">1</td><td class="w"><b>Optional bundles — all 17</b></td><td class="n">30</td><td class="n">100 h</td><td class="wk found"><i style="width:27%"></i>2.5 wk</td><td class="n">4</td></tr><tr><td class="s">2</td><td class="w"><b>CRM</b></td><td class="n">4</td><td class="n">36 h</td><td class="wk "><i style="width:10%"></i>0.9 wk</td><td class="n">5</td></tr><tr><td class="s">3</td><td class="w"><b>Sales</b></td><td class="n">5</td><td class="n">73 h</td><td class="wk "><i style="width:20%"></i>1.8 wk</td><td class="n">6</td></tr><tr><td class="s">4</td><td class="w"><b>Point of Sale</b></td><td class="n">12</td><td class="n">77 h</td><td class="wk "><i style="width:21%"></i>1.9 wk</td><td class="n">8</td></tr><tr><td class="s">5</td><td class="w"><b>Inventory &amp; Manufacturing</b></td><td class="n">45</td><td class="n">288 h</td><td class="wk big"><i style="width:78%"></i>7.2 wk</td><td class="n">16</td></tr><tr><td class="s">6</td><td class="w"><b>Services</b></td><td class="n">12</td><td class="n">97 h</td><td class="wk "><i style="width:26%"></i>2.4 wk</td><td class="n">18</td></tr><tr><td class="s">7</td><td class="w"><b>Human Resources</b></td><td class="n">35</td><td class="n">184 h</td><td class="wk "><i style="width:50%"></i>4.6 wk</td><td class="n">23</td></tr><tr><td class="s">8</td><td class="w"><b>Finance</b></td><td class="n">4</td><td class="n">49 h</td><td class="wk "><i style="width:13%"></i>1.2 wk</td><td class="n">24</td></tr><tr><td class="s">9</td><td class="w"><b>Marketing</b></td><td class="n">28</td><td class="n">165 h</td><td class="wk "><i style="width:45%"></i>4.1 wk</td><td class="n">28</td></tr><tr><td class="s">10</td><td class="w"><b>Website</b></td><td class="n">49</td><td class="n">367 h</td><td class="wk big"><i style="width:100%"></i>9.2 wk</td><td class="n">37</td></tr><tr><td class="s">11</td><td class="w"><b>Productivity</b></td><td class="n">3</td><td class="n">20 h</td><td class="wk "><i style="width:5%"></i>0.5 wk</td><td class="n">38</td></tr></tbody>
+    <tfoot><tr><td class="s"></td><td class="w"><b>Everything</b></td><td class="n">234</td><td class="n">1502 h</td><td class="wk">38 weeks</td><td class="n">≈ 8.6 mo</td></tr></tfoot>
   </table></div>
+  <div class="note acc">
+    <p><b>Phase 1 is done, and it came in near the estimate.</b> The seven core worksheets and seven bundle
+    worksheets — 14 of the 37 the phase will eventually hold — are built, seeded and UI-tested. The estimate above
+    puts the core at 48 h and all thirty bundle worksheets at 100 h; what was actually built is the core plus the
+    six bundles the core leans on hardest, and the shape of the work matched the model: creating worksheets was
+    nearly free, and the hours went into relations, workflows, roles and reading everything back. The <b>tail the
+    model warns about is visible here too</b> — three of the six bundles spent most of their time not on the new
+    worksheet but on going back to the worksheets that had been waiting for it.</p>
+  </div>
   <div class="note">
     <p><b>Two phases distort the total.</b> <em>Website</em> at 9 weeks is a quarter of the plan and is not worksheet work — Nocoly is a database, not a site builder, so eCommerce and public pages mean a separate front end talking to HAP over the v3 API. Treat it as its own project. <em>Inventory &amp; Manufacturing</em> at 7 weeks is genuine: 45 worksheets and the 27-control bridge back into Sales.</p>
     <p>Drop both and the working ERP — foundation, CRM, Sales, POS, Services, HR, Finance, Marketing — lands in about <b>21 weeks</b>, roughly five months.</p>
@@ -639,7 +663,7 @@ figcaption b{color:var(--ink-2);font-weight:500}
   <div class="col">
     <h3 style="font-family:Archivo,sans-serif;font-size:18px;margin-top:30px">Milestones worth naming</h3>
     <ul class="checks">
-      <li><b>Week 1</b> — core foundation standing. Seven worksheets, no app yet, but every later phase now has something to relate into.</li>
+      <li><b>Week 1</b> — core foundation standing. Seven worksheets, no app yet, but every later phase now has something to relate into. <b>Done</b>, along with six of the bundles.</li>
       <li><b>Week 5</b> — CRM live. First complete app: pipeline, views, roles, rules, a won-to-quotation workflow, and a click-through pass behind it.</li>
       <li><b>Week 6</b> — quote to cash. Orders, Order Lines, Invoices, Payments, quotation PDFs. The point the system starts replacing something.</li>
       <li><b>Week 16</b> — the physical business. Inventory, Purchase and Manufacturing in; delivery-driven invoicing real rather than modelled.</li>
@@ -692,7 +716,8 @@ const BUNDLES=[
  ['bcat','Product Categories','—','product reporting and stock valuation',[
    ['categories','Product Categories','product.category',[]]]],
  ['bterm','Payment Terms','—','any due date beyond immediate payment',[
-   ['terms','Payment Terms','account.payment.term',[]]]],
+   ['terms','Payment Terms','account.payment.term',[]],
+   ['termlines','Payment Term Lines','account.payment.term.line',['terms']]]],
  ['bpay','Payments','—','receipts as records rather than a paid-amount field',[
    ['paymeth','Payment Methods','account.payment.method',[]],
    ['payments','Payments','account.payment',['invoices','contacts','journals','paymeth']]]],
@@ -853,7 +878,7 @@ const PHASES=[
       const st=status(id,S); if(st.hard.length) blocked+=m.count; else if(st.miss.length) degraded+=m.count;});
     let hrs=HOURS.core+act0().reduce((a,b)=>a+(HOURS.bundles[b]||0),0)+(act0().length?HOURS.bundleApp:0)
       +PHASES.filter(x=>x[0]<=p).reduce((a,x)=>a+(HOURS.phases[x[0]]||0),0);
-    stats.innerHTML=`<span>worksheets built <b>${built}</b> of 233</span>`
+    stats.innerHTML=`<span>worksheets built <b>${built}</b> of 234</span>`
       +`<span>elapsed <b>${(hrs/HOURS.week).toFixed(1)}</b> weeks at 40 h/week · ~${Math.round(hrs)} h</span>`
       +(blocked?`<span class="warn">blocked <b>${blocked}</b> — a required worksheet isn't built yet</span>`:'')
       +(degraded?`<span>degraded <b>${degraded}</b> — an optional bundle they use is switched off</span>`:'');
