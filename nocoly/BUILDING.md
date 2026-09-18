@@ -119,6 +119,14 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   view-editor enum: a single select's "is" is **filterType 51** with the option key in `values`. It computes over a
   mounted 子表 too: Payment Terms' *Percent total* (`enumDefault` 5, sum of Due where Value is Percent) reads 100 on a
   TEST term holding a 100 Percent and a 50 Fixed line, and *Line count* (6) reads 2 (bundle 3).
+- **…and the same filter takes over a multi-Relation, on a *Dropdown* (type 11) of the related worksheet.** Invoice
+  Lines' *Tax rate* (`enumDefault` 5, sum of Taxes' Amount through the Taxes relation, `filterType` **51** with the
+  Percentage option key) reads **3** on a line carrying a 3 % tax and a **Fixed 7** tax, and **0** on a line carrying
+  the Fixed tax alone — so 51 is not limited to the single select of a 子表 (bundle 6, 18 Sep 2026).
+- **A 汇总 over a multi-Relation follows the relation, and a *number formula* can read it.** `$<the 汇总>$` inside a
+  type-31 expression computes — Invoice Lines' *Total* is `Subtotal × (1 + Tax rate ÷ 100)` — and recomputes on every
+  change of the relation through the open API, with no workflow and no re-save (four probes, bundle 6). What it does
+  while a **form** is open is a separate question, and the 子表 answer below says it holds only the saved rows.
 - **A 汇总 does not follow the rows being edited in the open form** — answered in the browser, 17 Sep 2026: it holds
   the **saved** rows until the record is saved, so a validation rule standing on one judges the record as it was. On a
   new record every roll-up is empty, and Payment Terms' two rules refused every new term, its default 100 % row
@@ -164,7 +172,9 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
 - A new worksheet comes with three stock controls — Name (the title), Description and Attachment. A first
   `update-fields` save that leaves one out deletes it: reuse their ids for your own fields.
 - A tab and a field can share a name (the Sales tab and the Sales checkbox): look fields up by name among non-tab
-  controls (`common.fields`).
+  controls (`common.fields`). **Any other by-name index over the whole control list has the same hazard**: a row map
+  built as `{controlName: row}` over Products put the *Sales* **checkbox** on the *Sales* **tab**'s row and moved it
+  out of the header into the middle of the form. Key by `controlId` (bundle 6, 18 Sep 2026).
 - **Static text on a form takes two controls.** The 分段 block, control type 22 (`SPLIT_LINE`, "Divider"), renders
   its `controlName` as a heading and **renders its `desc` nowhere at all** — not even as a tooltip, so a note written
   there is invisible. The text itself is HAP's **remark block, control type 10010**: the content is HTML in
@@ -261,6 +271,12 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   `Modified worksheet` entry in `hap app logs`, and the control-set `version` does not move. Products' digest
   shifted when Invoice Lines was seeded with eight lines pointing at the `Units` unit. Compare a worksheet
   control by control, by id, as the build scripts do.
+- **…and adding a control to the worksheet a default points *at* does it too.** The embedded record is the related
+  row's whole JSON, so a new column on that worksheet appears inside it — and the server re-serialises the snapshot
+  on every read, moving its keys about. Giving Chart of Accounts its *Default Taxes* control changed the string
+  stored inside **Contacts'** two account defaults, and a raw-string `check_untouched` stopped the run over a
+  worksheet nothing had touched. Parse `advancedSetting` before comparing it (`accounts.control_state`, which
+  `accounts.signature` and `invlines.signature_of` now go through — bundle 6, 18 Sep 2026).
 - **A deleted control's alias is free again at once.** The formula State key was deleted and a **Text** control
   carrying the same name and the same alias `state_key` was added in the next call of the same run: accepted,
   and the alias reads back on the new control. The old one is still listed in the field recycle bin with that
@@ -462,6 +478,10 @@ What decides is **whether the value being compared is in the write**.
 - **A Relation picker lists the newest record first**, whatever the target worksheet's views are sorted by — Odoo
   orders its own by sequence or name, so a picker's order is a difference to record, not a defect (bundle 3).
 - `hap workflow trigger <processId> -s <rowid>` runs a button's workflow on one record — a CLI check of a button.
+  **It runs a *worksheet-event* workflow on one record too**, which is the only way to re-run one over a record
+  without writing to it: a `record update` that changes nothing fires no worksheet-event workflow, so "nudging" a
+  record means writing a value and writing it back. Invoice Lines' roll-up, started this way on one line of an
+  invoice, rewrote that invoice's four amounts and the run came back `status` 2 (bundle 6, `taxes.py amounts`).
 - In a button's workflow a **get related record** step cannot start from the trigger record: the server leaves the
   trigger out of that step's sources, drops the relation field, and publishing fails (warningType 103, 200). Search
   the related worksheet instead: Record ID equals the trigger's Relation field (conditionId 9).
@@ -480,7 +500,11 @@ What decides is **whether the value being compared is in the write**.
   `rowid` for that node's record, or a Relation field of it.
 - To add steps to an existing workflow, `batch-add` with `--trigger-node-id <last node in the chain>` and
   `{"nodeId": …}` references (aliases exist only within one call; `--trigger-alias` then names that last node, not
-  the trigger). Change a trigger's fields or condition with
+  the trigger). **`batch-add` can only append**, so a step that has to go in the *middle* of a chain is
+  `workflow node add --type <n> -n … --after <the node it follows>` — the same call the abort node needs. A formula
+  step is `--type 9` with `-a` its sub-mode (100 number · 106 function · **107 worksheet total**), and a 107 needs
+  `--app-id` at create time like any data node: a later `saveNode` cannot attach `appId`. Both roll-ups of bundle 6
+  gained their 汇总 and their Tax formula that way, in the middle, and published unchanged otherwise. Change a trigger's fields or condition with
   `workflow node save --type 0 -c '{appId, appType: 1, triggerId, assignFieldIds, operateCondition, returns: []}'`.
 - A data step's **worksheet is fixed when the step is added**: `node save` with another `appId` answers success, keeps
   the old one and drops the fields that do not fit. `hap workflow rollback <processId> -y` restores the last published
@@ -592,6 +616,9 @@ What decides is **whether the value being compared is in the write**.
   (4 avg · 5 max · 6 min), and its filter can compare a Relation with another node's record: `op` "33",
   `conditionValues: [{nodeId, controlId: "rowid"}]`. `batch-add` writes a 107 node's filter correctly (it sends
   `filters`), unlike a search node's (type 7). `batch-add` refuses `nodeType: "code"` outright — but a code block **can** be built through the CLI (below).
+- **A field write taking a formula node's result reads `nodeAppType` back as 11**, whatever it was sent as (1 is
+  what pd-openweb sends). It is the same binding — the step works and publishes — but a step that compares what it
+  sent with what came back re-saves for ever unless it leaves that key out of the comparison (bundle 6).
 - **A formula node's result can only be bound as `nodeId` + `fieldValueId` when the node is a worksheet total
   (107) or a number formula (100).** A **function** formula (106) reports `appType` **11**, its `number_fx_id`
   comes back with an empty `type` and `name` in the consuming node's `formulaMap`, that node goes
@@ -766,6 +793,11 @@ What decides is **whether the value being compared is in the write**.
 - A **Relation cell carries the related record's title**, so a seeded value is compared with the target's *title
   field*, not its name: a product's Category reads back "Goods / IT Equipment" (the Complete Name), never
   "IT Equipment".
+- **A single select reads back differently through the two record calls.** `GetRowDetail` (what `record get` is
+  built on, and what a script reaches through the session) hands back a JSON list of the option **keys** —
+  `["d4ecbc5c-…"]` — while the v3 `record get` command hands back `[{"key": …, "value": "Sales"}]` with the label.
+  A reader written for one blanks on the other (bundle 6: every tax read back with an empty Tax Type until the
+  option table was consulted). The same is true of the `--use-field-id-as-key` list.
 - `record get` returns a record's creation time as `_createdAt`; `record list` returns `ctime` empty.
 - `record get` keys a value by the control's **alias**, and by its **controlId** when it has none — the new Payment Terms
   relation on Invoices read back under `6aab8b6b7d58b0f449311740` beside the stand-in's `invoice_payment_term_id` until
@@ -922,3 +954,30 @@ What decides is **whether the value being compared is in the write**.
 - **Read the table in a wide window.** A narrow or zoomed window renders only the leftmost columns, and a missing
   column then looks exactly like a hidden field — it cost a wrong finding on Journals before the same list, in a
   wide window, showed the column it was supposed to.
+
+### Four more, from the Taxes UI test (18 Sep 2026)
+
+- **`advancedSetting.showtype` on a *Dropdown* (type 11) is the display style, and it is not the Relation's
+  meaning.** "0" is the dropdown, "1" tiles, "2" the **progress bar** — which draws the option as a slider with a
+  bar behind it in the table and reads as a defect beside every other column. On a **Relation** (type 29) the
+  same key means list · tab · dropdown, which is where the confusion comes from: Taxes' five Dropdowns were built
+  with "2" in the belief that it meant "a dropdown list, as Journals' and Invoices' single selects". It does not
+  — all thirteen Dropdowns built before them carry **"0"**. A `SingleSelect` (type 9) with "1" is a deliberate
+  tile row (Products' Product Type, Odoo's radio).
+- **`record list` blanks a multi-value Relation and a 汇总 even when the view shows them.** Single relations come
+  back populated, so this is not the "columns the view does not show" cut above: Invoice Lines' *Taxes* and *Tax
+  rate* read as empty strings through `record list --view-id` on a view that carries both, while *Product*,
+  *Account* and *Unit* on the same rows read fine. **`record get` shows them**, and it takes the **`rowId`
+  (the uuid), not the `_id`** — passing `_id` answers *行记录不存在或没权限*, which reads like a permission
+  problem and is not one.
+- **A 子表 row's panel draws the *subtable's* columns, not the child worksheet's form.** A field that is on the
+  child's form but missing from `showControls` is missing from the row panel as well, so a person opening the row
+  from inside the parent cannot see or set it — Invoice Lines' *Taxes* was on the worksheet, held the right
+  values and drove the arithmetic, and was invisible and unsettable from inside an invoice until it was added to
+  the column list. **Add a field to `showControls` whenever a person must edit it from the parent**, not only
+  when it should be a visible column.
+- **A self-check that finds its probe record by name breaks the moment the duplicate check is exercised in the
+  UI** — which is exactly what the house rule asks for, since `TEST …` records are left in place. A second record
+  with the probe's name makes `{name: rowid}` keep whichever came last, and the run then drives the *marked*
+  record and reports DIFF on probes the workflow actually passed. Resolve the probe by the record that **holds
+  the key**, and say so when the name is shared.

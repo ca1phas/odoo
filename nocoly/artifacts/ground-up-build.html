@@ -406,7 +406,7 @@ figcaption b{color:var(--ink-2);font-weight:500}
     assigned yet. The slider therefore starts at <b>1</b>.</p>
     <p>Six bundle worksheets are being added to Phase 1 now, in this order: <b>Product Categories</b> ·
     <b>Chart of Accounts</b> · <b>Payment Terms</b> · <b>Countries</b> · <b>States</b> · <b>Taxes</b> — the ones the core
-    seven lean on hardest. They are switched on above. <b>Five are built.</b> <b>Product Categories</b> — the tenant's seven
+    seven lean on hardest. They are switched on above. <b>All six are built.</b> <b>Product Categories</b> — the tenant's seven
     categories, UI-tested 17/18 — gave Products the Category it never had. <b>Chart of Accounts</b> — the tenant's 87
     accounts, UI-tested 27/28 — brought every account field in the app with it, on Contacts, Products, Product
     Categories, Journals and Invoice Lines, hidden by role as Odoo hides them. <b>Payment Terms</b> — the tenant's ten
@@ -416,8 +416,11 @@ figcaption b{color:var(--ink-2);font-weight:500}
     second stand-in the same way: a contact's Country text became a link to a real country, with its calling code, VAT
     label and the two switches that say whether an address needs a state or a postcode. <b>States</b> — Odoo's 2,102 in
     74 countries, UI-tested 15 of 17 — did the same for a contact's State, gave every country the list of its states, and
-    brought Odoo's two rules with it: a state sets its country, and a country clears a state that belongs elsewhere. Only
-    <b>Taxes</b> is left. Everything else on this page is plan.</p>
+    brought Odoo's two rules with it: a state sets its country, and a country clears a state that belongs elsewhere.
+    <b>Taxes</b> — Odoo's 35 Malaysian SST taxes, UI-tested 19 of 23 — is the last of the six, and the one that made the
+    arithmetic real: a product carries its sales and purchase taxes, a line carries the taxes it was given, and an
+    invoice's <b>Tax stopped being a figure copied from the tenant</b>. It is now the lines' total less their subtotal,
+    landing on the tenant's own 10,460.32, 1,143.20 and 14,400.00 to the cent. Everything else on this page is plan.</p>
   </div>
 </section>
 

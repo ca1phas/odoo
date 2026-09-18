@@ -77,6 +77,7 @@ INVOICES = hap.ids()['worksheets']['Invoices']
 VARIANTS = hap.ids()['worksheets']['Product Variants']
 UNITS = hap.ids()['worksheets']['Units & Packagings']
 ACCOUNTS = hap.ids()['worksheets']['Chart of Accounts']
+TAXES = hap.ids()['worksheets'].get('Taxes')       # the Taxes bundle; None until taxes.py `create` has run
 OTHERS = ('Contacts', 'Units & Packagings', 'Products', 'Product Variants', 'Journals')   # must stay untouched
 
 SUBLIST = 34                                       # HAP's 子表: a worksheet mounted under a parent record
@@ -125,6 +126,12 @@ TEXT_LINES = ['Section', 'Subsection', 'Note']     # Odoo's non-accountable disp
 # Odoo's invoice form: accounts.py adds it with `add-fields`, which parks it at row 9999, and `layout` here places
 # it; everything under it moved down one row.
 BUNDLE_2 = ('Account',)
+# Taxes, Tax rate and Total belong to the **Taxes** bundle (nocoly/worksheets/13-taxes.md, built by taxes.py
+# `lines`), which added them with `add-fields` — that parks a new control at row 9999, and only a full save
+# moves it. `layout` here is that save. Odoo's own invoice line puts the taxes between the price and the
+# amount and `price_total` straight after `price_subtotal`, so Taxes took row 7 (Subtotal moving down one) and
+# Total row 9 (the three lookups under it moving down two). Tax rate is the hidden 汇总 Total is computed from.
+BUNDLE_6 = ('Taxes', 'Tax rate', 'Total')
 PLACE = {  # name -> (row, col, size)
     'Invoice': (0, 0, 12),
     'Sequence': (1, 0, 6), 'Display Type': (1, 1, 6),
@@ -133,14 +140,18 @@ PLACE = {  # name -> (row, col, size)
     'Account': (4, 0, 12),
     'Quantity': (5, 0, 6), 'Unit': (5, 1, 6),
     'Unit Price': (6, 0, 6), 'Discount (%)': (6, 1, 6),
-    'Subtotal': (7, 0, 12),
-    'Number': (8, 0, 6), 'Accounting Date': (8, 1, 6),
-    'Status': (9, 0, 6),
+    'Taxes': (7, 0, 12),
+    'Subtotal': (8, 0, 12),
+    'Total': (9, 0, 12),
+    'Number': (10, 0, 6), 'Accounting Date': (10, 1, 6),
+    'Status': (11, 0, 6),
+    'Tax rate': (12, 0, 6),
 }
 TITLE = 'Label'                                    # Odoo's _rec_name on account.move.line is `name`
 REQUIRED = {'Invoice', 'Display Type'}
-READONLY = {'Subtotal', 'Number', 'Accounting Date', 'Status'}
+READONLY = {'Subtotal', 'Total', 'Number', 'Accounting Date', 'Status'}
 HIDDEN = set()
+PERMISSION = {'Tax rate': '001'}                   # hidden **and** read-only: nobody types a roll-up
 DESC = {  # Odoo field help, verbatim where Odoo has one (addons/account/models/account_move_line.py)
     'Invoice': 'The document this line belongs to — Odoo labels it Journal Entry. It is also the link the '
                'subtable on the invoice is built on, so a line opened from inside an invoice carries it already.',
@@ -173,6 +184,16 @@ DESC = {  # Odoo field help, verbatim where Odoo has one (addons/account/models/
     'Accounting Date': "The invoice's Accounting Date. Odoo stores it on the line and sorts the Journal Items "
                        'list on it.',
     'Status': "The invoice's Status. Odoo's Journal Items views filter Posted / Unposted on it.",
+    # the Taxes bundle (13-taxes.md §1 › What this bundle changes on Invoice Lines)
+    'Taxes': 'The taxes on this line — Odoo tax_ids. Unfiltered, as Odoo\'s own field is: its context turns '
+             'active_test off, so its picker offers archived taxes too, and it carries no Tax Type domain. A '
+             'line takes whatever the product put there.',
+    'Tax rate': 'The sum of the Amounts of this line\'s Taxes, counting only the ones whose Tax Computation is '
+                'Percentage — so a Fixed or Custom Formula tax cannot add its amount as if it were a rate. A '
+                'roll-up (汇总) over the Taxes relation; hidden and read-only, and Total is computed from it.',
+    'Total': 'Subtotal plus this line\'s tax — Odoo price_total. Subtotal × (1 + Tax rate ÷ 100), rounded to '
+             'two decimals, which is what the company\'s round-per-line setting does. The sum of these is the '
+             "invoice's Total, and the difference from the sum of the Subtotals is its Tax.",
 }
 ADVANCED = {  # advancedSetting keys this script owns
     'Sequence': {'defsource': C.static_default(10)},
@@ -181,15 +202,20 @@ ADVANCED = {  # advancedSetting keys this script owns
     'Unit Price': {'defsource': C.static_default(0)},
     'Discount (%)': {'defsource': C.static_default(0), 'suffix': '%'},
 }
-DOT = {'Sequence': 0, 'Quantity': 2, 'Unit Price': 2, 'Discount (%)': 2, 'Subtotal': 2}
+DOT = {'Sequence': 0, 'Quantity': 2, 'Unit Price': 2, 'Discount (%)': 2, 'Subtotal': 2, 'Total': 2,
+       'Tax rate': 4}                              # Odoo's amount is float(16, 4), so their sum is too
 ALIAS = {'Invoice': 'move_id', 'Sequence': 'sequence', 'Display Type': 'display_type', 'Product': 'product_id',
          'Label': 'name', 'Account': 'account_id', 'Quantity': 'quantity', 'Unit': 'product_uom_id',
          'Unit Price': 'price_unit',
          'Discount (%)': 'discount', 'Subtotal': 'price_subtotal', 'Number': 'move_name',
-         'Accounting Date': 'date', 'Status': 'parent_state'}
-RELATIONS = {'Product': VARIANTS, 'Unit': UNITS, 'Account': ACCOUNTS}   # one-way; no target gets a reverse field
+         'Accounting Date': 'date', 'Status': 'parent_state',
+         'Taxes': 'tax_ids', 'Total': 'price_total',
+         'Tax rate': 'tax_rate'}                   # tax_rate is a helper, not a field of account.move.line
+RELATIONS = {'Product': VARIANTS, 'Unit': UNITS, 'Account': ACCOUNTS,
+             'Taxes': TAXES}                       # one-way; no target gets a reverse field
 LOOKUPS = [('Number', 'Number'), ('Accounting Date', 'Accounting Date'), ('Status', 'Status')]
-FIGURES = ['Product', 'Account', 'Quantity', 'Unit', 'Unit Price', 'Discount (%)', 'Subtotal']   # what a section hides
+# what a section, a subsection and a note hide — Odoo's check_non_accountable_fields_null
+FIGURES = ['Product', 'Account', 'Quantity', 'Unit', 'Unit Price', 'Discount (%)', 'Taxes', 'Subtotal', 'Total']
 
 
 def ws():
@@ -211,7 +237,12 @@ SIGNATURE = ('controlName', 'type', 'alias', 'row', 'col', 'size', 'sectionId', 
 
 
 def signature_of(worksheet):
-    return sorted(json.dumps([c['controlId']] + [c.get(k) for k in SIGNATURE], sort_keys=True, ensure_ascii=False)
+    """Every JSON-valued `advancedSetting` is parsed rather than compared as a string: a static Relation default
+    embeds the whole related record and the server re-serialises that snapshot on every read, so a raw string
+    comparison reports a change nobody made (BUILDING.md; `accounts.signature`, 18 Sep 2026)."""
+    import accounts
+    return sorted(json.dumps([c['controlId'], accounts.control_state(c)], sort_keys=True, ensure_ascii=False,
+                             default=str)
                   for c in hap.controls(worksheet))
 
 
@@ -376,7 +407,11 @@ def step_fields():
 
 # What the subtable shows inside an invoice, in Odoo's own column order.
 SUBTABLE_COLUMNS = ('Sequence', 'Display Type', 'Product', 'Label', 'Account', 'Quantity', 'Unit', 'Unit Price',
-                    'Discount (%)', 'Subtotal')          # Account: the Chart of Accounts bundle
+                    'Discount (%)', 'Taxes', 'Subtotal', 'Total')
+# Account: bundle 2 · Taxes and Total: bundle 6. Odoo's own Invoice Lines tab puts Taxes between the price and
+# the amount, and a line's taxes have to be **settable from inside the invoice** — the UI test of 18 Sep found
+# Total here without Taxes, so the tab showed a line's tax-inclusive amount with no way to see or change the
+# tax that made it (13-taxes.md §3).
 
 
 def sub_list(ctrls=None):
@@ -519,7 +554,8 @@ def desired(c):
     want = {'row': row, 'col': col, 'size': size, 'desc': DESC.get(name, ''), 'hint': '',
             'required': name in REQUIRED, 'alias': ALIAS.get(name, ''),
             'attribute': 1 if name == TITLE else 0,
-            'fieldPermission': '101' if name in READONLY else ('011' if name in HIDDEN else '111')}
+            'fieldPermission': PERMISSION.get(
+                name, '101' if name in READONLY else ('011' if name in HIDDEN else '111'))}
     if name in DOT:
         want['dot'] = DOT[name]
     return want
@@ -546,7 +582,8 @@ def step_layout():
     pairs it with the subtable on Invoices, is read from the live control and sent back untouched."""
     ctrls = guard()
     # Account is bundle 2's and is placed when it is there; accounts.py adds it.
-    missing = [n for n in PLACE if n not in {c['controlName'] for c in ctrls} and n not in BUNDLE_2]
+    missing = [n for n in PLACE if n not in {c['controlName'] for c in ctrls}
+               and n not in BUNDLE_2 + BUNDLE_6]
     if missing:
         sys.exit(f'{missing} are not on the worksheet yet — run fields, mount and computed first')
     hap.backup('invlines_controls_pre_layout', ctrls)
@@ -595,7 +632,7 @@ def step_rules():
     f = C.fields(ws())
     # Account is bundle 2's (accounts.py `lines`): on a build that has not reached it yet, the rule hides the rest.
     rules = [(RULE_FIGURES, C.INTERACTION, C.any_of([is_any_of(f, 'Display Type', TEXT_LINES)]),
-              [C.item(C.HIDE, *[f[t] for t in FIGURES if t in f or t not in BUNDLE_2])], {})]
+              [C.item(C.HIDE, *[f[t] for t in FIGURES if t in f or t not in BUNDLE_2 + BUNDLE_6])], {})]
     C.upsert_rules(ws(), rules, 'invlines_rules_pre_rules')
     for r in hap.listing('worksheet', 'rules', ws()):
         C.remember('rules', KEY + r['name'], r['ruleId'])
@@ -604,7 +641,7 @@ def step_rules():
 # ── 7 · the view ────────────────────────────────────────────────────────────
 
 VIEW_COLUMNS = ('Number', 'Label', 'Account', 'Product', 'Quantity', 'Unit', 'Unit Price', 'Discount (%)',
-                'Subtotal')                           # Account: the Chart of Accounts bundle
+                'Taxes', 'Subtotal', 'Total')         # Account: bundle 2 · Taxes and Total: bundle 6
 VIEWS = ('Lines',)
 
 
@@ -615,7 +652,7 @@ def step_views():
     guard()
     f = C.fields(ws())
     # Account is bundle 2's (accounts.py `lines`): until it exists the view shows the other columns.
-    columns = [f[n]['controlId'] for n in VIEW_COLUMNS if n in f or n not in BUNDLE_2]
+    columns = [f[n]['controlId'] for n in VIEW_COLUMNS if n in f or n not in BUNDLE_2 + BUNDLE_6]
     sort = C.sort_by([(f['Accounting Date'], False), (f['Number'], False), (f['Sequence'], True)])
     quick = [{'fieldId': f['Display Type']['controlId'], 'selectionType': 'multiple', 'displayType': 'dropdown'}]
     views = {'Lines': (dict(viewType='table', tableFields=columns, quickFilters=quick), sort, columns)}
@@ -1208,7 +1245,7 @@ def step_check():
     if f.get(TITLE, {}).get('attribute') != 1:
         problems.append(f'{TITLE} is not the title field')
     for name, target in RELATIONS.items():
-        if f.get(name, {}).get('dataSource') != target:
+        if target and name in f and f.get(name, {}).get('dataSource') != target:
             problems.append(f"{name} points at {f.get(name, {}).get('dataSource')}, want {target}")
     if f.get('Invoice', {}).get('dataSource') != INVOICES:
         problems.append(f"Invoice points at {f.get('Invoice', {}).get('dataSource')}")
@@ -1231,7 +1268,7 @@ def step_check():
         got = (r['type'], r['disabled'], {i['type'] for i in r['ruleItems']},
                sorted(LABEL['Display Type'].get(v) for c in conds for v in c.get('values', [])),
                [names.get(c['controlId']) for i in r['ruleItems'] for c in i['controls']])
-        if got != (C.INTERACTION, False, {C.HIDE}, sorted(TEXT_LINES), FIGURES):
+        if got != (C.INTERACTION, False, {C.HIDE}, sorted(TEXT_LINES), [n for n in FIGURES if n in f]):
             problems.append(f'rule {RULE_FIGURES!r}: {got}')
     if set(rules) != {RULE_FIGURES}:
         problems.append(f'rules {sorted(rules)}')
@@ -1244,7 +1281,7 @@ def step_check():
                sortCid=names.get(v.get('sortCid')), sortType=v.get('sortType'),
                filters=[names.get(x['controlId']) for x in v.get('filters', [])],
                quick=[names.get(q['controlId']) for q in v.get('fastFilters', [])])
-    want = dict(columns=list(VIEW_COLUMNS),
+    want = dict(columns=[n for n in VIEW_COLUMNS if n in f],
                 sort=[('Accounting Date', False), ('Number', False), ('Sequence', True)],
                 sortCid='Accounting Date', sortType=1, filters=[], quick=['Display Type'])
     if got != want:
@@ -1258,7 +1295,7 @@ def step_check():
         problems.append('the subtable is not on Invoices')
     else:
         columns = [names.get(x) for x in sub.get('showControls') or []]
-        if columns != list(SUBTABLE_COLUMNS):
+        if columns != [n for n in SUBTABLE_COLUMNS if n in f]:
             problems.append(f'subtable columns {columns}')
         if sub.get('sectionId') != INV['Invoice Lines']:
             problems.append(f"subtable tab {inv_names.get(sub.get('sectionId'))}")

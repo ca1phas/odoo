@@ -58,6 +58,7 @@ record was seeded from the Odoo tenant.
 | 10 | Payment Terms | `account.payment.term` (+ `account.payment.term.line`) | **Bundle 3 of 6.** The tenant's ten terms with their lines, as a worksheet and a *Due Terms* table; Invoices' **text stand-in replaced by the relation** (values carried, then the text field deleted), the Due Date computed from the term, the term taken from the customer or vendor; Contacts gained Customer and Vendor Payment Terms. UI-tested 21/22, 1 fails (the two roll-up rules, built and disabled) — ready for review | [md](worksheets/10-payment-terms.md) · [page](https://claude.ai/artifact/Vi6EAAxNgZ9nDiGya4qjh4) |
 | 11 | Countries | `res.country` | **Bundle 4 of 6.** Odoo's 251 countries with their ISO code, calling code, VAT label and the two address switches; Contacts' **Country text replaced by the relation** (8 contacts carried, then the text field deleted) and its column, quick filter, Kanban field and both address automations re-pointed. UI-tested 22 pass, 1 fixed during the test | [md](worksheets/11-countries.md) · [page](https://claude.ai/artifact/Cjkq8eoykwMX7L6mshQnUT) |
 | 12 | States | `res.country.state` | **Bundle 5 of 6.** Odoo's 2 102 states in 74 countries; **Countries** gained the States list Odoo shows at the foot of its form, and Contacts' **State text was replaced by the relation** (eight contacts carried, then the text field deleted), with Odoo's two onchanges as workflows — a state sets its country, a country clears a state that belongs elsewhere. UI-tested 20 pass, 1 not isolated — the one failure, Odoo's unique code per country, was dropped and rebuilt the same day: a duplicate now saves, then loses its key, gains a **Duplicate code** tick and lands in a *Duplicate codes* view | [md](worksheets/12-states.md) · [page](https://claude.ai/artifact/4pAVaBa4GsmRWuumAAtHmL) |
+| 13 | Taxes | `account.tax` | **Bundle 6 of 6, the last.** Odoo's 35 Malaysian SST taxes, ten active; **Products** gained Sales Taxes and Purchase Taxes, **Chart of Accounts** gained Default Taxes, **Invoice Lines** gained Taxes and Total, and **06's Tax stopped being a seeded figure** — it is now the lines' Total less their Subtotal, and the three tenant documents land on 10 460.32, 1 143.20 and 14 400.00 exactly. Uniqueness reuses bundle 5's key-and-mark pattern on Odoo's five-way constraint. UI-tested 19 pass, 3 fixed during the test, 1 not isolated | [md](worksheets/13-taxes.md) · [page](https://claude.ai/artifact/Ss1RP2nf72YFYVXecypQLF) |
 
 ## Phase 1 · Roles
 
@@ -81,12 +82,12 @@ group it stands for is written in its description, checked against
 `addons/account/security/account_security.xml` in this checkout. **None of them has a member** — who belongs in
 which role is the owner's call, and the two people above stay app administrators as they were.
 
-| Role | Odoo group (and Odoo's own name for it) | Contacts | Countries | States | Units & Packagings | Products | Product Variants | Product Categories | Chart of Accounts | Payment Terms | Payment Term Lines | Journals | Invoices | Invoice Lines |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| Accounting Administrator | `account.group_account_manager` — *Administrator*, plus `base.group_allow_export` | full | view | full | full | full | full | full | full | full | full | full | full | full |
-| Accountant | `account.group_account_user` — *Show Full Accounting Features* | view · add · edit | view | view · add · edit | view | view | view | view | view | view | view | view · add · edit | view · add · edit | view · add · edit |
-| Invoicing | `account.group_account_invoice` — *Invoicing* | view · add · edit | view | view · add · edit | view | view | view | view | view | view | view | **view** | view · add · edit | view · add · edit |
-| Accounting Read-only | `account.group_account_readonly` — *Show Accounting Features - Readonly* | view | view | view | view | view | view | view | view | view | view | view | view | view |
+| Role | Odoo group (and Odoo's own name for it) | Contacts | Countries | States | Units & Packagings | Products | Product Variants | Product Categories | Chart of Accounts | **Taxes** | Payment Terms | Payment Term Lines | Journals | Invoices | Invoice Lines |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Accounting Administrator | `account.group_account_manager` — *Administrator*, plus `base.group_allow_export` | full | view | full | full | full | full | full | full | **full** | full | full | full | full | full |
+| Accountant | `account.group_account_user` — *Show Full Accounting Features* | view · add · edit | view | view · add · edit | view | view | view | view | view | **view** | view | view | view · add · edit | view · add · edit | view · add · edit |
+| Invoicing | `account.group_account_invoice` — *Invoicing* | view · add · edit | view | view · add · edit | view | view | view | view | view | **view** | view | view | **view** | view · add · edit | view · add · edit |
+| Accounting Read-only | `account.group_account_readonly` — *Show Accounting Features - Readonly* | view | view | view | view | view | view | view | view | **view** | view | view | view | view | view |
 
 Read the three words as HAP stores them, per worksheet:
 

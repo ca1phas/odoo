@@ -65,7 +65,7 @@ Every field is module `account` unless noted. S = stored.
 
 That is why the tenant's names repeat: **0% NA** is both a Sales tax and a Purchase tax, **5% G**, **8% S** and
 **10% G** each exist twice for the same reason, and **Exempt C 1,2** exists once for Sales (Goods) and once for
-Purchases (Goods). Fourteen of the 35 names are shared by two records.
+Purchases (Goods). **Eight** of the 27 distinct names are shared by two records apiece — sixteen of the 35.
 
 Two more constraints: the tax group's country must equal the tax's (`validate_tax_group_id`), and a
 Based-on-Payment tax needs a reconcilable transition account.

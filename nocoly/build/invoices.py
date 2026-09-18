@@ -190,12 +190,17 @@ PLACE = {  # name -> (row, col, size, tab)
 
 # What each remark block says, as the HTML the block stores (worksheets/06-invoices.md §1).
 HTML = {
-    NOTE_LINES: '<p><strong>The lines arrive with 07 Invoice Lines.</strong> '
-                "Odoo's Invoice Lines tab holds the product lines — product, label, quantity, unit, unit price, "
-                'taxes and subtotal — with <em>Add a line</em>, <em>Add a section</em>, <em>Add a note</em> and the '
-                'product <em>Catalog</em>, and under them the totals and the payments already made.</p>'
-                '<p>Until then, Untaxed Amount, Tax, Total and Amount Due are read-only figures seeded from the '
-                'tenant; 07 turns them into roll-ups of the lines. Taxes themselves need the Taxes bundle.</p>',
+    # Rewritten by `taxes.py note` on 18 Sep 2026: 06 wrote this while the lines and the taxes were both still
+    # to come, and both of its sentences went false — 07 made three amounts roll-ups and bundle 6 the fourth.
+    NOTE_LINES: "<p><strong>Odoo's Invoice Lines tab</strong> holds the product lines — product, label, "
+                'quantity, unit, unit price, discount, taxes, subtotal and total — with <em>Add a line</em>, '
+                '<em>Add a section</em>, <em>Add a note</em> and the product <em>Catalog</em>, and under them '
+                'the totals and the payments already made.</p>'
+                '<p><strong>All four amounts are roll-ups of these lines.</strong> Untaxed Amount is the sum '
+                'of their Subtotal; <strong>Tax</strong> is the sum of their Total less that, and stopped '
+                'being a figure seeded from the tenant when the Taxes bundle arrived; Total and Amount Due '
+                'are the sum of their Total. The payments already made, and the tax and payment-term lines '
+                "Odoo writes itself, are not built.</p>",
     NOTE_OTHER: "<p><strong>Also on Odoo's Other Info tab:</strong> Sales Team and the marketing fields, a Payment "
                 'QR-code, the Incoterm and its location, Fiscal Position, Payment Method, and — on a vendor bill — '
                 'the source email and the OCR extraction.</p>'

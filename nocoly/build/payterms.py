@@ -3094,7 +3094,9 @@ def step_check():
     problems = []
     section = next(s for s in app_sections() if s['name'] == SECTION)
     names = [i['name'] for i in section['items']]
-    if names != ['Chart of Accounts', 'Journals', TERMS_WS, LINES_WS, 'Invoices', 'Invoice Lines']:
+    # Taxes joined the group between Chart of Accounts and Journals with the Taxes bundle (13-taxes.md), where
+    # Odoo's Accounting configuration menu has it.
+    if names != ['Chart of Accounts', 'Taxes', 'Journals', TERMS_WS, LINES_WS, 'Invoices', 'Invoice Lines']:
         problems.append(f'Invoicing reads {names}')
     status = {k: v.get('status') for k, v in main_site_items().items()}
     if (status.get(terms_ws()), status.get(lines_ws())) != (1, HIDDEN):

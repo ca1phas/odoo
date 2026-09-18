@@ -163,6 +163,7 @@ CODE, NAME, DISPLAY, TYPE, GROUP = 'Code', 'Account Name', 'Display Name', 'Type
 RECONCILE, NON_TRADE, PARENT, DESCRIPTION, ACTIVE = ('Payment Reconciliation', 'Non Trade', 'Parent Account',
                                                      'Description', 'Active')
 CHILDREN = 'Child Accounts'                         # the reverse of Parent Account, made by the server
+DEFAULT_TAXES = 'Default Taxes'                     # the Taxes bundle (13-taxes.md), added by taxes.py `accounts`
 
 # §1's form layout, no tabs: Code (4) | Account Name (8); Display Name; Type | Internal Group; Payment
 # Reconciliation | Non Trade; Parent Account; Description. The two hidden controls sit under it all — a hidden
@@ -171,15 +172,21 @@ PLACE = {
     CODE: (0, 0, 4), NAME: (0, 1, 8),
     DISPLAY: (1, 0, 12),
     TYPE: (2, 0, 6), GROUP: (2, 1, 6),
-    RECONCILE: (3, 0, 6), NON_TRADE: (3, 1, 6),
-    PARENT: (4, 0, 6),
-    DESCRIPTION: (5, 0, 12),
-    ACTIVE: (6, 0, 6),
-    CHILDREN: (7, 0, 12),
+    # Default Taxes (tax_ids) belongs to the **Taxes** bundle (nocoly/worksheets/13-taxes.md, built by taxes.py
+    # `accounts`), which added it with `add-fields` — that parks a new control at row 9999, and only a full save
+    # moves it. `layout` here is that save: Odoo's Accounting tab puts it straight under Type, so everything
+    # below it moved down one row. 09 § Not built now named this as the one field the Taxes bundle had to come
+    # back for.
+    DEFAULT_TAXES: (3, 0, 12),
+    RECONCILE: (4, 0, 6), NON_TRADE: (4, 1, 6),
+    PARENT: (5, 0, 6),
+    DESCRIPTION: (6, 0, 12),
+    ACTIVE: (7, 0, 6),
+    CHILDREN: (8, 0, 12),
 }
 ALIASES = {CODE: 'code', NAME: 'name', DISPLAY: 'display_name', TYPE: 'account_type', GROUP: 'internal_group',
            RECONCILE: 'reconcile', NON_TRADE: 'non_trade', PARENT: 'parent_id', DESCRIPTION: 'description',
-           ACTIVE: 'active', CHILDREN: 'child_ids'}
+           ACTIVE: 'active', CHILDREN: 'child_ids', DEFAULT_TAXES: 'tax_ids'}
 HINTS = {CODE: 'e.g. 101000', NAME: 'e.g. Current Assets', PARENT: 'Root account',
          DESCRIPTION: 'Enter description here...'}   # Odoo's placeholders; every other control gets none
 DESC = {  # Odoo's field help, verbatim, where it has one (19.4 labels and help); how a helper is computed otherwise
@@ -195,6 +202,8 @@ DESC = {  # Odoo's field help, verbatim, where it has one (19.4 labels and help)
            'keeps it out of sight and filters on it; here a view can show it and filter on it.',
     CHILDREN: 'The accounts whose Parent Account is this one — Odoo child_ids. Hidden: Odoo shows an account\'s '
               'children only by indenting its list.',
+    DEFAULT_TAXES: 'Default taxes for this account — Odoo tax_ids, on the Accounting tab of its form. Not one '
+                   'of this tenant\'s accounts has any, so the field is here and empty.',
 }
 REQUIRED = {CODE, NAME, TYPE}
 UNIQUE = {CODE}                                     # Odoo _ensure_code_is_unique, per company = per app copy
@@ -357,8 +366,16 @@ SIGNATURE = ('controlName', 'type', 'alias', 'row', 'col', 'size', 'sectionId', 
 
 
 def signature(worksheet_id):
-    """A worksheet's controls by id, position in the listing not compared."""
-    return sorted(json.dumps([c['controlId']] + [c.get(k) for k in SIGNATURE], sort_keys=True, ensure_ascii=False)
+    """A worksheet's controls by id, position in the listing not compared, and every JSON-valued
+    `advancedSetting` **parsed** rather than compared as a string.
+
+    A static Relation default embeds the whole related record, and the server re-serialises that snapshot on
+    every read — so a raw string comparison reports a change nobody made. Adding **Default Taxes** to Chart of
+    Accounts (the Taxes bundle, 18 Sep 2026) put a new key inside the account record embedded in Contacts'
+    two account defaults and moved the `rq…` keys around it, and `check_untouched` stopped the run over a
+    worksheet nothing had touched. `control_state` is the comparison BUILDING.md already prescribes.
+    """
+    return sorted(json.dumps([c['controlId'], control_state(c)], sort_keys=True, ensure_ascii=False, default=str)
                   for c in hap.controls(worksheet_id))
 
 
@@ -414,7 +431,7 @@ def guard(fresh=False):
         sys.exit(f"profile {who.get('profile')!r} does not reach ERP Master › {SECTION} › {WORKSHEET}")
     problems, ctrls = [], hap.controls(worksheet)
     f = hap.by_name(ctrls)
-    known = set(PLACE) | (STOCK if fresh else set())
+    known = set(PLACE) | (STOCK if fresh else set())          # DEFAULT_TAXES is in PLACE: bundle 6 adds it
     # A self-relation's reverse is made by the server as "Child"; it is known by its reserved id until `layout`
     # names it.
     reverses = {f[PARENT].get('sourceControlId')} if PARENT in f else set()
@@ -572,7 +589,7 @@ def step_layout():
     picker filter — in one full save, read back."""
     ctrls = guard()
     f = hap.by_name(ctrls)
-    missing = [n for n in PLACE if n != CHILDREN and n not in f]
+    missing = [n for n in PLACE if n not in (CHILDREN, DEFAULT_TAXES) and n not in f]
     if missing:
         sys.exit(f'controls missing — run the earlier steps first: {missing}')
     hap.backup('accounts_controls_pre_layout', ctrls)
@@ -1700,7 +1717,7 @@ def step_check():
     ctrls = hap.controls(ws())
     f = hap.by_name(ctrls)
     if set(f) != set(PLACE):
-        problems.append(f'controls {sorted(set(f) ^ set(PLACE))}')
+        problems.append(f'controls {sorted(set(f) ^ set(PLACE))}')   # DEFAULT_TAXES: bundle 6
     problems += [f'{n}: {d}' for n, d in layout_differences(ctrls).items()]
     kinds = {CODE: 2, NAME: 2, DISPLAY: FORMULA, TYPE: 11, GROUP: FORMULA, RECONCILE: 36, NON_TRADE: 36,
              PARENT: 29, DESCRIPTION: 2, ACTIVE: 36, CHILDREN: 29}
@@ -2586,7 +2603,11 @@ def b_ids():
         variant_product=variants['Product'], product_category=products['Category'],
         product_income=products['Income Account'], product_expense=products['Expense Account'],
         category_income=categories['Income Account'], category_expense=categories['Expense Account'],
-        journal_default=journals['Default Account'])
+        journal_default=journals['Default Account'],
+        # the Taxes bundle (13-taxes.md § What this bundle changes on Invoice Lines / on Products), which
+        # added one write to four of the seven paths. `.get`, so `b_ids` still works before it is built.
+        line_taxes=lines.get('Taxes'), product_sales_taxes=products.get('Sales Taxes'),
+        product_purchase_taxes=products.get('Purchase Taxes'))
 
 
 def b_searches(x):
@@ -2746,6 +2767,37 @@ def b_path_conditions(x, start, byname, groups):
     return out
 
 
+# The Taxes bundle's tax fill: the four paths whose product is known also write the line's **Taxes**, from the
+# *Get the product* step — the product's Sales Taxes on a customer document, its Purchase Taxes on a vendor
+# one. Odoo's `_compute_tax_ids` without the fiscal position. The three journal-default paths write no tax:
+# they are the paths the product and its category gave nothing on (13-taxes.md §1). Built by `taxes.py rollup`
+# (`step_tax_fill`); named here so `b-check` still reads the two workflows back in full.
+B_TAX_FILL_STEPS = {"Take the product's Income Account": 'product_sales_taxes',
+                    "Take the category's Income Account": 'product_sales_taxes',
+                    "Take the product's Expense Account": 'product_purchase_taxes',
+                    "Take the category's Expense Account": 'product_purchase_taxes'}
+
+
+def b_tax_fill(x=None):
+    """{step name: (the step whose record the value comes from, the control)} — empty until the Taxes bundle
+    has added the two Products fields and the line's Taxes."""
+    x = x or b_ids()
+    if not x.get('line_taxes'):
+        return {}
+    out = {}
+    for step, key in B_TAX_FILL_STEPS.items():
+        if x.get(key):
+            out[step] = (B_GET_PRODUCT, x[key])
+    return out
+
+
+def b_tax_entry(x, byname, source, control):
+    """The one `fields` entry the tax fill adds: the line's Taxes from the product record that step found."""
+    node = byname[source]['id']
+    return {'fieldId': x['line_taxes']['controlId'], 'type': RELATION, 'addType': 0, 'fieldValue': '',
+            'fieldValueId': control['controlId'], 'nodeId': node, 'sureNodeId': node, 'nodeAppType': 1}
+
+
 def b_step_fields(x, byname, source, control):
     node = byname[source]['id']
     return [{'fieldId': x['line_account']['controlId'], 'type': RELATION, 'addType': 0, 'fieldValue': '',
@@ -2810,8 +2862,13 @@ def automation_b_differences(workflow, x=None):
             out.append(f'{workflow} / path {name!r} runs into {nxt and nxt.get("name")!r}')
             continue
         got = b_step_state(pid, nxt['id'])
-        wanted = dict(selectNodeId=start, appId=x['lines'], isException=False,
-                      fields=[(x['line_account']['controlId'], byname[source]['id'], control['controlId'])])
+        writes = [(x['line_account']['controlId'], byname[source]['id'], control['controlId'])]
+        tax = b_tax_fill(x).get(step)
+        if tax:                                     # the Taxes bundle: this path also writes the line's Taxes
+            writes.append((x['line_taxes']['controlId'], byname[tax[0]]['id'], tax[1]['controlId']))
+        wanted = dict(selectNodeId=start, appId=x['lines'], isException=False, fields=writes)
+        got = dict(got, fields=sorted(got['fields']))
+        wanted = dict(wanted, fields=sorted(writes))
         if got != wanted:
             out.append(f'{workflow} / {step!r}: {got} != {wanted}')
     info = hap.run('workflow', 'get', pid)
