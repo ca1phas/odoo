@@ -7,7 +7,7 @@
 | Odoo models | `account.payment.term`, `account.payment.term.line` |
 | Reference | **casimir.odoo.com — Odoo saas~19.4+e**: both models' fields by module, constraints, defaults, every view's raw arch, the window action and menu, the decimal precision, all 10 terms and 11 lines, every field in the database that points at either model, the invoice-form and contact-form arch that places them, and the payment terms of every invoice, contact and sales order — extracted read-only to `nocoly/reference/odoo-19.4/account.payment.term.md`, with the data in `nocoly/data/casimir-payment-terms.json`. Behaviour the tenant cannot show — the constraints, the line defaults, how a term dates an invoice, how a company's terms reach its contacts — is read from the Odoo 19.0 source in this repo: `addons/account/models/account_payment_term.py`, `account_move.py`, `partner.py`, `odoo/addons/base/models/res_partner.py` |
 | Phase | 1 — **bundle 3 of 6** (Product Categories · Chart of Accounts · Payment Terms · Countries · States · Taxes) |
-| Status | §1 written 17 Sep 2026 · built and self-checked through the CLI the same day (§2) · **UI-tested 17 Sep 2026: 18 of 22 pass, 1 fails, 3 not run** (§3) — the two rules standing on roll-ups are built and **disabled**, a HAP roll-up not following unsaved subtable rows · each invoice is dated once since the *trigger other workflows* switch (§2) · the Invoices text stand-in was deleted after its three values were carried into the relation and read back |
+| Status | §1 written 17 Sep 2026 · built and self-checked through the CLI the same day (§2) · **UI-tested 17–18 Sep 2026: 21 of 22 pass, 1 fails** (§3) · ready for review — the two rules standing on roll-ups are built and **disabled**, a HAP roll-up not following unsaved subtable rows · each invoice is dated once since the *trigger other workflows* switch (§2) · the Invoices text stand-in was deleted after its three values were carried into the relation and read back |
 
 A payment term says when an invoice falls due: "30 Days", "End of Following Month", "30% Now, Balance 60 Days". The
 tenant carries the 10 terms Odoo's chart template installs. This bundle builds the table of terms with its lines,
@@ -796,7 +796,7 @@ Customer Payment Terms.
 
 ## 3 · Test list
 
-**18 of 22 pass, 1 fails, 3 not run.** Run in the Nocoly UI in Chrome on 17 Sep 2026, with every stored value read
+**21 of 22 pass, 1 fails.** Run in the Nocoly UI in Chrome on 17 and 18 Sep 2026, with every stored value read
 back through `hap worksheet record get` and every workflow's runs counted with `hap approval history`. The one
 failure is answered: the two rules that stand on roll-ups are **built and disabled** (test 5, difference 1).
 
@@ -821,9 +821,9 @@ failure is answered: the two rules that stand on roll-ups are **built and disabl
 | 17 | Invoices: Due Date or Payment Terms | **Pass.** Clearing Payment Terms on the draft shows **Due Date 2026-10-31**, the date D last wrote; setting a term hides it again |
 | 18 | Contacts: the two terms | **Pass.** *TEST PT Person*'s **Sales & Purchase** tab reads *Sales* · Salesperson \| **Customer Payment Terms 45 Days** · **Vendor Payment Terms** · *Misc* · Reference. The tab shows for a contact under a company, where the Invoicing tab is hidden |
 | 19 | Contacts: a company's terms reach a new contact | **Pass.** A contact created in the browser (*TEST UI PT contact*) under **TEST PT Vendor Co** came back with **Customer Payment Terms 45 Days and Vendor Payment Terms 15 Days**, the company's own |
-| 20 | Invoices: Confirm dates the document | **Not run.** The fix that dates each document once landed after the browser pass; Confirm on the draft `11ec708e…` is to be pressed in the UI, expecting today's Invoice Date, the Due Date 60 days on, one Confirm run and **no** run of D |
-| 21 | Invoices: dated exactly once | **Not run** in the browser. Proved through the CLI on five `TEST PT once …` documents after the switch (§2), including a create, a term typed, a date change, a customer change and Confirm |
-| 22 | Products: Favorite restored | **Not run.** Another administrator deleted Products' Favorite while this bundle was being built; it was rebuilt as `6aabf880e43d174ab374dcf0` (03 §2). The form's row 1, the three views' sort and the List quick filter are still to be looked at |
+| 20 | Invoices: Confirm dates the document | **Pass**, 18 Sep. The draft of test 15 (*30% Now, Balance 60 Days*, Accounting Date 2026-09-01, no Invoice Date) → **INV/2026/00009, Posted, Invoice Date 2026-09-18** (today) and **Due Date 2026-11-17**, 60 days on from the new Invoice Date. Every field read-only afterwards, Due Date hidden behind the term |
+| 21 | Invoices: dated exactly once | **Pass**, 18 Sep, counted in the run history around each browser action. Changing a draft's Invoice Date to 2026-09-05: **D 25 → 26**, C unmoved, Due Date 2026-10-05. Confirm on another draft (Invoice Date already set): **Confirm 26 → 27, D unmoved at 26**, Due Date 2026-10-20 — the document is dated once, by whichever workflow acts |
+| 22 | Products: Favorite restored | **Pass**, 18 Sep. Another administrator deleted Products' Favorite while this bundle was being built; it is rebuilt as `6aabf880e43d174ab374dcf0` (03 §2). The form's row 1 reads **Favorite \| Sales \| Purchase**; the List view's quick filters read Product Type · Sales · Purchase · **Favorite** · Category; ticking it on *TEST Favorite Restored* carried to its variant **[TEST-0007]** and moved the product to the **top of the list**, favourites first |
 
 ### Differences from Odoo
 
@@ -847,9 +847,10 @@ failure is answered: the two rules that stand on roll-ups are **built and disabl
 
 - **Payment Terms:** the four `TEST PT` terms from §2 (empty After · 15 Days after End of Month · 30 Days, on the 31st
   · fixed line), all active with Sequence 90, and **TEST UI default row**, active again after test 10.
-- **Invoices:** the `TEST PT` documents of §2, plus `11ec708e-086f-49bb-9334-27baa4e9faea` from test 14 — a draft on
-  Sunway Construction Group, *30% Now, Balance 60 Days*, Accounting Date 2026-09-01, due 2026-10-31, waiting for
-  test 20's Confirm.
+- **Products:** **TEST Favorite Restored** is left **Favorite**, so the list shows favourites first (test 22).
+- **Invoices:** the `TEST PT` documents of §2, and from tests 14–21 **INV/2026/00009** (`11ec708e…`, posted on
+  18 Sep, *30% Now, Balance 60 Days*, due 2026-11-17), **INV/2026/00010** (`b24859c8…`, posted, 30 Days, due
+  2026-10-20) and the draft `a2f3da54…` (30 Days, Invoice Date 2026-09-05, due 2026-10-05).
 - **Contacts:** the `TEST PT` contacts of §2 and **TEST UI PT contact** under TEST PT Vendor Co (test 19).
 - **Products:** TEST Favorite Restored and its variant [TEST-0007], from the Favorite fix.
 

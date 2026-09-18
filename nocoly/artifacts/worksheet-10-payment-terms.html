@@ -1,0 +1,150 @@
+<title>ERP Master Payment Terms</title>
+<meta name="description" content="Review pack for worksheet 10 of the Odoo-to-Nocoly build, the third feature bundle: requirements, build ids and UI test results.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<link rel="stylesheet" href="review.css">
+
+<main class="page">
+
+  <header class="identity">
+    <div class="eyebrow"><span>ERP Master</span><span>Phase 1</span><span>Bundle 3 of 6</span></div>
+    <h1>Payment Terms <span class="model">account.payment.term</span></h1>
+    <p class="lede">When an invoice falls due — "30 Days", "End of Following Month", "30% Now, Balance 60 Days". The tenant's ten terms arrive with their lines, and <strong>the text stand-in on Invoices is replaced by the real thing</strong>: the values were carried across, read back, and the text field deleted. An invoice now takes its term from the customer or vendor, and its Due Date is worked out from the term, as Odoo does.</p>
+    <dl class="meta">
+      <div><dt>Reference</dt><dd>casimir.odoo.com — Odoo saas~19.4+e</dd></div>
+      <div><dt>Behaviour read from</dt><dd>Odoo 19.0 source, <code>account_payment_term.py</code>, <code>account_move.py</code>, <code>partner.py</code></dd></div>
+      <div><dt>Nocoly</dt><dd>App ERP Master · menu group Invoicing, after Journals</dd></div>
+      <div><dt>Built and tested</dt><dd>17–18 September 2026</dd></div>
+    </dl>
+    <div class="scoreline">
+      <span class="chip pass">21 of 22 tests pass</span>
+      <span class="chip decide">1 fails</span>
+      <span class="chip note">10 terms · 11 lines · 1 field deleted</span>
+    </div>
+  </header>
+
+  <aside class="callout" aria-labelledby="note-title">
+    <span class="chip note small" style="justify-self:start">Worth knowing before you review</span>
+    <h2 id="note-title">Two of Odoo's checks are built but switched off</h2>
+    <p>Odoo refuses a term whose percentages do not add up to 100, and an early discount spread over more than one line. Both were built here on a <strong>roll-up</strong> of the Due Terms table — and a HAP roll-up only counts the rows that are <em>already saved</em>. On a new term it reads empty, so the rule refused every term, including one with Odoo's own default 100 % line. Both rules are therefore <strong>disabled</strong>, and nothing checks the percentages today. They stay in place for the day HAP's roll-ups follow the rows being typed. Everything else — the per-line checks, the discount checks, the dates — holds. One thing to try yourself: give a term two lines of 30 % and 30 % and save it; then open an invoice on that term and see which date it gets.</p>
+  </aside>
+
+  <nav class="toc" aria-label="Sections">
+    <a href="#requirements"><span>1</span>Requirements</a>
+    <a href="#build"><span>2</span>Build</a>
+    <a href="#tests"><span>3</span>Tests and differences</a>
+  </nav>
+
+  <section id="requirements" aria-labelledby="req-title">
+    <div class="section-head"><span class="n">1</span><h2 class="section" id="req-title">Requirements</h2></div>
+
+    <div class="block">
+      <h3>The term</h3>
+      <p class="aside">Labels are Odoo 19.4's; aliases are Odoo's field names.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th class="num">#</th><th>Field</th><th>Odoo field</th><th>Nocoly type</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td class="num">1</td><td class="label">Payment Terms</td><td><code>name</code></td><td>Text · required · <strong>title</strong></td><td>"e.g. 30 days"</td></tr>
+            <tr><td class="num">2</td><td class="label">Early Discount</td><td><code>early_discount</code></td><td>Checkbox</td><td>Shows the three discount fields</td></tr>
+            <tr><td class="num">3</td><td class="label">Discount %</td><td><code>discount_percentage</code></td><td>Number · 2</td><td>Odoo's help; must be positive</td></tr>
+            <tr><td class="num">4</td><td class="label">Discount Days</td><td><code>discount_days</code></td><td>Number · 10</td><td>Odoo's help; must be positive</td></tr>
+            <tr><td class="num">5</td><td class="label">Reduced tax</td><td><code>early_pay_discount_computation</code></td><td>Dropdown</td><td>On early payment · Never · Always (upon invoice)</td></tr>
+            <tr><td class="num">6</td><td class="label">Due Terms</td><td><code>line_ids</code></td><td>Table of lines</td><td>Opens with one row, 100 Percent · 0 · Days after invoice date</td></tr>
+            <tr><td class="num">7</td><td class="label">Show installment dates</td><td><code>display_on_invoice</code></td><td>Checkbox · ticked</td><td>For the printed invoice, which is not built</td></tr>
+            <tr><td class="num">8</td><td class="label">Description on the Invoice</td><td><code>note</code></td><td>Rich text</td><td>The tenant's wording, carried across</td></tr>
+            <tr><td class="num">9</td><td class="label">Sequence</td><td><code>sequence</code></td><td>Number · 10</td><td>Odoo drags terms into order; here the number does it</td></tr>
+            <tr><td class="num">10</td><td class="label">Active</td><td><code>active</code></td><td>Checkbox · hidden</td><td>Archive and Unarchive buttons, and an Archived view</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="prose"><strong>A line</strong> (worksheet <em>Payment Term Lines</em>, hidden from the sidebar as Odoo gives it no menu) carries <strong>Due</strong> · <strong>Value</strong> Percent or Fixed · <strong>After</strong> days · <strong>Delay Type</strong> — days after the invoice date, after the end of the month, after the end of next month, or end of month on a given day — and <strong>Days on the next month</strong>, which shows for that last type alone. A percentage must lie between 0 and 100, and the day between 0 and 31, both with Odoo's own messages.</p>
+    </div>
+
+    <div class="block">
+      <h3>What it brings to the worksheets already built</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Worksheet</th><th>New</th><th>Seeded from the tenant</th></tr></thead>
+          <tbody>
+            <tr><td class="label">Invoices</td><td><strong>Payment Terms</strong>, a real relation in place of the text stand-in, which was <strong>deleted</strong> after its values were carried over. Odoo's "Due Date <em>or</em> Payment Terms": with a term set the date is hidden and computed; a journal entry carries neither</td><td>The three documents that had a term: 30 Days, 21 Days, 45 Days — and their due dates unchanged</td></tr>
+            <tr><td class="label">Contacts</td><td><strong>Customer Payment Terms</strong> and <strong>Vendor Payment Terms</strong> on Sales &amp; Purchase, where Odoo has them; a company's terms follow to its contacts</td><td>Sunway Construction Group 30 Days · Klinik Kesihatan Damansara 21 Days · Sarawak Timber Logistics 45 Days</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="prose"><strong>The term follows the customer</strong>, as Odoo's compute does: a customer document takes the contact's Customer Payment Terms, a vendor document its Vendor Payment Terms, a journal entry none — and a contact with no term of its own leaves the invoice's alone. <strong>The Due Date follows the term</strong>: the reference date is the Invoice Date, or the Accounting Date, or today, and each line gives a date — the latest of them wins, with the end-of-month arithmetic and the clamp Odoo uses (the 31st of November is the 30th). Confirm dates the document too, because posting fills an empty Invoice Date.</p>
+      <p class="prose"><strong>Roles:</strong> Payment Terms and its lines are written by the Accounting Administrator alone, as Odoo's access list has it; the other three roles read them. Nothing is hidden per field — Odoo shows a contact's payment terms to every accounting group.</p>
+    </div>
+  </section>
+
+  <section id="build" aria-labelledby="build-title">
+    <div class="section-head"><span class="n">2</span><h2 class="section" id="build-title">Build</h2></div>
+    <p class="prose">Built by <code>nocoly/build/payterms.py</code>, each step safe to re-run — a second run of every step wrote nothing. Before the first write it snapshotted all nine existing worksheets, their records, every workflow and every role, and each step compares them again afterwards, allowing only the changes it names.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Element</th><th>Built</th><th>Id</th></tr></thead>
+        <tbody>
+          <tr><td class="label">Worksheet</td><td>Payment Terms, alias <code>account_payment_term</code>, after Journals</td><td class="id">6aab893fe43d174ab374ce17</td></tr>
+          <tr><td class="label">Worksheet</td><td>Payment Term Lines, mounted as the Due Terms table, hidden from the sidebar</td><td class="id">6aab89417d58b0f449311705</td></tr>
+          <tr><td class="label">Rules</td><td>Five on the term, three on the line — <strong>two disabled</strong> (the callout above)</td><td class="muted">in ids.json</td></tr>
+          <tr><td class="label">Invoices</td><td>The relation, two rules, and the stand-in <code>…68d</code> deleted once its three values read back</td><td class="id">6aab8b6b7d58b0f449311740</td></tr>
+          <tr><td class="label">The term follows the customer</td><td>Four paths — customer, vendor, journal entry, and everything else</td><td class="id">6aab8f1016473257ad5c91e0</td></tr>
+          <tr><td class="label">The Due Date follows the term</td><td>Reads the term's lines and works out the latest date in a code step</td><td class="id">6aab8d164f2a99acac144995</td></tr>
+          <tr><td class="label">Contacts</td><td>The two terms, and both copy automations extended to carry them</td><td class="muted">in ids.json</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose">The date arithmetic was run against Python's own calendar library on 2,000 random dates and line sets before it went in: no mismatches. CLI self-checks: every control, picker, default, rule, column, workflow node and role setting reads back as specified; the ten terms and eleven lines match the tenant; the three documents and three contacts carry their terms; and no view, rule, button or workflow anywhere in the app still names the deleted field.</p>
+    <p class="prose"><strong>Each invoice is dated once.</strong> At first the term-follows-customer workflow and Confirm each worked the date out and then, by writing, started the date workflow as well — the right date twice. HAP has a per-workflow switch for that, and both now start no other workflow. Nothing was deleted to achieve it.</p>
+  </section>
+
+  <section id="tests" aria-labelledby="tests-title">
+    <div class="section-head"><span class="n">3</span><h2 class="section" id="tests-title">Tests and differences</h2></div>
+    <p class="prose">Run in the Nocoly UI in Chrome on 17 and 18 September, with every stored value read back through the CLI and every workflow's runs counted around each action.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th class="num">#</th><th>Check</th><th>Result</th></tr></thead>
+        <tbody>
+          <tr><td class="num">1–2</td><td class="label">The sidebar and the main view</td><td><div class="result"><span class="chip pass small">Pass</span>After Journals; the lines worksheet hidden; ten terms in Odoo's order, then four test terms</div></td></tr>
+          <tr><td class="num">3–4</td><td class="label">A term, and a new term's form</td><td><div class="result"><span class="chip pass small">Pass</span>Two lines of 30 % and 70 %; a new term opens with Odoo's 100 % line; the discount fields appear with Early Discount</div></td></tr>
+          <tr><td class="num">5</td><td class="label">The percentages add up to 100; an early discount has one line</td><td><div class="result"><span class="chip decide small">Fail</span>Refused a correct term, because a roll-up counts saved rows only. Both rules disabled — the callout above</div></td></tr>
+          <tr><td class="num">6</td><td class="label">An early discount must be positive, and needs days</td><td><div class="result"><span class="chip pass small">Pass</span>Both messages appear as you type</div></td></tr>
+          <tr><td class="num">7–9</td><td class="label">The line checks, inside the Due Terms table</td><td><div class="result"><span class="chip pass small">Pass</span>120 % and 40 days refused with Odoo's words; the day field opens only for "Days end of month on the"</div></td></tr>
+          <tr><td class="num">10–11</td><td class="label">Archive and Unarchive; the Lines table</td><td><div class="result"><span class="chip pass small">Pass</span></div></td></tr>
+          <tr><td class="num">12–13</td><td class="label">Invoices: a posted document, and the picker</td><td><div class="result"><span class="chip pass small">Pass</span>21 Days, read-only, no Due Date; the picker offers active terms only</div></td></tr>
+          <tr><td class="num">14</td><td class="label">Invoices: a new invoice in the browser</td><td><div class="result"><span class="chip pass small">Pass</span>Sunway Construction Group → 30 Days, due 2026-10-01 from the accounting date</div></td></tr>
+          <tr><td class="num">15</td><td class="label">Invoices: changing the term</td><td><div class="result"><span class="chip pass small">Pass</span>30 % Now, Balance 60 Days → 2026-10-31, the later of its two lines</div></td></tr>
+          <tr><td class="num">16–17</td><td class="label">Invoices: a journal entry; Due Date or Payment Terms</td><td><div class="result"><span class="chip pass small">Pass</span>An entry carries neither; clearing the term brings the date back</div></td></tr>
+          <tr><td class="num">18–19</td><td class="label">Contacts: the two terms, and a company's terms on a new contact</td><td><div class="result"><span class="chip pass small">Pass</span>A contact created under a company came back with both of its terms</div></td></tr>
+          <tr><td class="num">20</td><td class="label">Confirm dates the document</td><td><div class="result"><span class="chip pass small">Pass</span>INV/2026/00009: posting filled today's invoice date and the due date moved with it, 60 days on</div></td></tr>
+          <tr><td class="num">21</td><td class="label">Dated exactly once</td><td><div class="result"><span class="chip pass small">Pass</span>Counted around each action: a date change ran the date workflow once; Confirm ran only Confirm</div></td></tr>
+          <tr><td class="num">22</td><td class="label">Products: Favorite restored</td><td><div class="result"><span class="chip pass small">Pass</span>Another administrator deleted it mid-build; rebuilt, and ticking it still reaches the variant and sorts the product first</div></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="block">
+      <h3>Differences from Odoo</h3>
+      <ol class="differences">
+        <li><span class="n">1</span><div class="head"><strong>Nothing checks that the percentages add up to 100</strong><span class="chip note small">HAP behaviour</span></div><p>Nor that an early discount keeps to one line. Both rules are built and disabled; a roll-up cannot see the rows being typed.</p></li>
+        <li><span class="n">2</span><div class="head"><strong>No preview of the installments</strong><span class="chip note small">Scope</span></div><p>Odoo shows an example amount on an example date with each installment. A formula here cannot walk the lines — but a real invoice's Due Date is the same arithmetic, and it is built.</p></li>
+        <li><span class="n">3</span><div class="head"><strong>Pickers list the newest term first</strong><span class="chip note small">HAP behaviour</span></div><p>Odoo orders them by sequence.</p></li>
+        <li><span class="n">4</span><div class="head"><strong>The Lines table shows every line's day-of-month</strong><span class="chip note small">HAP behaviour</span></div><p>A rule hides a field on a form, not in a table column. Inside a term's own Due Terms table it is hidden as Odoo hides it.</p></li>
+        <li><span class="n">5</span><div class="head"><strong>An invoice is dated as soon as it has a term</strong><span class="chip note small">Note</span></div><p>Odoo waits until the invoice has lines.</p></li>
+        <li><span class="n">6</span><div class="head"><strong>The term and the date arrive with the save</strong><span class="chip note small">HAP behaviour</span></div><p>Odoo fills them the moment the customer is picked; here the workflows run just after the save.</p></li>
+        <li><span class="n">7</span><div class="head"><strong>A term an invoice uses can still be deleted</strong><span class="chip note small">HAP behaviour</span></div><p>Odoo refuses and tells you to archive it instead. Only the Accounting Administrator can delete, and Archive is the way to retire a term.</p></li>
+        <li><span class="n">8</span><div class="head"><strong>Sequence is typed, not dragged</strong><span class="chip note small">HAP behaviour</span></div><p>And a new line does not start at 100 minus the other percentages, nor at the previous line's days plus 30.</p></li>
+      </ol>
+    </div>
+
+    <div class="block">
+      <h3>Test records left for you</h3>
+      <p class="prose">Five terms beginning <strong>TEST</strong> — an empty After, a 15-days-after-end-of-month, a 30-days-on-the-31st, one with a fixed line, and <strong>TEST UI default row</strong>. On Invoices, the <strong>TEST PT</strong> documents, including one posted as INV/2026/00008 and a draft waiting for its Confirm check. On Contacts, four <strong>TEST PT</strong> contacts and <strong>TEST UI PT contact</strong>. All go after sign-off, with the owner's approval; the tenant's ten terms and their lines stay.</p>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <p>Bundle 3 of 6 · <code>nocoly/worksheets/10-payment-terms.md</code> · reference <code>nocoly/reference/odoo-19.4/account.payment.term.md</code> · build <code>nocoly/build/payterms.py</code>. Next are <strong>Countries</strong> and <strong>States</strong>, which replace the Country and State text on Contacts, and then <strong>Taxes</strong>.</p>
+  </footer>
+</main>
