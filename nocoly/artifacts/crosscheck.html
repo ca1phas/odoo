@@ -1,0 +1,116 @@
+<title>Beside Odoo's Screens</title>
+<meta name="description" content="The 18 September 2026 pass comparing all ten ERP Master worksheets, screen by screen, with the Odoo tenant they were built from.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<link rel="stylesheet" href="review.css">
+
+<main class="page">
+
+  <header class="identity">
+    <div class="eyebrow"><span>ERP Master</span><span>Phase 1</span><span>18 September 2026</span></div>
+    <h1>Beside Odoo's Screens <span class="model">casimir.odoo.com</span></h1>
+    <p class="lede">Every worksheet of the app opened in one browser tab, the same model in the reference Odoo in the other, and the two compared field for field. Five worksheets had never had this: <strong>08</strong> and <strong>09</strong> had never been compared at all, and <strong>02</strong>, <strong>04</strong> and <strong>06</strong> were written from extracts because their Odoo pages "would not render". They render. Nothing in the tenant was created or changed.</p>
+    <dl class="meta">
+      <div><dt>Reference</dt><dd>casimir.odoo.com — Odoo saas~19.4+e, read-only</dd></div>
+      <div><dt>Compared</dt><dd>10 worksheets · their lists, forms, tabs and filters · 6 behaviours</dd></div>
+      <div><dt>Written up in</dt><dd><code>nocoly/CROSSCHECK.md</code></dd></div>
+      <div><dt>Result</dt><dd>Nothing built is wrong; three cosmetic differences</dd></div>
+    </dl>
+    <div class="scoreline">
+      <span class="chip pass">10 of 10 worksheets compared</span>
+      <span class="chip note">3 new differences, all cosmetic</span>
+      <span class="chip note">2 earlier notes corrected</span>
+    </div>
+  </header>
+
+  <aside class="callout" aria-labelledby="note-title">
+    <span class="chip note small" style="justify-self:start">Read this before you open Odoo yourself</span>
+    <h2 id="note-title">Two things about the reference tenant</h2>
+    <p><strong>Odoo does not render in a background browser tab.</strong> Its client waits for an animation frame, and a hidden tab is given none, so the page stops after its top bar and control panel and every screenshot is a dark rectangle. Click into the Odoo window before you read a page. Nocoly's own app draws happily while hidden — which is why only Odoo ever looked broken, and why three worksheets ended up carrying a false "the tenant has no screen for this".</p>
+    <p><strong>The tenant's user cannot see any account field.</strong> casimir is an <em>Invoicing</em> administrator — it holds <code>account.group_account_invoice</code> and <code>account.group_account_manager</code>, but not <code>account.group_account_readonly</code> or <code>account.group_account_user</code>, which belong to the full Accounting app. Odoo puts a journal's five accounts, a product's and a category's income and expense accounts, an invoice line's account and a contact's receivable and payable behind exactly those two groups. They exist and hold values; that screen just will not show them to you. Everything bundle 2 hid from our <strong>Invoicing</strong> role is a field Odoo hides the same way.</p>
+  </aside>
+
+  <nav class="toc" aria-label="Sections">
+    <a href="#worksheets"><span>1</span>Worksheet by worksheet</a>
+    <a href="#differences"><span>2</span>What is new</a>
+    <a href="#behaviour"><span>3</span>Workflows and core functions</a>
+  </nav>
+
+  <section id="worksheets" aria-labelledby="ws-title">
+    <div class="section-head"><span class="n">1</span><h2 class="section" id="ws-title">Worksheet by worksheet</h2></div>
+
+    <div class="block">
+      <p class="prose">Each row is a list and a form opened side by side. "Confirms §1" means what the worksheet already says about Odoo is what Odoo shows.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th class="num">#</th><th>Worksheet</th><th>What was opened in Odoo</th><th>Outcome</th></tr></thead>
+          <tbody>
+            <tr><td class="num">01</td><td class="label">Contacts</td><td>Contacts; Klinik Kesihatan Damansara, all four tabs</td><td>Confirms §1. The customer's term — <strong>21 Days</strong> — reads the same on both, under <em>Sales</em>, where bundle 3 put ours</td></tr>
+            <tr><td class="num">02</td><td class="label">Units &amp; Packagings</td><td><em>Sales › Products › Units &amp; Packagings</em>, and the unit Minutes</td><td><strong>First time seen.</strong> Same 14 units, same three columns. One new difference: Odoo's form labels the ratio <em>Quantity</em></td></tr>
+            <tr><td class="num">03</td><td class="label">Products</td><td>Customers › Products; a 2-variant and a 1-variant product</td><td>Confirms §1, tab for tab. Odoo's defaults confirm both of Teh Li Wei's divergences</td></tr>
+            <tr><td class="num">04</td><td class="label">Product Variants</td><td>The <em>Variants</em> button on a product — there is no menu</td><td><strong>First time seen.</strong> Confirms §1. Opening the action on its own throws Odoo's <em>Oops!</em>: it needs a product</td></tr>
+            <tr><td class="num">05</td><td class="label">Journals</td><td>Configuration › Journals; the Sales journal</td><td>Confirms §1, including the ordering already written down as difference 2. Odoo shows casimir <em>one</em> checkbox on the Journal Entries tab</td></tr>
+            <tr><td class="num">06</td><td class="label">Invoices</td><td>Customers › Invoices; INV/2026/00001, posted</td><td><strong>First time seen.</strong> Same tabs, same head. Two new differences, both about the list</td></tr>
+            <tr><td class="num">07</td><td class="label">Invoice Lines</td><td>The lines inside that invoice</td><td>Confirms §1. Odoo has no standalone list of lines; ours stands in for Journal Items</td></tr>
+            <tr><td class="num">08</td><td class="label">Product Categories</td><td>Configuration › Product Categories; Goods / Consumables</td><td><strong>Never compared before.</strong> Confirms §1; # Products reads 2 on both. Odoo's Accounting page is hidden from casimir</td></tr>
+            <tr><td class="num">09</td><td class="label">Chart of Accounts</td><td>Configuration › Chart of Accounts; 124000 Account Receivable</td><td><strong>Never compared before.</strong> The same four columns, the same 87 rows. Answers an open question: our Internal Group filter is a search box</td></tr>
+            <tr><td class="num">10</td><td class="label">Payment Terms</td><td>Configuration › Payment Terms; 2/7 Net 30</td><td>Confirms §1. Our <em>Description on the Invoice</em> is Odoo's own preview sentence, word for word</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="block">
+      <h3>Where a field of Odoo's is missing from ours</h3>
+      <p class="prose">In every case it was already named in that worksheet's <em>Not built now</em>: Invoicing Policy, Track Inventory and the stock figures; Sales and Purchase Taxes, Default Taxes and the tax preview, which wait for the <strong>Taxes</strong> bundle; barcodes, tags and the two Malaysian e-invoicing codes; pricelists, payment methods and Incoterms; the Balance stat button and the <em>→ Reconcile</em> link, which need journal items; the Attributes &amp; Variants and Prices tabs; SST and TTx; UN/ECE codes and packaging barcodes; the analytic fields. Nothing turned up that nobody had thought about.</p>
+    </div>
+  </section>
+
+  <section id="differences" aria-labelledby="diff-title">
+    <div class="section-head"><span class="n">2</span><h2 class="section" id="diff-title">What is new</h2></div>
+
+    <div class="block">
+      <h3>Three differences, none of which moves a value</h3>
+      <ol class="differences">
+        <li><span class="n">1</span><div class="head"><strong>A unit's ratio is called Quantity on Odoo's form</strong><span class="chip note small">02 · label</span></div><p>Only Odoo's <em>list</em> heads it <em>Contains</em>, which is the word we took. The field, its help text and its value are the same. A one-word rename whenever the owner wants Odoo's exact wording.</p></li>
+        <li><span class="n">2</span><div class="head"><strong>Odoo's invoice list heads the untaxed figure Tax Excluded</strong><span class="chip note small">06 · label</span></div><p>Ours uses Odoo's own field label, <em>Untaxed Amount</em>. Same figure, same column.</p></li>
+        <li><span class="n">3</span><div class="head"><strong>The invoice list carries Journal where Odoo carries Last Reminder</strong><span class="chip note small">06 · view</span></div><p>Odoo keeps Journal optional and hidden, and it <strong>totals</strong> Tax Excluded, Total and Amount Due at the foot of the list. Ours shows Journal and foots nothing.</p></li>
+      </ol>
+    </div>
+
+    <div class="block">
+      <h3>Two earlier notes corrected</h3>
+      <p class="prose"><strong>02's test 19</strong> said "the tenant does not show a Units &amp; Packagings menu (its units setting is off), so there is no screen to compare". The menu is there, the setting is on, and the screens match unit for unit. The same trap — a hidden browser tab, not a missing page — is why <strong>04</strong> and <strong>06</strong> had only ever been compared against data. All three are compared now.</p>
+    </div>
+  </section>
+
+  <section id="behaviour" aria-labelledby="beh-title">
+    <div class="section-head"><span class="n">3</span><h2 class="section" id="beh-title">Workflows and core functions</h2></div>
+
+    <div class="block">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Behaviour</th><th>Odoo's screen</th><th>ERP Master</th></tr></thead>
+          <tbody>
+            <tr><td class="label">Numbering, on Confirm</td><td>Posted documents read INV/2026/00001, 00002, 00003; a draft reads <code>/</code></td><td>Journal prefix, year, five digits — one past the highest already issued</td></tr>
+            <tr><td class="label">Due Date from the term</td><td>The form shows <strong>Payment terms 21 Days</strong> and no Due Date at all</td><td>The same: a term hides the date, no term shows it. 30 Days on 2026-09-20 gives 2026-10-20</td></tr>
+            <tr><td class="label">The term on a contact</td><td>Klinik Kesihatan Damansara, <em>Sales &amp; Purchase › SALES</em>: 21 Days</td><td>The same contact, the same tab: Customer Payment Terms 21 Days</td></tr>
+            <tr><td class="label">Complete Name</td><td>The tree reads <em>Goods / Consumables</em>; the form shows Parent <em>Goods</em></td><td>Computed from the parent's own Complete Name, four levels deep</td></tr>
+            <tr><td class="label">Payment Reconciliation follows Type</td><td>124000 Account Receivable has the box ticked</td><td>The same 87 accounts, the same boxes</td></tr>
+            <tr><td class="label">Product → variant</td><td>A template with several variants <em>hides</em> Cost and Reference — they belong to the variant</td><td>One variant per product; Products is the master of code, cost, weight, volume and favourite</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="block">
+      <h3>Three things that could not be compared</h3>
+      <p class="prose">None of them is a gap in the build. <strong>Journals' archive guard</strong> and the <strong>invoice line's account fill</strong> would both mean writing to the tenant, and its refusal message is copied from Odoo's own source. <strong>Role-by-role field hiding</strong> needs a second Odoo user: casimir is the only one, and the groups it lacks are the subject of the note at the top of this page.</p>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <p>Cross-check of 18 September 2026 · <code>nocoly/CROSSCHECK.md</code> · the worksheets it compares are <code>nocoly/worksheets/01…10</code>, each with its own review page. Next in the build: <strong>Countries</strong>, then <strong>States</strong>, then <strong>Taxes</strong>.</p>
+  </footer>
+</main>

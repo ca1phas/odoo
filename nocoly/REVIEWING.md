@@ -18,7 +18,7 @@ everything a reviewer needs.
 | What a worksheet must do, what was built, and the test results | `worksheets/NN-name.md`, or the same content as a web page (link in the table below) |
 | What Odoo itself looks like for that model | `reference/odoo-19.4/<model>.md` — fields, form, list, search and records, extracted from the tenant |
 | Why something was done a certain way | `DECISIONS.md` |
-| How each worksheet compares to Odoo's own screen, side by side | `CROSSCHECK.md` — the pass of 18 Sep 2026 |
+| How each worksheet compares to Odoo's own screen, side by side | `CROSSCHECK.md`, or the same as a web page: [Beside Odoo's Screens](https://claude.ai/artifact/PWWjfHTutqNycCMcBXZBzn) — the pass of 18 Sep 2026 |
 | How the worksheet was built, to rebuild or change it | `BUILDING.md` and `build/<worksheet>.py` |
 
 ## How to review

@@ -9,6 +9,8 @@ Before this pass, several worksheets had only ever been compared against **extra
 `fields_get`, record reads) rather than against its screens: 08 and 09 had never been compared at all, 02 was
 written when the tenant's screen for it could not be reached, and 04 and 06 were compared from data alone.
 
+*The same page, for a reviewer: https://claude.ai/artifact/PWWjfHTutqNycCMcBXZBzn*
+
 ## What the pass found
 
 **All ten worksheets now stand beside Odoo's own screens**, and nothing built is wrong. Five had never had this
