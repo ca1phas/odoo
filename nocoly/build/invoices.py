@@ -14,7 +14,7 @@ the CLI's interpreter:
                                                                 #    blocks, place everything in its tab, set the
                                                                 #    title field, help, hints, defaults, decimals,
                                                                 #    required and read-only
-    ~/.hap-venv/bin/python nocoly/build/invoices.py rules       # 2. the five interaction rules (upsert by name)
+    ~/.hap-venv/bin/python nocoly/build/invoices.py rules       # 2. the seven interaction rules (upsert by name)
     ~/.hap-venv/bin/python nocoly/build/invoices.py views       # 3. Invoices, Bills and Journal Entries
     ~/.hap-venv/bin/python nocoly/build/invoices.py buttons     # 4. Confirm / Cancel / Reset to Draft and their
                                                                 #    workflows, numbering included
@@ -35,6 +35,15 @@ the CLI's interpreter:
     ~/.hap-venv/bin/python nocoly/build/invoices.py show        # the live control list
 
 Every step reads the live worksheet first and is safe to re-run; a second run writes nothing.
+
+**Payment Terms (bundle 3, 17 Sep 2026).** Teh Li Wei's text control Payment Terms (`6aa920d74a73a3142152e68d`) was
+replaced by a relation to the Payment Terms worksheet and **deleted**, with the owner's approval, once its three values
+had been carried into the relation and read back (`payterms.py`, `worksheets/10-payment-terms.md`). This script owns the
+relation's place, alias and placeholder like any other control's, two new rules, and the dating chain at the end of
+Confirm (built by `payterms.ensure_dating`), with Confirm's writes starting no other workflow so the Invoice Date it
+fills does not date the invoice a second time through automation D (`payterms.ensure_quiet`, 17 Sep 2026);
+`payterms.py` owns the relation's creation and picker filter, and automations C and D. The seed writes the relation,
+by term name, and never text.
 
 Nothing here touches the Sales app, any worksheet but Invoices, or anything in Contacts but the three customer
 records this worksheet needs. Every write step compares the other worksheets' controls by id before and after.
@@ -121,7 +130,8 @@ FIRST_BUILD = {
     '6aa920d74a73a3142152e689': ('Customer', RELATION),
     '6aa920d74a73a3142152e68b': ('Invoice Date', 15),
     '6aa920d74a73a3142152e68c': ('Due Date', 15),
-    '6aa920d74a73a3142152e68d': ('Payment Terms* (Future Relation)', 2),
+    # '6aa920d74a73a3142152e68d': ('Payment Terms* (Future Relation)', 2) — the text stand-in, deleted on 17 Sep 2026
+    # by the Payment Terms bundle once a relation held its values; the relation took its place, name and alias.
     '6aa920d74a73a3142152e68e': ('Invoice Lines', C.TAB),
     '6aa920d74a73a3142152e68f': ('Other Info', C.TAB),
     '6aa920d74a73a3142152e690': ('Invoice', DIVIDER),
@@ -136,7 +146,6 @@ FIRST_BUILD = {
 }
 RENAME = {                                         # control id -> the name this build gives it
     '6aa920d74a73a3142152e689': 'Customer / Vendor',           # Odoo renames the one field per document type
-    '6aa920d74a73a3142152e68d': 'Payment Terms',               # the "* (Future Relation)" marker moves into `desc`
     '6aa920d74a73a3142152e694': 'Recipient Bank',              # same
     '6aa920d74a73a3142152e691': 'Invoice note',                # a remark block's name is internal (hidetitle "1");
 }                                                              # "Invoice" also clashed with the divider above it
@@ -202,6 +211,7 @@ HTML = {
 
 HINTS = {  # Odoo's placeholders on this form; every other field's placeholder is cleared
     'Invoice Date': 'Today',
+    'Payment Terms': 'Payment Terms',
     'Payment Reference': 'Standard communication',
     'Terms and Conditions': 'Terms and Conditions',
 }
@@ -219,8 +229,7 @@ DESC = {  # Odoo field help, verbatim where Odoo has one (addons/account/models/
                     'today when it is empty.',
     'Accounting Date': 'The date the entry is booked under, and the year the number is taken from.',
     'Due Date': 'Odoo shows the Due Date or the Payment Terms: setting terms computes the date.',
-    'Payment Terms': 'A stand-in: plain text holding the Odoo payment term\'s name ("30 Days") until the Payment '
-                     'Terms table arrives.',
+    'Payment Terms': '',                          # Odoo's field has no help; the stand-in's description went with it
     'Journal': 'The book the entry is written in. Its Sequence Prefix is what Confirm numbers the document with, '
                'so it cannot be changed once the document is numbered.',
     'Tax mode': "Whether a line's Amount is its subtotal or its total. Odoo requires it on every invoice, credit "
@@ -293,6 +302,10 @@ NEW = {  # controls this script adds: name -> (builder type, alias, extra contro
     NOTE_MYINVOIS: (NOTE, '', {}),
 }
 RELATIONS = {'Delivery Address': CONTACTS, 'Journal': JOURNALS}      # one-way; neither target gets a reverse field
+# The Payment Terms bundle's relation — one-way too. Not in NEW: payterms.py creates it (the text stand-in held the
+# name and alias until it was deleted), and `check` reads its target back from here.
+if hap.ids()['worksheets'].get('Payment Terms'):
+    RELATIONS['Payment Terms'] = hap.ids()['worksheets']['Payment Terms']
 # Odoo's field names on account.move. The skeleton's nine controls carry no alias at all, so giving them Odoo's
 # name keeps nothing and breaks nothing — and makes `record get` read the worksheet in Odoo's own vocabulary.
 ALIAS = dict({name: spec[1] for name, spec in NEW.items()}, **{
@@ -503,13 +516,16 @@ RULE_BILL_DATE = 'A vendor document must carry its date'
 RULE_TAX_MODE = 'Every document but an entry has a tax mode'
 RULE_AUTO_POST = 'Auto-post until follows Auto-post'
 RULE_CLOSED = 'A posted or cancelled document is closed for editing'
+RULE_DUE_OR_TERMS = 'Due Date or Payment Terms'                   # bundle 3, Payment Terms
+RULE_NO_DUE_ON_ENTRY = 'No due date on a journal entry'           # bundle 3, Payment Terms
 
 CLOSED_FIELDS = ['Type', 'Customer / Vendor', 'Journal', 'Invoice Date', 'Accounting Date', 'Due Date',
                  'Payment Terms', 'Tax mode', LINES]
 # LINES is 07's mounted 子表. It joined the list on 16 Sep 2026, at the end of Phase 1: the rule was written
 # before Invoice Lines existed, so a posted document still offered *Add a row* where Odoo locks a posted
 # move's lines (07's difference 11). A rule item acts on a control, and a 子表 is one.
-# rule name -> (driving field, its option labels, the controls it acts on, the rule item type). A rule applies its
+# rule name -> (driving field, its option labels — or None for "the field is not empty" —, the controls it acts on, the
+# rule item type). A rule applies its
 # action while its condition holds and the opposite when it fails, so every `show` here also hides its field on a
 # new record whose driver is still empty — which is what Odoo's `invisible` does.
 RULES = {
@@ -522,8 +538,13 @@ RULES = {
     # <field name="auto_post_until" invisible="auto_post == 'no'"/>
     RULE_AUTO_POST: ('Auto-post', [o['value'] for o in AUTO_POST_OPTIONS if o['value'] != 'No'],
                      ['Auto-post until'], C.SHOW),
-    # readonly="state != 'draft'" across the form
+    # readonly="state != 'draft'" across the form. 'Payment Terms' is the relation since bundle 3 (the rule named the
+    # text stand-in until it was deleted)
     RULE_CLOSED: ('Status', ['Posted', 'Cancelled'], CLOSED_FIELDS, C.READONLY),
+    # <field name="invoice_date_due" invisible="invoice_payment_term_id"/>: with a term the date is computed (D)
+    RULE_DUE_OR_TERMS: ('Payment Terms', None, ['Due Date'], C.HIDE),
+    # <div name="due_date" invisible="move_type not in (…the six invoice and receipt types…)">: neither on an entry
+    RULE_NO_DUE_ON_ENTRY: ('Type', ['Journal Entry'], ['Due Date', 'Payment Terms'], C.HIDE),
 }
 
 
@@ -538,8 +559,10 @@ def is_any_of(f, field, labels):
 
 def step_rules():
     ctrls = guard()
-    f = C.fields(WORKSHEET)
-    rules = [(name, C.INTERACTION, C.any_of([is_any_of(f, driver, labels)]),
+    f = hap.by_name(c for c in hap.controls(WORKSHEET) if c['type'] != C.TAB)       # the Lines subtable included
+    when = lambda driver, labels: (C.cond(f[driver], C.NOT_EMPTY) if labels is None
+                                   else is_any_of(f, driver, labels))
+    rules = [(name, C.INTERACTION, C.any_of([when(driver, labels)]),
               [C.item(kind, *[f[t] for t in targets])], {})
              for name, (driver, labels, targets, kind) in RULES.items()]
     C.upsert_rules(WORKSHEET, rules, 'invoices_rules_pre_rules')
@@ -893,6 +916,17 @@ def step_numbering():
     changed |= set_fields(pid, byname[REFERENCE_STEP],
                           [patch(f['Payment Reference']['controlId'], 2, node=byname[NUMBER_STEP]['id'],
                                  source=STRING_FX)], trigger)
+    # Odoo's _post fills an empty invoice date and the due date recomputes from it: once the Payment Terms bundle has
+    # given Invoices its relation, Confirm ends with the same dating chain as automations C and D (payterms.py) — the
+    # fresh document, its terms' lines, the code block, the Due Date. Its write of the Invoice Date would also start
+    # automation D, dating the invoice a second time, so Confirm's writes start no other workflow (payterms.ensure_quiet:
+    # 触发其他工作流 set to 不允许触发 — none of Confirm's other writes has a workflow to start).
+    relation = next((c for c in hap.controls(WORKSHEET) if c['type'] == RELATION
+                     and c.get('dataSource') == hap.ids()['worksheets'].get('Payment Terms')), None)
+    if relation:
+        import payterms
+        changed |= payterms.ensure_dating(pid, byname[REFERENCE_BRANCH]['id'])
+        changed |= payterms.ensure_quiet(pid, KEY + 'Confirm')
     print('  Confirm:', C.publish(pid) if changed else 'already built; not re-published')
 
 
@@ -1075,7 +1109,7 @@ def read_document(rowid):
                 status=option_label(d.get('state')), partner=first('partner_id'),
                 shipping=first('partner_shipping_id'), invoice_date=d.get('invoice_date') or '',
                 date=d.get('date') or '', due=d.get('invoice_date_due') or '',
-                terms=d.get('invoice_payment_term_id') or '', journal=first('journal_id'),
+                terms=first('invoice_payment_term_id'), journal=first('journal_id'),     # the term's name (bundle 3)
                 tax_mode=option_label(d.get('document_tax_mode')), ref=d.get('ref') or '',
                 payment_reference=d.get('payment_reference') or '', origin=d.get('invoice_origin') or '',
                 delivery_date=d.get('delivery_date') or '', auto_post=option_label(d.get('auto_post')),
@@ -1106,7 +1140,9 @@ def values_for(f, m, partners, journals):
         {'id': cid('Invoice Date'), 'value': want['invoice_date']},
         {'id': cid('Accounting Date'), 'value': want['date']},
         {'id': cid('Due Date'), 'value': want['due']},
-        {'id': cid('Payment Terms'), 'value': want['terms']},
+        # a relation since bundle 3: the term's record, looked up by its name; never text
+        {'id': cid('Payment Terms'), 'value': [hap.ids()['records']['Payment Terms: ' + want['terms']]]
+                                              if want['terms'] else []},
         {'id': cid('Journal'), 'value': rows(journals, want['journal'])},
         {'id': cid('Tax mode'), 'value': [key('Tax mode', want['tax_mode'])]},
         {'id': cid('Untaxed Amount'), 'value': want['untaxed']},
@@ -1366,9 +1402,12 @@ def step_check():
             continue
         conds = [g for group in r['filters'] for g in group.get('groupFilters', [])]
         got = (r['type'], r['disabled'], {i['type'] for i in r['ruleItems']},
-               sorted(LABEL[driver].get(v) for c in conds for v in c.get('values', [])),
+               [(names.get(c['controlId']), c['filterType']) for c in conds],
+               sorted(LABEL.get(driver, {}).get(v) for c in conds for v in c.get('values', [])),
                [names.get(c['controlId']) for i in r['ruleItems'] for c in i['controls']])
-        if got != (C.INTERACTION, False, {kind}, sorted(labels), targets):
+        want = (C.INTERACTION, False, {kind}, [(driver, C.NOT_EMPTY if labels is None else C.EQ)],
+                sorted(labels or []), targets)
+        if got != want:
             problems.append(f'rule {name!r}: {got}')
     views = {v['name']: C.view_info(WORKSHEET, APP, v['viewId']) for v in
              hap.listing('worksheet', 'view', 'list', WORKSHEET, '-a', APP)}

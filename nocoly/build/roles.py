@@ -9,7 +9,9 @@ Two things:
   2. **Four business roles**, one per Odoo accounting group, each with per-worksheet access rules
      (`hap app role create-fine`). Nobody is assigned to any of them — who belongs in which role is the
      owner's call. The Chart of Accounts bundle added per-field hiding: the account fields Odoo keeps from its
-     Invoicing and Read-only groups are hidden from those roles, field by field (HIDDEN_FIELDS).
+     Invoicing and Read-only groups are hidden from those roles, field by field (HIDDEN_FIELDS). The Payment Terms
+     bundle added Payment Terms and Payment Term Lines: Accounting Administrator full, the other three view — Odoo
+     gives write, create and delete on both models to account.group_account_manager alone.
 
 Run from the repo root with the CLI's interpreter:
 
@@ -60,7 +62,7 @@ STOCK = [  # (English name, the Chinese name HAP ships, roleType)
 FULL, EDIT, VIEW = 'full', 'view · add · edit', 'view'
 
 ORDER = ['Contacts', 'Units & Packagings', 'Products', 'Product Variants', 'Product Categories',
-         'Chart of Accounts', 'Journals', 'Invoices', 'Invoice Lines']
+         'Chart of Accounts', 'Journals', 'Payment Terms', 'Payment Term Lines', 'Invoices', 'Invoice Lines']
 
 ROLES = {
     'Accounting Administrator': (
@@ -74,15 +76,15 @@ ROLES = {
         'Odoo group account.group_account_user — "Show Full Accounting Features". The accountant: can do '
         'everything except advanced configuration.',
         {'Contacts': EDIT, 'Units & Packagings': VIEW, 'Products': VIEW, 'Product Variants': VIEW,
-         'Product Categories': VIEW, 'Chart of Accounts': VIEW, 'Journals': EDIT, 'Invoices': EDIT,
-         'Invoice Lines': EDIT},
+         'Product Categories': VIEW, 'Chart of Accounts': VIEW, 'Journals': EDIT, 'Payment Terms': VIEW,
+         'Payment Term Lines': VIEW, 'Invoices': EDIT, 'Invoice Lines': EDIT},
     ),
     'Invoicing': (
         'Odoo group account.group_account_invoice — "Invoicing". Invoices, payments and basic invoice '
         'reporting; cannot see accounting configuration, so Journals is read-only.',
         {'Contacts': EDIT, 'Units & Packagings': VIEW, 'Products': VIEW, 'Product Variants': VIEW,
-         'Product Categories': VIEW, 'Chart of Accounts': VIEW, 'Journals': VIEW, 'Invoices': EDIT,
-         'Invoice Lines': EDIT},
+         'Product Categories': VIEW, 'Chart of Accounts': VIEW, 'Journals': VIEW, 'Payment Terms': VIEW,
+         'Payment Term Lines': VIEW, 'Invoices': EDIT, 'Invoice Lines': EDIT},
     ),
     'Accounting Read-only': (
         'Odoo group account.group_account_readonly — "Show Accounting Features - Readonly". Can see (and '

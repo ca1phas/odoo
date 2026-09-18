@@ -104,7 +104,7 @@ def fields(ws):
     return hap.by_name(c for c in hap.controls(ws) if c['type'] != TAB)
 
 
-def save_controls(ws, ctrls):
+def save_controls(ws, ctrls, version=None):
     """A full SaveWorksheetControls save of worksheet `ws` — exactly what `hap worksheet update-fields --controls`
     does — made through the CLI's own session instead of the command line.
 
@@ -112,13 +112,30 @@ def save_controls(ws, ctrls):
     holding a few Relations to a large worksheet is past the kernel's 128 KiB limit on a single argument, and the
     command dies with `OSError: [Errno 7] Argument list too long` (Invoices once 07 mounted its subtable; Contacts,
     Products, Product Categories and Journals once bundle 2 gave them Relations to Chart of Accounts). Same call,
-    same optimistic-lock retry; only the transport differs. Raises on a response that is not a success."""
+    same optimistic-lock retry; only the transport differs. Raises on a response that is not a success.
+
+    `version` pins HAP's optimistic lock: pass the `version` that `controls_with_version` read together with the
+    controls being sent, and a control save anyone made in between refuses this one (code 10, "数据过时") instead of
+    being overwritten. Without it hap-cli refetches the counter on a conflict and saves anyway — fine for a worksheet
+    nobody else edits, not for a surgical change to one another administrator is working on (Products, 17 Sep)."""
     from hap_cli.core import worksheet as ws_mod
     from hap_cli.core.session import Session
-    resp = ws_mod.save_controls(Session.load(None), ws, relation_defaults_by_id(ctrls))
+    resp = ws_mod.save_controls(Session.load(None), ws, relation_defaults_by_id(ctrls), version=version)
     if isinstance(resp, dict) and resp.get('code') not in (None, 1):
         raise RuntimeError(f'SaveWorksheetControls on {ws} answered {json.dumps(resp, ensure_ascii=False)[:400]}')
     return resp
+
+
+def controls_with_version(ws):
+    """The worksheet's controls and their optimistic-lock `version`, from one GetWorksheetControls call — the pair a
+    read-modify-write hands to `save_controls(ws, ctrls, version=…)`."""
+    from hap_cli.core.session import Session
+    resp = Session.load(None).api_call('Worksheet', 'GetWorksheetControls',
+                                       {'worksheetId': ws, 'getRelationSearch': True, 'resultType': 3})
+    data = resp.get('data') if isinstance(resp, dict) else None
+    if not isinstance(data, dict) or not isinstance(data.get('controls'), list) or not isinstance(data.get('version'), int):
+        raise RuntimeError(f'GetWorksheetControls on {ws} answered {json.dumps(resp, ensure_ascii=False)[:300]}')
+    return data['controls'], data['version']
 
 
 def relation_defaults_by_id(ctrls):

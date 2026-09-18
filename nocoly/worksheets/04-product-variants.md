@@ -230,6 +230,27 @@ wrote unchecked), B has Favorite among its trigger fields and in its copy step (
 workflow renamed), and C's reactivation copies it too. A second run rewrote nothing. `seed` sets Favorite from the
 product and `verify` compares it; the seed changed no record, as no product is a favourite.
 
+**Products' Favorite deleted by another administrator, and re-pointed — 17 Sep 2026.** Teh Li Wei deleted Products'
+Favorite (`6aa8ea161204328eb1af1013`) at 16:11; at the owner's request it was re-created at 22:26 with a **new id,
+`6aabf880e43d174ab374dcf0`** (03 §2). Automations A, B and C still named the old id — A's *Create the product's
+variant*, B's *Copy the five fields to them* and B's trigger fields, C's *Unarchive it with the product's current
+values* — and all three stayed published without an exception: the dead entry's `fieldValueName` reading "" was the only
+sign. Each was re-pointed in place (22:29, the id alone replaced; the entry's `fieldValueName` now reads Favorite),
+republished and compared node by node with its backup; no other node or entry changed, and the variant's own Favorite
+(`6aa90c69f363582dd37a6227`) was not touched. `variants.py` was not run. Proved through the CLI on TEST products, one
+run each, all completed (status 2):
+
+- **B** — Favorite ticked on TEST Auto Variant Product reached [TEST-0002] and not the archived [TEST-0002-OLD]
+  (run `6aabf9c416473257ad612e9d`); unticked, [TEST-0002] followed (`6aabfa0c8e75db182e899dc2`).
+- **C** — TEST Favorite Product archived took [TEST-0005] with it (`6aabfa2e16473257ad6130de`); Favorite ticked while
+  archived ran B and left the archived variant unticked (`6aabfa4a4f2a99acac181b91`); unarchived, [TEST-0005] came back
+  active and ticked (`6aabfa6916473257ad6132af`); unticked, it followed (`6aabfa8716473257ad61340d`).
+- **A** — *TEST Favorite Restored* (TEST-0007) created with Favorite ticked got one variant, ticked
+  (`6aabfadb4f2a99acac1832e3`); unticked, it followed (`6aabfafd87707da9d62025a6`).
+
+No product or variant is favourite at the end. `variants.py verify`: 19 products, 0 whose own variant differs, 1 extra
+([TEST-0002-OLD]); 11 of 11 single-variant products match the extract. `products.py verify`: 0 missing or differing.
+
 **Self-checks through the CLI** (records named TEST, listed in §3); A, B, C and the buttons were rerun after the
 Favorite change:
 
@@ -350,3 +371,7 @@ and the variant was checked in the UI. Test records are named `TEST …`.
   and [TEST-0004], and the archived extra [TEST-0002-OLD] (Cost 11.00).
 
 No barcodes are set and nothing is favourite. Remove them after sign-off.
+
+Added on 17 Sep 2026 by the proof of the re-pointed automations (§2): **TEST Favorite Restored** (TEST-0007, rowid
+`3869dcc0-8b75-4e0a-b311-2d82f4e092a1`) and its variant **[TEST-0007] TEST Favorite Restored** (rowid
+`f826f74f-4f8e-4ca0-9577-2678503deeef`), both active, not favourite, no Weight or Volume.

@@ -50,6 +50,7 @@ record was seeded from the Odoo tenant.
 | 07 | Invoice Lines | `account.move.line` | Built, mounted inside Invoices, seeded (the 8 lines of the 3 seeded documents), UI-tested 19/20 + 1 not run (test 3 re-run on 17 Sep); its one open question is now resolved — ready for review | [md](worksheets/07-invoice-lines.md) · [page](https://claude.ai/artifact/7HsZ8L7Ecsp6mDbqGyocCh) |
 | 08 | Product Categories | `product.category` | **Bundle 1 of 6.** Built, seeded (7 categories, all 14 products categorised), UI-tested 17/18 + 1 caveat (test 8 re-run on 17 Sep); Products gained the Category it never had, between Cost and Internal Reference — ready for review | [md](worksheets/08-product-categories.md) · [page](https://claude.ai/artifact/5RbMmEJKXzV2Vf3QEdmz99) |
 | 09 | Chart of Accounts | `account.account` | **Bundle 2 of 6.** The worksheet with the tenant's 87 accounts, and every account field on Contacts, Products, Product Categories, Journals and Invoice Lines, seeded with the tenant's values and hidden by role as Odoo hides them. UI-tested 27/28 + 1 not run (the role check: no members) — ready for review | [md](worksheets/09-chart-of-accounts.md) · [page](https://claude.ai/artifact/5boffeaSTZzPnY7xsvjWtN) |
+| 10 | Payment Terms | `account.payment.term` (+ `account.payment.term.line`) | **Bundle 3 of 6.** The tenant's ten terms with their lines, as a worksheet and a *Due Terms* table; Invoices' **text stand-in replaced by the relation** (values carried, then the text field deleted), the Due Date computed from the term, the term taken from the customer or vendor; Contacts gained Customer and Vendor Payment Terms. UI-tested 18/22, 1 fails (the two roll-up rules, built and disabled), 3 not run | [md](worksheets/10-payment-terms.md) |
 
 ## Phase 1 · Roles
 
@@ -73,12 +74,12 @@ group it stands for is written in its description, checked against
 `addons/account/security/account_security.xml` in this checkout. **None of them has a member** — who belongs in
 which role is the owner's call, and the two people above stay app administrators as they were.
 
-| Role | Odoo group (and Odoo's own name for it) | Contacts | Units & Packagings | Products | Product Variants | Product Categories | Chart of Accounts | Journals | Invoices | Invoice Lines |
-|---|---|---|---|---|---|---|---|---|---|---|
-| Accounting Administrator | `account.group_account_manager` — *Administrator*, plus `base.group_allow_export` | full | full | full | full | full | full | full | full | full |
-| Accountant | `account.group_account_user` — *Show Full Accounting Features* | view · add · edit | view | view | view | view | view | view · add · edit | view · add · edit | view · add · edit |
-| Invoicing | `account.group_account_invoice` — *Invoicing* | view · add · edit | view | view | view | view | view | **view** | view · add · edit | view · add · edit |
-| Accounting Read-only | `account.group_account_readonly` — *Show Accounting Features - Readonly* | view | view | view | view | view | view | view | view | view |
+| Role | Odoo group (and Odoo's own name for it) | Contacts | Units & Packagings | Products | Product Variants | Product Categories | Chart of Accounts | Payment Terms | Payment Term Lines | Journals | Invoices | Invoice Lines |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Accounting Administrator | `account.group_account_manager` — *Administrator*, plus `base.group_allow_export` | full | full | full | full | full | full | full | full | full | full | full |
+| Accountant | `account.group_account_user` — *Show Full Accounting Features* | view · add · edit | view | view | view | view | view | view | view | view · add · edit | view · add · edit | view · add · edit |
+| Invoicing | `account.group_account_invoice` — *Invoicing* | view · add · edit | view | view | view | view | view | view | view | **view** | view · add · edit | view · add · edit |
+| Accounting Read-only | `account.group_account_readonly` — *Show Accounting Features - Readonly* | view | view | view | view | view | view | view | view | view | view | view |
 
 Read the three words as HAP stores them, per worksheet:
 

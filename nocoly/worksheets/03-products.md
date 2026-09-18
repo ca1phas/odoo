@@ -151,6 +151,27 @@ product's stored values, hidden ones included.
 | Button workflows | one step each, setting Active | `6aa8eb452fe3e8d6b31a6da2` · `6aa8eb482fe3e8d6b31a6dc6` |
 | Records | the 14 products; `verify` matches all 14 | — |
 
+**Favorite deleted by another administrator, and restored with a new id — 17 Sep 2026.** Teh Li Wei deleted Favorite
+(`6aa8ea161204328eb1af1013`) in the form designer at 16:11 on 17 Sep. At the owner's request ("Add the favourite
+back") it was re-created at 22:26 with a **new id, `6aabf880e43d174ab374dcf0`**: the same name, checkbox, alias
+`is_favorite`, default unchecked, permission "111" and no description, back on row 1 as **Favorite (4) | Sales (4) |
+Purchase (4)**. It went in with one full save pinned to the controls' version (`common.save_controls(…, version=…)`),
+read immediately before it after the app log showed no other operator active since 16:57; every other control read
+back identical key by key, Sales and Purchase changed only col and size, and the other eight worksheets were
+identical. `products.py` was **not** run — its layout and views predate his changes and would revert them. His other
+changes stay as he made them: Name No duplicates, Product Type's option **Combo**, Purchase no longer ticked by
+default, Active moved to row 3 (the tabs and their fields one row down), a Number **Delivery Time** on Inventory
+(16:46), the rule *Interaction Rule 3* (Purchase hidden for Combo), and his Units & Packagings changes. **Re-pointed
+from the old id to the new one:** the Products, List and Archived views' sort (Favorite descending, then Name) and
+List's quick filters (Product Type · Sales · Purchase · Favorite · Category); Product Variants' automations A, B (its
+copy step and its trigger fields) and C — see 04 §2. `payterms.py deadrefs 6aa8ea161204328eb1af1013` then found no
+reference in the views, rules, buttons and controls of 11 worksheets or in 30 workflows (354 nodes). All 18 products
+were written unchecked, as every variant was (no variant said otherwise). `products.py verify`: 0 missing or
+differing. `ids.json`: `Products: Favorite` holds the new id, the old one is kept under `Products: Favorite (deleted
+by another admin 17 Sep 2026)`. **The deleted control is still in Products' field recycle bin — do not restore it**:
+the form would carry two Favorite checkboxes with one alias (`BUILDING.md`). Backups:
+`backups/favorite_products_*_20260917-22*.json`.
+
 **History.** Built and seeded on 15 Sep 2026 in one pass; nothing was left behind and there is nothing to delete.
 Self-checks through the CLI: Units & Packagings' controls, rules, buttons and views read back unchanged after every
 save; Whiteboard Marker Set was marked Favorite (it moved to the top of Products and List) and back, and archived
@@ -223,3 +244,7 @@ Run in the Nocoly UI in Chrome on 15 Sep 2026; stored values read back with
 TEST Product — TEST-0001, Goods, Sales Price RM 1,890.00, Cost RM 5.50, Unit Units, Packagings Pack of 6, Sales
 Description "TEST line", Weight 1.50 kg. Whiteboard Marker Set is back to not favourite. Remove TEST Product after
 sign-off.
+
+Added on 17 Sep 2026 by the Favorite restore's proof (§2, 04 §2): **TEST Favorite Restored** — TEST-0007, Goods, RM
+7.00 / RM 3.00, Unit Units, not favourite, no Weight or Volume (created through the API, which applies no defaults),
+rowid `3869dcc0-8b75-4e0a-b311-2d82f4e092a1`.

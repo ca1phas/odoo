@@ -43,19 +43,24 @@ PLACE = {
     'ZIP': (9, 0, 6, None), 'Country': (9, 1, 6, None),
     'Image': (10, 0, 12, None),
     'Contacts': (12, 0, 12, 'Contacts'),
+    # The Payment Terms bundle (10-payment-terms.md, payterms.py `contacts`) adds Customer and Vendor Payment Terms in
+    # Odoo's order — Sales, Purchase, Misc: Salesperson | Customer Payment Terms, then Vendor Payment Terms on its own
+    # row, above the Misc divider so it is not read as a Misc field; Reference and everything under it moved down.
     'Sales': (14, 0, 12, 'Sales & Purchase'), 'Salesperson': (15, 0, 6, 'Sales & Purchase'),
-    'Misc': (16, 0, 12, 'Sales & Purchase'), 'Reference': (17, 0, 6, 'Sales & Purchase'),
+    'Customer Payment Terms': (15, 1, 6, 'Sales & Purchase'),
+    'Vendor Payment Terms': (16, 0, 6, 'Sales & Purchase'),
+    'Misc': (17, 0, 12, 'Sales & Purchase'), 'Reference': (18, 0, 6, 'Sales & Purchase'),
     # The tab Invoicing and its two accounts belong to the Chart of Accounts bundle (09-chart-of-accounts.md,
     # built by accounts.py `contacts`), which adds them with `add-fields` — that parks a new control at row 9999,
     # and only a full save moves it. This step is that save, so they are placed here, between Sales & Purchase and
     # Notes where Odoo has the page; Notes and everything under it moved down two rows to make room.
-    'Account Receivable': (19, 0, 6, 'Invoicing'), 'Account Payable': (19, 1, 6, 'Invoicing'),
-    'Notes': (21, 0, 12, 'Notes'),
-    'Active': (22, 0, 6, None),
-    'Display Name': (23, 0, 12, None),
-    'Parent name': (24, 0, 6, None),
+    'Account Receivable': (20, 0, 6, 'Invoicing'), 'Account Payable': (20, 1, 6, 'Invoicing'),
+    'Notes': (22, 0, 12, 'Notes'),
+    'Active': (23, 0, 6, None),
+    'Display Name': (24, 0, 12, None),
+    'Parent name': (25, 0, 6, None),
 }
-TABS = {'Contacts': 11, 'Sales & Purchase': 13, 'Invoicing': 18, 'Notes': 20}
+TABS = {'Contacts': 11, 'Sales & Purchase': 13, 'Invoicing': 19, 'Notes': 21}
 HINTS = {'Name': 'Name (company or person)', 'Company': 'Company Employer', 'Email': 'Email', 'Phone': 'Phone',
          'Job Position': 'e.g. Sales Director', 'Website': 'e.g. https://www.odoo.com', 'Tax ID': 'Tax ID',
          'Company ID': 'Company ID', 'DUNS': 'DUNS', 'Street': 'Street...', 'Street 2': 'Street 2...',
@@ -173,6 +178,11 @@ DESC = {
     'Account Receivable': "Odoo reads the company's default, 124000 Account Receivable, until a contact is given "
                           'its own.',
     'Account Payable': "Odoo reads the company's default, 221100 Account Payable, until a contact is given its own.",
+    # The Payment Terms bundle's two terms (10 §1; Odoo has no help on either). payterms.py writes and checks them.
+    'Customer Payment Terms': "A customer invoice for this contact takes these terms. A contact given a company takes "
+                              "the company's; a company's change reaches all its contacts.",
+    'Vendor Payment Terms': "A vendor bill for this contact takes these terms. A contact given a company takes the "
+                            "company's; a company's change reaches all its contacts.",
 }
 # A hidden field drops out of table columns (cards and pickers still get the title), so Display Name is shown
 # read-only, once the record exists; Parent name is hidden.
@@ -432,6 +442,14 @@ def step_buttons():
 COPY_DETAILS = 'Contacts: copy company details to its contact'
 PUSH_DETAILS = 'Contacts: push company address and Tax ID to its contacts'
 IDENTIFIERS = ['Tax ID', 'Company ID', 'DUNS']
+# Odoo commercial fields added by the Payment Terms bundle (10-payment-terms.md): copied from a company that has them,
+# and pushed to all of a company's contacts, as Tax ID is. Built only once payterms.py has added the two controls.
+TERMS = ['Customer Payment Terms', 'Vendor Payment Terms']
+TERM_BRANCHES = {'Customer Payment Terms': ('customer_terms', 'The company has Customer Payment Terms?',
+                                            'Copy the Customer Payment Terms'),
+                 'Vendor Payment Terms': ('vendor_terms', 'The company has Vendor Payment Terms?',
+                                          'Copy the Vendor Payment Terms')}
+PUSH_TERMS_STEP = 'Copy the Payment Terms to them'
 
 
 def step_automations():
@@ -445,6 +463,7 @@ def step_automations():
     ids = hap.ids()
     f = hap.by_name(c for c in hap.controls(WS) if c['type'] != 52)
     fid = lambda n: f[n]['controlId']
+    terms = [n for n in TERMS if n in f]              # the Payment Terms bundle's, when it has been built
     option = lambda field, label: next({'key': o['key'], 'value': o['value'], 'isDeleted': False}
                                        for o in f[field]['options'] if o['value'] == label)
 
@@ -488,6 +507,10 @@ def step_automations():
                    update('copy_salesperson', 'Copy the salesperson', trigger, ['Salesperson'], company)),
             only_if_set('registry', 'Company ID'),
             only_if_set('duns', 'DUNS'),
+            *[branch(TERM_BRANCHES[n][0], TERM_BRANCHES[n][1],
+                     {'logic': 'and', 'items': [when(company, n, 'not_empty')]},
+                     update('copy_' + TERM_BRANCHES[n][0], TERM_BRANCHES[n][2], trigger, [n], company))
+              for n in terms],
         ]
 
     def push_steps(r):
@@ -497,6 +520,9 @@ def step_automations():
              'config': {'target': {'node': trigger}, 'fields': [{'fieldId': fid('Contacts')}], 'worksheet': WS}},
             update('push_ids', 'Copy Tax ID, Company ID and DUNS to them', {'nodeAlias': 'all_contacts'},
                    IDENTIFIERS, trigger),
+            # Odoo _commercial_sync_to_descendants writes every commercial field, an empty one included
+            *([update('push_terms', PUSH_TERMS_STEP, r.get('all_contacts', {'nodeAlias': 'all_contacts'}), terms,
+                      trigger)] if terms else []),
             {'nodeAlias': 'contact_type', 'nodeType': 'get_relation_records', 'name': 'Get its Contact-type contacts',
              'config': {'target': {'node': trigger}, 'fields': [{'fieldId': fid('Contacts')}], 'worksheet': WS}},
             update('push_address', 'Copy the address to them', {'nodeAlias': 'contact_type'}, ADDRESS, trigger),
@@ -515,10 +541,11 @@ def step_automations():
              desc="Odoo _children_sync: a company's address goes to its Contact-type contacts; its Tax ID, "
                   'Company ID and DUNS go to all of its contacts.',
              trigger_name="When a company's address or identifiers change",
-             event='update', fields=[fid(n) for n in ADDRESS + IDENTIFIERS],
+             event='update', fields=[fid(n) for n in ADDRESS + IDENTIFIERS + terms],
              # only records that have contacts under them, so ordinary contact edits start no run
              filter=lambda t: {'logic': 'and', 'items': [when(t, 'Contacts', 'not_empty')]},
-             steps=push_steps, anchors={}, only_contact_type='Get its Contact-type contacts'),
+             steps=push_steps, anchors={'all_contacts': 'Get its contacts'},
+             only_contact_type='Get its Contact-type contacts'),
     ]
 
     for wf in workflows:
@@ -575,6 +602,9 @@ def step_automations():
                                           'returns': []}, ensure_ascii=False))
                 print(f"{wf['name']}: trigger fields/condition rewritten")
             proc = hap.run('workflow', 'node', 'list', pid)
+        if terms:
+            term_nodes(pid, wf['name'], terms, fid)
+            proc = hap.run('workflow', 'node', 'list', pid)
         # batch-add names the trigger in Chinese and drops branch path names
         hap.run('workflow', 'node', 'rename', pid, proc['startEventId'], '-n', wf['trigger_name'])
         for n in proc['flowNodeMap'].values():
@@ -585,6 +615,49 @@ def step_automations():
     for name in (COPY_DETAILS, PUSH_DETAILS):
         print(subprocess.run(['hap', 'workflow', 'structure', ids['workflows'][name]],
                              capture_output=True, text=True).stdout)
+
+
+def term_nodes(pid, workflow, terms, fid):
+    """The Payment Terms bundle's nodes, written again in the shape the server keeps and read back. A second
+    `batch-add` drops a branch path's condition, and a Relation copied from another node is `nodeId` + `fieldValueId`
+    (BUILDING.md); an update step must select a node that produces a record."""
+    proc = hap.run('workflow', 'node', 'list', pid)
+    nodes, start = proc['flowNodeMap'], proc['startEventId']
+    by_name = {n['name']: n for n in nodes.values()}
+    get = lambda node_id: (lambda d: d.get('data', d))(hap.run('workflow', 'node', 'get', pid, node_id))
+
+    def ensure_step(name, select, source, fields):
+        node = by_name[name]
+        want = [{'fieldId': fid(n), 'type': 29, 'addType': 0, 'fieldValue': '', 'fieldValueId': fid(n),
+                 'nodeId': source, 'sureNodeId': source, 'nodeAppType': 1} for n in fields]
+        shape = lambda xs: [(x.get('fieldId'), x.get('nodeId'), x.get('fieldValueId')) for x in xs]
+        d = get(node['id'])
+        if d.get('selectNodeId') != select or d.get('isException') or shape(d.get('fields') or []) != shape(want):
+            hap.run('workflow', 'node', 'save', pid, node['id'], '--type', '6', '-n', name, '-c', json.dumps(
+                {'actionId': '2', 'appId': WS, 'appType': 1, 'selectNodeId': select, 'fields': want}))
+            d = get(node['id'])
+            print(f"  {workflow}: {name!r} rewritten")
+        if d.get('selectNodeId') != select or d.get('isException') or shape(d.get('fields') or []) != shape(want):
+            sys.exit(f"{workflow}: {name!r} read back {d.get('selectNodeId')} {d.get('isException')} {d.get('fields')}")
+
+    if workflow == COPY_DETAILS:
+        company = by_name['Get the company']['id']
+        for n in terms:
+            _, gateway_name, step = TERM_BRANCHES[n]
+            gateway = by_name[gateway_name]
+            paths = [nodes[i] for i in gateway.get('flowIds') or []]
+            yes = next(x for x in paths if x.get('nextId') not in ('', None, '99'))
+            condition = [[{'nodeId': company, 'filedId': fid(n), 'filedValue': n, 'filedTypeId': 29, 'enumDefault': 1,
+                           'conditionId': '7', 'sourceType': 0, 'conditionValues': []}]]
+            live = [[(c.get('nodeId'), c.get('filedId'), str(c.get('conditionId'))) for c in g]
+                    for g in get(yes['id']).get('conditions') or []]
+            if live != [[(company, fid(n), '7')]]:
+                hap.run('workflow', 'node', 'save', pid, yes['id'], '--type', '2', '-n', 'Yes',
+                        '-c', json.dumps({'operateCondition': condition}, ensure_ascii=False))
+                print(f"  {workflow}: {gateway_name!r} condition written")
+            ensure_step(step, start, company, [n])
+    else:
+        ensure_step(PUSH_TERMS_STEP, by_name['Get its contacts']['id'], start, terms)
 
 
 def publish(pid):

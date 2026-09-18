@@ -72,7 +72,23 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   (`size`, `sectionId` and the rest are kept). A new two-way Relation's reverse arrives there too, width 0 and
   with no alias — that is the general rule, not a quirk of reverses. **Only a full `update-fields` save places a
   control**: there is no per-field endpoint, and hap-cli's own editor ops `field update` and `field reorder` both
-  go through `save_controls`.
+  go through `save_controls`. A control can also be **created and placed in that one full save**: sent with a
+  client-side 32-hex `controlId` (what hap-cli's `build_control` mints), it gets a server id and keeps the row, col and
+  size it was sent with (Products' Favorite re-created at row 1 col 0, 17 Sep).
+- **A read-modify-write of a worksheet someone else edits must pin the version.** `SaveWorksheetControls` carries an
+  optimistic-lock `version`, but hap-cli's `save_controls` refetches the counter on a conflict and saves anyway — a
+  change another administrator made between the read and the save is silently overwritten. Read the controls and
+  their `version` in one call (`common.controls_with_version`) and pass it on (`common.save_controls(ws, ctrls,
+  version=…)`): hap-cli then returns a conflict as it comes — code 10, 数据过时, which `save_controls` raises — instead of
+  retrying over it (its docstring; no conflict was provoked here). Before a surgical save, `hap --json app logs <app>
+  --start …` names every operator's recent *Modified worksheet* (Products, version 15 → 16, Favorite, 17 Sep).
+- **A deleted field waits in the form designer's field recycle bin** (字段回收站, pd-openweb `FieldRecycleBin.jsx`) for
+  the site's `worksheetRowRecycleDays`: `GetWorksheetControls` with `getControlType` **9** lists it — id, alias, place,
+  who deleted it and when — and `EditControlsStatus {worksheetId, controlIds, status}` restores it with its id (1)
+  or purges it (999). Look there before re-creating a deleted field: a re-created field has a new id, and every view,
+  rule and workflow naming the old one must be re-pointed. **Once it is re-created, the old one must never be restored**
+  — the worksheet would carry two controls with one name and alias. (Products' Favorite, deleted by another
+  administrator at 16:11 on 17 Sep, is still listed there; restoring through the API was not tried.)
 - **`add-fields` given a control that already exists appends a second entry with the same `controlId`** instead of
   updating it (`{"code": 1}`, and the worksheet then lists it twice). A full save that sends that id once updates
   **both** copies; a full save that omits it deletes **both**. A duplicate can only be cleared by deleting the
@@ -94,6 +110,14 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   `$<the bridge 子表 or multi-Relation>$`, and **a count still needs a column named** on the target worksheet in
   `sourceControlId` (the title serves). Added with `add-fields` and re-saved (as a formula must be) it computes at
   once and follows a record moving in or out of the relation (Product Categories' # Products).
+- **A 汇总 can carry its own filter** — `rollup_control(…, filters=[…])` stores it in `advancedSetting.filters`, in the
+  view-editor enum: a single select's "is" is **filterType 51** with the option key in `values`. It computes over a
+  mounted 子表 too: Payment Terms' *Percent total* (`enumDefault` 5, sum of Due where Value is Percent) reads 100 on a
+  TEST term holding a 100 Percent and a 50 Fixed line, and *Line count* (6) reads 2 (bundle 3).
+- **A 汇总 does not follow the rows being edited in the open form** — answered in the browser, 17 Sep 2026: it holds
+  the **saved** rows until the record is saved, so a validation rule standing on one judges the record as it was. On a
+  new record every roll-up is empty, and Payment Terms' two rules refused every new term, its default 100 % row
+  included; both are built and **disabled** (10 §3). Never gate a save on a roll-up of the subtable being edited.
 - A **static Relation default** is `defsource: [{"staticValue": "[\"<rowid>\"]"}]`; the server stores the whole record
   in place of the id. The API applies no defaults — only the form does.
 - **…and a save that sends that whole record back clears the default.** `GetWorksheetControls` returns the record's
@@ -156,6 +180,16 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
 - **`hap app sort-worksheets <app> <section> <every worksheet id, in order>`** reorders a menu group
   (`HomeApp/UpdateSectionChildSort`); `worksheet create --section-id` always appends. Read the order back from
   `app info` (Chart of Accounts, moved in front of Journals).
+- **A worksheet is hidden from the sidebar with `HomeApp/SetWorksheetStatus`** `{appId, worksheetId, status}` —
+  status **1** shown · **2** hidden everywhere (全隐藏) · 3 hidden on PC · 4 hidden on mobile (pd-openweb
+  `api/homeApp.js`). hap-cli has no command for it; call it through the session (`payterms.step_create`). The status
+  reads back only from the main site's `HomeApp/GetApp` with `getSection` true (`sections[].workSheetInfo[].status`);
+  `hap app info` (V3) lists a hidden worksheet exactly like a visible one. The worksheet keeps its views, rules,
+  records and role entries, and still works as a mounted 子表 (Payment Term Lines, bundle 3). What an administrator
+  and a role member each see in the sidebar is for the browser.
+- **A Number hides its trailing zeros with `advancedSetting.dotformat` "1"** — the field editor's 省略末尾的 0 under
+  小数位数 (pd-openweb `PointerConfig.jsx`). `dot` keeps the stored precision: Payment Term Lines' Due has `dot` 6 and
+  should show 100 rather than 100.000000 (bundle 3; the rendering is for the browser).
 - **A text control can carry a format check**: `advancedSetting.filterregex`, the field editor's 限定输入格式 — a
   JSON list of at most five `{name, value, err}`, `value` the regular expression and `err` the message
   (pd-openweb `TextVerify.jsx`). hap-cli has no builder for it; send it in a full save. **It is the form's check
@@ -178,12 +212,21 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   <child> --name … --back-relate-name …` does both halves of HAP's 已有关联 handshake: the 子表 on the parent
   (with the child's controls as its `relationControls` snapshot), then the **back-relation on the child carrying
   the placeholder controlId the server reserved** for it — which is what makes rows show under the right parent.
+  (`--back-relate-name` names that back-relation at once — Payment Term Lines' *Payment Terms* needed no rename —
+  but leaves its alias empty and its `required` false.)
   The child keeps its sidebar entry, its views, its rules and its records; only the `child_fields` kind of 子表
   creates a hidden child table. The back-relation is created *by the mount*, at row 0 col 0 width 12, dropdown,
   with no alias — place and alias it in a later save, sending its `sourceControlId` back untouched. Column order
   is `showControls` (an ordered list) **plus** `advancedSetting.controlssorts` (the same list as a JSON string);
   `advancedSetting.hidetitle` "1" drops the heading above the table. `record get` on the parent returns a 子表
   as a **row count**, an integer, not as the rows (Invoice Lines under Invoices).
+- **A 子表 can start a new record with rows**: its custom default (自定义默认值, pd-openweb
+  `DynamicDefaultValue/inputTypes/SubSheet/CustomDefaultValue.jsx`) is `advancedSetting.defsource`
+  `[{rcid: "", cid: "", staticValue: "<the rows as a JSON string>", isAsync: false}]` with `dynamicsrc` "" and
+  `defaulttype` "0"; each row is keyed by the table's column ids plus `pid`, `rowid` (`temp-<uuid>`) and `childrenids`,
+  a number as a string and a dropdown as its key list in a string. Payment Terms' Due Terms carries Odoo's default
+  line, 100 Percent · 0 · Days after invoice date, stored and read back byte for byte (bundle 3). Like every default
+  it is the form's: the API creates a term with no line, and only the browser shows whether the row appears.
 - **`worksheet update-fields --controls` stops working once a worksheet carries a 子表.** The whole control list
   goes on the command line and the `relationControls` snapshot pushes it past the kernel's argument limit —
   `OSError: [Errno 7] Argument list too long`. Make the same call through the CLI's own session:
@@ -198,7 +241,9 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   used the session; `units.py`, `variants.py` and part A of `accounts.py` still put the list on the command line, and
   their worksheets are well under the limit — switch them the day one gains Relations.
 - `add-fields` stores a new control's `fieldPermission` as `""` where every saved control reads `"111"`; the first
-  `layout` save writes `"111"`, and a before/after comparison shows it as a change.
+  `layout` save writes `"111"`, and a before/after comparison shows it as a change. **Only a save that sends `"111"`
+  does**: `contacts.py layout` places a control without touching its permission, and Contacts' two payment-term
+  Relations still read `""` after it — `payterms.py` wrote the permission in a save of its own (bundle 3).
 - **A control-set digest is not a reliable "untouched" signal when a static Relation default is in play.** The
   default stores the whole related record, `utime` included, so saving *any* record that the default points at
   changes the holding worksheet's control payload without the worksheet being written to at all — no
@@ -215,6 +260,10 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   take **no** `c` prefix there; a dropdown compares by its label (`type == "Delivery"`); the formula recomputes when
   a stored lookup it reads changes (Contacts' Display Name).
 - A text combination can use the record id, `$rowid$`.
+- **A function formula renders a Number without its decimals' trailing zeros, and an empty Number as nothing.**
+  Payment Term Lines' Display name, `CONCAT(Due," ",Value," · ",After," · ",Delay Type)` over a Due with `dot` 6,
+  reads "100 Percent · 30 · Days after invoice date" and — with After empty — "50 Percent ·  · Days after end of next
+  month" (two spaces). No `TEXT()` or rounding was needed (bundle 3).
 - Stored lookups chain: saving a record updates the lookups pointing at it and the formulas built on them, level
   after level — so a self-referencing chain (Absolute Quantity down a unit chain) works without workflows.
 - **A stored lookup (`strDefault` "00") may read a function formula on its own worksheet**, which is how a
@@ -254,7 +303,16 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   alone (Products' Category quick filter, added beside the four that were already there).
 - **Deleting a field leaves every view sorting on its id.** `sortCid` and `moreSort` keep the dead control id and
   nothing cleans them up (Journals' two views still pointed at a Sequence field removed on 15 Sep). Re-write the sort
-  after a field goes.
+  after a field goes. **A quick filter keeps it too** — Products' List still listed the deleted Favorite fourth among
+  its `fastFilters` — and so do **a business rule** (Rules, below) and **a workflow step or trigger** (Workflows). To
+  re-point a view, send only the attribute with the id replaced in place: `--view-json '{"sortCid": …, "sortType": …,
+  "moreSort": […]}' --edit-attrs sortCid,sortType,moreSort`, and `--edit-attrs fastFilters` for the quick filters;
+  every other attribute read back unchanged (17 Sep).
+- **A view sorts on a Relation by the related record's title, as text**: Payment Term Lines' *Lines* view, sorted
+  Payment Terms then created, lists "10 Days after End of Next Month", "15 Days", "2/7 Net 30", "21 Days", … **The
+  system field `ctime` works as a sort key** in `moreSort` (`controlId` "ctime", `dataType` 16): Payment Terms' views
+  sort Sequence then created, and ten terms sharing Sequence 10 come back in creation order (bundle 3). `record list
+  --view-id` returns them in that order; the seed created each term in a second of its own so no two share a `ctime`.
 - A **view's or a button's condition on a single select is filterType 51**, not 2: the CLI's filter translator maps
   `eq` to 51 (EQ_FOR_SINGLE) only when the condition carries `dataType` 9 or 11, and to 2 without it. 51 with several
   option keys means "is any of" (Invoices' Reset to Draft: Status is Posted or Cancelled). A **business rule's**
@@ -312,6 +370,13 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   **None of that is readable from the CLI** — the stored rule looks the same whether the browser greys the table,
   hides the row controls or ignores it — so a rule acting on a control type this app has not used before has to
   be proved in the UI before it is written down as working.
+- **Deleting a control does not take it out of the rules that name it.** Invoices' *A posted or cancelled document is
+  closed for editing* still listed the deleted text stand-in `6aa920d74a73a3142152e68d` among its read-only controls
+  after the full save that removed it (bundle 3). Give the rule its replacement **before** the deletion — the build
+  added the new relation beside the stand-in, so the relation was never unlocked — and rewrite the rule's controls
+  afterwards (`invoices.py rules`). Views, buttons and workflow nodes were scanned the same way (`payterms.py
+  deadrefs`); a workflow node's `controls`, `addControls`, `filedControls`, `flowNodeList` and `flowNodeAppDtos` are the
+  worksheet's control catalogue and name every control, dead or alive, so a scan must leave them out.
 - The CLI cannot delete a rule. Disable it (`save-rule --rule-id … --disabled`) and delete it in the UI: worksheet
   ⋯ › Set Worksheet › Business Rules › hover the rule › trash icon.
 
@@ -321,10 +386,14 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   button up by name with `hap worksheet custom-actions <ws>` first.
 - A button that runs a workflow gets a hidden workflow; while it has no steps, its trigger's `nextId` is `99`.
   Deleting the button deletes that workflow too.
-- A button's condition **hides** it when unmet on an open record — a posted Invoices document shows Reset to Draft
-  and neither Confirm nor Cancel — though a greyed-out button has also been seen elsewhere in the UI. Do not write
-  a test expecting one or the other without checking the worksheet you are on; Journals' own hand-off records the
-  same hiding on a full-page record.
+- A button's condition **hides** it on a full-page record — a posted Invoices document shows Reset to Draft and
+  neither Confirm nor Cancel — and **greys it out in the pop-up record** a table row opens: Payment Terms' Unarchive
+  reads disabled beside Archive in the pop-up and is absent from the same record's own page (bundle 3). Write the test
+  for the surface it is run on.
+- **A validation message is drawn above its field**, and covers whatever sits there: Payment Terms' *Discount %*
+  message lands on the Early Discount checkbox, which then cannot be clicked until the field is corrected (bundle 3).
+- **A Relation picker lists the newest record first**, whatever the target worksheet's views are sorted by — Odoo
+  orders its own by sequence or name, so a picker's order is a difference to record, not a defect (bundle 3).
 - `hap workflow trigger <processId> -s <rowid>` runs a button's workflow on one record — a CLI check of a button.
 - In a button's workflow a **get related record** step cannot start from the trigger record: the server leaves the
   trigger out of that step's sources, drops the relation field, and publishing fails (warningType 103, 200). Search
@@ -354,6 +423,15 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   `fields`), then republish (`variants.py` `sync_step`). A text value taken from a node reads back as the template
   `$node-field$`, the other types as `nodeId` + `fieldValueId`. `hap workflow update <processId> -n … -d …` renames a
   workflow; `workflow get` returns its description as `explain`.
+- **A step or trigger naming a deleted field keeps the dead id, stays published and raises nothing.** When Products'
+  Favorite was deleted in the form designer, Product Variants' automations A, B and C kept it as the `fieldValueId`
+  of a create or update entry, and B kept it among its trigger's `assignFieldIds`: `isException` stayed false,
+  `publishStatus` 2, and the only sign in `node get` was the entry's **`fieldValueName` reading ""** (it reads the
+  field's name once the id is live). A scan for the id finds them (`payterms.py deadrefs <id>`, which skips each
+  node's control catalogue). Re-point in place: the entry with only its `fieldValueId` replaced, the whole `fields`
+  list sent back with `node save --type 6`; the trigger's `assignFieldIds` with `node save --type 0` (appId, appType,
+  triggerId, operateCondition and returns as read); republish, then compare every node with its backup — only the id,
+  and the server's `fieldValueName` and `sourceType` on that entry, changed (17 Sep).
 - A search step's result branch marks its paths `resultTypeId` 3 (found) and 4 (not found) in `workflow node list`;
   `node get` leaves it out, and `workflow structure` leaves out get-records (type 13) steps.
 - **An update step's `selectNodeId` must name a node that produces a record** — the trigger, or a search step.
@@ -373,6 +451,31 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   the greatest X" needs no extra field — sort descending and read the first (Invoices' highest-number step).
   `batch-add` writes neither the filter (it sends `operateCondition`) nor the sort; both go in with
   `node save --type 7`.
+- **A code block (flowNodeType 14) is built with `node add`, `saveNode` and `codeTest`**, and the organisation runs
+  it (bundle 3, automations C and D and Confirm):
+  1. `hap workflow node add <pid> --type 14 -n … --after <node> -a 102` inserts it after that node (102 JavaScript ·
+     103 Python — pd-openweb `WorkflowSettings/enum.js`);
+  2. `flow_node.save_node(session, pid, node, 14, {actionId, inputDatas, code, testMap, version, maxRetries})` —
+     **`testMap` is required**: without it `flowNode/saveNode` answers **HTTP 500**, even for one line of code. `code` is
+     the source **base64-encoded** as the editor does (`btoa(unescape(encodeURIComponent(code)))`); `inputDatas` is
+     `[{name, value: "$<nodeId>-<controlId>$"}]`; `maxRetries` defaults to 1;
+  3. **the outputs exist only once `flowNode/codeTest` has run it** (`hap workflow node test-code`, the code base64
+     again, `inputDatas` carrying test values): the answer's `controls` — one per key of `output`, `type` 1 — are
+     stored on the node, and only then can a later step bind them. An update step writes a **Date** field from an
+     output with `nodeId` = the code node and `fieldValueId` = the output's key; `isException` stays false and the
+     workflow publishes.
+  A **get-multiple step's field reaches the code as a list**, one entry per record, in the same record order for every
+  field, and **an empty value keeps its place**: a term whose first line has no After and whose second has 5 dated as
+  if the lists were aligned. Whether the list arrives as a JSON array or comma-separated text is not visible from the
+  CLI — `approval history-detail` lists a code node's run with no input or output — so the code accepts both. A system
+  value is reachable as `$5d39140d381d42d20db0c4da-nowTime$`.
+- **A get-multiple step (flowNodeType 13, actionId 400) has no `executeType`.** It carries **`execute`** instead:
+  true fetches the records when the step runs (直接获取), false — the default — fetches them again every time a later
+  step reads them (每次使用时动态获取; pd-openweb `FindMode`). Its filter is `filters`, as a search step's; a Relation
+  equal to another node's Relation is conditionId 33 with `conditionValues: [{nodeId, controlId}]`.
+- **An update step empties a field with `isClear: true`** on the field entry (the editor's 清空, pd-openweb
+  `UpdateFields`). Sent as a plain empty `fieldValue`, the entry is dropped on save — `fields` reads back `[]`, no
+  error, and the step writes nothing (automation C's *Empty the Payment Terms*).
 - **A search step whose filter value is empty fails the whole run** — status 4, cause 100000 **"筛选条件值为空
   记录ID"** — even with `executeType` 2 (carry on when nothing is found). A Relation that is empty on the record the
   value comes from is enough: Invoice Lines' automation B died at *Get the product variant* on a line with no Product.
@@ -402,8 +505,7 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   string_fx_id`). **Summing a column** is the same node with `reportControlId` = the column and `reportType` **3**
   (4 avg · 5 max · 6 min), and its filter can compare a Relation with another node's record: `op` "33",
   `conditionValues: [{nodeId, controlId: "rowid"}]`. `batch-add` writes a 107 node's filter correctly (it sends
-  `filters`), unlike a search node's (type 7). There is **no code node** through the CLI: `batch-add` refuses
-  `nodeType: "code"` outright.
+  `filters`), unlike a search node's (type 7). `batch-add` refuses `nodeType: "code"` outright — but a code block **can** be built through the CLI (below).
 - **A formula node's result can only be bound as `nodeId` + `fieldValueId` when the node is a worksheet total
   (107) or a number formula (100).** A **function** formula (106) reports `appType` **11**, its `number_fx_id`
   comes back with an empty `type` and `name` in the consuming node's `formulaMap`, that node goes
@@ -419,8 +521,12 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   share a trigger, so a roll-up that must survive a deletion is two workflows with the same body.
   `node batch-add --trigger-worksheet … --trigger-event …` configures a `--type worksheet` workflow's trigger in
   the same call; without it the trigger stays unconfigured and the workflow cannot publish.
-- **新增或更新 ('2') narrowed to fields (`assignFieldIds`) fires on every create**, whatever the fields, and on an
-  update **whenever one of those fields is in the write — changed or not**. A `record update` sending Type
+- **新增或更新 ('2') narrowed to fields (`assignFieldIds`) fires on a create only when the create writes one of those
+  fields**, and on an update **whenever one of those fields is in the write — changed or not**. (This bullet first read
+  "on every create, whatever the fields": Chart of Accounts' creates all wrote Type. Bundle 3 isolated it: automation C,
+  narrowed to Customer / Vendor, ran for every API create carrying a Customer / Vendor and **for none without one** —
+  *TEST PT C no customer* has a create entry in its record log and no run. Whether the browser's create sends an empty
+  Customer / Vendor, and so starts C, is for the UI pass.) A `record update` sending Type
   unchanged together with a real change to Non Trade started Chart of Accounts' Type-narrowed automation, and
   the record log shows the entry as `Type: 'Current Assets'->'Current Assets'`; a write of Non Trade alone started
   nothing. So a script that re-sends every field re-runs every field-narrowed workflow — as Odoo does for a stored
@@ -428,21 +534,42 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
 - **A `record update` that changes nothing fires no worksheet-event workflow** — so a check that writes back the
   value a record already holds and then re-reads is testing nothing.
 - `hap workflow list` takes the **app id as an argument**, not as `-a`.
-- `batch-add` in a **second** call drops a branch path's name as well as its condition. `node save --type 2` with
+- `batch-add` in a **second** call drops a branch path's name as well as its condition. (Seen otherwise once: the two
+  branches bundle 3 appended to *Contacts: copy company details to its contact* read back with their DSL `condition`
+  on the Yes path — the names were set by `contacts.py`'s own rename pass. Read the conditions back rather than trust
+  either behaviour.) `node save --type 2` with
   `operateCondition` sets the condition but not the name even with `-n`; the name needs `workflow node rename`.
 - Even in a **first** call, `batch-add` returns the **two paths it reuses from a new gateway's default items with no
   name**, while the paths it adds beyond those two keep theirs. The order holds: the gateway's `flowIds` list the
   paths as given. Re-save every path's condition, rename every path, and read both back (Chart of Accounts'
   four-path automation).
-- **A record written by a workflow starts that worksheet's event workflows** (a variant's Unarchive button writing its
-  product started the product's archive workflow). Design cascades so the second run finds nothing to change.
-- **…but a worksheet-event workflow's write of its own trigger record started none of that worksheet's event
-  workflows.** Invoice Lines' automation B writes Account on the line that started it; 07's roll-up, which triggers
-  on *any* change to a line (新增或更新, no fields), ran once for every API write of a line — the eight Account-only
-  writes of bundle 2's seed included — and **not once** for the seventeen writes automation B made (each in the line's
-  record log as `requestType` 2, five or six seconds after the API write). Whether HAP suppresses the event because
-  the record is the run's own trigger, or because the write comes from inside a run on the same worksheet, was not
-  isolated; do not rely on a cascade through the same worksheet without proving it.
+- **Whether a workflow's writes start other workflows is the writing workflow's own setting, 触发其他工作流**, in its
+  process config (the editor's ⋯ › 流程配置; `hap workflow config-get <pid>` / `config-set`; pd-openweb
+  `WorkflowSettings/ProcessConfig`, key **`triggerType`**): **0 允许触发** — HAP's default — · **1 只能触发指定工作流**,
+  the workflows listed in `processIds` · **2 不允许触发**. There is no such switch on an update step or on a trigger
+  (pd-openweb's action and trigger editors have none). Under 0 the editor's help text adds that **a workflow of the
+  writer's own worksheet is started only if it is narrowed to trigger fields**, which accounts for everything seen:
+  a variant's Unarchive button writing its product started the product's archive workflow (another worksheet);
+  Invoice Lines' automation B writing Account on its line started **none** of the runs of 07's roll-up, which has no
+  trigger fields (新增或更新 on any change), while the roll-up ran for every API write of a line; and automation C
+  writing Payment Terms, and Confirm filling the Invoice Date, each started automation D, which is narrowed to
+  Payment Terms, Invoice Date and Accounting Date — a control run on 17 Sep, 22:40, dated one new invoice twice: C at
+  :14, D at :19. **With `triggerType` 2 on C and Confirm, neither starts D any more**: seven actions on *TEST PT once
+  …* invoices — creates with a customer's term, a typed term, the same term typed; a date change; a customer change;
+  a create and Confirm — each dated the invoice exactly once (`payterms.py selfcheck once`, 17 Sep). A workflow set
+  to 2 starts nothing anywhere, so a later workflow that must react to its writes needs 1 with that workflow named.
+  Design cascades so a second run finds nothing to change, or switch the writer off when its own run already does
+  the work.
+- **`workflow config-set` takes the config object**: send back the whole `config-get` answer with only the key changed,
+  as the editor's Save does (`revokeNodeIds` kept only while `allowRevoke`, `value` trimmed), then read it back — every
+  other key came back unchanged — and **republish**: the editor marks the workflow as having unpublished changes after
+  this save (`payterms.ensure_quiet`).
+- **An update step copying a field from the trigger record to related records writes an empty value as empty.**
+  *Contacts: push company address and Tax ID to its contacts* cleared TEST PT Person's Tax ID when TEST PT Company's
+  was emptied (a text template `$trigger-field$`), and its Vendor Payment Terms when the company's was emptied (a
+  Relation, `nodeId` + `fieldValueId`) — Odoo's `_commercial_sync_to_descendants` does the same (bundle 3).
+- `hap workflow create` can answer **ReadTimeout** after 30 s having created nothing: the workflow list did not show it,
+  and running the step again created it once. Look the workflow up by name before re-creating it.
 - Give a worksheet-event trigger a condition when most records cannot need the run — every run counts against the
   organisation's workflow quota.
 - **A workflow's run history is `hap approval history --process-id <pid>`** — `workflow history` is the *version*
@@ -514,6 +641,9 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   field*, not its name: a product's Category reads back "Goods / IT Equipment" (the Complete Name), never
   "IT Equipment".
 - `record get` returns a record's creation time as `_createdAt`; `record list` returns `ctime` empty.
+- `record get` keys a value by the control's **alias**, and by its **controlId** when it has none — the new Payment Terms
+  relation on Invoices read back under `6aab8b6b7d58b0f449311740` beside the stand-in's `invoice_payment_term_id` until
+  the stand-in was deleted and the relation took the alias (bundle 3). A script that reads by alias must know which.
 - **`hap worksheet record logs <ws> <rowid>` is the record's change log**: every write with its time and each
   field's old → new value, including the formulas it recomputed, and a `requestType` — seen as **1** for a
   `record update`, **2** for a workflow's step (button and worksheet-event workflows alike) and **8**
