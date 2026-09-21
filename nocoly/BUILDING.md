@@ -1112,3 +1112,26 @@ What decides is **whether the value being compared is in the write**.
   Prepayment Percentage (`fieldPermission` `011`) as `''` on all twelve orders that had just been written with
   100, and read every tax's Amount as `''` while the tax-rate roll-up was correctly summing 10 and 8. **Never
   conclude a hidden field is empty from a listing** — fetch the record.
+
+### Neither record read path is complete (21 Sep 2026)
+
+Measured on Orders in one run, writing with `hap worksheet record update` and reading back both ways:
+
+| Control | `fieldPermission` | `record get` | `common.records` |
+|---|---|---|---|
+| Prepayment Percentage | `011` hidden | `100.00` | **empty** |
+| Invoicing Closed | `100` read-only | **None** | `1` |
+| Signed By | `100` read-only | **None** | the value |
+| Status | `100` read-only | the value | the value |
+
+**Every write landed.** An API write stores whatever the permission says, and a workflow update node writes a
+read-only field too — that is how Confirm and Close Invoicing fill fields nobody may type. Permission governs
+the form, not the API.
+
+What is not reliable is **reading back**. `common.records` drops hidden fields; `record get` dropped the four
+controls §6b added *after* those twelve records already existed, even once a button had written one. Status
+is `100` and survives both, so permission alone does not explain it.
+
+**So: never conclude a field is empty from a single read.** During this build that mistake produced two wrong
+conclusions — "no tax carries an Amount" and "Prepayment was never seeded" — and one wrong entry in this file,
+which this section replaces.

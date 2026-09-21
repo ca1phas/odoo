@@ -74,8 +74,24 @@ Full map: `hap_cli/core/worksheet.py` `_TYPES`.
 
 **`fieldPermission` is three inverted flags** — hidden / read-only / hidden-on-create, where `0` turns the
 restriction **on**. `111` unrestricted · `101` read-only · `011` hidden · `100` read-only and off the create
-form. A hidden field is never a column; hidden-on-create is not the same thing. An **API write ignores field
-permission**, so read-only does not stop a workflow writing.
+form. A hidden field is never a column; hidden-on-create is not the same thing.
+
+**An API write works whatever the permission** — `011` hidden and `100` read-only both store through
+`record update`, and a workflow update node writes them too. Permission governs the *form*, not the API.
+
+**But no single read path is complete, and they differ.** Measured on Orders, 21 Sep 2026:
+
+| Control | Permission | `record get` | `common.records` listing |
+|---|---|---|---|
+| Prepayment Percentage | `011` hidden | `100.00` | **empty** |
+| Invoicing Closed | `100` read-only | **None** | `1` |
+| Signed By | `100` read-only | **None** | the value |
+| Status | `100` read-only | the value | the value |
+
+Status is `100` and both paths return it, so this is not permission alone — the three that vanish were added
+to the worksheet **after** those records existed. **Never conclude a field is empty from one read.** Cross-check
+with the other path before reporting a gap; this has produced two wrong conclusions and one wrong entry in
+these notes.
 
 ## Computation
 
