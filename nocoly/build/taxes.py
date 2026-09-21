@@ -1606,11 +1606,19 @@ PICKER_BASE = {'spliceType': 1, 'dateRange': 0, 'dateRangeType': 0, 'minValue': 
 
 
 def tax_picker(use):
-    """A Relation's picker filter over Taxes: Tax Type is `use`. A picker filter runs in the **browser only**
-    (BUILDING.md), so the UI pass is what proves it."""
+    """A Relation's picker filter over Taxes: **Tax Type is `use` and Active is ticked**. A picker filter runs in
+    the **browser only** (BUILDING.md), so the UI pass is what proves it.
+
+    The Active half was added on 21 Sep 2026 at the owner's ruling *"follow whichever used by Odoo"*. Odoo's
+    `product.template.taxes_id` carries `domain=[('type_tax_use','=','sale')]` on a field whose `active_test` is
+    **on**, so an archived tax is never offered on a product. **The invoice line is deliberately the other way** —
+    `account.move.line.tax_ids` carries `context={'active_test': False}` — so `lines()` leaves that picker
+    unfiltered and must stay that way (13 §3, difference 2)."""
     f = fields_of(ws())
     return json.dumps([{'controlId': f[TYPE]['controlId'], 'dataType': DROPDOWN, **PICKER_BASE,
-                        'filterType': C.EQ, 'value': '', 'values': [KEY_OF[TYPE][use]], 'dynamicSource': []}],
+                        'filterType': C.EQ, 'value': '', 'values': [KEY_OF[TYPE][use]], 'dynamicSource': []},
+                       {'controlId': f[ACTIVE]['controlId'], 'dataType': SWITCH, **PICKER_BASE,
+                        'filterType': C.EQ, 'value': '', 'values': ['1'], 'dynamicSource': []}],
                       ensure_ascii=False, separators=(',', ':'))
 
 

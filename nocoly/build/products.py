@@ -38,26 +38,38 @@ def units_ws():
 # Odoo saas~19.4 product_template_form_view on HAP's 12-column grid. Header: Name (the favourite star beside
 # it), the Sales and Purchase checkboxes under it, the image; then the notebook.
 GENERAL, SALES, INVENTORY, ACCOUNTING = 'General Information', 'Sales', 'Inventory', 'Accounting'
-TAB_ROWS = {GENERAL: 3, SALES: 8, INVENTORY: 11, ACCOUNTING: 13}
+TAB_ROWS = {GENERAL: 4, SALES: 11, INVENTORY: 14, ACCOUNTING: 17}
+# Re-cut to the live form on 21 Sep 2026 at the owner's ruling "follow whichever used by Odoo". The old rows were
+# written before the Taxes bundle inserted Sales Taxes and Purchase Taxes, and everything below them had shifted by
+# one, two, three and finally four rows — which is why `prodcat check` and `accounts.py check-b` had been reporting
+# Products "out of place" without anything actually being wrong. The order below **is** Odoo's own right-hand group:
+# Sales Price · Sales Taxes · Cost · Purchase Taxes · Category · Reference, then Internal Notes as its own group
+# (product.template.md › Form). Unit sits beside Cost because Odoo draws the unit inline after both prices.
 PLACE = {  # field name -> (row, col, size, tab)
     'Name': (0, 0, 12, None),
     'Favorite': (1, 0, 4, None), 'Sales': (1, 1, 4, None), 'Purchase': (1, 2, 4, None),
     'Image': (2, 0, 12, None),
-    'Product Type': (4, 0, 6, GENERAL), 'Sales Price': (4, 1, 6, GENERAL),       # group_general | group_standard_price
-    'Unit': (5, 0, 6, GENERAL), 'Cost': (5, 1, 6, GENERAL),
+    'Active': (3, 0, 6, None),                                   # hidden by fieldPermission; Archive/Unarchive set it
+    'Product Type': (5, 0, 6, GENERAL), 'Sales Price': (5, 1, 6, GENERAL),      # group_general | group_standard_price
+    'Sales Taxes': (6, 0, 12, GENERAL),                          # bundle 6 (13-taxes.md)
+    'Unit': (7, 0, 6, GENERAL), 'Cost': (7, 1, 6, GENERAL),
+    'Purchase Taxes': (8, 0, 12, GENERAL),                       # bundle 6
     # Category (categ_id) belongs to the Product Categories bundle (nocoly/worksheets/08-product-categories.md,
     # built by prodcat.py), which added it with `add-fields` — that parks a new control at row 9999, and only a
-    # full save moves it. This step is that save: it reads the live controls and sends the same list back, so
-    # Category lands where Odoo's form has it, between Cost and Internal Reference.
-    'Category': (6, 0, 6, GENERAL), 'Internal Reference': (6, 1, 6, GENERAL),
-    'Internal Notes': (7, 0, 12, GENERAL),
-    'Packagings': (9, 0, 12, SALES), 'Sales Description': (10, 0, 12, SALES),
-    'Weight': (12, 0, 6, INVENTORY), 'Volume': (12, 1, 6, INVENTORY),
+    # full save moves it. This step is that save, so Category lands where Odoo's form has it, after Purchase Taxes.
+    'Category': (9, 0, 6, GENERAL), 'Internal Reference': (9, 1, 6, GENERAL),
+    'Internal Notes': (10, 0, 12, GENERAL),
+    'Packagings': (12, 0, 12, SALES), 'Sales Description': (13, 0, 12, SALES),
+    'Weight': (15, 0, 6, INVENTORY), 'Volume': (15, 1, 6, INVENTORY),
+    # **Delivery Time is not ours and not Odoo's.** No builder creates it, it is in no ids.json, it carries no alias
+    # and no fieldPermission, and 03-products.md lists Delivery Time among the parts of Odoo's Inventory tab that
+    # were *not* built. It appeared in the app around 18 Sep 2026. It is placed here so a layout save does not move
+    # it, and flagged for the owner: on the "follow Odoo" rule it should go, and deleting needs their approval.
+    'Delivery Time': (16, 0, 6, INVENTORY),
     # The tab Accounting and its two accounts belong to the Chart of Accounts bundle (09-chart-of-accounts.md, built
     # by accounts.py `products`), added with `add-fields` and placed by this step, as Category was: after Inventory,
     # where Odoo has the page. Odoo's group title "Cost and Revenue" is left out, as the other group titles are.
-    'Income Account': (14, 0, 6, ACCOUNTING), 'Expense Account': (14, 1, 6, ACCOUNTING),
-    'Active': (15, 0, 6, None),
+    'Income Account': (18, 0, 6, ACCOUNTING), 'Expense Account': (18, 1, 6, ACCOUNTING),
 }
 HINTS = {'Name': 'e.g. Cheese Burger', 'Internal Notes': 'This note is only for internal purposes.',
          'Sales Description': 'This note is added to sales orders and invoices.',
