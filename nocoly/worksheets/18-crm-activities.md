@@ -45,8 +45,11 @@ avoids waking for records that are not due.
 | `TEST - CRM Activity follow-up` | Done, due/completed 21 Sep 2026 | Mark Done workflow and Done/Calendar rendering |
 | `TEST - Activity notification flow` | Scheduled, due 22 Sep 2026 | Creation notification and due reminder |
 | `TEST - Scheduled from Lead action` | Scheduled, due 23 Sep 2026 | Workflow-backed Lead action and Calendar rendering |
+| `TEST - Schedule Activity repeat` | Scheduled, due 24 Sep 2026 | Repeated action creation |
+| `TEST - Schedule Activity default reset` | Scheduled, due 25 Sep 2026 | First reset-node test |
+| `TEST - Schedule Activity final reset` | Scheduled, due 26 Sep 2026 | Corrected Relation reset and final repeatability proof |
 
-Both point to `TEST MY - New sales enquiry` and Activity Type To-Do. They remain intentionally for review.
+All six point to `TEST MY - New sales enquiry` and Activity Type To-Do. They remain intentionally for review.
 
 ## 4 · Schedule Activity on the Lead
 
@@ -60,10 +63,20 @@ Activities with the current Lead relation, Scheduled status and Active flag. To-
 are the configured defaults; Note is optional. The fields use raw `fieldPermission=011`, so they do not appear in
 the normal Lead form.
 
+The workflow finishes with `Reset Schedule Inputs`. It clears Summary and Note, restores Activity Type to To-Do,
+sets Due Date from System Current time, and sets Assigned To from System Trigger user. This is necessary because a
+Fill action on an existing record does not reapply field defaults after a previous workflow has cleared the stored
+values. The final CLI trigger and read-only Web reopening proved the action is repeat-safe.
+
 CLI end-to-end validation triggered the workflow on `TEST MY - New sales enquiry` and created
 `TEST - Scheduled from Lead action` (`775f477f-fe05-4a45-a9db-645a53efc964`). Read-only Web validation then
 confirmed the top button, dialog values and Calendar entry. The stored `sureName=Schedule` is rendered by HAP as
 `Confirm`; this is a recorded presentation mismatch, not a functional blocker.
+
+The final repeatability fixture is `TEST - Schedule Activity final reset`
+(`44447036-2147-4f37-89d0-76bc1f201b34`). It was created with To-Do, the source Lead, 26 September, Teh Li Wei,
+Scheduled, Active and its test note. After creation, the Lead read back with To-Do, 21 September, Teh Li Wei and
+empty Summary/Note; the Web dialog showed the same clean defaults and was cancelled without saving.
 
 ## 5 · Review checklist
 
@@ -72,8 +85,8 @@ confirmed the top button, dialog values and Calendar entry. The stored `sureName
 - Keep the scheduled 22 Sep test active through 09:00 and confirm the due message; complete/cancel it before the
   trigger to prove the guard suppresses the message.
 - Confirm the Lead form does not show the Activities subtable.
-- Open `Schedule Activity` from a Lead, confirm To-Do/current date/current user defaults on an untouched record,
-  and cancel without saving if review must remain read-only.
+- Open `Schedule Activity` repeatedly from the test Lead and confirm To-Do/current date/current user defaults,
+  empty Summary/Note, then cancel without saving. This passed on 21 Sep 2026.
 - Confirm My Activities' six views and English labels remain usable for a non-administrator.
 - Decide whether Activity Plan Steps should be hidden manually from the sidebar; hiding its only view did not
   hide the worksheet entry.
@@ -87,7 +100,9 @@ behaviour. The original direct-relation Schedule Activity action looked valid in
 deleted. Its replacement is the delivered Fill + Create workflow above. Captured CLI issues include workflow
 batch-add partial writes, the full wire required for dynamic Member recipients, add-fields dropping a Member
 default, save-action clearing that Member mapping, and one malformed raw button wire temporarily breaking both
-button listing and deletion until an in-place minimal recovery.
+button listing and deletion until an in-place minimal recovery. A raw update-node Relation also requires a bare
+row ID rather than the JSON-array string used by worksheet record updates; the wrong shape saved and published but
+rendered as a deleted relation until corrected and re-tested.
 
 `MCP status: not evaluated`. No MCP write or verification was used for this Activity follow-up, and no product
 ticket was submitted.
