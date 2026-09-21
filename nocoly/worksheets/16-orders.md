@@ -18,7 +18,9 @@ sections and notes, and a totals block. Most of the modelling decisions taken fo
 Lines transfer directly, and should be, so the two read the same way.
 
 **Status bar** `draft` **Quotation** → `sent` **Quotation Sent** → `sale` **Sales Order**, with `cancel`
-**Cancelled** off the bar. A separate boolean **`locked`** freezes a confirmed order and gates Lock/Unlock.
+**Cancelled** off the bar. A separate boolean **`locked`** freezes a confirmed order; in Odoo it is driven
+by Lock / Unlock buttons, but **here it is an ordinary editable checkbox and those two buttons are not
+built** (owner's decision, 21 Sep 2026).
 
 ## 2 · Fields
 
@@ -28,27 +30,47 @@ Lines transfer directly, and should be, so the two read the same way.
 |---|---|---|---|---|---|---|
 | 1 | Number | `name` | Text · title · read-only | — | `New` | written on confirmation from the sequence, as Invoices' Number is |
 | 2 | Status | `state` | Single Select, read-only | — | Quotation | **Quotation · Quotation Sent · Sales Order · Cancelled**; moved only by buttons |
-| 3 | Customer | `partner_id` | Relation → Contacts | **yes** in practice | — | read-only once `state in ['cancel','sale']` |
-| 4 | Invoice Address | `partner_invoice_id` | Relation → Contacts | — | the customer | read-only `state == 'cancel' or locked` |
-| 5 | Delivery Address | `partner_shipping_id` | Relation → Contacts | — | the customer | read-only `state == 'cancel' or locked` |
-| 6 | Expiration | `validity_date` | Date | — | computed from company settings | **hidden once `state == 'sale'`**; read-only for cancel/sale |
-| 7 | Quotation Date / Order Date | `date_order` | **Date & time** | — | **now** | two instances in Odoo's form: labelled *Quotation Date* while draft/sent, *Order Date* once confirmed. Read-only for cancel/sale |
-| 8 | Payment Terms | `payment_term_id` | Relation → Payment Terms | — | the customer's | **never read-only** — unlike the invoice, which locks it once posted |
-| 9 | Delivery Date | `commitment_date` | Date & time | — | — | read-only `state == 'cancel' or locked` |
-| 10 | Tax mode | `document_tax_mode` | Single Select | **yes** for non-entry | Tax Excluded | **the same field ERP Master already models on Invoices**; read-only `state != 'draft'` |
+| 3 | Customer | `partner_id` | Relation → Contacts | **yes** | — | |
+| 4 | Invoice Address | `partner_invoice_id` | Relation → Contacts | — | the customer | |
+| 5 | Delivery Address | `partner_shipping_id` | Relation → Contacts | — | the customer | |
+| 6 | Expiration | `validity_date` | Date | — | **Quotation/Order Date + 30 days** | from a company setting — see below. Odoo's help: "Validity of the quotation. After this date, you will no longer be able to sign and pay it." |
+| 7 | **Quotation/Order Date** | `date_order` | **Date & time** | — | **now** | Odoo puts the one field on the form twice under two labels — *Quotation Date* while draft or sent, *Order Date* once confirmed. HAP cannot rename a field from a rule, so it carries **both words**, exactly as Invoices' *Customer / Vendor* does |
+| 8 | Payment Terms | `payment_term_id` | Relation → Payment Terms | — | the customer's | |
+| 9 | Delivery Date | `commitment_date` | Date & time | — | — | |
+| 10 | Tax mode | `document_tax_mode` | Single Select | **yes** | Tax Excluded | **the same field ERP Master already models on Invoices** |
 | 11 | Pricelist | `pricelist_id` | Relation → Pricelists | — | the customer's | **blocked** — Pricelists is not built |
 | 12 | Salesperson | `user_id` | Relation → users | — | the current user | Other Info › Sales |
 | 13 | Sales Team | `team_id` | Relation → Sales Teams | — | — | Teh Li Wei built Sales Teams |
 | 14 | Customer Reference | `client_order_ref` | Text | — | — | Other Info › Sales |
 | 15 | Tags | `tag_ids` | Relation → CRM Tags, multiple | — | — | Teh Li Wei built CRM Tags |
 | 16 | Source Document | `origin` | Text | — | — | Other Info › Tracking |
-| 17 | Online signature | `require_signature` | Checkbox | — | company setting | Other Info › Confirmation |
-| 18 | Online payment | `require_payment` | Checkbox | — | company setting | Other Info › Confirmation |
-| 19 | Prepayment % | `prepayment_percent` | Number | — | company setting | shown only when `require_payment` |
+| 17 | Online signature | `require_signature` | Checkbox | — | **ticked** | from a company setting — see below. "Request a online signature from the customer to confirm the order." |
+| 18 | Online payment | `require_payment` | Checkbox | — | **unticked** | from a company setting — see below |
+| 19 | Prepayment % | `prepayment_percent` | Number | — | **100 %** | from a company setting — see below |
 | 20 | Invoicing status | `invoice_status` | Single Select, read-only | — | computed | **Upselling Opportunity · Fully Invoiced · To Invoice · Nothing to Invoice** |
 | 21 | Delivery status | `delivery_status` | Single Select, read-only | — | computed | **Not Delivered · Started · Partially Delivered · Fully Delivered** — needs Inventory; see §4 |
-| 22 | Untaxed Amount · Tax · Total | `amount_untaxed`, `amount_tax`, `amount_total` | roll-ups over the lines | — | — | exactly the pattern 06 uses: Σ Subtotal, and Σ Total − Σ Subtotal for the tax |
-| 23 | Locked | `locked` | Checkbox, hidden | — | unticked | set by Lock / Unlock |
+| 22 | Untaxed Amount · Tax · Total | `amount_untaxed`, `amount_tax`, `amount_total` | roll-ups over the lines | — | — | the pattern 06 uses: Σ Subtotal, and Σ Total − Σ Subtotal for the tax |
+| 23 | **Locked** | `locked` | **Checkbox, editable** | — | unticked | **Owner's decision, 21 Sep 2026: a plain editable checkbox, and Odoo's Lock / Unlock buttons are not built.** Odoo's help: "Locked orders cannot be modified." It still drives a read-only rule — see below |
+
+### Defaults that come from company settings
+
+Four of the defaults above are not constants. Odoo computes each from `res.company`, and these are the
+values **casimir holds today**:
+
+| Field on the order | `res.company` field | Label in Sales › Configuration › Settings | casimir | What an order gets |
+|---|---|---|---|---|
+| Expiration `validity_date` | `quotation_validity_days` | **Default Quotation Validity** | **30** | Quotation/Order Date **+ 30 days** |
+| Online signature `require_signature` | `portal_confirmation_sign` | **Online Signature** | **true** | **ticked** |
+| Online payment `require_payment` | `portal_confirmation_pay` | **Online Payment** | **false** | **unticked** |
+| Prepayment % `prepayment_percent` | `prepayment_percent` | **Prepayment percentage** | **1** | **100 %** — Odoo stores a **fraction**, not a percentage |
+
+Proved on the tenant, not inferred: **S00021** is dated 2026-09-14 and expires **2026-10-14**; **S00022** is
+dated 2026-09-21 and expires **2026-10-21**. Both are exactly thirty days.
+
+**A decision to take.** HAP has no company-settings table, so either hard-code the four values as control
+defaults and record that they came from a setting, or build a one-row Settings worksheet. Hard-coding is
+cheaper and is what every other ERP Master worksheet has done with a company default; the cost is that
+changing the validity from 30 days becomes a build change rather than a setting.
 
 ### Lines — `sale.order.line`
 
@@ -78,46 +100,65 @@ The three-way split is **the same as Invoice Lines**: `display_type` is **`line_
 | 15 | Subtotal | `price_subtotal` | **Formula**, read-only | `Quantity × Unit Price × (1 − Discount ÷ 100)` — 07's formula exactly |
 | 16 | Total | `price_total` | Formula, read-only | subtotal plus its taxes, as 07's Total is |
 
-## 3 · Rules, buttons, views
+### Interaction rules — grouped by action
 
-### Rules to build
+Everything the two tables above imply about *behaviour* is gathered here, so the tables stay a description
+of the fields and this stays the description of the form.
 
-| Rule | When | Effect | Odoo source |
-|---|---|---|---|
-| A section or a note carries no figures | Display Type is Section, Subsection or Note | hide Product, Quantity, Unit, Unit Price, Discount, Taxes, Subtotal | `sale_order_line_non_accountable_null_fields` — the same constraint 07 already implements |
-| Expiration is for an unconfirmed quotation | Status is Sales Order | hide **Expiration** | `invisible="state == 'sale'"` |
-| Prepayment follows Online payment | Online payment unticked | hide **Prepayment %** | `invisible="not require_payment"` |
-| A confirmed or cancelled order is closed for editing | Status is Sales Order or Cancelled | make Customer · Expiration · Quotation Date · Pricelist · Tax mode · Online signature · Online payment · Prepayment % read-only | the `readonly` conditions in the reference |
-| A locked order is closed for editing | Locked is ticked | make Invoice Address · Delivery Address · Delivery Date read-only | `readonly="state == 'cancel' or locked"` |
+**Hide**
 
-**Validation.** `sale_order_date_order_conditional_required` — a confirmed order must have a
-`date_order`. Since Confirm will set it, this is a guard rather than a form rule.
+| When | Hide | Odoo source |
+|---|---|---|
+| Status is **Sales Order** | **Expiration** | `invisible="state == 'sale'"` |
+| **Online payment** is unticked | **Prepayment %** | `invisible="not require_payment"` |
+| A line's Display Type is **Section, Subsection or Note** | that line's **Product · Quantity · Unit · Unit Price · Discount (%) · Taxes · Subtotal** | `sale_order_line_non_accountable_null_fields` — the same constraint 07 already implements as a rule |
 
-Note the deliberate asymmetry to carry over: **Payment Terms is never read-only on an order**, where 06
-locks it on a posted invoice. That is Odoo's own difference, not a slip.
+**Make read-only**
+
+| When | Make read-only | Odoo source |
+|---|---|---|
+| Status is **Sales Order or Cancelled** | **Customer · Expiration · Quotation/Order Date · Pricelist · Tax mode · Online signature · Online payment · Prepayment %** | `readonly="state in ['cancel','sale']"` |
+| **Locked** is ticked, **or** Status is Cancelled | **Invoice Address · Delivery Address · Delivery Date** | `readonly="state == 'cancel' or locked"` |
+| Status is **not Quotation** | **Tax mode** | `readonly="state != 'draft'"` — stricter than the first row, and the one to use for this field |
+
+**Require** — nothing conditional. Customer is required in practice and Tax mode is required for every type;
+both belong on the field, not on a rule.
+
+**The asymmetry to keep.** **Payment Terms is never read-only on an order**, where 06 locks it on a posted
+invoice. That is Odoo's own difference, not a slip — do not "fix" it into line with Invoices.
+
+## 3 · Validation, buttons and views
+
+### Validation
+
+| Rule | Odoo source |
+|---|---|
+| A confirmed order must have a Quotation/Order Date | `sale_order_date_order_conditional_required` — `CHECK((state = 'sale' AND date_order IS NOT NULL) OR state != 'sale')`. Confirm sets it, so this is a guard rather than something a person trips |
 
 ### Buttons
 
 | Button | Shown when | Does |
 |---|---|---|
 | **Send** | Quotation, or Quotation Sent / Sales Order | Status → Quotation Sent |
-| **Confirm** | Quotation or Quotation Sent | Status → **Sales Order**; assigns the **Number**; fills Order Date if empty |
-| **Cancel** | Quotation, Quotation Sent or Sales Order, and not locked | Status → Cancelled |
+| **Confirm** | Quotation or Quotation Sent | Status → **Sales Order**; assigns the **Number**; fills Quotation/Order Date if empty |
+| **Cancel** | Quotation, Quotation Sent or Sales Order, **and Locked is unticked** | Status → Cancelled |
 | **Set to Quotation** | Cancelled | Status → Quotation |
-| **Lock** | Sales Order and not locked | Locked → ticked |
-| **Unlock** | Locked | Locked → unticked |
-| **Create Invoice** | `invoice_status` is *To Invoice* | **defer** — see §4 |
-| Preview · Download | — | PDF; **defer** |
-| Capture / Void Transaction | there is an authorised transaction | **defer** — payment providers |
 
-The first six are the buildable set, and they are the same shape as 06's Confirm / Cancel / Reset to Draft.
+Four buttons, the same shape as 06's Confirm / Cancel / Reset to Draft.
+
+**Not built — owner's decision, 21 Sep 2026: Lock and Unlock.** Odoo gates a confirmed order behind those
+two buttons; here **Locked is an ordinary editable checkbox** a person ticks. The read-only rule it drives
+is unchanged, and Cancel still hides while it is ticked — so the behaviour survives, only the buttons go.
+
+**Deferred, and why** — *Create Invoice* (§4), *Preview* and *Download* (no PDF), *Capture* and *Void
+Transaction* (no payment providers).
 
 ### Views
 
 | View | Filter | Columns |
 |---|---|---|
-| **Quotations** | Status is Quotation or Quotation Sent | Number · Customer · Quotation Date · Salesperson · Total · Invoicing status |
-| **Orders** | Status is Sales Order | the same, plus Order Date |
+| **Quotations** | Status is Quotation or Quotation Sent | Number · Customer · Quotation/Order Date · Salesperson · Total · Invoicing status |
+| **Orders** | Status is Sales Order | the same |
 | **Cancelled** (ours) | Status is Cancelled | — Odoo reaches these through a filter, not a menu |
 
 Odoo's own visible list columns are `name · date_order · partner_id · user_id · activity_ids ·
@@ -133,7 +174,7 @@ amount_total · invoice_status · expected_date`, with a dozen more available an
 | **Quotation Templates** (`sale_order_template_id`) | Not built; zero records on the tenant |
 | **Quote Builder** tab (`quotation_document_ids`, `customizable_pdf_form_fields`) | See worksheet 17 — it configures a PDF assembler HAP does not have |
 | Down payments (`is_downpayment`), optional lines' ordering, combos (`combo_item_id`, `linked_line_id`), product custom attributes | Each is its own machinery; the fields are on the line but nothing in Phase 1 drives them |
-| Online signature and payment (`require_signature`, `require_payment`, `prepayment_percent` as behaviour) | The checkboxes can be stored; the customer portal cannot |
+| Online signature and payment (`require_signature`, `require_payment`, `prepayment_percent` as behaviour) | The checkboxes can be stored with their company-setting defaults; the customer portal cannot |
 | Preview · Download · Send as behaviour | No PDF, no mail |
 | `fiscal_position_id`, `incoterm`, `project_id`, `preferred_payment_method_line_id` | Each needs a table that is not built |
 | Smart buttons (Invoices, Projects, Tasks, Transactions) | Counts over tables that do not exist yet |
