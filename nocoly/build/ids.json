@@ -321,7 +321,11 @@
   "Orders: Total": "6ab0c740e43d174ab37535ba",
   "Orders: Is Template": "6ab0e7dee43d174ab3753a3d",
   "Orders: Template Name": "6ab0e7dee43d174ab3753a3e",
-  "Orders: Invoice Status": "6ab0c5eae54d2a34fa4e8131"
+  "Orders: Invoice Status": "6ab0c5eae54d2a34fa4e8131",
+  "Orders: Invoicing Closed": "6ab10089e54d2a34fa4e88c4",
+  "Orders: Signature": "6ab10089e54d2a34fa4e88c5",
+  "Orders: Signed By": "6ab10089e54d2a34fa4e88c6",
+  "Orders: Signed On": "6ab10089e54d2a34fa4e88c7"
  },
  "rules": {
   "Journals: Payment Communications only for Sales": "6aa9dae5e54d2a34fa4dfde2",

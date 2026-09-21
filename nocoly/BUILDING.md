@@ -287,6 +287,13 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   `layout` save writes `"111"`, and a before/after comparison shows it as a change. **Only a save that sends `"111"`
   does**: `contacts.py layout` places a control without touching its permission, and Contacts' two payment-term
   Relations still read `""` after it — `payterms.py` wrote the permission in a save of its own (bundle 3).
+- **…but `""` is what an `add-fields` payload carrying *no* `fieldPermission` gets, not a value the endpoint
+  refuses.** Sent one, `AddWorksheetControls` stores it: Orders' four button-written controls — Invoicing Closed,
+  Signature, Signed By, Signed On — were appended with `fieldPermission` `"100"` in the payload and all four read
+  back `"100"` from the append alone, so **no repair save was needed at all** (21 Sep 2026, `orders.py part1`;
+  `common.control` only sets the key when `hidden` or `readonly` is passed, which is why Is Template and Template
+  Name, appended with neither, still read `""`). A new control that must be read-only from its first moment can
+  therefore be appended read-only, without a full `SaveWorksheetControls` ever being made.
 - **A control-set digest is not a reliable "untouched" signal when a static Relation default is in play.** The
   default stores the whole related record, `utime` included, so saving *any* record that the default points at
   changes the holding worksheet's control payload without the worksheet being written to at all — no

@@ -12,6 +12,9 @@ owner approved — deliberately nothing else.
     ~/.hap-venv/bin/python nocoly/build/orders.py dots     # 5. two decimals on those three roll-ups, so a money
                                                            #    total draws 270.00 — one version-pinned save
     ~/.hap-venv/bin/python nocoly/build/orders.py controls # 6. Is Template and Template Name, appended
+    ~/.hap-venv/bin/python nocoly/build/orders.py part1    # 6b. Part 1 of the button build: the four controls
+                                                           #    four of Odoo's twenty Orders actions write —
+                                                           #    Invoicing Closed, Signature, Signed By, Signed On
     ~/.hap-venv/bin/python nocoly/build/orders.py customer # 7. clear `required` on Customer, one pinned save
     ~/.hap-venv/bin/python nocoly/build/orders.py invstatus# 8. Invoicing Status stops being hidden, so it can be
                                                            #    a column and a quick filter — one pinned save
@@ -396,8 +399,12 @@ SIGNATURE = ('controlName', 'type', 'alias', 'row', 'col', 'size', 'sectionId', 
              'fieldPermission', 'dataSource', 'sourceControlId', 'sourceControlType', 'showControls', 'desc',
              'hint', 'enumDefault', 'enumDefault2', 'strDefault', 'dot', 'unit', 'options', 'default', 'viewId',
              'coverCid', 'noticeItem', 'half', 'defaultMen')
+# `cardstyle` joins the list for the owner's *Sign & Acccept* control (type 49, a 查询按钮), whose
+# `advancedSetting.cardstyle` is a JSON object in a string: BUILDING.md's rule is that the server re-serialises
+# JSON-valued `advancedSetting` keys on save, so a byte comparison of one would report a change nobody made and
+# stop a pinned save that had already gone through. Comparison only — nothing here writes it.
 JSON_KEYS = ('filters', 'filterregex', 'controlssorts', 'customShowControls', 'defsource', 'defaultfunc',
-             'uniquecontrols', 'rowsummary')
+             'uniquecontrols', 'rowsummary', 'cardstyle')
 
 
 def defsource_state(value):
@@ -843,6 +850,175 @@ def step_controls():
     return True
 
 
+# ── 6b · the four controls the Orders buttons write ─────────────────────────
+#
+# **Part 1 of the Orders button build** — 16-orders.md's twenty Orders actions. Not one of these four is a
+# button, and they go first because **four of Odoo's twenty actions are nothing but a write to them** and cannot
+# be built until they exist:
+#
+#   * *Close Invoicing* and *Reopen Invoicing* are **only** a write and a clear of Invoicing Closed;
+#   * *Sign & Accept* writes the three signature fields, and *Set to Quotation* clears them.
+#
+# Odoo's own field metadata, read off casimir on 21 Sep 2026 — `invoicing_closed` boolean · `signature` binary ·
+# `signed_by` char · `signed_on` datetime, all four **stored**. `SIGNATURE` is control type **42** in hap-cli's
+# own `FIELD_TYPES`; an Attachment (14) is **not** a substitute — HAP draws a signature pad for 42 and a file
+# picker for 14, and the customer signing on a shared page draws rather than uploads.
+#
+# **Naming.** The control is *Invoicing Closed*, not Odoo's own label *Manually Closed For Invoicing*, and that
+# divergence is deliberate: the label is never shown on Odoo's own form — the field appears only inside the
+# Reopen button's `invisible` condition — and the short name matches the two buttons that drive it. Odoo's label
+# is recorded in the control's `desc` so the divergence stays traceable from the app itself.
+#
+# **Permissions.** All four carry `fieldPermission` **"100"** — read-only and hidden on create, which is
+# **Status**' own permission and for the same reason: a button or a workflow writes them and nobody types them.
+# The step asserts Status still reads "100" before copying it. It does not stop the buttons: **an API write
+# ignores field permission** (Prepayment Percentage is "011", hidden, and seeded fine on 21 Sep), and a
+# workflow's write is not the form's either.
+#
+# Appended with `common.append_controls`, as §6 is and for the same reason — `AddWorksheetControls` with no
+# client-side id, so the server mints real ids and not one of the owner's controls is re-sent. `C.add_fields`
+# would follow the append with an **unpinned full re-save**, the clobber this builder exists to avoid.
+#
+# **Placement is the owner's.** `add-fields` parks a new control at **row 9999, col 0** whatever `row` and `col`
+# the payload carries, and only a full `SaveWorksheetControls` places one — which this builder must never make.
+# `size` *is* kept, so the widths below are real; `PART1_PLACE`'s rows and columns are the intent recorded for
+# the owner, exactly as `NEW_PLACE` is for Is Template and Template Name. No `sectionId` is sent either, so all
+# four land in the form's main body rather than in a tab; if the owner would rather have the signature trio sit
+# under *Other Info › Confirmation* beside Online Signature, that is a placement decision and theirs to make in
+# the designer.
+INVOICING_CLOSED = 'Invoicing Closed'
+# **Not `SIGNATURE`** — that name is this module's signature-diff key tuple, and a module-level constant defined
+# later silently replaces an earlier one of the same name. It is the hazard §8 hit with `INVOICE_STATUS` and
+# `orderlines.FIGURES`, and here it would have quietly broken every `signature()` call in the file.
+SIGNATURE_FIELD = 'Signature'
+SIGNED_BY, SIGNED_ON = 'Signed By', 'Signed On'
+PART1 = (INVOICING_CLOSED, SIGNATURE_FIELD, SIGNED_BY, SIGNED_ON)
+SIGN_PAD, DATE_TIME = 42, 16                   # hap-cli's FIELD_TYPES: SIGNATURE 42 · DATE_TIME 16
+ODOO_INVOICING_CLOSED_LABEL = 'Manually Closed For Invoicing'
+PART1_TYPE = {INVOICING_CLOSED: CHECKBOX, SIGNATURE_FIELD: SIGN_PAD, SIGNED_BY: TEXT, SIGNED_ON: DATE_TIME}
+PART1_ALIAS = {INVOICING_CLOSED: 'invoicing_closed', SIGNATURE_FIELD: 'signature',
+               SIGNED_BY: 'signed_by', SIGNED_ON: 'signed_on'}
+PART1_PLACE = {INVOICING_CLOSED: (24, 0, 6),   # (row, col, size) — only `size` survives the append
+               SIGNATURE_FIELD: (25, 0, 12),   # a signature pad wants the full width
+               SIGNED_BY: (26, 0, 6), SIGNED_ON: (26, 1, 6)}
+# Each type's own neighbours on this worksheet decide the placeholder: the three checkboxes all carry "", and
+# both datetimes carry HAP's own "Please select date". A read-only control never shows a placeholder anyway, so
+# this is consistency rather than behaviour — and the spec below deliberately does **not** assert it, as §6 does
+# not, so a server-side normalisation cannot put the step into a repair loop.
+PART1_HINT = {INVOICING_CLOSED: '', SIGNATURE_FIELD: '', SIGNED_BY: '', SIGNED_ON: 'Please select date'}
+PART1_DESC = {
+    INVOICING_CLOSED: 'Stop asking for this order to be invoiced, without cancelling it. Written by the Close '
+                      'Invoicing button and cleared by Reopen Invoicing — never typed, which is why it is '
+                      'read-only and hidden on create. Odoo calls the same field "'
+                      + ODOO_INVOICING_CLOSED_LABEL + '"; the shorter name here matches the two buttons that '
+                      'drive it.',
+    SIGNATURE_FIELD: 'The signature the customer drew when they accepted this quotation on a shared page. '
+                     'Written by Sign & Accept and cleared by Set to Quotation — never typed, which is why it '
+                     'is read-only and hidden on create. The Online Signature checkbox is only a request for a '
+                     'signature and stores nothing; this is where the signature itself lands.',
+    SIGNED_BY: 'The name the customer gave when they accepted this quotation on a shared page. Written by Sign '
+               '& Accept and cleared by Set to Quotation — never typed, which is why it is read-only and hidden '
+               'on create. Online Signature is only the request; this is who signed.',
+    SIGNED_ON: 'When the customer accepted this quotation on a shared page. Written by Sign & Accept and '
+               'cleared by Set to Quotation — never typed, which is why it is read-only and hidden on create. '
+               'Online Signature is only the request; this is when the signature arrived.',
+}
+
+
+def part1_controls():
+    """The four controls, as `append_controls` takes them (its own copy drops the `controlId`).
+
+    `showtype` "1" on the checkbox is what the owner's own three checkboxes on this worksheet carry (Locked,
+    Online Payment, Online Signature) and what §6 gave Is Template; hap-cli's SWITCH template defaults to "0",
+    which would draw this one differently from its four neighbours. The datetime's `showtype` "1" is hap-cli's
+    own template default and is what Quotation/Order Date and Delivery Date both read."""
+    def built(name, kind, **kw):
+        return C.control(kind, name, PART1_PLACE[name], alias=PART1_ALIAS[name], hint=PART1_HINT[name],
+                         desc=PART1_DESC[name], extra={'fieldPermission': READ_ONLY_PERMISSION}, **kw)
+    return {
+        INVOICING_CLOSED: built(INVOICING_CLOSED, 'SWITCH',
+                                advanced_setting={'showtype': '1', 'itemnames': '', 'sorttype': 'zh'}),
+        SIGNATURE_FIELD: built(SIGNATURE_FIELD, 'SIGNATURE'),
+        SIGNED_BY: built(SIGNED_BY, 'TEXT'),
+        SIGNED_ON: built(SIGNED_ON, 'DATE_TIME', advanced_setting={'showtype': '1'}),
+    }
+
+
+def part1_spec():
+    """What each appended control must read back as — {name: {key: value}}, in `drift`'s form.
+
+    Unlike §6's `new_spec` this **does** pin `fieldPermission`: "" is not an acceptable resting state for a
+    control four buttons write and nobody may type. BUILDING.md records that `add-fields` stores a new control's
+    permission as "" whatever the payload carried, so the append is expected to leave all four wrong and
+    `step_part1`'s one pinned save is expected to fix them — which is why the spec, not the payload, is what the
+    step verifies against.
+
+    The server fills `allowtime`, `showformat`, `sorttype`, `analysislink`, `max` and `min` in on its own, so
+    none of them is asserted; nor is `hint` (see `PART1_HINT`)."""
+    spec = {n: {'type': PART1_TYPE[n], 'alias': PART1_ALIAS[n], 'desc': PART1_DESC[n], 'required': False,
+                'fieldPermission': READ_ONLY_PERMISSION} for n in PART1}
+    spec[INVOICING_CLOSED]['advancedSetting.defsource'] = C.static_default(0)   # a new order is not closed
+    spec[INVOICING_CLOSED]['advancedSetting.showtype'] = '1'
+    spec[SIGNED_BY]['enumDefault'] = 2                                         # a single-line text
+    spec[SIGNED_ON]['advancedSetting.showtype'] = '1'
+    return spec
+
+
+def step_part1():
+    """Append Invoicing Closed, Signature, Signed By and Signed On, then check the append stored everything and
+    repair what it did not in one version-pinned save limited to the four ids just minted.
+
+    Not `C.add_fields`: that appends and then re-saves the whole control set **unpinned**, which is exactly the
+    clobber this builder exists to avoid on a worksheet the owner is hand-building. `step_controls` is the
+    pattern, and nothing here deletes anything or touches Order Lines."""
+    f = guard()
+    status_perm = f['Status'].get('fieldPermission')
+    if status_perm != READ_ONLY_PERMISSION:
+        sys.exit(f'Status carries fieldPermission {status_perm!r}, not {READ_ONLY_PERMISSION!r} — it is the '
+                 f'permission these four copy, and the reason for copying it; re-read the worksheet')
+    print(f'  Status reads fieldPermission {status_perm!r}; all four copy it')
+    missing = [n for n in PART1 if n not in f]
+    if missing:
+        hap.backup('orders_controls_pre_part1', hap.controls(ws()))
+        b = part1_controls()
+        C.append_controls(ws(), [b[n] for n in missing])
+        f = C.fields(ws())
+        gone = [n for n in missing if n not in f]
+        if gone:
+            sys.exit(f'{gone} did not come back from the worksheet — the append did not store')
+        for n in missing:
+            print(f"  added {n}: {f[n]['controlId']} (t{f[n]['type']}, row {f[n].get('row')} col "
+                  f"{f[n].get('col')} size {f[n].get('size')} — `add-fields` parks a new control at row 9999, "
+                  f'and only a full save places one)')
+    else:
+        print(f'  {list(PART1)} are already on {WORKSHEET}; nothing appended')
+    spec = part1_spec()
+    stale = {n: drift(f[n], spec[n]) for n in PART1 if drift(f[n], spec[n])}
+    if stale:
+        print('  the append did not store everything; repairing in one version-pinned save:')
+        for n, diffs in stale.items():
+            for k, (got, want) in diffs.items():
+                print(f'    {n}.{k}: {got!r} -> {want!r}')
+        if not pinned_write('part1', {f[n]['controlId']: {k: spec[n][k] for k in stale[n]} for n in stale},
+                            'orders_controls_pre_part1_repair'):
+            sys.exit('the repair found nothing to write, which contradicts the drift above')
+        f = C.fields(ws())
+        left = {n: drift(f[n], spec[n]) for n in PART1 if drift(f[n], spec[n])}
+        if left:
+            sys.exit(f'{WORKSHEET}: read back with differences '
+                     f'{json.dumps(left, ensure_ascii=False, default=str)}')
+    for n in PART1:
+        C.remember('controls', KEY + n, f[n]['controlId'])
+        c = f[n]
+        print(f"  {n:<17} {c['controlId']} t{c['type']:<3} alias={c.get('alias') or '-':<17} "
+              f"perm={c.get('fieldPermission') or '-':<4} r{c.get('row')}c{c.get('col')} s{c.get('size'):<3} "
+              f"hint={c.get('hint')!r} desc={len(c.get('desc') or '')} chars")
+    print(f'  Odoo\'s own label for {INVOICING_CLOSED} is {ODOO_INVOICING_CLOSED_LABEL!r}, recorded in its desc')
+    print('  placement outstanding — the owner places all four in the designer; intended (row, col, size): '
+          + ', '.join(f'{n} {PART1_PLACE[n]}' for n in PART1))
+    return True
+
+
 # ── 7 · Customer stops being required on the control ────────────────────────
 #
 # **A rule cannot relax a field-level Required.** A required field is required whatever any rule says, so
@@ -1203,7 +1379,10 @@ TAX_MODES = {'tax_excluded': 'Tax Excluded', 'tax_included': 'Tax Included'}
 # `"prepayment_percent": 1`, and its `_note` records the conversion — because an extract records what the tenant
 # holds and a builder is where a convention is applied.
 PREPAYMENT_RATIO_TO_PERCENT = 100
-NOT_SEEDED = ('Delivery Status', 'Journal', 'Tags', 'Template', 'Incoterm Location', TEMPLATE_NAME)
+# The four of §6b join it: `sale-orders-casimir.json` carries no `invoicing_closed`, `signature`, `signed_by` or
+# `signed_on` key at all — none of the tenant's twelve orders was ever signed or manually closed — so there is
+# nothing to write and nothing to compare. They are written by buttons, not by a seed.
+NOT_SEEDED = ('Delivery Status', 'Journal', 'Tags', 'Template', 'Incoterm Location', TEMPLATE_NAME) + PART1
 
 
 _SEED = None
@@ -1549,7 +1728,7 @@ def guard():
                 for name, cid in CONTROLS.items() if (f.get(name) or {}).get('controlId') != cid]
     if problems:
         sys.exit(f'{WORKSHEET}: ' + '; '.join(problems) + ' — re-read the worksheet before writing a rule')
-    unknown = sorted(set(f) - set(CONTROLS) - set(NEW))
+    unknown = sorted(set(f) - set(CONTROLS) - set(NEW) - set(PART1))
     if unknown:
         print(f'  note: {WORKSHEET} also carries {unknown} — added by the owner, and no rule here names them')
     for name in CONTROLS:
@@ -1636,6 +1815,27 @@ def step_check():
                 problems.append(f'{n}: {json.dumps(diff, ensure_ascii=False)} — run `controls`')
             else:
                 print(f"  OK  {n} as specified ({f[n]['controlId']}, alias {f[n].get('alias')})")
+    # §6b's four, the controls four of Odoo's twenty Orders actions write
+    missing = [n for n in PART1 if n not in f]
+    if missing:
+        problems.append(f'{missing} are not on the worksheet — run `part1`')
+    else:
+        spec = part1_spec()
+        for n in PART1:
+            diff = drift(f[n], spec[n])
+            if diff:
+                problems.append(f'{n}: {json.dumps(diff, ensure_ascii=False, default=str)} — run `part1`')
+            else:
+                print(f"  OK  {n} as specified ({f[n]['controlId']}, t{f[n]['type']}, alias "
+                      f"{f[n].get('alias')}, fieldPermission {f[n].get('fieldPermission')})")
+        if not any(drift(f[n], spec[n]) for n in PART1):
+            parked = [n for n in PART1 if f[n].get('row') == 9999]
+            print(f'  {"NOTE" if parked else "OK  "} placement: '
+                  + (f'{parked} still parked at row 9999 — the owner places them in the designer; intended '
+                     + ', '.join(f'{n} {PART1_PLACE[n]}' for n in parked)
+                     if parked else
+                     'all four placed, at ' + ', '.join(f"{n} r{f[n].get('row')}c{f[n].get('col')}"
+                                                        f"s{f[n].get('size')}" for n in PART1)))
     if f[CUSTOMER].get('required'):
         problems.append(f'{CUSTOMER} carries `required` on the control, so {RULE_CUSTOMER!r} cannot relax it on '
                         'a template — run `customer`')
@@ -1711,7 +1911,8 @@ def step_check():
         sys.exit(1)
     print(f'  check: OK — {len(RULES)} rules, the retired five, Expiration, three roll-ups at {MONEY_DOT} '
           f'decimals, the {len(SUBTABLE_COLUMNS)} subtable columns, {INVOICING_STATUS} at '
-          f'{READ_ONLY_PERMISSION} and {len(VIEW_ROWS)} views returning {list(VIEW_ROWS.values())} rows')
+          f'{READ_ONLY_PERMISSION}, the {len(PART1)} controls of §6b at {READ_ONLY_PERMISSION} and '
+          f'{len(VIEW_ROWS)} views returning {list(VIEW_ROWS.values())} rows')
 
 
 def step_show():
@@ -1737,7 +1938,7 @@ def step_show():
 
 
 STEPS = {'rules': step_rules, 'retire': step_retire, 'expiry': step_expiry, 'totals': step_totals,
-         'dots': step_dots, 'controls': step_controls, 'customer': step_customer,
+         'dots': step_dots, 'controls': step_controls, 'part1': step_part1, 'customer': step_customer,
          'invstatus': step_invstatus, 'views': step_views,
          'wipe': step_wipe, 'seed': step_seed, 'figures': step_figures,
          'check': step_check, 'show': step_show}
