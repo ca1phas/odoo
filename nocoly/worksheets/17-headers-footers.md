@@ -102,7 +102,10 @@ practice nobody uses. Revisit only if two templates ever need the same documents
 
 ## 4 · Headers/Footers (`quotation.document`) — fields
 
-The worksheet exists, hand-built, at `6ab099387d58b0f449316373` with **5 controls and 3 records**.
+**The worksheet no longer exists.** It was hand-built at `6ab099387d58b0f449316373` with 5 controls and 3
+records, and the owner **deleted it on 21 Sep 2026** together with Template, once §1.1 settled the template
+question and §1 settled that nothing here can consume a header. The table below is therefore the **spec for
+the day the bundle is taken**, and the "State" column records what that first build had got to.
 
 | # | Field | Odoo | Type | Required | State |
 |---|---|---|---|---|---|
@@ -123,15 +126,15 @@ The worksheet exists, hand-built, at `6ab099387d58b0f449316373` with **5 control
 | `company_id` | Single company, as everywhere else |
 | **The PDF assembly** | The feature this table configures. HAP does not generate the quotation PDF — §1 |
 
-## 5 · The Template worksheet — to be retired
+## 5 · The Template worksheet — retired, and deleted by the owner
 
 Hand-built at `6ab0c38dbd43f55762c78496` with **3 controls** — Name (required, title), Description,
 Attachment — and one record, *Testing*. It never grew a Lines child table, which is the half a template
 exists for.
 
-**The owner approved retiring it on 21 Sep 2026**, once §1.1 settled that templates are flagged orders. Per
-BUILDING.md a retirement is a rename to `ZZ obsolete – `, not a delete, and it is reported rather than done
-quietly.
+**The owner approved retiring it on 21 Sep 2026** and then **deleted it themselves**, along with
+Headers/Footers — so the rename-to-`ZZ obsolete – ` convention did not apply. Deleting it also removed Orders'
+*Template* relation control, taking Orders from 35 controls to 34 before the reseed added two.
 
 Two things move with it:
 
