@@ -144,3 +144,11 @@ Nothing here is a rebuild. In the order I would take them:
 
 **Open for the owner.** Items 2, 4 and 9 remove things, which needs approval. And the CRM Tags record `testtest`
 should be renamed `TEST …` or removed under the same rule.
+
+## 7 · Later Activity implementation
+
+This document is the 21 September conformance snapshot of the original nine CRM worksheets. Later the same day,
+Teh Li Wei added the CRM Activity slice: My Activities, Activity Types, Activity Plans and Activity Plan Steps,
+plus creation, reassignment and due-date notification workflows. Its current implementation, tests and explicit
+gaps are tracked separately in [`18-crm-activities.md`](18-crm-activities.md); do not use the earlier statement
+that Activity Types and Activity Plans were absent as the current ERP Master state.
