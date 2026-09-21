@@ -370,3 +370,50 @@ worksheet with its own sidebar entry, views, rules and records, mounted with `mo
 hidden child table that no CLI call can read or write. If the line-level rule, the Subtotal and Total formulas
 and the order roll-ups are to be built the way 06 and 07 were, Order Lines has to be a worksheet of its own —
 which is a decision for the owner, and a rebuild of the subtable, not a rule.
+
+---
+
+## 7 · What is left — read off the app, 21 Sep 2026 (evening)
+
+The owner rebuilt both worksheets by hand after §6. **Order Lines went from two controls to sixteen and is now
+a real mounted worksheet** (`6ab0c740e43d174ab37535b2`), not the hidden child table §6 could not read — so the
+structural blocker recorded there is **cleared**. Orders grew from twelve controls to thirty-six.
+
+What stands: Order Lines has Orders · Sequence · Display Type (**all four options including Product**, as 07
+does) · Product → Product Variants · Description · Quantity · Quantity Invoiced · Quantity Delivered · Unit →
+Units · Unit Price · Discount · Taxes → Taxes · Product Unit (Lookup off Product) · Tax Amount · Subtotal ·
+Total. Orders gained the Order Lines subtable correctly mounted at `6ab0c740e43d174ab37535b0`, Tax Mode,
+Salesperson, Tags, Sales Teams, an Other Info section with the Sales / Confirmation / Tracking / Invoicing /
+Shipping dividers, Customer Reference, Source Document, Online Signature, Online Payment, Prepayment
+Percentage, Template, Journal, Incoterm Location, Invoicing Status and three roll-up controls.
+
+### 7.1 Orders
+
+| # | What | Detail |
+|---|---|---|
+| 1 | **The three roll-ups aggregate nothing** | Untaxed Amount `…35b8`, Tax `…35b9`, Total `…35ba` are 汇总 (type 37) but carry `dataSource=''`, `sourceControlId=''` and `enumDefault=6` — which is **count**, not sum. The working shape to copy is Invoice Lines' *Tax rate*: `dataSource='$<relation control>$'`, `sourceControlId='<child control>'`. Wire them over the subtable `$6ab0c740e43d174ab37535b0$` onto the child's **Subtotal** `6ab0ca80805aef703286d82a` and **Total** `6ab0cad0805aef703286d83e`, and **filter out Section · Subsection · Note** as 07's roll-up does — a section keeps whatever figures were typed into it |
+| 2 | **Tax Mode carries a stray third option** | `Tax Excluded · Tax Included · **Option 3**` — HAP's default leftover. Odoo's `document_tax_mode` has exactly two |
+| 3 | **Widen the closed-for-editing rule** | `A confirmed or cancelled order is closed for editing` (`6ab0ba6e805aef703286d6fd`) names three controls. Tax Mode, Online Signature, Online Payment and Prepayment Percentage now exist and belong in it |
+| 4 | **Tax Mode read-only when Status is not Quotation** | Was blocked in §6; buildable now. `readonly="state != 'draft'"` — stricter than the rule above and the one to use for this field |
+| 5 | **A divergence to decide** | The owner's rule *Only require Prepayment Percentage if Online Payment is needed* makes the field conditionally **required**; Odoo's `invisible="not require_payment"` **hides** it. Both defensible, but they are not the same thing |
+| 6 | Pricelist · Fiscal Position · Incoterm | Still absent, all correctly deferred to their bundles. **Incoterm Location is present without Incoterm** — half a pair |
+| 7 | Invoicing Status | The control and its four options exist, but nothing can compute it until the order → invoice link does. See §4 |
+
+### 7.2 Order Lines
+
+| # | What | Detail |
+|---|---|---|
+| 1 | **Subtotal · Total · Tax Amount do not compute** | All three are type 8 **Currency**, where Invoice Lines' Subtotal and Total are type 31 **Formula**. They are numbers a person types. **Owner's call before it is changed** — converting a Currency control to a Formula discards whatever was typed |
+| 2 | **Lead Time missing** | `customer_lead`, integer, required in Odoo: "Number of days between the order confirmation and the shipping of the products" |
+| 3 | **Optional Line missing** | `is_optional`, checkbox |
+| 4 | **The Orders relation is not required** | Invoice Lines makes Invoice required, which is what 07's test 8 showed stops an orphan line being created from the standalone worksheet |
+| 5 | Description is not required | Odoo's `sale.order.line.name` is `required=True`. Minor — Odoo fills it from the product, which we do not |
+| 6 | **No rules at all** | The line-level rule — *a section or a note carries no figures* — is unbuilt. Blocked in §6, buildable now |
+| 7 | No `invoice_lines` link | So Quantity Invoiced has no source and stays manual until the order → invoice bundle |
+
+### 7.3 The order to do it in
+
+Roll-ups are downstream of the formulas, and both are downstream of one decision. So: **settle 7.2 item 1**
+(Currency → Formula, losing typed values), then the formulas, then the three roll-ups with their
+Display Type filter, then the rules — 7.2 item 6 and 7.1 items 3 and 4 together, since they are one pass over
+two worksheets.
