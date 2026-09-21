@@ -399,10 +399,17 @@ figcaption b{color:var(--ink-2);font-weight:500}
     <p><b>Point of Sale is the one phase that can't run in its numbered order.</b> <code>point_of_sale</code> hard-depends on <code>stock_account</code>, so it needs Inventory standing before it. Either build phase 5 before phase 4, or accept that phase 4 drags a subset of Inventory in with it. Every other phase in the plan is buildable in the order shown.</p>
   </div>
   <div class="note">
-    <p><b>Where the build actually is — 18 September 2026.</b> This page is the plan; the app is real. <b>Phase 1 is
+    <p><b>Where the build actually is — 21 September 2026.</b> This page is the plan; the app is real. <b>Phase 1 is
     built.</b> Fourteen worksheets stand in the Nocoly app <b>ERP Master</b>, seeded from a live Odoo 19.4 tenant,
     UI-tested one at a time and out for review — the seven core, and seven more from six bundles the owner pulled
     forward into Phase 1 rather than deferring. The slider therefore starts at <b>1</b>, with those six switched on.</p>
+    <p><b>Since then, three days of a different kind of work.</b> Every one of the seven core worksheets was put beside
+    Odoo's own screen and then <b>driven</b> — each rule tripped, each button pressed, a record created and updated —
+    which found five defects in Invoices and Journals and nine controls leaking onto create forms. All are fixed and
+    re-tested. In parallel <b>Teh Li Wei built Phase 2 CRM by hand</b>, and two of the seventeen bundles came with it:
+    <em>Marketing attribution</em> and <em>Sales Teams</em>, taking the bundles built to <b>seven of the seventeen</b>. The owner has also
+    started Phase 3 Sales by hand — <em>Orders</em>, <em>Headers/Footers</em> and <em>Template</em> — so the first three
+    phases are all now live at once rather than in sequence.</p>
     <p><b>The seven core.</b> Contacts 13/13 · Units &amp; Packagings 18 of 19 · Products 15 of 17 ·
     Product Variants 16/16 · Journals 20 of 21 · Invoices 25/25 · Invoice Lines 19 of 20.</p>
     <p><b>The six bundles, in build order.</b> <b>Product Categories</b> — the tenant's seven categories, 17 of 18 —
@@ -499,7 +506,7 @@ figcaption b{color:var(--ink-2);font-weight:500}
   <div class="col">
     <p class="eyebrow">Deferred</p>
     <h2>Seventeen optional bundles</h2>
-    <p>Each bundle is one feature, switchable on its own. Where Odoo ships a settings toggle, the toggle is named — that is evidence the feature is genuinely optional rather than a judgment call. Build a bundle when you reach the phase in the last column.</p>
+    <p>Each bundle is one feature, switchable on its own. Where Odoo ships a settings toggle, the toggle is named — that is evidence the feature is genuinely optional rather than a judgment call. Build a bundle when you reach the phase in the last column.</p><p><b>Seven of the seventeen now stand</b>, eleven worksheets in all — five pulled forward into Phase 1 by the build loop, and <em>Marketing attribution</em> and <em>Sales Teams</em> built alongside them by Teh Li Wei for Phase 2 CRM. <i>The prose elsewhere on this page says “six bundles” for Phase 1 because it counts Countries and States separately; this table counts them as one, Geography.</i> Ten remain, and the two the plan calls cheap-now-expensive-later — <em>Product Variants</em> and <em>Pricelists</em> — are both still among them.</p>
   </div>
   <div class="tw"><table>
     <thead><tr><th>Bundle</th><th>Odoo toggle</th><th class="n">WS</th><th>Worksheets</th><th>Needed by</th></tr></thead><tbody>
@@ -510,8 +517,8 @@ figcaption b{color:var(--ink-2);font-weight:500}
     <tr><td class="w"><b>Payments</b></td><td class="m">—</td><td class="n">2</td><td class="r">Payment Methods · Payments</td><td class="r">receipts as records rather than a field</td></tr>
     <tr><td class="w"><b>Product Variants</b></td><td class="m">product.group_product_variant</td><td class="n">4</td><td class="r">Attributes · Attribute Values · Product Attribute Lines · Template Attribute Values</td><td class="r">first product with options</td></tr>
     <tr><td class="w"><b>Pricelists</b></td><td class="m">product.group_product_pricelist</td><td class="n">2</td><td class="r">Pricelists · Price Rules</td><td class="r"><b>Phase 3</b> Sales</td></tr>
-    <tr><td class="w"><b>Marketing attribution</b></td><td class="m">—</td><td class="n">3</td><td class="r">Campaigns · Sources · Mediums</td><td class="r"><b>Phase 2</b> CRM</td></tr>
-    <tr><td class="w"><b>Sales Teams</b></td><td class="m">—</td><td class="n">1</td><td class="r">Sales Teams</td><td class="r"><b>Phase 2</b> CRM</td></tr>
+    <tr><td class="w"><b>Marketing attribution</b> <span class="pill have">built</span></td><td class="m">—</td><td class="n">3</td><td class="r">Campaigns · Sources · Mediums</td><td class="r"><b>Phase 2</b> — built by Teh Li Wei, not by the Phase 1 loop. The conformance check found <b>Campaigns short two required relations</b>, and Odoo files it under Link Tracker rather than CRM</td></tr>
+    <tr><td class="w"><b>Sales Teams</b> <span class="pill have">built</span></td><td class="m">—</td><td class="n">1</td><td class="r">Sales Teams</td><td class="r"><b>Phase 2</b> — built by Teh Li Wei. Live fields only; the assignment-rule internals are deferred</td></tr>
     <tr><td class="w"><b>Analytic Accounting</b></td><td class="m">analytic.group_analytic_accounting</td><td class="n">2</td><td class="r">Analytic Accounts · Analytic Lines</td><td class="r"><b>Phase 6</b> Services — Project and Timesheet both post here</td></tr>
     <tr><td class="w"><b>Activities</b></td><td class="m">—</td><td class="n">3</td><td class="r">Activity Types · Activity Plans · Plan Steps</td><td class="r">first scheduled follow-up</td></tr>
     <tr><td class="w"><b>Geography</b> <span class="pill have">built</span></td><td class="m">—</td><td class="n">2</td><td class="r">Countries · States</td><td class="r"><b>Phase 1</b> — built fourth and fifth, because Taxes could not stand without it</td></tr>
@@ -519,7 +526,7 @@ figcaption b{color:var(--ink-2);font-weight:500}
     <tr><td class="w"><b>Incoterms</b></td><td class="m">—</td><td class="n">1</td><td class="r">Incoterms</td><td class="r">first international shipment</td></tr>
     <tr><td class="w"><b>Multi-currency</b></td><td class="m">base.group_multi_currency</td><td class="n">1</td><td class="r">Currencies</td><td class="r">second currency · single-currency lives in the Currency control itself</td></tr>
     <tr><td class="w"><b>Product Combos</b></td><td class="m">—</td><td class="n">2</td><td class="r">Combo Choices · Combo Items</td><td class="r"><b>Phase 4</b> Point of Sale</td></tr>
-    <tr><td class="w"><b>Contact Tags</b></td><td class="m">—</td><td class="n">1</td><td class="r">Contact Tags</td><td class="r">first segmented mailing or report</td></tr>
+    <tr><td class="w"><b>Contact Tags</b></td><td class="m">—</td><td class="n">1</td><td class="r">Contact Tags</td><td class="r">first segmented mailing or report. <b>Still unbuilt</b> — the app’s <em>CRM Tags</em> is <code>crm.tag</code>, a different model, and its own remark reads “Do not substitute Contact Tags”</td></tr>
   </tbody></table></div>
   <div class="note">
     <p><b>Two bundles are cheap now and expensive later.</b> <em>Product Variants</em> — order lines, stock moves and invoice lines all point at Product Variants from the start, so turning attributes on later only adds tables; but pointing those lines at Products instead of Variants to "keep it simple" is the one decision in this plan that costs a rebuild. <em>Geography</em> — Fiscal Positions select by country in Odoo, so if you expect any tax exemption at all, build Countries before Contacts rather than after.</p>
@@ -646,7 +653,9 @@ figcaption b{color:var(--ink-2);font-weight:500}
   </table></div>
   <div class="note acc">
     <p><b>Phase 1 is done, and it came in near the estimate.</b> The seven core worksheets and seven bundle
-    worksheets — 14 of the 37 the phase will eventually hold — are built, seeded and UI-tested. The estimate above
+    worksheets — 14 of the 37 the phase will eventually hold — are built, seeded and UI-tested. <b>Four more bundle
+    worksheets have since arrived from Phase 2</b>, taking the bundles built to seven of seventeen and eleven
+    worksheets. The estimate above
     puts the core at 48 h and all thirty bundle worksheets at 100 h; what was actually built is the core plus the
     six bundles the core leans on hardest, and the shape of the work matched the model: creating worksheets was
     nearly free, and the hours went into relations, workflows, roles and reading everything back. The <b>tail the
@@ -663,7 +672,7 @@ figcaption b{color:var(--ink-2);font-weight:500}
   <div class="col">
     <h3 style="font-family:Archivo,sans-serif;font-size:18px;margin-top:30px">Milestones worth naming</h3>
     <ul class="checks">
-      <li><b>Week 1</b> — core foundation standing. Seven worksheets, no app yet, but every later phase now has something to relate into. <b>Done</b>, along with six of the bundles.</li>
+      <li><b>Week 1</b> — core foundation standing. Seven worksheets, no app yet, but every later phase now has something to relate into. <b>Done</b>, along with six of the bundles — and Marketing attribution and Sales Teams have since come in with Phase 2.</li>
       <li><b>Week 5</b> — CRM live. First complete app: pipeline, views, roles, rules, a won-to-quotation workflow, and a click-through pass behind it.</li>
       <li><b>Week 6</b> — quote to cash. Orders, Order Lines, Invoices, Payments, quotation PDFs. The point the system starts replacing something.</li>
       <li><b>Week 16</b> — the physical business. Inventory, Purchase and Manufacturing in; delivery-driven invoicing real rather than modelled.</li>
@@ -819,7 +828,7 @@ const PHASES=[
   const wall=$('wall'), chips=$('chips'), detail=$('detail'), stats=$('stats'), ph=$('ph'), phl=$('phl');
   if(!wall) return;
   const PHNAME={1:'Core Foundation'}; PHASES.forEach(p=>PHNAME[p[0]]=p[1]);
-  const on=new Set(['bcat','bcoa','bterm','bgeo','btax']);
+  const on=new Set(['bcat','bcoa','bterm','bgeo','btax','butm','bteam']);
   const META={}; // id -> {name, sub, deps, kind, count, course}
   CORE.forEach(w=>META[w[0]]={name:w[1],sub:w[2],deps:w[3],kind:'core',count:1,course:1});
   BUNDLES.forEach(b=>b[4].forEach(w=>META[w[0]]={name:w[1],sub:w[2],deps:w[3],kind:'bundle',count:1,course:1,bundle:b[0]}));
