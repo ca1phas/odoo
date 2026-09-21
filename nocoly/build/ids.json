@@ -110,7 +110,9 @@
   "Taxes: Taxes": "6aad1034805aef703286ac33",
   "Taxes: Archived": "6aad11d1e54d2a34fa4e584b",
   "Taxes: Duplicate names": "6aad11e77d58b0f449314258",
-  "Orders: Templates": "6ab0e816e43d174ab3753a42"
+  "Orders: Templates": "6ab0e816e43d174ab3753a42",
+  "Orders: Quotations": "6ab0de5dbd43f55762c78833",
+  "Orders: Orders": "6ab0df017d58b0f449316f4e"
  },
  "controls": {
   "Journals: Journal Name": "6aa8f6c81204328eb1af1676",
@@ -318,7 +320,8 @@
   "Orders: Tax": "6ab0c740e43d174ab37535b9",
   "Orders: Total": "6ab0c740e43d174ab37535ba",
   "Orders: Is Template": "6ab0e7dee43d174ab3753a3d",
-  "Orders: Template Name": "6ab0e7dee43d174ab3753a3e"
+  "Orders: Template Name": "6ab0e7dee43d174ab3753a3e",
+  "Orders: Invoice Status": "6ab0c5eae54d2a34fa4e8131"
  },
  "rules": {
   "Journals: Payment Communications only for Sales": "6aa9dae5e54d2a34fa4dfde2",

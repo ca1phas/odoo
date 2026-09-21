@@ -1050,3 +1050,27 @@ What decides is **whether the value being compared is in the write**.
   with the probe's name makes `{name: rowid}` keep whichever came last, and the run then drives the *marked*
   record and reports DIFF on probes the workflow actually passed. Resolve the probe by the record that **holds
   the key**, and say so when the name is shared.
+
+### Five from the Orders build (21 Sep 2026)
+
+- **A function default only fires in the browser.** A number control whose value comes from
+  `advancedSetting.defaulttype "1"` + `defaultfunc` is computed **client-side, in the form**. The API applies no
+  defaults, so every record written by a seed stores it **empty**. Order Lines' Subtotal was built this way and
+  worked perfectly for the two lines typed in the browser, then stored blank on all thirty seeded ones — and
+  because Tax Amount and Total were Formulas built on it, they went blank too and all twelve order roll-ups read
+  `0.00`. **A control that anything other than a person will write must be a Formula (type 31), not a function
+  default.**
+- **A control that reads a 汇总 must be a Formula**, for the same reason from the other direction: a roll-up is
+  computed server-side and has no value while the form is open, so a client-side function default reading one
+  evaluates to nothing.
+- **A type 31 formula does read a Currency (type 8) operand.** Order Lines' Unit Price is a t8 where Invoice
+  Lines' is a plain t6, which was the one thing its Subtotal formula could not copy from 07. Every Subtotal
+  computed, so it is settled.
+- **A definition change can recompute cleanly, and can also leave rows stale.** Converting Subtotal recomputed
+  all 30 lines and all 12 orders at once, three levels deep, with no nudge. An earlier conversion on the same
+  worksheet left one order rounded to whole ringgit because the roll-up recomputed while it still carried
+  `dot = 0`. So: **set `dot` before the child's figures change**, and read back rather than assume either way.
+- **A record listing drops fields the control hides; `record get` returns them.** `common.records` read
+  Prepayment Percentage (`fieldPermission` `011`) as `''` on all twelve orders that had just been written with
+  100, and read every tax's Amount as `''` while the tax-rate roll-up was correctly summing 10 and 8. **Never
+  conclude a hidden field is empty from a listing** — fetch the record.

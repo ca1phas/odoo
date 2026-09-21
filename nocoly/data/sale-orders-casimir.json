@@ -1,6 +1,6 @@
 {
  "_source": "casimir.odoo.com, sale.order + sale.order.line, read over read-only RPC on 21 Sep 2026",
- "_note": "Odoo's own `sequence` is 10 on nearly every line, so it cannot order them. Sequence here is renumbered 10, 20, 30 in Odoo's own returned order (order_id, sequence, id) so the lines keep their on-screen order in HAP. Relations are given by display name and must be resolved at build time. Down-payment lines carry no Product and no Unit, exactly as Odoo stores them.",
+ "_note": "Odoo's own `sequence` is 10 on nearly every line, so it cannot order them. Sequence here is renumbered 10, 20, 30 in Odoo's own returned order (order_id, sequence, id) so the lines keep their on-screen order in HAP. Relations are given by display name and must be resolved at build time. Down-payment lines carry no Product and no Unit, exactly as Odoo stores them. `prepayment_percent` is Odoo's raw value, a **ratio**: 1 means 100 %. It is kept raw here because this file records what the tenant holds; ERP Master's Prepayment Percentage is a Number with a \"%\" suffix and the owner chose the percentage as this app's convention, so `orders.py seed` multiplies by 100 and stores 100 (PREPAYMENT_RATIO_TO_PERCENT). Convert in the builder, never in the extract.",
  "orders": [
   {
    "name": "S00010",

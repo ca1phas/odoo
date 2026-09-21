@@ -13,10 +13,13 @@ owner approved — deliberately nothing else.
                                                            #    total draws 270.00 — one version-pinned save
     ~/.hap-venv/bin/python nocoly/build/orders.py controls # 6. Is Template and Template Name, appended
     ~/.hap-venv/bin/python nocoly/build/orders.py customer # 7. clear `required` on Customer, one pinned save
-    ~/.hap-venv/bin/python nocoly/build/orders.py views    # 8. the Templates view (the owner's three untouched)
-    ~/.hap-venv/bin/python nocoly/build/orders.py wipe     # 9. delete the three test orders the owner approved
-    ~/.hap-venv/bin/python nocoly/build/orders.py seed     # 10. the tenant's twelve orders
-    ~/.hap-venv/bin/python nocoly/build/orders.py figures  # 11. the three roll-ups beside the tenant's amounts
+    ~/.hap-venv/bin/python nocoly/build/orders.py invstatus# 8. Invoicing Status stops being hidden, so it can be
+                                                           #    a column and a quick filter — one pinned save
+    ~/.hap-venv/bin/python nocoly/build/orders.py views    # 9. Templates, and the filters Quotations and Orders
+                                                           #    were missing (All is never touched)
+    ~/.hap-venv/bin/python nocoly/build/orders.py wipe     # 10. delete the three test orders the owner approved
+    ~/.hap-venv/bin/python nocoly/build/orders.py seed     # 11. the tenant's twelve orders
+    ~/.hap-venv/bin/python nocoly/build/orders.py figures  # 12. the three roll-ups beside the tenant's amounts
     ~/.hap-venv/bin/python nocoly/build/orders.py check    # read rules, Expiration, the roll-ups, the two new
                                                            #    controls, the view and the seed back, and
                                                            #    report drift
@@ -90,6 +93,9 @@ CONTROLS = {                                   # name -> id, read off the app on
     'Untaxed Amount': '6ab0c740e43d174ab37535b8',
     'Tax': '6ab0c740e43d174ab37535b9',
     'Total': '6ab0c740e43d174ab37535ba',
+    # Odoo's `invoice_status`. The worksheet calls it *Invoice Status*; 16-orders.md and the Odoo menus call the
+    # same thing Invoicing Status. §8 takes it out of hiding so it can be a column and a quick filter.
+    'Invoice Status': '6ab0c5eae54d2a34fa4e8131',
 }
 EXPIRATION = 'Expiration'
 DRIVERS = ('Status', 'Locked')                 # the two controls the three rules stand on
@@ -858,45 +864,238 @@ def step_customer():
     return pinned_write('customer', {CONTROLS[CUSTOMER]: {'required': False}}, 'orders_controls_pre_customer')
 
 
-# ── 8 · the Templates view ──────────────────────────────────────────────────
+# ── 8 · Invoicing Status stops being hidden ─────────────────────────────────
 #
-# **The owner's three views are theirs and this step does not touch them.** `C.upsert_views` writes only the
-# views it is given, and `C.sort_views` is deliberately not called — it would re-order the whole view bar, and a
-# new view is appended last, which is where it belongs.
+# **A hidden control is not a column and cannot be a quick filter.** BUILDING.md: a hidden field never shows as a
+# table column even when the view names it — which is exactly what the owner's *Orders* view was doing, listing
+# Invoice Status among its `showControls` and drawing nothing — and the list calls behind views blank it.
 #
-# None of *All*, *Quotations* or *Orders* carries a filter, so a template will appear in all three until the
-# owner adds one; `check` prints the filter they need.
+# The control was built `fieldPermission` **"001"**: hidden *and* read-only. The right permission for a value the
+# app computes and nobody types is the one **Status** already carries, **"100"** — read-only and hidden on create,
+# visible everywhere else. (The three places are hidden · read-only · hidden on create, and `0` switches each one
+# on, so "100" reads: not hidden, read-only, hidden on create.) Nothing else about the control changes: not its
+# options, not its place, not its name.
+# **Not `INVOICE_STATUS`** — that name is §11's Odoo `invoice_status` -> label map, and a module-level constant
+# defined later silently replaces an earlier one of the same name: the first cut of this step died on
+# `CONTROLS[INVOICE_STATUS]` with "cannot use 'dict' as a dict key". The same hazard as `orderlines.FIGURES`.
+INVOICING_STATUS = 'Invoice Status'      # the control's name on the worksheet
+READ_ONLY_PERMISSION = '100'                   # read-only and hidden on create — Status' own permission
+
+
+def step_invstatus():
+    """Take Invoicing Status out of hiding — `fieldPermission` "001" -> "100" — in one version-pinned save that
+    changes nothing else, so it can serve as a column and as the `views` step's quick filter."""
+    f = guard()
+    want = f['Status'].get('fieldPermission')
+    if want != READ_ONLY_PERMISSION:
+        sys.exit(f'Status carries fieldPermission {want!r}, not {READ_ONLY_PERMISSION!r} — it is the permission '
+                 f'this step copies onto {INVOICING_STATUS}; re-read the worksheet')
+    return pinned_write('invstatus', {CONTROLS[INVOICING_STATUS]: {'fieldPermission': READ_ONLY_PERMISSION}},
+                        'orders_controls_pre_invstatus')
+
+
+# ── 9 · the views ───────────────────────────────────────────────────────────
+#
+# **All is the system default and is never touched here**, whatever it shows. *Quotations* and *Orders* are the
+# owner's, hand-built with column sets and **no filters at all**, so every order appeared in both; the owner asked
+# for them to be completed (relayed 21 Sep 2026), and this step writes their **filters** and *Orders*' **quick
+# filter** and nothing else about them. *Templates* is this builder's own, from first to last.
+#
+# Every write to one of the owner's two views goes through `--view-json … --edit-attrs <the one attribute>`, the
+# surgical form BUILDING.md documents: SaveWorksheetView applies only the attributes named in `editAttrs`, so the
+# columns, the sort and the name read back untouched. `--view-spec` is deliberately **not** used on them — it
+# derives `editAttrs` from everything the spec produced, and a spec carrying `tableFields` would rewrite the
+# owner's column list.
+#
+# **Odoo's own definitions**, read off casimir (16-orders.md §5): both menus point at `sale.order` and neither
+# action carries a domain — the filtering is done by named search filters.
+#
+#   * Quotations, action 497, `sale.order.search.inherit.quotation`: filter `draft` "Quotations" is
+#     `state in ('draft','sent')`;
+#   * Orders, action 496, `sale.order.search.inherit.sale`: filter `sales` "Sales Orders" is `state = 'sale'`,
+#     and it is that action's **default** filter.
+#
+# Each gains *Is Template is not ticked* as well, which is this app's own addition: Odoo keeps a quotation
+# template in a model of its own, so it has nothing to exclude, while here a template is an order (§6).
 VIEW_TEMPLATES = 'Templates'
-OWNER_VIEWS = ('All', 'Quotations', 'Orders')
+VIEW_QUOTATIONS, VIEW_ORDERS = 'Quotations', 'Orders'
+FILTERED_VIEWS = (VIEW_QUOTATIONS, VIEW_ORDERS)        # the owner's two, whose filters this step now owns
+UNTOUCHED_VIEWS = ('All',)                             # the system default: never written, filter or otherwise
+# Odoo `state` -> Status, per view. The labels are looked up in the live option table, never assumed.
+VIEW_STATES = {VIEW_QUOTATIONS: ('Quotation', 'Quotation Sent'),     # Odoo's `draft` filter
+               VIEW_ORDERS: ('Sales Order',)}                        # Odoo's `sales` filter
+# What each view must return once it is filtered, from the twelve seeded orders: Sales Order 4 · Quotation Sent 3
+# · Quotation 3 · Cancelled 2, and no record with Is Template ticked. A count that does not match is a defect in
+# the filter, so `views` and `check` both assert it.
+VIEW_ROWS = {VIEW_QUOTATIONS: 6, VIEW_ORDERS: 4, VIEW_TEMPLATES: 0}
+
+# ── Orders' quick filter ────────────────────────────────────────────────────
+#
+# Odoo's *Orders* search view carries two more named filters beside `sales` — `to_invoice` "To Invoice"
+# (`invoice_status = 'to invoice'`) and `upselling` "To Upsell" (`invoice_status = 'upselling'`), which are also
+# two menu actions of their own (499 and 500). **HAP's quick filter is a field, not a fixed-domain filter**: one
+# quick filter on Invoicing Status covers both of those and hands back the other two states as well, so it is
+# built as one field rather than as two or four named filters.
+#
+# The shape is the spec adapter's own `{fieldId, selectionType, displayType}` object, lowered by
+# `_quick_filter_item` to `advancedSetting` `allowitem` "2" (any of) and `direction` "2" (a dropdown) — the same
+# lowering `--view-spec quickFilters` performs, reached directly so the save can stay a one-attribute
+# `--edit-attrs fastFilters` edit of the owner's view. A bare control id would store an **empty**
+# `advancedSetting`, which is the trap BUILDING.md records.
+QUICK_FILTER = {'fieldId': CONTROLS[INVOICING_STATUS], 'selectionType': 'multiple', 'displayType': 'dropdown'}
+
+
+def quick_filters():
+    """Orders' `fastFilters`, as the spec adapter lowers the `quickFilters` object."""
+    from hap_cli.core import view_spec_adapter as vsa
+    return [vsa._quick_filter_item(dict(QUICK_FILTER))]
+
+
+def not_a_template(f):
+    """*Is Template is not ticked* — the condition that keeps a template out of a list of real orders."""
+    return {'field': f[IS_TEMPLATE]['controlId'], 'dataType': CHECKBOX, 'operator': 'ne', 'value': ['1']}
+
+
+def status_is(f, labels):
+    """*Status is any of …*. A view's condition on a single select is **filterType 51**, not the 2 a business rule
+    uses, and 51 with several option keys means "is any of" (BUILDING.md) — which is what the CLI's own
+    translator emits for `eq` on a `dataType` 11, so the mapping is not written out here."""
+    c = f['Status']
+    return {'field': c['controlId'], 'dataType': c['type'], 'operator': 'eq',
+            'value': [option_key(c, label) for label in labels]}
+
+
+def view_filter(f, labels):
+    """The wire `filters` for one of the owner's two views: Status is any of `labels` **and** not a template."""
+    from hap_cli.core import filter_translator as flt
+    return flt.translate_filter_group({'type': 'group', 'logic': 'AND',
+                                       'children': [status_is(f, labels), not_a_template(f)]})
+
+
+def filter_state(filters):
+    """A stored or wanted filter in comparable form: the server fills in keys neither the translator nor the view
+    editor sends (`minValue`, `emptyRule`, `advancedSetting` …) and returns an option list in the options' own
+    order, so a filter is compared by what it *means* — never byte for byte."""
+    return [(c.get('controlId'), c.get('dataType'), c.get('spliceType'), c.get('filterType'),
+             tuple(sorted(c.get('values') or []))) for c in filters or []]
+
+
+def quick_filter_state(fast):
+    """`fastFilters` in comparable form: the control and the two settings that make it a multi-select dropdown."""
+    return [(q.get('controlId'), (q.get('advancedSetting') or {}).get('allowitem'),
+             (q.get('advancedSetting') or {}).get('direction')) for q in fast or []]
+
+
+def edit_view(vid, attr, value):
+    """Write one attribute of a view and nothing else — `editAttrs` is what SaveWorksheetView applies."""
+    hap.run('worksheet', 'view', 'update', ws(), vid, '-a', APP,
+            '--view-json', json.dumps({attr: value}, ensure_ascii=False), '--edit-attrs', attr)
+
+
+def view_rows(vid):
+    """Every row the view returns, its filter and sort applied — `record list --view-id`."""
+    out, page = [], 1
+    while True:
+        res = hap.run('worksheet', 'record', 'list', ws(), '-a', APP, '--view-id', vid, '-n', '200',
+                      '-p', str(page), '--use-field-id-as-key')
+        data = res.get('data', res) if isinstance(res, dict) else res
+        rows = (data.get('rows') if isinstance(data, dict) else data) or []
+        out += rows
+        if len(rows) < 200:
+            return out
+        page += 1
+
+
+def view_ids():
+    return {v['name']: v['viewId'] for v in hap.listing('worksheet', 'view', 'list', ws(), '-a', APP)}
 
 
 def step_views():
-    """The Templates view — a table filtered to *Is Template is ticked*, sorted by Template Name."""
+    """*Templates* (this builder's own), and the filters the owner's *Quotations* and *Orders* were missing —
+    plus *Orders*' quick filter on Invoicing Status. *All* is not touched.
+
+    `C.upsert_views` writes only the views it is given and `C.sort_views` is deliberately not called: it would
+    re-order the whole view bar, and a new view is appended last, which is where it belongs."""
     f = guard()
     for n in NEW:
         if n not in f:
             sys.exit(f'{n} is not on {WORKSHEET} — run `controls` first')
+    if f[INVOICING_STATUS].get('fieldPermission') != READ_ONLY_PERMISSION:
+        sys.exit(f'{INVOICING_STATUS} carries fieldPermission '
+                 f'{f[INVOICING_STATUS].get("fieldPermission")!r}: a hidden control is neither a column nor a '
+                 'quick filter — run `invstatus` first')
     i = lambda *names: [f[n]['controlId'] for n in names]
     columns = i(TEMPLATE_NAME, 'Number', CUSTOMER, 'Quotation/Order Date', 'Total', 'Status')
     views = {VIEW_TEMPLATES: (dict(viewType='table', filter=C.switch_filter(f[IS_TEMPLATE], 'eq'),
                                    tableFields=columns),
                               C.sort_spec([f[TEMPLATE_NAME]]), columns)}
-    for name, vid in C.upsert_views(ws(), APP, views, 'orders_views_pre_views').items():
+    live = view_ids()
+    missing = [n for n in FILTERED_VIEWS if n not in live]
+    if missing:
+        sys.exit(f"{missing} are not on {WORKSHEET} — they are the owner's views and this step does not "
+                 'create them')
+    hap.backup('orders_views_pre_views', [C.view_info(ws(), APP, v) for v in live.values()])
+    for name, vid in C.upsert_views(ws(), APP, views, 'orders_views_pre_templates').items():
         C.remember('views', KEY + name, vid)
+    wrote = False
+    for name in FILTERED_VIEWS:
+        vid, want = live[name], view_filter(f, VIEW_STATES[name])
+        info = C.view_info(ws(), APP, vid)
+        if filter_state(info.get('filters')) == filter_state(want):
+            print(f"  {name}: already filtered to Status is any of {list(VIEW_STATES[name])} and "
+                  f'{IS_TEMPLATE} not ticked; nothing saved')
+        else:
+            edit_view(vid, 'filters', want)
+            back = C.view_info(ws(), APP, vid)
+            if filter_state(back.get('filters')) != filter_state(want):
+                sys.exit(f'{name}: the filter read back as {filter_state(back.get("filters"))}, wanted '
+                         f'{filter_state(want)} — the save did not store')
+            print(f"  {name}: filtered to Status is any of {list(VIEW_STATES[name])} and {IS_TEMPLATE} not "
+                  f'ticked ({vid})')
+            wrote = True
+        C.remember('views', KEY + name, vid)
+    vid, want = live[VIEW_ORDERS], quick_filters()
+    info = C.view_info(ws(), APP, vid)
+    if quick_filter_state(info.get('fastFilters')) == quick_filter_state(want):
+        print(f'  {VIEW_ORDERS}: the {INVOICING_STATUS} quick filter is already as specified; nothing saved')
+    else:
+        edit_view(vid, 'fastFilters', want)
+        back = C.view_info(ws(), APP, vid)
+        if quick_filter_state(back.get('fastFilters')) != quick_filter_state(want):
+            sys.exit(f'{VIEW_ORDERS}: fastFilters read back as {quick_filter_state(back.get("fastFilters"))}, '
+                     f'wanted {quick_filter_state(want)} — the save did not store')
+        print(f'  {VIEW_ORDERS}: quick filter on {INVOICING_STATUS} — any of, as a dropdown '
+              f'({json.dumps(back.get("fastFilters"), ensure_ascii=False)})')
+        wrote = True
     C.print_views(ws(), APP)
-    print(f'  the owner\'s {list(OWNER_VIEWS)} were not touched, and none of them filters templates out — '
-          f'{template_filter_note()}')
-    return True
+    report_view_rows()
+    print(f"  {list(UNTOUCHED_VIEWS)} not touched: the system default is the owner's, and it carries no filter, "
+          f'so **templates appear in it** — {template_filter_note()}')
+    return wrote
+
+
+def report_view_rows():
+    """Each view's row count beside what the twelve seeded orders say it must be."""
+    live, bad = view_ids(), []
+    for name, want in VIEW_ROWS.items():
+        if name not in live:
+            bad.append(f'{name} is missing')
+            continue
+        got = len(view_rows(live[name]))
+        print(f"  {'OK  ' if got == want else 'DIFF'} {name} returns {got} row(s), expected {want}")
+        if got != want:
+            bad.append(f'{name} returns {got} row(s), expected {want}')
+    return bad
 
 
 def template_filter_note():
     f = C.fields(ws())
     cid = (f.get(IS_TEMPLATE) or {}).get('controlId', '<Is Template>')
-    return (f'each needs the condition {IS_TEMPLATE} ({cid}) filterType {C.NE} (is not) value "1", '
-            f'values ["1"], dataType {CHECKBOX}, in a group of its own')
+    return (f'it needs the condition {IS_TEMPLATE} ({cid}) filterType {C.NE} (is not) value "1", '
+            f'values ["1"], dataType {CHECKBOX}')
 
 
-# ── 9 · the records the owner approved deleting ──────────────────────────────
+# ── 10 · the records the owner approved deleting ─────────────────────────────
 #
 # The owner approved clearing **these two worksheets' records and nothing else** (relayed 21 Sep 2026): the
 # three hand-made orders and the two lines under them, all test data. The approval is pinned to the records it
@@ -970,7 +1169,7 @@ def step_wipe():
     return bool(wipe_records(ws(), WORKSHEET, WIPE, lambda d: d.get(CONTROLS['Number']) or ''))
 
 
-# ── 10 · the tenant's twelve orders ─────────────────────────────────────────
+# ── 11 · the tenant's twelve orders ─────────────────────────────────────────
 #
 # `nocoly/data/sale-orders-casimir.json`, read off casimir over read-only RPC on 21 Sep 2026: twelve orders and
 # thirty lines. The file is the source — nothing here re-derives it — and its `_note` explains the Sequence
@@ -996,12 +1195,15 @@ INVOICE_STATUS = {'to invoice': 'To Invoice', 'invoiced': 'Fully Invoiced', 'no'
                   'upselling': 'Upselling Opportunity'}
 TAX_MODES = {'tax_excluded': 'Tax Excluded', 'tax_included': 'Tax Included'}
 
-# **Prepayment Percentage is deliberately not seeded.** Odoo's `prepayment_percent` is a *ratio* — 1.0 on every
-# one of the twelve, meaning 100 % — while this control is a plain Number carrying `advancedSetting.suffix`
-# "%", so the tenant's 1 would draw "1.00 %" and the figure the tenant's own form shows is 100. That is a unit
-# conversion, not a copy, and the brief did not ask for one: the field is left empty and reported instead.
-NOT_SEEDED = ('Prepayment Percentage', 'Delivery Status', 'Journal', 'Tags', 'Template', 'Incoterm Location',
-              TEMPLATE_NAME)
+# **Prepayment Percentage is a unit conversion, not a copy.** Odoo stores `prepayment_percent` as a *ratio* —
+# 1.0 on every one of the twelve, meaning 100 % — while this control is a plain Number carrying
+# `advancedSetting.suffix` "%", so the tenant's raw 1 would draw "1.00 %" where the tenant's own form shows 100.
+# **The owner chose this app's convention: a percentage** (relayed 21 Sep 2026), so the seed multiplies by 100
+# and the app stores 100. The extract keeps the tenant's raw value — `sale-orders-casimir.json` still says
+# `"prepayment_percent": 1`, and its `_note` records the conversion — because an extract records what the tenant
+# holds and a builder is where a convention is applied.
+PREPAYMENT_RATIO_TO_PERCENT = 100
+NOT_SEEDED = ('Delivery Status', 'Journal', 'Tags', 'Template', 'Incoterm Location', TEMPLATE_NAME)
 
 
 _SEED = None
@@ -1171,6 +1373,10 @@ def order_want(f, o, index, gaps):
         'Source Document': o['origin'] or '',
         'Online Signature': '1' if o['require_signature'] else '0',
         'Online Payment': '1' if o['require_payment'] else '0',
+        # Odoo's ratio as this app's percentage: 1.0 -> 100. The control is hidden (fieldPermission "011"), which
+        # changes nothing here — a hidden control is written and read back by the API like any other, and only
+        # `record list` blanks it, which is why every read goes through `record get` (BUILDING.md).
+        'Prepayment Percentage': round(float(o['prepayment_percent']) * PREPAYMENT_RATIO_TO_PERCENT, 2),
         'Locked': '1' if o['locked'] else '0',
         IS_TEMPLATE: '0',                      # a seeded order is never a template
     }
@@ -1232,7 +1438,12 @@ def step_seed():
 
     Nothing is written to any other worksheet: a Customer, an Invoice or Delivery Address, a Payment Term or a
     Sales Team whose record this app does not hold is left empty and reported, because creating it would mean
-    writing to Contacts, Payment Terms or Sales Teams."""
+    writing to Contacts, Payment Terms or Sales Teams.
+
+    **The one value the seed converts rather than copies is Prepayment Percentage** — Odoo's `prepayment_percent`
+    is a ratio (1.0 = 100 %) and this control is a Number with a "%" suffix, so the seed writes
+    `prepayment_percent × 100` and the app stores 100. The extract keeps the tenant's raw 1; see
+    `PREPAYMENT_RATIO_TO_PERCENT` above and the seed file's `_note`."""
     f = guard()
     for n in NEW:
         if n not in f:
@@ -1288,7 +1499,7 @@ def report_gaps(gaps):
         print(f'    {what:<13} {name!r} — on {count} cell(s); create it in its own worksheet and re-run `seed`')
 
 
-# ── 11 · the figures: what the app computed against what the tenant holds ────
+# ── 12 · the figures: what the app computed against what the tenant holds ────
 #
 # Untaxed Amount, Tax and Total are 汇总 over the Order Lines subtable and the seed writes none of them —
 # nothing here "fixes" a figure, because a mismatch is a finding about the roll-ups and the line formulas
@@ -1430,18 +1641,51 @@ def step_check():
                         'a template — run `customer`')
     else:
         print(f'  OK  {CUSTOMER} is not required on the control; {RULE_CUSTOMER!r} requires it conditionally')
-    views = {v['name']: v['viewId'] for v in hap.listing('worksheet', 'view', 'list', ws(), '-a', APP)}
+    if f[INVOICING_STATUS].get('fieldPermission') != READ_ONLY_PERMISSION:
+        problems.append(f'{INVOICING_STATUS} carries fieldPermission '
+                        f'{f[INVOICING_STATUS].get("fieldPermission")!r}, not {READ_ONLY_PERMISSION!r}: hidden, so '
+                        'it is neither a column nor a quick filter — run `invstatus`')
+    else:
+        print(f'  OK  {INVOICING_STATUS} fieldPermission {READ_ONLY_PERMISSION} — read-only and hidden on create, '
+              f"as Status' own is; visible as a column and usable as a quick filter")
+    views = view_ids()
     if VIEW_TEMPLATES not in views:
         problems.append(f'the {VIEW_TEMPLATES!r} view is missing — run `views`')
     elif IS_TEMPLATE in f:
         info = C.view_info(ws(), APP, views[VIEW_TEMPLATES])
         flt = [(c['controlId'], c['filterType'], c.get('values')) for c in info.get('filters') or []]
         want = [(f[IS_TEMPLATE]['controlId'], C.EQ, ['1'])]
+        sort = [(names.get(s['controlId'], s['controlId']), s.get('isAsc')) for s in info.get('moreSort') or []]
+        lead = (info.get('showControls') or [None])[0]
         if flt != want:
             problems.append(f'the {VIEW_TEMPLATES!r} view filters {flt}, wanted {want} — run `views`')
+        elif sort != [(TEMPLATE_NAME, True)] or lead != f[TEMPLATE_NAME]['controlId']:
+            problems.append(f'the {VIEW_TEMPLATES!r} view sorts {sort} and leads with {names.get(lead, lead)!r}, '
+                            f'wanted {[(TEMPLATE_NAME, True)]} and {TEMPLATE_NAME!r} — run `views`')
         else:
-            print(f'  OK  {VIEW_TEMPLATES} filters {IS_TEMPLATE} is ticked ({views[VIEW_TEMPLATES]})')
-    for name in OWNER_VIEWS:
+            print(f'  OK  {VIEW_TEMPLATES} filters {IS_TEMPLATE} is ticked, sorts by {TEMPLATE_NAME} ascending '
+                  f'and leads with it ({views[VIEW_TEMPLATES]})')
+    for name in FILTERED_VIEWS:
+        if name not in views:
+            problems.append(f"the owner's {name!r} view is missing")
+            continue
+        info = C.view_info(ws(), APP, views[name])
+        want = view_filter(f, VIEW_STATES[name])
+        if filter_state(info.get('filters')) != filter_state(want):
+            problems.append(f"the owner's {name!r} view filters {filter_state(info.get('filters'))}, wanted "
+                            f'{filter_state(want)} — run `views`')
+        else:
+            print(f'  OK  {name} filters Status is any of {list(VIEW_STATES[name])} and {IS_TEMPLATE} not '
+                  f'ticked ({views[name]})')
+    if VIEW_ORDERS in views:
+        got = quick_filter_state(C.view_info(ws(), APP, views[VIEW_ORDERS]).get('fastFilters'))
+        if got != quick_filter_state(quick_filters()):
+            problems.append(f'{VIEW_ORDERS} carries fastFilters {got}, wanted '
+                            f'{quick_filter_state(quick_filters())} — run `views`')
+        else:
+            print(f'  OK  {VIEW_ORDERS} has a quick filter on {INVOICING_STATUS}, any of, as a dropdown')
+    problems += report_view_rows()
+    for name in UNTOUCHED_VIEWS:
         info = C.view_info(ws(), APP, views[name]) if name in views else {}
         if not (info.get('filters') or []):
             print(f"  the owner's {name!r} view has no filter, so **templates appear in it** — "
@@ -1466,7 +1710,8 @@ def step_check():
         print('  check: ' + '\n         '.join(problems))
         sys.exit(1)
     print(f'  check: OK — {len(RULES)} rules, the retired five, Expiration, three roll-ups at {MONEY_DOT} '
-          f'decimals and the {len(SUBTABLE_COLUMNS)} subtable columns')
+          f'decimals, the {len(SUBTABLE_COLUMNS)} subtable columns, {INVOICING_STATUS} at '
+          f'{READ_ONLY_PERMISSION} and {len(VIEW_ROWS)} views returning {list(VIEW_ROWS.values())} rows')
 
 
 def step_show():
@@ -1492,7 +1737,8 @@ def step_show():
 
 
 STEPS = {'rules': step_rules, 'retire': step_retire, 'expiry': step_expiry, 'totals': step_totals,
-         'dots': step_dots, 'controls': step_controls, 'customer': step_customer, 'views': step_views,
+         'dots': step_dots, 'controls': step_controls, 'customer': step_customer,
+         'invstatus': step_invstatus, 'views': step_views,
          'wipe': step_wipe, 'seed': step_seed, 'figures': step_figures,
          'check': step_check, 'show': step_show}
 

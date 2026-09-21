@@ -5,9 +5,10 @@
                                                                  #    appended with no client-side id
     ~/.hap-venv/bin/python nocoly/build/orderlines.py computed   # 2. Orders and Description required — one
                                                                  #    pinned save
-    ~/.hap-venv/bin/python nocoly/build/orderlines.py formulas   # 3. Tax Amount and Total stop being Currency
-                                                                 #    controls carrying a function default and
-                                                                 #    become type 31 Formulas — one pinned save
+    ~/.hap-venv/bin/python nocoly/build/orderlines.py formulas   # 3. Subtotal, Tax Amount and Total stop being
+                                                                 #    Currency controls carrying a function
+                                                                 #    default and become type 31 Formulas — one
+                                                                 #    pinned save
     ~/.hap-venv/bin/python nocoly/build/orderlines.py rules      # 4. a section or a note carries no figures
     ~/.hap-venv/bin/python nocoly/build/orderlines.py alias      # 5. the Odoo field names into `alias`, one
                                                                  #    pinned save
@@ -373,28 +374,45 @@ def step_computed():
     return bool(changed)
 
 
-# ── 3 · Tax Amount and Total become Formulas ────────────────────────────────
+# ── 3 · Subtotal, Tax Amount and Total become Formulas ──────────────────────
 #
-# **A control that reads a roll-up must be a Formula.** A *function default* (`advancedSetting.defaulttype` "1"
-# with a `defaultfunc`) is evaluated **client-side in the form**, and Tax rate is a 汇总 (type 37) computed on the
-# server, so at form time it has no value and the expression yields nothing. Proved in the UI on 21 Sep 2026: a
-# line saved with a percentage tax picked stored Tax Amount blank, and because Total's own function default was
-# `Subtotal + Tax Amount` it stored blank too — so the order's roll-ups read Untaxed 270 / Tax 0 / Total 0 while
-# the line's Tax rate 汇总 held 3.0000 all along.
+# **A control whose value must exist on an API write must be a Formula.** A *function default*
+# (`advancedSetting.defaulttype` "1" with a `defaultfunc`) is evaluated **client-side in the form** and the API
+# applies no defaults at all (BUILDING.md), so a row written by a script stores nothing there. Two separate
+# failures followed from the one cause:
 #
-# Invoice Lines is the working shape: its Total is a type 31 **Formula** reading the same kind of roll-up, and its
-# stored rows are right (1798.00 → 1977.80 at 10 %, 850.00 → 918.00 at 8 %, 18000.00 → 19440.00 at 8 %). So both
-# controls are converted, and the shape is read off Invoice Lines at build time rather than typed here.
+#   * Tax rate is a 汇总 (type 37) computed on the server, so even **in the form** it has no value at the moment a
+#     function default runs and the expression yields nothing. Proved in the UI on 21 Sep 2026: a line saved with a
+#     percentage tax picked stored Tax Amount blank, and because Total's own function default was
+#     `Subtotal + Tax Amount` it stored blank too — so the order's roll-ups read Untaxed 270 / Tax 0 / Total 0
+#     while the line's Tax rate 汇总 held 3.0000 all along.
+#   * **Subtotal's** own function default reads Quantity, Unit Price and Discount — plain numbers on its own row —
+#     so it computes correctly *in the form*, which is why it was left alone at first. But all thirty seeded lines
+#     were written through the API, so every one of them stored Subtotal **empty**, which left Tax Amount and
+#     Total (Formulas built on it) empty as well and every order roll-up reading 0.00. The owner approved the
+#     conversion on 21 Sep 2026 in exchange for losing the RM prefix: a Formula carries no currency. Nothing is
+#     lost converting — every Subtotal was already blank.
 #
-# **Subtotal is deliberately left alone.** Its function default reads Quantity, Unit Price and Discount — plain
-# numbers on its own row, all three present in the form — so it works, and it is a Currency, so it shows RM. The
-# owner built it that way on purpose.
-CONVERT = ('Tax Amount', 'Total')
-# The two operands, by name, with the ids read off the app on 21 Sep 2026. Confirmed by name at run time before
-# the expression is written, because a formula built on a wrong id computes nothing and says nothing.
-OPERANDS = {'Subtotal': '6ab0ca80805aef703286d82a', RATE: '6ab0d4bbe43d174ab3753780'}
-# Invoice Lines' Total, with its own two operands as placeholders. `$S$` is Subtotal, `$R$` the Tax rate 汇总.
+# Invoice Lines is the working shape for all three: its Subtotal and Total are type 31 **Formulas**, the second
+# reading the same kind of roll-up, and its stored rows are right (1798.00 → 1977.80 at 10 %, 850.00 → 918.00 at
+# 8 %, 18000.00 → 19440.00 at 8 %). Both expressions are rebuilt from **07's own stored formulas** rather than from
+# a string typed here, so the two worksheets cannot drift apart.
+#
+# One thing this step cannot copy from 07 and has to prove by reading records back: Order Lines' **Unit Price is a
+# Currency (t8)** where Invoice Lines' is a plain Number (t6). `figures` is what says whether a type 31 formula
+# reads a money operand.
+CONVERT = ('Subtotal', 'Tax Amount', 'Total')
+# Every operand, by name, with the ids read off the app on 21 Sep 2026. Confirmed by name at run time before any
+# expression is written, because a formula built on a wrong id computes nothing and says nothing. Subtotal is both
+# a converted control and the operand of the other two.
+OPERANDS = {'Subtotal': '6ab0ca80805aef703286d82a', RATE: '6ab0d4bbe43d174ab3753780',
+            'Quantity': '6ab0c864e43d174ab37535fb', 'Unit Price': '6ab0ca1be43d174ab3753657',
+            'Discount': '6ab0ca1be43d174ab3753658'}
+# Invoice Lines' two formulas with their own operands as placeholders: `$S$` Subtotal, `$R$` the Tax rate 汇总,
+# `$Q$` Quantity, `$P$` Unit Price, `$D$` Discount.
 TOTAL_TEMPLATE = '$S$*(1+$R$/100)'
+# Odoo's `price_subtotal` is `quantity × price_unit × (1 − discount/100)`, which is what 07 stores as well.
+SUBTOTAL_TEMPLATE = '$Q$*$P$*(1-$D$/100)'
 # Odoo's `price_tax` is `price_total - price_subtotal`; arrived at from the rate it is the same figure.
 TAX_TEMPLATE = '$S$*$R$/100'
 SHAPE_KEYS = ('type', 'enumDefault', 'enumDefault2', 'fieldPermission', 'dot')
@@ -411,10 +429,10 @@ def reference_formula(rate):
     """Invoice Lines' Subtotal and Total — the two type 31 Formulas in this app whose stored rows are proved
     right — read off the app, and the one shape both of them carry.
 
-    Returns (shape, advancedSetting, template): `template` is Invoice Lines' **Total expression** with its own two
-    operands replaced by `$S$` and `$R$`, so Order Lines' Total is rebuilt from 07's own stored formula rather
-    than from a string typed in this file, and the two worksheets' Totals cannot drift apart. `rate` is Invoice
-    Lines' Tax rate 汇总, as `reference_rate` read it."""
+    Returns (shape, advancedSetting, {'Total': …, 'Subtotal': …}): each template is 07's own stored expression with
+    its operands replaced by placeholders, so Order Lines' two are rebuilt from 07's formulas rather than from
+    strings typed in this file and the two worksheets cannot drift apart. `rate` is Invoice Lines' Tax rate 汇总,
+    as `reference_rate` read it."""
     live = hap.by_name(hap.controls(INVLINES))
     ref = {}
     for name in ('Subtotal', 'Total'):
@@ -433,20 +451,38 @@ def reference_formula(rate):
     if shapes['Total'] != WANT_SHAPE or settings['Total'] != WANT_SETTING:
         sys.exit(f'Invoice Lines\' Formula shape has drifted from what this step was written against:\n'
                  f'  live {shapes["Total"]} {settings["Total"]}\n  want {WANT_SHAPE} {WANT_SETTING}')
-    expr = ref['Total'].get('dataSource') or ''
-    template = expr.replace(f'${ref["Subtotal"]["controlId"]}$', '$S$').replace(f'${rate["controlId"]}$', '$R$')
-    if template != TOTAL_TEMPLATE:
-        sys.exit(f'Invoice Lines / Total is {expr!r} — as a template {template!r}, not {TOTAL_TEMPLATE!r}: it is '
-                 'no longer Subtotal × (1 + Tax rate ÷ 100), so there is nothing to copy')
+    # Each reference expression back to a template, and each template checked against the constant above.
+    # 07's own operand names differ from this worksheet's — its Discount is called *Discount (%)* — so they are
+    # looked up by the names 07 uses and every one of them must be there.
+    inv_ops = {}
+    for label, name in (('$Q$', 'Quantity'), ('$P$', 'Unit Price'), ('$D$', 'Discount (%)')):
+        c = live.get(name)
+        if c is None:
+            sys.exit(f'Invoice Lines / {name} is missing, so its Subtotal expression cannot be read as a '
+                     f'template; read {INVLINES} first')
+        inv_ops[label] = c['controlId']
+    inv_ops['$S$'] = ref['Subtotal']['controlId']
+    inv_ops['$R$'] = rate['controlId']
+    templates, want = {}, {'Total': TOTAL_TEMPLATE, 'Subtotal': SUBTOTAL_TEMPLATE}
+    for name in ('Total', 'Subtotal'):
+        expr = ref[name].get('dataSource') or ''
+        template = expr
+        for label, cid in inv_ops.items():
+            template = template.replace(f'${cid}$', label)
+        if template != want[name]:
+            sys.exit(f'Invoice Lines / {name} is {expr!r} — as a template {template!r}, not {want[name]!r}: it is '
+                     f'no longer the expression this step copies, so there is nothing to copy')
+        templates[name] = template
     shape, setting = shapes['Total'], settings['Total']
     print(f"  reference: Invoice Lines / Subtotal {ref['Subtotal']['controlId']} and Total "
           f"{ref['Total']['controlId']} — t{shape['type']} Formulas, perm {shape['fieldPermission']} (read-only), "
-          f"dot {shape['dot']}, {setting}; Total is {template}")
-    return shape, setting, template          # the live values, checked above, not the constants
+          f"dot {shape['dot']}, {setting}; Subtotal is {templates['Subtotal']}, Total is {templates['Total']}")
+    return shape, setting, templates         # the live values, checked above, not the constants
 
 
 def operands(f):
-    """{name: controlId} for Subtotal and Tax rate, **confirmed by name on the live worksheet**.
+    """{name: controlId} for every operand the three expressions name, **confirmed by name on the live
+    worksheet**.
 
     A formula built on an id that is not there stores, publishes and computes nothing — silently — so a missing or
     renumbered operand stops this step instead of being written into an expression."""
@@ -455,27 +491,39 @@ def operands(f):
         c = f.get(name)
         if c is None:
             sys.exit(f'{name} is not on {WORKSHEET}, so the expression has no operand to name'
-                     + (f' — run `fields` first' if name == RATE else ''))
+                     + (' — run `fields` first' if name == RATE else ''))
         if c['controlId'] != expected:
             sys.exit(f'{name} is {c["controlId"]}, expected {expected} — the owner has replaced the control; '
                      're-read the worksheet before writing a formula on it')
         out[name] = c['controlId']
-    if f['Subtotal']['type'] != CURRENCY:
-        sys.exit(f'Subtotal is t{f["Subtotal"]["type"]}, expected the owner\'s Currency (t{CURRENCY}) — '
-                 'this step does not convert it and must not be run against something else')
+    # Subtotal is what this step converts, so it is the owner's Currency before the save and a Formula after it —
+    # anything else means the control is not the one this step was written against.
+    if f['Subtotal']['type'] not in (CURRENCY, FORMULA):
+        sys.exit(f'Subtotal is t{f["Subtotal"]["type"]}, expected the owner\'s Currency (t{CURRENCY}) or the '
+                 f'Formula (t{FORMULA}) this step converts it to')
+    # Its own three operands must hold numbers. Unit Price is a Currency here where 07's is a plain Number, which
+    # is the one difference between the two worksheets' Subtotals; `figures` is what proves a t8 operand computes.
+    for name, kinds in (('Quantity', (NUMBER,)), ('Unit Price', (NUMBER, CURRENCY)), ('Discount', (NUMBER,))):
+        if f[name]['type'] not in kinds:
+            sys.exit(f'{name} is t{f[name]["type"]}, expected one of {kinds} — a formula over it would compute '
+                     'nothing and say nothing')
     if f[RATE]['type'] != ROLLUP:
         sys.exit(f'{RATE} is t{f[RATE]["type"]}, expected a 汇总 (t{ROLLUP})')
     return out
 
 
 def fill(template, ops):
-    return template.replace('$S$', f'${ops["Subtotal"]}$').replace('$R$', f'${ops[RATE]}$')
+    for label, name in (('$S$', 'Subtotal'), ('$R$', RATE), ('$Q$', 'Quantity'), ('$P$', 'Unit Price'),
+                        ('$D$', 'Discount')):
+        template = template.replace(label, f'${ops[name]}$')
+    return template
 
 
-def formula_spec(f, shape, setting, template):
-    """{control name: {key: value}} — everything the `formulas` step writes onto the two controls."""
+def formula_spec(f, shape, setting, templates):
+    """{control name: {key: value}} — everything the `formulas` step writes onto the three controls."""
     ops = operands(f)
-    expression = {'Tax Amount': fill(TAX_TEMPLATE, ops), 'Total': fill(template, ops)}
+    expression = {'Subtotal': fill(templates['Subtotal'], ops), 'Tax Amount': fill(TAX_TEMPLATE, ops),
+                  'Total': fill(templates['Total'], ops)}
     return {n: {**shape, 'dataSource': expression[n],
                 **{f'advancedSetting.{k}': v for k, v in setting.items()}} for n in CONVERT}
 
@@ -491,25 +539,27 @@ def leftovers(c, setting):
 
 
 def step_formulas():
-    """Convert Tax Amount and Total from Currency (type 8) to **Formula** (type 31) — one version-pinned save that
-    changes those two controls and nothing else.
+    """Convert Subtotal, Tax Amount and Total from Currency (type 8) to **Formula** (type 31) — one version-pinned
+    save that changes those three controls and nothing else.
 
     Each takes Invoice Lines' stored Formula shape (read-only `fieldPermission` "101", two decimals,
-    `advancedSetting` `{roundtype, sorttype, nullzero}`) and its expression in `dataSource`: Tax Amount
-    `Subtotal × Tax rate ÷ 100`, Total `Subtotal × (1 + Tax rate ÷ 100)` — Invoice Lines' Total exactly, for
-    parity, rather than the `Subtotal + Tax Amount` the function default used. Both aliases (`price_tax`,
-    `price_total`) are left as they are, because everything reads a value by them.
+    `advancedSetting` `{roundtype, sorttype, nullzero}`) and its expression in `dataSource`: Subtotal
+    `Quantity × Unit Price × (1 − Discount ÷ 100)` — the very expression Subtotal's function default carried — Tax
+    Amount `Subtotal × Tax rate ÷ 100`, and Total `Subtotal × (1 + Tax rate ÷ 100)`, Invoice Lines' Total exactly,
+    for parity, rather than the `Subtotal + Tax Amount` the function default used. All three aliases
+    (`price_subtotal`, `price_tax`, `price_total`) are left as they are, because everything reads a value by them.
 
     The whole `advancedSetting` is **replaced** with the three keys a Formula carries, which is what drops the
     currency keys and the function default. Any other key still holding a value stops the step rather than being
     discarded quietly; the empties HAP leaves behind (`min`, `max`, `dynamicsrc`, `defsource`) go with the rest.
+    Losing the RM prefix on Subtotal is the price of the conversion and the owner accepted it (21 Sep 2026).
 
-    Both worksheets hold one TEST record between them, so no typed figure is lost — and both figures were blank
-    on it anyway, which is the defect."""
+    **No stored figure is lost.** All three were blank on every one of the thirty seeded lines and on the TEST
+    record — a function default is the form's and the API applies none — which is the whole defect."""
     f = guard()
     rate, _filters = reference_rate()
-    shape, setting, template = reference_formula(rate)
-    spec = formula_spec(f, shape, setting, template)
+    shape, setting, templates = reference_formula(rate)
+    spec = formula_spec(f, shape, setting, templates)
     unknown = {n: {k: v for k, v in surplus(f[n], setting).items() if v and k not in DROPPED} for n in CONVERT}
     unknown = {n: u for n, u in unknown.items() if u}
     if unknown:
@@ -553,15 +603,19 @@ def step_formulas():
 
 
 def check_subtotal(f):
-    """Subtotal is still the owner's Currency carrying its own function default — the one figure on this
-    worksheet that a function default computes correctly, because it reads plain numbers on its own row."""
-    c = f['Subtotal']
-    func = (c.get('advancedSetting') or {}).get('defaultfunc') or ''
-    if c['type'] != CURRENCY or (c.get('advancedSetting') or {}).get('defaulttype') != '1' or not func:
-        sys.exit(f'Subtotal {c["controlId"]} is t{c["type"]} defaulttype='
-                 f'{(c.get("advancedSetting") or {}).get("defaulttype")!r} defaultfunc={func!r} — it must stay a '
-                 f'Currency (t{CURRENCY}) carrying its function default; nothing here converts it')
-    print(f'  OK  Subtotal {c["controlId"]} untouched: t{CURRENCY} Currency, function default {func}')
+    """**No function default is left on any of the three computed controls.** That is the guarantee the conversion
+    is for: a function default is evaluated in the form and the API applies none, so every figure written by a
+    script stored empty while one remained. Named as its own check because the drift comparison above would pass
+    just as happily on a control that had somehow kept `defaulttype` alongside the formula."""
+    bad = {n: {k: v for k, v in (f[n].get('advancedSetting') or {}).items()
+               if k in ('defaulttype', 'defaultfunc', 'defsource', 'dynamicsrc') and v}
+           for n in CONVERT}
+    bad = {n: v for n, v in bad.items() if v}
+    if bad:
+        sys.exit(f'{json.dumps(bad, ensure_ascii=False)} — a default is still set on a Formula, so a figure can '
+                 'still be written by the form and not by the API; run `formulas`')
+    print(f'  OK  {list(CONVERT)} carry no default of any kind — every figure is computed, in the form and on an '
+          'API write alike')
 
 
 # ── 4 · the line-level rule ─────────────────────────────────────────────────
@@ -737,10 +791,11 @@ def step_wipe():
 # control minted and which says nothing about which tenant order a line belongs to. `invlines.py seed_key` keys
 # its lines the same way and for the same reason.
 #
-# **Subtotal, Tax Amount and Total are never written.** Subtotal is the owner's Currency carrying a *function
-# default*, which is evaluated client-side in the form and not by the API (BUILDING.md: the API applies no
-# defaults), and the other two are type 31 Formulas computed from it. The seed's figures are read back and
-# compared in `figures`, and a mismatch is reported, never repaired.
+# **Subtotal, Tax Amount and Total are never written.** All three are type 31 Formulas (§3): Subtotal from
+# Quantity, Unit Price and Discount on its own row, and the other two from Subtotal and the Tax rate 汇总. A
+# Formula's value is the server's, so a seeded line carries all three the moment it is written — which is exactly
+# what a *function default* did not do. The seed's figures are read back and compared in `figures`, and a mismatch
+# is reported, never repaired.
 NOT_WRITTEN = ('Subtotal', 'Tax Amount', 'Total', 'Tax rate', 'Product Unit')
 
 # The seed names five variants this app does not hold, and creating them would mean writing to Product
@@ -884,7 +939,9 @@ COMPUTED = (('Subtotal', 'subtotal'), ('Tax Amount', 'tax_amount'), ('Total', 't
 
 def step_figures():
     """Each seeded line's computed Subtotal, Tax Amount and Total beside the tenant's own — reported, never
-    repaired: a mismatch is a finding about Subtotal's function default and the two Formulas built on it."""
+    repaired: a mismatch is a finding about the three Formulas and the Tax rate 汇总 they stand on, not about the
+    data. It is also what answers the one thing §3 could not copy from Invoice Lines — whether a type 31 formula
+    reads a **Currency** operand, since Unit Price is a t8 here and a plain Number there."""
     f = guard()
     data, grouped = O.seed_data()
     orders = O.seeded_orders()
@@ -963,9 +1020,9 @@ def step_check():
                 problems.append(f'{n}: {json.dumps(diff, ensure_ascii=False)}')
             else:
                 print(f'  OK  {n} {sorted(want)}')
-        # the two converted Formulas, and Subtotal still as the owner built it
-        shape, setting, template = reference_formula(ref)
-        fspec = formula_spec(f, shape, setting, template)
+        # the three converted Formulas, and the proof no function default is left on any of them
+        shape, setting, templates = reference_formula(ref)
+        fspec = formula_spec(f, shape, setting, templates)
         for n in CONVERT:
             diff = drift(f[n], fspec[n])
             extra = leftovers(f[n], setting)
@@ -1055,7 +1112,7 @@ def step_check():
     if problems:
         print('  check: ' + '\n         '.join(problems))
         sys.exit(1)
-    print(f'  check: OK — {len(NEW)} appended controls, {list(CONVERT)} as Formulas, Subtotal untouched, '
+    print(f'  check: OK — {len(NEW)} appended controls, {list(CONVERT)} as Formulas with no default left, '
           f'two required fields, one rule, {len(ALIAS)} aliases')
 
 
