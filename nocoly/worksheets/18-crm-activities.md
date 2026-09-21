@@ -7,7 +7,7 @@
 | Odoo models | CRM-scoped equivalent of `mail.activity`, `mail.activity.type` and `mail.activity.plan` |
 | Built by | **Teh Li Wei**, 21 Sep 2026, through `hap --profile fbmy-nocoly` |
 | Reference | Odoo CRM rendered UI, with ERP Master's existing Leads worksheet preserved |
-| Status | **Built and partly UI-tested.** Creation notification has rendered evidence; reassignment and due-time delivery still need runtime testing; the Odoo-style Lead top button is not delivered |
+| Status | **Built and UI-tested.** The workflow-backed Lead `Schedule Activity` action creates a real Activity; creation notification has rendered evidence; reassignment and due-time delivery still need runtime testing |
 
 This is a bounded CRM activity implementation, not a claim to reproduce Odoo's global polymorphic
 `mail.activity` engine. It adds useful assignment and reminder behaviour without extending the same model to
@@ -44,23 +44,26 @@ avoids waking for records that are not due.
 |---|---|---|
 | `TEST - CRM Activity follow-up` | Done, due/completed 21 Sep 2026 | Mark Done workflow and Done/Calendar rendering |
 | `TEST - Activity notification flow` | Scheduled, due 22 Sep 2026 | Creation notification and due reminder |
+| `TEST - Scheduled from Lead action` | Scheduled, due 23 Sep 2026 | Workflow-backed Lead action and Calendar rendering |
 
 Both point to `TEST MY - New sales enquiry` and Activity Type To-Do. They remain intentionally for review.
 
-## 4 · Known gap: Schedule Activity on the Lead
+## 4 · Schedule Activity on the Lead
 
-Three direct-related-record action configurations were tested and removed. The final raw action retained the
-child-side Lead relation correctly in CLI read-back, but Nocoly Web returned:
+The direct-related-record design remains invalid and its three failed attempts remain useful historical evidence:
+when the mounted subtable is hidden, Nocoly rejects that action as a hidden/deleted associated field. Phase 3
+therefore uses the approved alternative instead of reopening that relation path.
 
-> Unable to execute button "Schedule Activity" Associated field is hidden or has been deleted
+Leads now owns five hidden technical inputs—Activity Type, Summary, Due Date, Assigned To and Note. The
+`Schedule Activity` Fill action writes those inputs, then its published workflow creates a real row in My
+Activities with the current Lead relation, Scheduled status and Active flag. To-Do, current date and current user
+are the configured defaults; Note is optional. The fields use raw `fieldPermission=011`, so they do not appear in
+the normal Lead form.
 
-The final Leads action inventory is Won, Lost and Quotation; no broken Schedule Activity button remains. A
-simple direct relation action therefore cannot satisfy both requirements at once: the relation bridge must be
-visible for the action, while the approved Odoo-like Lead form hides the mounted subtable.
-
-If the top button is approved as the next slice, implement it with hidden technical scheduling fields on Leads,
-a Fill workflow and a Create Activity workflow, then validate the complete no-save/create path in Web. Do not
-reuse the failed direct-relation configuration.
+CLI end-to-end validation triggered the workflow on `TEST MY - New sales enquiry` and created
+`TEST - Scheduled from Lead action` (`775f477f-fe05-4a45-a9db-645a53efc964`). Read-only Web validation then
+confirmed the top button, dialog values and Calendar entry. The stored `sureName=Schedule` is rendered by HAP as
+`Confirm`; this is a recorded presentation mismatch, not a functional blocker.
 
 ## 5 · Review checklist
 
@@ -69,19 +72,22 @@ reuse the failed direct-relation configuration.
 - Keep the scheduled 22 Sep test active through 09:00 and confirm the due message; complete/cancel it before the
   trigger to prove the guard suppresses the message.
 - Confirm the Lead form does not show the Activities subtable.
+- Open `Schedule Activity` from a Lead, confirm To-Do/current date/current user defaults on an untouched record,
+  and cancel without saving if review must remain read-only.
 - Confirm My Activities' six views and English labels remain usable for a non-administrator.
 - Decide whether Activity Plan Steps should be hidden manually from the sidebar; hiding its only view did not
   hide the worksheet entry.
-- Do not report the Lead top button, activity-plan execution, Meetings/Calendar bridge, Odoo chatter, top-bar
-  counter or Opportunity × Activity Type matrix as delivered.
+- Do not report activity-plan execution, Meetings/Calendar bridge, Odoo chatter, top-bar counter or Opportunity
+  × Activity Type matrix as delivered. The Lead top button is delivered through Fill + workflow, not direct relation.
 
 ## 6 · Tool and evidence boundary
 
 All HAP writes and record creation were made through CLI. Web was read-only and is the authority for rendered
-behaviour. The highest-impact mismatch is the Schedule Activity action: CLI read-back looked valid, but Web
-execution failed, so the action was deleted. Other captured CLI issues include workflow batch-add partial writes,
-the full wire required for dynamic Member recipients and high-level field output not reflecting raw layout-hidden
-permission.
+behaviour. The original direct-relation Schedule Activity action looked valid in CLI but failed in Web and was
+deleted. Its replacement is the delivered Fill + Create workflow above. Captured CLI issues include workflow
+batch-add partial writes, the full wire required for dynamic Member recipients, add-fields dropping a Member
+default, save-action clearing that Member mapping, and one malformed raw button wire temporarily breaking both
+button listing and deletion until an in-place minimal recovery.
 
 `MCP status: not evaluated`. No MCP write or verification was used for this Activity follow-up, and no product
 ticket was submitted.
