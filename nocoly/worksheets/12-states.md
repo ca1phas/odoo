@@ -279,7 +279,7 @@ closes in both directions.
 | Name · alias | **States** · `state_ids` |
 | Shape | `showtype` "2" — a **list at the foot of the country form**, not a field in the grid; row 4 size 12 |
 | Columns | **State Name · State Code**, by controlId from the States worksheet — exactly Odoo's two. A list with no `showControls` shows its row count over the words *No visible fields* |
-| Permission | `101` — **read-only**, as §1 asks: a state is given its country on the state |
+| Permission | **`100`** — read-only **and hidden on create**. It was `101` until 21 Sep 2026, when the screen pass found a "101" reverse rendering on the Create Record form, where Odoo has no states list on a country that does not exist yet (`15-ui-conformance.md` §1). A state is still given its country on the state. `011` would take the table column with it; hidden-on-create does not |
 | Reads back | Malaysia **18** (the sixteen plus the two TEST states), United Kingdom **119**, Saudi Arabia **13**, Singapore and Andorra **0**. `record get` returns the reverse half as a **row count**, an integer, not the rows |
 
 The remark block `6aacb5ba7d58b0f449312e41` had its last line rewritten in the same save, from "The **States**

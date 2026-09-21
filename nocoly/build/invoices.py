@@ -14,7 +14,8 @@ the CLI's interpreter:
                                                                 #    blocks, place everything in its tab, set the
                                                                 #    title field, help, hints, defaults, decimals,
                                                                 #    required and read-only
-    ~/.hap-venv/bin/python nocoly/build/invoices.py rules       # 2. the seven interaction rules (upsert by name)
+    ~/.hap-venv/bin/python nocoly/build/invoices.py rules       # 2. the eight interaction rules and the two journal
+                                                                #    checks (upsert by name)
     ~/.hap-venv/bin/python nocoly/build/invoices.py views       # 3. Invoices, Bills and Journal Entries
     ~/.hap-venv/bin/python nocoly/build/invoices.py buttons     # 4. Confirm / Cancel / Reset to Draft and their
                                                                 #    workflows, numbering included
@@ -156,6 +157,7 @@ INVOICE_LINES, OTHER_INFO, MYINVOIS = 'Invoice Lines', 'Other Info', 'MyInvois'
 LINES = 'Lines'                                    # 07's mounted subtable, inside the Invoice Lines tab
 NOTE_LINES, NOTE_OTHER, NOTE_MYINVOIS = 'Invoice Lines note', 'Invoice note', 'MyInvois note'
 TABS = (INVOICE_LINES, OTHER_INFO, MYINVOIS)
+JOURNAL_TYPE = 'Journal Type'                      # a stored lookup of the Journal's Type; see PLACE below
 
 # Odoo saas~19.4 view_move_form on HAP's 12-column grid. Odoo's header buttons become Confirm / Cancel / Reset to
 # Draft and Status as a read-only field; the h1 Number follows; then Odoo's left column (the partner) beside its
@@ -184,6 +186,10 @@ PLACE = {  # name -> (row, col, size, tab)
     'Accounting': (18, 0, 12, OTHER_INFO),       # Odoo's <group name="accounting_info_group"> heading
     'Source Document': (19, 0, 6, OTHER_INFO),   'Auto-post': (19, 1, 6, OTHER_INFO),
     'Auto-post until': (20, 0, 6, OTHER_INFO),
+    # Not an Odoo field: a stored lookup of the Journal's Type, added 21 Sep 2026 so the two journal checks
+    # below have something on this worksheet to compare (15 §1.3). Odoo reads `journal_id.type` straight off
+    # the relation and stores nothing; a HAP rule condition can only name a control of its own worksheet.
+    JOURNAL_TYPE: (20, 1, 6, OTHER_INFO),
     MYINVOIS: (21, 0, 12, None),
     NOTE_MYINVOIS: (22, 0, 12, MYINVOIS),
 }
@@ -258,11 +264,16 @@ DESC = {  # Odoo field help, verbatim where Odoo has one (addons/account/models/
     'Auto-post': 'Specify whether this entry is posted automatically on its accounting date, and any similar '
                  'recurring invoices.',
     'Auto-post until': 'This recurring move will be posted up to and including this date.',
+    JOURNAL_TYPE: "The Journal's own Type, read through the Journal relation and stored here. Odoo has no such "
+                  'field — it reads journal_id.type directly — but a HAP business rule can only compare a '
+                  "control of its own worksheet, and this is what the two journal checks stand on: Odoo's "
+                  "@api.constrains('journal_id', 'move_type') _check_journal_move_type, which refuses a sale "
+                  'document in a non-sale journal and a purchase document in a non-purchase journal.',
     # The two dividers carry no description: HAP renders a type-22 divider's `desc` nowhere at all.
     'Invoice': '', 'Accounting': '',
 }
 REQUIRED = {'Type', 'Accounting Date', 'Journal', 'Auto-post'}   # Tax mode and Invoice Date are required by a rule
-READONLY = {'Number', 'Status', 'Untaxed Amount', 'Tax', 'Total', 'Amount Due', 'Source Document'}
+READONLY = {'Number', 'Status', 'Untaxed Amount', 'Tax', 'Total', 'Amount Due', 'Source Document', JOURNAL_TYPE}
 TITLE = 'Number'
 # A Date field's default of "today". `staticValue` is a **sentinel, not a day offset**: "2" with `time` "current"
 # is HAP's 当天 (the current day) — the shape hap-cli's own captured payload asserts (tests/test_core.py
@@ -303,6 +314,9 @@ NEW = {  # controls this script adds: name -> (builder type, alias, extra contro
     'Source Document': ('TEXT', 'invoice_origin', {'enumDefault': 2}),
     'Auto-post': ('DROP_DOWN', 'auto_post', {}),
     'Auto-post until': ('DATE', 'auto_post_until', {}),
+    # `journal_type` is not an Odoo field name — Odoo stores nothing for it — so the house convention
+    # (an alias is the Odoo field) has nothing to offer here; the name says what the control holds.
+    JOURNAL_TYPE: ('SHEET_FIELD', 'journal_type', {'strDefault': '00', 'dot': 0}),   # '00' = a stored lookup
     NOTE_LINES: (NOTE, '', {}),
     NOTE_MYINVOIS: (NOTE, '', {}),
 }
@@ -329,6 +343,16 @@ def new_control(name):
         return {'controlName': name, 'type': NOTE, 'row': row, 'col': col, 'size': size, 'alias': alias,
                 'dataSource': HTML[name], 'advancedSetting': {'hidetitle': '1'}, 'desc': '', 'hint': '',
                 'required': False, 'unique': False}
+    if name == JOURNAL_TYPE:
+        # A stored lookup reads *through* a Relation on this worksheet: `data_source` is the Journal
+        # relation's controlId (the helper wraps it in "$…$") and `source_control_id` the column on
+        # Journals. It stores the source dropdown's **option key**, the way Invoice Lines' Status does.
+        live = hap.by_name(c for c in hap.controls(WORKSHEET) if c['type'] != C.TAB)
+        if 'Journal' not in live:
+            sys.exit(f'{JOURNAL_TYPE} reads through the Journal relation, which is not on the worksheet yet')
+        return C.control(kind, name, (row, col, size), alias=alias, hint='', desc=DESC.get(name, ''),
+                         readonly=True, data_source=live['Journal']['controlId'],
+                         source_control_id=C.fields(JOURNALS)['Type']['controlId'], extra=extra)
     advanced = dict(ADVANCED.get(name) or {})
     if name in RELATIONS:
         advanced.update(bidirectional='0', showtype='3')                       # 3 = dropdown
@@ -446,7 +470,7 @@ def guard():
             if live != [(o['key'], o['value']) for o in opts]:
                 problems.append(f'{name} options changed: {live}')
     rules = {r['name'] for r in hap.listing('worksheet', 'rules', WORKSHEET)}
-    problems += [f'unknown rule {n!r}' for n in rules - set(RULES)]
+    problems += [f'unknown rule {n!r}' for n in rules - set(RULES) - set(JOURNAL_CHECKS)]
     buttons = {b['name'] for b in hap.listing('worksheet', 'custom-actions', WORKSHEET)}
     problems += [f'unknown button {n!r}' for n in buttons - set(BUTTONS)]
     views = {v['name'] for v in hap.listing('worksheet', 'view', 'list', WORKSHEET, '-a', APP)}
@@ -520,15 +544,20 @@ RULE_DELIVERY = 'Delivery Address is for customer documents'
 RULE_BILL_DATE = 'A vendor document must carry its date'
 RULE_TAX_MODE = 'Every document but an entry has a tax mode'
 RULE_AUTO_POST = 'Auto-post until follows Auto-post'
+RULE_NO_AUTO_POST_ON_RECEIPT = 'Auto-post is not offered on a receipt'   # bundle 15, 21 Sep 2026
 RULE_CLOSED = 'A posted or cancelled document is closed for editing'
 RULE_DUE_OR_TERMS = 'Due Date or Payment Terms'                   # bundle 3, Payment Terms
 RULE_NO_DUE_ON_ENTRY = 'No due date on a journal entry'           # bundle 3, Payment Terms
 
 CLOSED_FIELDS = ['Type', 'Customer / Vendor', 'Journal', 'Invoice Date', 'Accounting Date', 'Due Date',
-                 'Payment Terms', 'Tax mode', LINES]
+                 'Payment Terms', 'Tax mode', LINES,
+                 'Delivery Address', 'Delivery Date', 'Auto-post', 'Auto-post until']
 # LINES is 07's mounted 子表. It joined the list on 16 Sep 2026, at the end of Phase 1: the rule was written
 # before Invoice Lines existed, so a posted document still offered *Add a row* where Odoo locks a posted
 # move's lines (07's difference 11). A rule item acts on a control, and a 子表 is one.
+# The last four joined on 21 Sep 2026 (15 §1.1): the tenant's arch carries `readonly="state != 'draft'"` on
+# `partner_shipping_id`, `delivery_date`, `auto_post` and `auto_post_until` too, and the UI pass found Delivery
+# Address still drawing its dropdown chevron on the posted INV/2026/00001 while every other header field was text.
 # rule name -> (driving field, its option labels — or None for "the field is not empty" —, the controls it acts on, the
 # rule item type). A rule applies its
 # action while its condition holds and the opposite when it fails, so every `show` here also hides its field on a
@@ -540,9 +569,17 @@ RULES = {
     RULE_BILL_DATE: ('Type', VENDOR_TYPES, ['Invoice Date'], C.REQUIRE),
     # SQL account_move_check_document_tax_mode_set: everything but a journal entry
     RULE_TAX_MODE: ('Type', INVOICE_TYPES, ['Tax mode'], C.REQUIRE),
-    # <field name="auto_post_until" invisible="auto_post == 'no'"/>
-    RULE_AUTO_POST: ('Auto-post', [o['value'] for o in AUTO_POST_OPTIONS if o['value'] != 'No'],
-                     ['Auto-post until'], C.SHOW),
+    # The **tenant's** arch (saas~19.4): <field name="auto_post_until"
+    #   invisible="auto_post in ('no', 'at_date')" readonly="state != 'draft'"/>
+    # — so At Date hides it as No does: a document posted on one date needs no "until". The 19.0 repo checkout
+    # at 7bbce824 still reads invisible="auto_post == 'no'", which is what the first cut of this rule followed
+    # (15 §1.2; the same repo-behind-tenant trap as the Taxes form and the CRM feature groups).
+    RULE_AUTO_POST: ('Auto-post', ['Monthly', 'Quarterly', 'Yearly'], ['Auto-post until'], C.SHOW),
+    # <field name="auto_post" invisible="move_type in ('out_receipt', 'in_receipt')" .../>, the tenant again.
+    # `hide · equals` rather than `show · equals`, so Auto-post is visible from the start on a new document
+    # whose Type is still empty (BUILDING.md). Auto-post stays required on the control: it carries the default
+    # **No**, so a receipt saves with the field hidden and filled, and Auto-post until stays hidden with it.
+    RULE_NO_AUTO_POST_ON_RECEIPT: ('Type', ['Sales Receipt', 'Purchase Receipt'], ['Auto-post'], C.HIDE),
     # readonly="state != 'draft'" across the form. 'Payment Terms' is the relation since bundle 3 (the rule named the
     # text stand-in until it was deleted)
     RULE_CLOSED: ('Status', ['Posted', 'Cancelled'], CLOSED_FIELDS, C.READONLY),
@@ -551,6 +588,59 @@ RULES = {
     # <div name="due_date" invisible="move_type not in (…the six invoice and receipt types…)">: neither on an entry
     RULE_NO_DUE_ON_ENTRY: ('Type', ['Journal Entry'], ['Due Date', 'Payment Terms'], C.HIDE),
 }
+
+
+# ── the two journal checks ──────────────────────────────────────────────────
+#
+# Odoo narrows the Journal picker itself — `journal_id`'s domain is `[('id', 'in', suitable_journal_ids)]`, and
+# `_get_suitable_journal_ids` keeps the journals whose Type is *sale* for the three customer types, *purchase*
+# for the three vendor types and *general* for a journal entry — **and** refuses the save afterwards, in
+# `@api.constrains('journal_id', 'move_type') _check_journal_move_type`:
+#
+#     if move.is_purchase_document(include_receipts=True) and move.journal_id.type != 'purchase':
+#         raise ValidationError(_("Cannot create a purchase document in a non purchase journal"))
+#     if move.is_sale_document(include_receipts=True) and move.journal_id.type != 'sale':
+#         raise ValidationError(_("Cannot create a sale document in a non sale journal"))
+#
+# **The picker filter cannot be built.** A HAP Relation's picker filter compares a field of the *candidate*
+# record with a literal or with a dynamic value read off the form (`dynamicSource`), and the value it would
+# need here is the document's Type — an option **key** of this worksheet's own Type dropdown, which shares no
+# key with Journals' Type dropdown, so the comparison could never match. Nothing in HAP maps one option set
+# onto another, and a static filter is worse than none: it would have to name one journal type, and a journal
+# entry legitimately uses Miscellaneous (15 §1.3, and `nocoly/worksheets/06-invoices.md` §2).
+#
+# So what is built is the **constraint**, with Odoo's two messages verbatim: two validation rules standing on
+# the Journal Type lookup, refusing the save rather than preventing the choice. Odoo's own `_check_journal_move_type`
+# says nothing about a journal entry, and neither do these — a journal entry may be written in any journal
+# here, where Odoo's *picker* would have offered it only the Miscellaneous ones.
+RULE_SALE_JOURNAL = 'A sale document must be in a sale journal'
+RULE_PURCHASE_JOURNAL = 'A purchase document must be in a purchase journal'
+MSG_SALE_JOURNAL = 'Cannot create a sale document in a non sale journal'
+MSG_PURCHASE_JOURNAL = 'Cannot create a purchase document in a non purchase journal'
+JOURNAL_CHECKS = {   # rule name -> (the document types it covers, the Journal Type it demands, Odoo's message)
+    RULE_SALE_JOURNAL: (CUSTOMER_TYPES, 'Sales', MSG_SALE_JOURNAL),
+    RULE_PURCHASE_JOURNAL: (VENDOR_TYPES, 'Purchase', MSG_PURCHASE_JOURNAL),
+}
+
+
+def journal_type_keys():
+    """Journals' Type options by label. The lookup stores the **source dropdown's option key**, as Invoice
+    Lines' Status lookup does, so that is what a condition on it compares."""
+    return {o['value']: o['key'] for o in C.fields(JOURNALS)['Type']['options'] if not o.get('isDeleted')}
+
+
+def journal_check_filters(f, labels, journal_type, keys):
+    """Type is any of `labels` **and** Journal Type is filled **and** Journal Type is not `journal_type`.
+
+    The "is filled" clause is what keeps the message off a document whose Journal has not been picked yet:
+    an empty lookup is "not Sales" as far as the comparison goes. The lookup's `dataType` is **11**, the
+    single select it mirrors, not 30 — the filter editor reads a type-30 lookup as its source control's
+    type (pd-openweb `redefineComplexControl`), as Chart of Accounts' picker does for a text formula."""
+    lookup = f[JOURNAL_TYPE]
+    clause = lambda op, values: {'controlId': lookup['controlId'], 'dataType': DROPDOWN, 'spliceType': 1,
+                                 'filterType': op, 'value': '', 'values': values, 'dynamicSource': [],
+                                 'isGroup': False}
+    return C.any_of([is_any_of(f, 'Type', labels), clause(C.NOT_EMPTY, []), clause(C.NE, [keys[journal_type]])])
 
 
 def is_any_of(f, field, labels):
@@ -570,6 +660,13 @@ def step_rules():
     rules = [(name, C.INTERACTION, C.any_of([when(driver, labels)]),
               [C.item(kind, *[f[t] for t in targets])], {})
              for name, (driver, labels, targets, kind) in RULES.items()]
+    if JOURNAL_TYPE in f:
+        keys = journal_type_keys()
+        # Checked in the form and on API writes (check type 1), and shown as the Journal is picked rather than
+        # only on submit (hint type 0) — the shape Chart of Accounts' _check_reconcile carries.
+        rules += [(name, C.VALIDATION, journal_check_filters(f, labels, journal_type, keys),
+                   [C.item(C.ERROR, f['Journal'], message=message)], {'check_type': 1, 'hint_type': 0})
+                  for name, (labels, journal_type, message) in JOURNAL_CHECKS.items()]
     C.upsert_rules(WORKSHEET, rules, 'invoices_rules_pre_rules')
     for r in hap.listing('worksheet', 'rules', WORKSHEET):
         C.remember('rules', KEY + r['name'], r['ruleId'])
@@ -1543,6 +1640,27 @@ def step_check():
                 sorted(labels or []), targets)
         if got != want:
             problems.append(f'rule {name!r}: {got}')
+    if JOURNAL_TYPE in f:
+        keys = journal_type_keys()
+        label_of = {k: v for v, k in keys.items()}
+        for name, (labels, journal_type, message) in JOURNAL_CHECKS.items():
+            r = rules.get(name)
+            if not r:
+                problems.append(f'rule {name!r} missing')
+                continue
+            conds = [g for group in r['filters'] for g in group.get('groupFilters', [])]
+            got = (r['type'], r['disabled'], r.get('checkType'), r.get('hintType'),
+                   sorted((names.get(c['controlId']), c['filterType'],
+                           tuple(sorted(LABEL['Type'].get(v) or label_of.get(v) or v for v in c.get('values') or [])))
+                          for c in conds),
+                   [(i['type'], [names.get(c['controlId']) for c in i['controls']], i.get('message', ''))
+                    for i in r['ruleItems']])
+            want = (C.VALIDATION, False, 1, 0,
+                    sorted([('Type', C.EQ, tuple(sorted(labels))), (JOURNAL_TYPE, C.NOT_EMPTY, ()),
+                            (JOURNAL_TYPE, C.NE, (journal_type,))]),
+                    [(C.ERROR, ['Journal'], message)])
+            if got != want:
+                problems.append(f'rule {name!r}: {got}')
     views = {v['name']: C.view_info(WORKSHEET, APP, v['viewId']) for v in
              hap.listing('worksheet', 'view', 'list', WORKSHEET, '-a', APP)}
     want_views = {'Invoices': (DOC_COLUMNS, CUSTOMER_TYPES), 'Bills': (DOC_COLUMNS, VENDOR_TYPES),

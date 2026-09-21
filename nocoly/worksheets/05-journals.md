@@ -7,7 +7,7 @@
 | Odoo model | `account.journal` |
 | Reference | **casimir.odoo.com — Odoo saas~19.4+e**: fields, form, list, kanban, search, defaults, `_order`, the SQL constraint and all 7 journals, extracted read-only to `nocoly/reference/odoo-19.4/account.journal.md`. Behaviour the tenant cannot show — the code and name placeholder computed from Type, the archive check — is read from the Odoo 19.0 source in this repo, `addons/account/models/account_journal.py`. Teh Li Wei's first hand-off read his own tenant, ohyes.odoo.com; the owner settled casimir as the reference on 15 Sep 2026 |
 | Phase | 1 — core worksheet 5 of 7 |
-| Status | First built by **Teh Li Wei** on 15 Sep 2026 (worksheet, 6 controls, 2 views, no records). Gaps against the casimir reference closed, seeded and self-checked with the hap CLI on 16 Sep 2026 · CLI self-checks pass · **UI-tested on 16 Sep 2026: 18 of 18 pass** · then, on the owner's decision the same day, Odoo's two notebook tabs and a remark block in each were added; tests 5–9 and 17 were re-run and pass — **18 of 18** · then, at the end of Phase 1 the same day, **Odoo's refusal to archive a journal with draft entries** went into the Archive workflow, now that 06 Invoices exists (§2). It is proved both ways through the CLI; **tests 19–21 are still to run in the browser** · ready for review. Finally, at the end of Phase 1, the archive guard Odoo has owed this worksheet since 06 existed was built and tested — **tests 19 and 20 pass, 21 not run** (the tenant is read-only), so **20 of 21** · ready for review |
+| Status | First built by **Teh Li Wei** on 15 Sep 2026 (worksheet, 6 controls, 2 views, no records). Gaps against the casimir reference closed, seeded and self-checked with the hap CLI on 16 Sep 2026 · CLI self-checks pass · **UI-tested on 16 Sep 2026: 18 of 18 pass** · then, on the owner's decision the same day, Odoo's two notebook tabs and a remark block in each were added; tests 5–9 and 17 were re-run and pass — **18 of 18** · then, at the end of Phase 1 the same day, **Odoo's refusal to archive a journal with draft entries** went into the Archive workflow, now that 06 Invoices exists (§2). It is proved both ways through the CLI; **tests 19–21 are still to run in the browser** · ready for review. Finally, at the end of Phase 1, the archive guard Odoo has owed this worksheet since 06 existed was built and tested — **tests 19 and 20 pass, 21 not run** (the tenant is read-only), so **20 of 21** · ready for review. **21 Sep 2026** — the screen pass (`15-ui-conformance.md` §6.6) found that the refusal also drew an untranslated **中止** toast, HAP's own mark of an aborted run. The guard was restructured so nothing aborts: the update moved onto the branch's *No* path and the abort node was deleted. `draftcheck` still passes both ways and the refused run now ends `status` 2 with an empty cause, so no toast is drawn — **test 19 is worth a re-run in the browser** |
 
 A journal is the book an accounting entry is written in: customer invoices go in a Sales journal, vendor bills in a
 Purchase one, payments in Bank, Cash or Credit Card, and everything else in Miscellaneous. Type drives the whole
@@ -104,7 +104,7 @@ Invoices and is now inside the Archive button's workflow (Buttons below, and §2
 
 | Button | Shown when | Does | Confirmation |
 |---|---|---|---|
-| Archive | Active is checked | **Counts the Invoices whose Journal is this journal and whose Status is Draft. One or more: notifies the user with Odoo's message and stops, leaving Active alone. None: Active → unchecked** | "Are you sure that you want to archive this record?" · Archive / Cancel |
+| Archive | Active is checked | **Counts the Invoices whose Journal is this journal and whose Status is Draft. One or more: notifies the user with Odoo's message and the run ends there, leaving Active alone. None: Active → unchecked** — the update sits on the branch's *No* path, so nothing is aborted and **no 中止 toast is drawn** (§2) | "Are you sure that you want to archive this record?" · Archive / Cancel |
 | Unarchive | Active is unchecked | Active → checked | none |
 
 **The draft-entry check** is Odoo's `_check_auto_post_draft_entries`
@@ -209,7 +209,8 @@ otherwise from hap-cli's active profile; nothing in `common.py` changed.
 | Views | Journals · Archived (both the first build's, re-sorted) | `6aa8f5191204328eb1af162e` · `6aa8f7074720c515252bf2c8` |
 | Buttons | Archive · Unarchive | `6aa9db31805aef7032865005` · `6aa9db34e43d174ab37498ec` |
 | Button workflows | Archive the journal (five steps since the guard) · Unarchive the journal (one update step), both published | `6aa9db3116473257ad4c471e` · `6aa9db348e75db182e77e1e2` |
-| Archive guard, added 16 Sep | Draft entries in this journal (汇总, 107) · Does the journal still hold draft entries? (branch) · Cannot archive this journal (站内通知, 27) · Stop — leave Active alone (中止流程, 30) | `6aaa48f18e75db182e7b42d0` · `6aaa48f18e75db182e7b42e7` · `6aaa48f287707da9d60f6ad1` · `6aaa48f48e75db182e7b434d` |
+| Archive guard, added 16 Sep · restructured 21 Sep | Draft entries in this journal (汇总, 107) · Does the journal still hold draft entries? (branch) · Cannot archive this journal (站内通知, 27) · **Archive the journal**, now on the *No* path (update, 6) | `6aaa48f18e75db182e7b42d0` · `6aaa48f18e75db182e7b42e7` · `6aaa48f287707da9d60f6ad1` · `6ab0a866789584ded322fd9a` |
+| | The abort *Stop — leave Active alone* (中止流程, 30) and the trunk *Archive the journal* it guarded were **deleted** on 21 Sep 2026 with the restructuring below | ~~`6aaa48f48e75db182e7b434d`~~ · ~~`6aa9db338e75db182e77e1a0`~~ |
 | Records | 7 journals of the extract, plus TEST Journal (TSTJ, active), TEST draft guard (TSTDG, active) and the archived TEST long prefix (Tf798) and TEST Sales (TSTS) | — |
 
 Every id is in `nocoly/build/ids.json` under "Journals: …" keys, the controls and rules in two new sections
@@ -230,15 +231,31 @@ Trigger by button
   → Does the journal still hold draft entries?
        · Yes — the count is 1 or more  → Cannot archive this journal   站内通知, Odoo's message, to the
                                                                        person who pressed the button
-                                       → Stop — leave Active alone     中止流程 (node type 30)
-       · No                            → (nothing)
-  → Archive the journal                        the first build's update step, not touched
+                                                                       — the path ends here
+       · No                            → Archive the journal           Active ← unchecked
+  (nothing follows the gateway)
 ```
 
-**Why an abort node.** A HAP branch **converges**: both paths run into whatever follows the gateway, so an empty
-path and a path whose steps have run both reach *Archive the journal*. Only 中止流程 stops the run first. Nothing
-was moved or deleted to make room for it — the branch was inserted in front of the existing update step, which
-still carries the first build's single field write, `Active` ← unchecked.
+**Restructured on 21 Sep 2026 — the abort node is gone.** The first cut left *Archive the journal* on the trunk,
+where a HAP branch **converges**: an empty path and a path whose steps have run both reach whatever follows the
+gateway, so the drafts path had to end in a 中止流程 abort (node type 30) to stop the run before the update. It
+worked — the guard refused correctly — but an aborted run draws **HAP's own toast: a warning icon and the
+untranslated word 中止**, with Odoo's explanation only in the notification centre. That is what the screen pass
+raised as `15-ui-conformance.md` §6.6.
+
+**A branch path can hold a data step.** `hap workflow node add --type 6 --after <the path node>` sets that path's
+`nextId` to the new node, and the node saves its configuration, reads back `isException: false` and publishes. So
+the update moved onto the **No** path — a second update step was created inside the path, the old node's
+`actionId`, `appId`, `selectNodeId` and `fields` were copied onto it and read back before anything was removed,
+then the trunk node and the abort were deleted and the workflow republished. Nothing else changed: the update
+still carries the first build's single field write, `Active` ← unchecked, and `journals.py draftguard` now
+recognises the new shape and writes nothing on a re-run. `check` fails the workflow if any abort node comes back.
+
+**What this buys.** A refused Archive now ends a run **normally** — `approval history` reports `status` **2** with
+an empty `causeMsg`, where the same refusal on 21 Sep at 11:20 reported `status` **3**, `cause` **6666**,
+`causeMsg` **中止**, naming *Stop — leave Active alone*. **No toast is drawn**, so nothing untranslated reaches
+the screen. The cost is that the *only* feedback is still the in-app notification below, which is difference 7 —
+the user is told the operation completed and must open the bell to learn that it did not.
 
 **What HAP can put in front of a user, which §1 asked to be found out first.** Not a dialog. A custom action
 button has one message, its confirmation, and it is shown *before* the workflow runs; the click itself always
@@ -269,12 +286,13 @@ does not have, rather than as what it does. Two consequences a reviewer should j
 alone — the Sales journal does hold the two seeded drafts, and archiving it is not how this is tested:
 
 - **TEST draft guard** (TSTDG, Miscellaneous, Sequence 99) with one draft entry on it — a `TEST draft guard`
-  journal entry, Status Draft, made for this — refused: `Active=1` after Archive. The run is in the workflow's
-  history with status 3 and `instanceLog.causeMsg` "中止", naming *Stop — leave Active alone*; its node trace is
-  trigger → count → branch → notice → abort, and *Archive the journal* was never reached. The notification
-  arrived, text as above.
+  journal entry, Status Draft, made for this — refused: `Active=1` after Archive. **Re-run on 21 Sep 2026 after
+  the restructuring**, with two draft documents on it, and refused again: `Active=1`, the run `status` **2** with
+  an empty `causeMsg` (it was status 3 · 中止 before), and its node trace **trigger → count → branch → Cannot
+  archive this journal** — *Archive the journal* was never reached. The notification arrived, text as above.
 - **TEST Journal** (TSTJ), which holds no document, archived exactly as before: `Active=0`, node trace trigger →
-  count → branch → *Archive the journal*. It was unarchived again and is left **active** for the reviewer.
+  count → branch → *Archive the journal* (now reached through the **No** path). It was unarchived again and is
+  left **active** for the reviewer.
 - `draftguard` is idempotent: a second run reported "already built; not re-published".
 
 **History.** **Teh Li Wei built the worksheet on 15 Sep 2026** — the Invoicing menu group, the worksheet and its
@@ -386,8 +404,19 @@ block with it, are tests 5–9.
 - **HAP's node type 30 is 中止流程**, an abort. Adding one anywhere but last in its chain is refused outright:
   `中止节点后面不允许有节点`. It takes a name and a description and **nothing user-facing** — no message. hap-cli's
   DSL has no builder for it, so it goes in with `workflow node add --type 30`.
-- **A branch converges**, so a path that "does nothing" is not a stop. Without the abort node the Yes path would
-  have notified the user and then archived the journal anyway.
+- **A branch converges**, so a path that "does nothing" is not a stop. With the update on the trunk, the Yes path
+  would have notified the user and then archived the journal anyway, which is why the first cut needed the abort.
+- **…but a branch path can hold the step itself, which is the way round that needs no abort** (21 Sep 2026).
+  `workflow node add --type 6 --after <the path node>` sets the path's `nextId` to the new node; it takes its
+  configuration through `node save --type 6` like any other data step, reads back `isException: false` and
+  publishes. Moving *Archive the journal* onto the **No** path let the abort go, and with it HAP's untranslated
+  **中止** toast — the only thing the user saw on screen when the guard refused (`15-ui-conformance.md` §6.6).
+  There is **no "move a node" call**: the new step is created inside the path, the old node's `actionId`,
+  `appId`, `selectNodeId` and `fields` are copied onto it and read back, and only then is the old node deleted.
+  All of it happens on the draft, so `hap workflow rollback <pid> -y` undoes a mis-built attempt.
+- **An aborted run is visible and a completed one is not.** The same refusal reported `status` **3**, `cause`
+  **6666**, `causeMsg` **中止** before the change and `status` **2** with an empty `causeMsg` after it — which is
+  also how to tell from the CLI whether any toast would have been drawn.
 - **A 站内通知 renders its node's name as the message's heading**, `【name】text`, so the node name is user-facing.
   The name also lives a second time inside the node's `flowNodeMap` "106" channel config, which
   `workflow node rename` does not update.
@@ -461,6 +490,15 @@ Journals beside TEST Journal.
    confirmation, shown before the flow runs, and the click always reports "Operation completed". So the journal
    simply stays where it is and Odoo's message arrives as an in-app notification headed *Cannot archive this
    journal* (§2). The guard itself is exact — Active is never written — only the way the user is told differs.
+
+   **The screen pass of 21 Sep 2026 found a second half to this** (`15-ui-conformance.md` §6.6): the refusal also
+   drew a toast reading the untranslated **中止** with a warning icon — HAP's own mark of an aborted run, not
+   anything this build wrote. **That is fixed**: the update step moved onto the branch's *No* path, the abort node
+   was deleted, and a refused Archive now ends the run normally (`approval history` `status` **2**, empty
+   `causeMsg`), so **no toast is drawn at all** (§2, *The archive guard*). What is left is the difference above,
+   and only that: the user is told the operation completed, the row does not move, and the reason waits in the
+   bell. A reviewer re-running test 19 should see **no Chinese anywhere on screen**; if a 中止 toast still
+   appears, the workflow was not republished.
 
 ### Test records left in the worksheet
 

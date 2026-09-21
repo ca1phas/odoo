@@ -86,8 +86,10 @@ finished shape: Reference Unit and Related UoMs each hold the other's id.
 
 | | On Products | |
 |---|---|---|
-| **Variants** | Relation → Product Variants, multiple, **read-only** (`fieldPermission` "101"), `showtype` "2" so it draws as a tab at the foot of the record. Columns **Display Name · Sales Price · Cost · Barcode · Unit**; **no filter** — none is possible (see *Archived variants* below) | `6aa90c7d4a22ad87b728e9f1` — the id HAP had reserved, not a new one |
-| **# Variants** | 汇总 (type 37), **count** over Variants, read-only, row 3 beside Active — where Odoo puts its stat button. Filtered to **Active is ticked**, as Odoo's count is | `6ab07f06805aef703286c9a9`, alias `product_variant_count` |
+| **Variants** | Relation → Product Variants, multiple, **read-only and hidden on create** (`fieldPermission` **"100"**), `showtype` "2" so it draws as a tab at the foot of the record. Columns **Display Name · Sales Price · Cost · Barcode · Unit**; **no filter** — none is possible (see *Archived variants* below) | `6aa90c7d4a22ad87b728e9f1` — the id HAP had reserved, not a new one |
+| **# Variants** | 汇总 (type 37), **count** over Variants, **read-only and hidden on create** ("100"), row 3 beside Active — where Odoo puts its stat button. Filtered to **Active is ticked**, as Odoo's count is | `6ab07f06805aef703286c9a9`, alias `product_variant_count` |
+
+**Both were "101" until later the same day.** The screen pass found them rendering on Products' **Create Record** form (`15-ui-conformance.md` §6.3), where Odoo's smart button does not exist yet, so both became **"100"** — read-only *and* hidden on create. `"011"` would have been wrong: a hidden field never shows as a table column either, and both are columns of the Products list. The permission is owned by `products.py` (`READ_ONLY`) and was written by its new **`perms`** step, a version-pinned save of those two controls and nothing else — `products.py layout` must not be run on this app (03 §2).
 
 Both are placed so **no existing row moves**: the count takes the empty column beside Active, the list sits last.
 Read back on 21 Sep: the pair cross-references correctly, and the count reads **1** on all nineteen products —

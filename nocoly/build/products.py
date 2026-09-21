@@ -5,6 +5,7 @@
     ~/.hap-venv/bin/python nocoly/build/products.py fields     # 1. base controls and tabs, in one save (fresh worksheet only)
     ~/.hap-venv/bin/python nocoly/build/products.py relations  # 2. Unit and Packagings, one-way relations to Units & Packagings
     ~/.hap-venv/bin/python nocoly/build/products.py layout     # 3. positions, tabs, hints, pickers, the Unit default
+    ~/.hap-venv/bin/python nocoly/build/products.py perms      # 3b. Variants and # Variants read-only and hidden on create
     ~/.hap-venv/bin/python nocoly/build/products.py rules      # 4. Sales / Inventory tab visibility, negative Cost (upsert by name)
     ~/.hap-venv/bin/python nocoly/build/products.py views      # 5. Products gallery, List and Archived tables
     ~/.hap-venv/bin/python nocoly/build/products.py buttons    # 6. Archive / Unarchive and their one-step workflows
@@ -101,8 +102,12 @@ DESC = {  # Odoo field help (product_template.py)
 }
 HIDDEN = ['Active']
 # Read-only, as every reverse relation and roll-up in this app is: a variant says which product it belongs
-# to, and the count is computed from that. Same '101' prodcat gives its own reverses and # Products.
+# to, and the count is computed from that. **Hidden on create as well** — "100", not "101" — since 21 Sep 2026:
+# the UI pass found both rendering on the Create Record form (15 §6.3), where Odoo has no such controls on a
+# product that does not exist yet. A *hidden* field ('011') would have taken the table column with it, and both
+# are columns of the Products list; hidden-on-create does not (BUILDING.md). Same change on prodcat's three.
 READ_ONLY = ['Variants', '# Variants']
+READ_ONLY_PERMISSION = C.field_permission_str(readonly=True, hidden_on_create=True)     # "100"
 MYR = json.dumps({'currencycode': 'MYR', 'symbol': 'RM'})
 PRODUCT_TYPES = ['Goods', 'Service']           # Combo waits for the Product Combos bundle
 
@@ -263,7 +268,8 @@ def step_layout():
         c.update(row=row, col=col, size=size, sectionId=tab[in_tab] if in_tab else '', hint=HINTS.get(name, ''))
         if name in DESC:
             c['desc'] = DESC[name]
-        c['fieldPermission'] = ('011' if name in HIDDEN else '101' if name in READ_ONLY else '111')
+        c['fieldPermission'] = ('011' if name in HIDDEN else
+                                READ_ONLY_PERMISSION if name in READ_ONLY else '111')
     units = C.fields(units_ws())
     # Odoo's unit dropdown shows "Days --8 Hours--" (uom formatted_display_name): the picker shows each
     # unit's Contains and Reference Unit, as the Reference Unit picker on Units & Packagings does.
@@ -280,6 +286,51 @@ def step_layout():
     C.save_controls(ws(), ctrls)
     check_units_untouched(before)
     C.show(ws())
+
+
+def products_signature(ctrls=None):
+    """Products' own controls by id, for a save that must change one key of two of them and nothing else."""
+    return {c['controlId']: json.dumps([c.get(k) for k in SIGNATURE], sort_keys=True, ensure_ascii=False)
+            for c in (ctrls if ctrls is not None else hap.controls(ws()))}
+
+
+def step_perms():
+    """Variants and # Variants read-only **and hidden on create** ("100"), in one version-pinned save that
+    changes nothing else.
+
+    Not `layout`: that step's places, permissions and views predate the changes another administrator made to
+    this worksheet on 17 Sep 2026 (Active at row 3, Delivery Time, Product Type's Combo option, Name's No
+    duplicates) and running it would revert them — 03 §2. `layout` carries the same permission for the day it
+    is next safe to run; this step is what actually writes it."""
+    want = READ_ONLY_PERMISSION
+    live = {c['controlName']: c for c in hap.controls(ws())}
+    missing = [n for n in READ_ONLY if n not in live]
+    if missing:
+        sys.exit(f'{missing} are not on {WORKSHEET} — run `variants.py reverse` first')
+    stale = [n for n in READ_ONLY if live[n].get('fieldPermission') != want]
+    if not stale:
+        print(f"  {READ_ONLY}: already {want}; nothing saved")
+        return False
+    ctrls, version = C.controls_with_version(ws())
+    hap.backup('products_controls_pre_perms', ctrls)
+    before, units = products_signature(ctrls), units_signature()
+    ids = []
+    for c in ctrls:
+        if c['controlName'] in READ_ONLY:
+            c['fieldPermission'] = want
+            ids.append(c['controlId'])
+    C.save_controls(ws(), ctrls, version=version)
+    after = products_signature()
+    changed = sorted(k for k in set(before) | set(after) if before.get(k) != after.get(k))
+    if changed != sorted(ids):
+        sys.exit(f'{WORKSHEET}: the save changed {changed}, wanted only {sorted(ids)}')
+    back = {c['controlName']: c.get('fieldPermission') for c in hap.controls(ws())}
+    wrong = {n: back.get(n) for n in READ_ONLY if back.get(n) != want}
+    if wrong:
+        sys.exit(f'{WORKSHEET}: permissions read back {wrong}, wanted {want}')
+    check_units_untouched(units)
+    print(f"  {stale}: fieldPermission -> {want} (read-only, hidden on create)")
+    return True
 
 
 # ── 4 · rules ───────────────────────────────────────────────────────────────
@@ -513,7 +564,7 @@ def show():
 
 
 if __name__ == '__main__':
-    steps = {'create': step_create, 'fields': step_fields, 'relations': step_relations, 'layout': step_layout,
+    steps = {'create': step_create, 'fields': step_fields, 'relations': step_relations, 'layout': step_layout, 'perms': step_perms,
              'rules': step_rules, 'views': step_views, 'buttons': step_buttons, 'seed': step_seed,
              'verify': step_verify, 'order': step_order, 'product': step_product, 'show': show}
     steps[sys.argv[1] if len(sys.argv) > 1 else 'show'](*sys.argv[2:])

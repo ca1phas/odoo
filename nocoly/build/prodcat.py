@@ -120,9 +120,13 @@ DESC = {  # Odoo's field help where it has one (product_category.py), how a help
 REQUIRED = {NAME}
 # A hidden field never shows as a table column, so Complete Name — the title, and a view column — is read-only
 # and hidden on create ("100") rather than hidden, as Contacts' and Product Variants' Display Name are.
+# The two reverses and the roll-up are read-only **and hidden on create** ("100") since 21 Sep 2026 (15 §1):
+# they were "101" and so rendered on the Create Record form, where Odoo — whose smart buttons only exist on a
+# saved record — shows nothing of the kind. "011" would have been wrong: a hidden field never shows as a table
+# column either, and Child Categories, Products and # Products are columns of this worksheet's views.
 PERMISSION = {
     COMPLETE: '100',                              # read-only · hidden on create
-    CHILDREN: '101', PRODUCTS_REL: '101', COUNT: '101',        # read-only
+    CHILDREN: '100', PRODUCTS_REL: '100', COUNT: '100',        # read-only · hidden on create
     PARENT_COMPLETE: '011',                       # hidden
 }
 ROLLUP = 37                                       # HAP's 汇总; hap-cli's builder is app_creator.fields.rollup_control

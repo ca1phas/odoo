@@ -32,9 +32,11 @@ Labels are Odoo 19.4's, taken from the invoice form's line columns; aliases are 
 | 8 | Unit Price | `price_unit` | Number, 2 decimals | — | 0 | |
 | 9 | Discount (%) | `discount` | Number, 2 decimals | — | 0 | Odoo's optional *Disc.%* column, hidden by default and used on five of the tenant's lines |
 | 10 | Subtotal | `price_subtotal` | **Formula**, 2 decimals, read-only | — | — | `Quantity × Unit Price × (1 − Discount ÷ 100)`. Odoo's *Amount* column shows this while the document is Tax Excluded, and `price_total` when it is Tax Included — which needs the Taxes bundle, so only the subtotal is built |
-| 11 | Number | `move_name` | Lookup of Invoice → Number | — | — | Read-only, so the standalone view can show which document a line belongs to |
-| 12 | Accounting Date | `date` | Lookup of Invoice → Accounting Date | — | — | Read-only. Odoo stores it on the line and sorts on it |
-| 13 | Status | `parent_state` | Lookup of Invoice → Status | — | — | Read-only; Odoo's Journal Items views filter Posted / Unposted on it |
+| 11 | Number | `move_name` | Lookup of Invoice → Number | — | — | Read-only **and hidden on create** (`fieldPermission` "100" since 21 Sep 2026), so the standalone view can show which document a line belongs to without the value appearing on a line that does not exist yet |
+| 12 | Accounting Date | `date` | Lookup of Invoice → Accounting Date | — | — | Read-only **and hidden on create** ("100"). Odoo stores it on the line and sorts on it |
+| 13 | Status | `parent_state` | Lookup of Invoice → Status | — | — | Read-only **and hidden on create** ("100"); Odoo's Journal Items views filter Posted / Unposted on it |
+
+**The three lookups went from "101" to "100" on 21 Sep 2026** (`15-ui-conformance.md` §1): they say nothing on a line that does not exist yet, and Odoo's line editor has no Number, Accounting Date or Status column at all. **Subtotal and Total stay "101"** — visible and read-only — because they are figures a person watches while typing a line, and Odoo shows its Amount live as the quantity and price are entered. "011" would have been wrong for all five: a hidden field never shows as a table column either, and the Lines view carries every one of them.
 
 **Added since by bundles:** **Account** (`account_id`), a relation to Chart of Accounts after Label — on the form, on the Lines view and in the Invoices subtable — hidden on a section or a note by the rule below and filled by automation B — bundle 2, `09-chart-of-accounts.md`.
 
@@ -94,7 +96,7 @@ Discount (%) · Subtotal**, in Odoo's column order.
 | Down-payment lines (`is_downpayment`, `sale_line_ids`) and the product **Catalog** | The **Sales** app. The tenant's down-payment lines belong to documents we did not seed |
 | Malaysian classification code (`l10n_my_edi_classification_code`), Professional / deductible percentage | e-invoicing and vendor-bill bundles |
 | Hide Composition / Hide Prices (`collapse_composition`, `collapse_prices`) and Parent Section Line (`parent_id`) | They only change how a **printed report** groups the lines, and nothing here renders one |
-| Odoo restricting Unit to the product's own units, and filling Label from the product | Both are onchange-time computes; the first also needs a lookup of a relation, which HAP stores as a title |
+| Odoo restricting Unit to the product's own units, and filling **Label**, **Unit** and **Unit Price** from the product | All of it is onchange-time compute, which HAP has no equivalent for; the Unit domain also needs a lookup of a relation, which HAP stores as a title. **Unit Price** was added to this row on 21 Sep 2026 (`15-ui-conformance.md` §2.7): Odoo's `_compute_price_unit` takes the product's **Sales Price** (`list_price`, through the pricelist) on a customer document and its **Cost** on a vendor one, and nothing here does — picking a product on a line leaves Unit Price empty, and it is typed. What *does* fill itself is **Account** and **Taxes**, written from the product by automation B a moment after the row is saved (09 §2, 13 §2) — so a reviewer sees two of the five fields appear and three stay empty |
 | ~~Roles~~ | **Set on 16 Sep 2026** for the whole app, at the end of Phase 1: five stock roles renamed to English and four business roles, one per Odoo accounting group, each with a rule for this worksheet. The table is in `REVIEWING.md` › *Phase 1 · Roles* |
 
 ### Records
@@ -569,9 +571,13 @@ on the `TEST …` line named in them.
    why the roll-up filters on Display Type as well.
 5. **Every unit is offered.** Odoo restricts Unit to the product's own unit and packagings (`allowed_uom_ids`);
    that domain needs a lookup of a relation, which HAP stores as a title.
-6. **Picking a product fills nothing in.** Odoo's onchange writes the Label from the product's display name and
-   sales description, the Unit Price from the pricelist and the Unit from the product. All of it is
-   onchange-time compute; here Label, Unit and Unit Price are typed.
+6. **Picking a product fills three of five fields in, not five.** Odoo's onchange writes the **Label** from the
+   product's display name and sales description, the **Unit Price** from the pricelist (the product's Sales
+   Price on a customer document, its Cost on a vendor one) and the **Unit** from the product, as well as the
+   Account and the Taxes. Here **Account and Taxes do fill themselves** — automation B writes them from the
+   product a moment after the row is saved, which the screen pass watched happen on 21 Sep 2026 — while
+   **Label, Unit and Unit Price stay empty and are typed**. A workflow runs after the save, so even the two that
+   are filled appear on Submit rather than the moment the product is picked.
 7. **Four lines point at a variant the tenant does not use.** `[FURN-0001] Ergonomic Office Chair` and
    `[FURN-0002] Height-Adjustable Desk 140cm` are archived original variants on the tenant; Phase 1 holds one
    active variant per product, so those lines point at *Ergonomic Office Chair* and *Height-Adjustable Desk

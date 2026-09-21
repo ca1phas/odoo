@@ -154,7 +154,13 @@ TITLE = 'Label'                                    # Odoo's _rec_name on account
 REQUIRED = {'Invoice', 'Display Type'}
 READONLY = {'Subtotal', 'Total', 'Number', 'Accounting Date', 'Status'}
 HIDDEN = set()
-PERMISSION = {'Tax rate': '001'}                   # hidden **and** read-only: nobody types a roll-up
+# Read-only **and hidden on create** ("100") since 21 Sep 2026 (15 §1): the three lookups of the invoice say
+# nothing on a line that does not exist yet — Odoo's line editor has no Number, Accounting Date or Status
+# column at all. **Subtotal and Total stay "101"**: they are figures a person watches while typing a line, and
+# Odoo shows its Amount live as the quantity and price are entered. "011" would be wrong for all five — a
+# hidden field never shows as a table column either, and the Lines view carries every one of them.
+PERMISSION = {'Tax rate': '001',                   # hidden **and** read-only: nobody types a roll-up
+              'Number': '100', 'Accounting Date': '100', 'Status': '100'}
 DESC = {  # Odoo field help, verbatim where Odoo has one (addons/account/models/account_move_line.py)
     'Invoice': 'The document this line belongs to — Odoo labels it Journal Entry. It is also the link the '
                'subtable on the invoice is built on, so a line opened from inside an invoice carries it already.',

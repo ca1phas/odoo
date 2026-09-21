@@ -273,7 +273,8 @@
   "Taxes: Name (stock control, dropped by `fields`)": "6aad1034805aef703286ac30",
   "Taxes: Attachment (stock control, dropped by `fields`)": "6aad1034805aef703286ac32",
   "Product Variants: Variants": "6aa90c7d4a22ad87b728e9f1",
-  "Product Variants: # Variants": "6ab07f06805aef703286c9a9"
+  "Product Variants: # Variants": "6ab07f06805aef703286c9a9",
+  "Invoices: Journal Type": "6ab0aa1de54d2a34fa4e7c07"
  },
  "rules": {
   "Journals: Payment Communications only for Sales": "6aa9dae5e54d2a34fa4dfde2",
@@ -311,7 +312,10 @@
   "Taxes: Formula is required for a custom formula": "6aad10c0e43d174ab374fb57",
   "Taxes: Tax Group is not offered for a group of taxes": "6aad10c0e43d174ab374fb59",
   "Taxes: Tax Group is required unless the computation is a group of taxes": "6aad10c1bd43f55762c7585c",
-  "Taxes: A group of taxes carries no price or base settings": "6aad10c17d58b0f44931421f"
+  "Taxes: A group of taxes carries no price or base settings": "6aad10c17d58b0f44931421f",
+  "Invoices: Auto-post is not offered on a receipt": "6ab0a730805aef703286d1c1",
+  "Invoices: A sale document must be in a sale journal": "6ab0aa83805aef703286d2da",
+  "Invoices: A purchase document must be in a purchase journal": "6ab0aa847d58b0f449316788"
  },
  "records": {
   "Invoices: customer Sunway Construction Group": "a4935a3f-0262-4d68-9b3b-6049d32e390b",

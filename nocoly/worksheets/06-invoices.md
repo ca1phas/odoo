@@ -7,7 +7,7 @@
 | Odoo model | `account.move` |
 | Reference | **casimir.odoo.com — Odoo saas~19.4+e**: fields, form, list, kanban, search, the seven window actions, defaults, `_order`, the SQL constraint and all 8 records, extracted read-only to `nocoly/reference/odoo-19.4/account.move.md`. Numbering, which the tenant cannot show from the outside, is read from the Odoo 19.0 source in this repo — `addons/account/models/account_move.py` and `sequence.mixin`. The three seeded documents and their customers were re-read from the tenant on 16 Sep 2026 into `nocoly/data/casimir-invoice-seed.json` |
 | Phase | 1 — core worksheet 6 of 7 |
-| Status | Skeleton first built by **Teh Li Wei** on 15 Sep 2026 (15 controls, 3 tabs, no rules, buttons or records). Completed against the casimir reference, seeded and self-checked with the hap CLI on 16 Sep 2026 — 32 controls, 5 rules, 3 buttons, 3 views, 3 documents and their 3 customers. **UI-tested the same day: 25 of 25 pass.** The test found one defect (Accounting Date had no default) and one detail to tighten (Confirm dated a Journal Entry); both were fixed and re-checked, and the numbering was then changed to take one past the **highest** number rather than one past a count, which retires a difference (§2). At the end of Phase 1 the same day, 07's **difference 11** was resolved: the Invoice Lines subtable joined the read-only rule, and **test 25** showed a posted document's lines locked — no *Add a row*, no *Batch Operation* (§1). **Ready for review** |
+| Status | Skeleton first built by **Teh Li Wei** on 15 Sep 2026 (15 controls, 3 tabs, no rules, buttons or records). Completed against the casimir reference, seeded and self-checked with the hap CLI on 16 Sep 2026 — 32 controls, 5 rules, 3 buttons, 3 views, 3 documents and their 3 customers. **UI-tested the same day: 25 of 25 pass.** The test found one defect (Accounting Date had no default) and one detail to tighten (Confirm dated a Journal Entry); both were fixed and re-checked, and the numbering was then changed to take one past the **highest** number rather than one past a count, which retires a difference (§2). At the end of Phase 1 the same day, 07's **difference 11** was resolved: the Invoice Lines subtable joined the read-only rule, and **test 25** showed a posted document's lines locked — no *Add a row*, no *Batch Operation* (§1). **Bundle 15, 21 Sep 2026** — the four defects the screen-by-screen pass raised (`15-ui-conformance.md` §1) were closed: four more controls joined the read-only rule, *Auto-post until* now follows the tenant's arch rather than the 19.0 repo's, Auto-post is hidden on a receipt, and Odoo's `_check_journal_move_type` arrived as two validation rules over a new **Journal Type** lookup — Odoo's *picker* narrowing could not be built and is recorded as a gap (§2). Tests 12, 13 and the new 26 need a re-run in the browser. **Ready for review** |
 
 `account.move` is one model behind seven menus. A customer invoice, a vendor bill, either kind of credit note, a
 receipt and a plain journal entry are all the same record; **Type** decides which, and the menus in Odoo are just
@@ -48,7 +48,8 @@ alias.
 | 21 | Delivery Date *(kept)* | `delivery_date` | Date | — | — | Tab **Other Info** |
 | 22 | Source Document | `invoice_origin` | Text · read-only | — | — | Tab **Other Info**, group Accounting. The sales order the document came from (S00011). Read-only, as in Odoo, and seeded; nothing in Phase 1 writes it |
 | 23 | Auto-post | `auto_post` | Single Select, dropdown | yes | No | Tab **Other Info**, group Accounting. **No · At Date · Monthly · Quarterly · Yearly** — Odoo's `no`, `at_date`, `monthly`, `quarterly`, `yearly` |
-| 24 | Auto-post until | `auto_post_until` | Date | — | — | Same group. Shown only when Auto-post is not *No*, by rule |
+| 24 | Auto-post until | `auto_post_until` | Date | — | — | Same group. Shown only when Auto-post is **Monthly, Quarterly or Yearly**, by rule — the tenant hides it for *At Date* as well as *No* |
+| 25 | Journal Type | *(none — Odoo reads `journal_id.type`)* | Stored lookup → Journals' Type, read through **Journal** · read-only | — | — | Tab **Other Info**, beside Auto-post until. **Not an Odoo field.** Added 21 Sep 2026 so the two journal checks have something on this worksheet to compare: a HAP rule condition can only name a control of its own worksheet. It stores the source dropdown's option key, as Invoice Lines' Status lookup does, and populated on all 36 live documents the moment it was saved. Alias `journal_type`, which is not an Odoo field name — the house convention has nothing to offer for a control Odoo does not have |
 
 **Added since by bundles:** **Payment Terms** (`invoice_payment_term_id`) is a relation to Payment Terms in place of the text stand-in (row 9 above), beside Due Date, locked by the posted-or-cancelled rule; two rules — *Due Date or Payment Terms* (Due Date hidden while a term is set) and *No due date on a journal entry* (Due Date and Payment Terms hidden); automation **C** (a customer or vendor document takes the contact's Customer or Vendor Payment Terms, a journal entry none) and automation **D** (the Due Date follows the term's lines), and **Confirm** dates the invoice after it fills an empty Invoice Date — bundle 3, `10-payment-terms.md`.
 
@@ -109,8 +110,28 @@ to write them.
 | Delivery Address is for customer documents | Type is Customer Invoice, Customer Credit Note or Sales Receipt | show **Delivery Address** | `<field name="partner_shipping_id" invisible="not is_sale_document(True)"/>` |
 | A vendor document must carry its date | Type is Vendor Bill, Vendor Credit Note or Purchase Receipt | **require** **Invoice Date** | `required="is_purchase_document(True)"` on `invoice_date` (labelled Bill Date) |
 | Every document but an entry has a tax mode | Type is not Journal Entry | **require** **Tax mode** | SQL `account_move_check_document_tax_mode_set` |
-| Auto-post until follows Auto-post | Auto-post is not *No* | show **Auto-post until** | `invisible="auto_post == 'no'"` |
-| A posted or cancelled document is closed for editing | Status is Posted or Cancelled | make **Type · Customer/Vendor · Journal · Invoice Date · Accounting Date · Due Date · Payment Terms · Tax mode · Lines** read-only | `readonly="state != 'draft'"` across the form; `journal_id` is read-only once numbered; a posted move's `line_ids` are locked |
+| Auto-post until follows Auto-post | Auto-post is **Monthly, Quarterly or Yearly** | show **Auto-post until** | **the tenant's** `invisible="auto_post in ('no', 'at_date')"` — see the note under this table |
+| Auto-post is not offered on a receipt | Type is Sales Receipt or Purchase Receipt | **hide** **Auto-post** | the tenant's `invisible="move_type in ('out_receipt', 'in_receipt')"` on `auto_post` |
+| A posted or cancelled document is closed for editing | Status is Posted or Cancelled | make **Type · Customer/Vendor · Journal · Invoice Date · Accounting Date · Due Date · Payment Terms · Tax mode · Lines · Delivery Address · Delivery Date · Auto-post · Auto-post until** read-only | `readonly="state != 'draft'"` across the form; `journal_id` is read-only once numbered; a posted move's `line_ids` are locked |
+| **A sale document must be in a sale journal** *(validation)* | Type is Customer Invoice, Customer Credit Note or Sales Receipt **and** Journal Type is filled **and** Journal Type is not *Sales* | error on **Journal**: *"Cannot create a sale document in a non sale journal"* | `@api.constrains('journal_id', 'move_type') _check_journal_move_type` |
+| **A purchase document must be in a purchase journal** *(validation)* | Type is Vendor Bill, Vendor Credit Note or Purchase Receipt **and** Journal Type is filled **and** Journal Type is not *Purchase* | error on **Journal**: *"Cannot create a purchase document in a non purchase journal"* | the same constraint's other half |
+
+**The last four rules changed or arrived on 21 Sep 2026**, from the screen-by-screen pass in `15-ui-conformance.md`
+§1. Three things a reviewer should know about them.
+
+*Auto-post until.* This table used to quote `invisible="auto_post == 'no'"` and the rule showed the field for every
+value but *No*. That quote is the **19.0 repo checkout at `7bbce824`**, not the tenant: casimir (saas~19.4) carries
+`invisible="auto_post in ('no', 'at_date')" readonly="state != 'draft'"`, so *At Date* hides it too — a document
+posted on one date needs no "until". Same repo-behind-tenant trap as the Taxes form and the CRM feature groups.
+
+*Auto-post on a receipt.* The tenant also carries `invisible="move_type in ('out_receipt', 'in_receipt')"` on
+`auto_post`. The rule is written *hide · equals*, not *show · equals*, so Auto-post is visible from the start on a
+document whose Type is still empty. **Auto-post stays required on the control** even though a rule can hide it —
+normally a mistake (`BUILDING.md`: a field a rule hides must not be required) — because it carries the default
+**No**, so a receipt is always saved with the field filled.
+
+*The two journal checks* are Odoo's `_check_journal_move_type`, with its two messages verbatim. They are not the
+picker narrowing Odoo also has; that could not be built — see §2 *Found while building*.
 
 The last rule depends on HAP offering a read-only action on interaction rules. **Check it before building**: if
 there is none, leave the rule out, record it in §2 *Found while building* and in the differences, and do not fake it
@@ -251,7 +272,7 @@ and otherwise from hap-cli's active profile; **nothing in `common.py` changed**.
 | App | ERP Master | `6cb4d051-a33c-4bf9-b56f-5f47f0e85dc9` |
 | Menu group | Invoicing — Journals, Invoices | `6aa8f3ecbf00c316381dbbe8` |
 | Worksheet | Invoices, alias **`account_move`** (was `invoices`) | `6aa90facf363582dd37a62f7` |
-| Controls | 32: the 24 fields, 3 tabs, 2 divider headings and 3 remark blocks | — |
+| Controls | **34**: the 25 fields (Payment Terms became a relation in bundle 3 and Journal Type arrived in bundle 15), the mounted Lines subtable, 3 tabs, 2 divider headings and 3 remark blocks | — |
 | Kept from the skeleton, fields | Customer / Vendor · Invoice Date · Due Date · Payment Terms · Customer Reference · Salesperson · Recipient Bank · Payment Reference · Delivery Date | `6aa920d74a73a3142152e689` · `…68b` · `…68c` · `…68d` · `…692` · `…693` · `…694` · `…695` · `…696` |
 | Kept from the skeleton, structure | Tabs Invoice Lines · Other Info · MyInvois; dividers Invoice · Accounting; remark block *Invoice note* | `…68e` · `…68f` · `…698`; `…690` · `…697`; `…691` |
 | Added, fields | Number · Type · Status | `6aa9f847e54d2a34fa4dfeed` · `…eee` · `…eef` |
@@ -261,6 +282,8 @@ and otherwise from hap-cli's active profile; **nothing in `common.py` changed**.
 | Added, relations (one-way) | Delivery Address → Contacts · Journal → Journals | `6aa9f848805aef703286517a` · `6aa9f848805aef703286517c` |
 | Added, remark blocks (type 10010, HTML) | Invoice Lines note · MyInvois note | `6aa9f846e54d2a34fa4dfedc` · `6aa9f846e54d2a34fa4dfedd` |
 | Rules | Delivery Address is for customer documents · A vendor document must carry its date · Every document but an entry has a tax mode · Auto-post until follows Auto-post · A posted or cancelled document is closed for editing | `6aa9f86de54d2a34fa4dff23` · `6aa9f86d805aef7032865182` · `6aa9f86e7d58b0f44930e8b1` · `6aa9f86fe54d2a34fa4dff25` · `6aa9f86f805aef7032865184` |
+| Rules, bundle 15 (21 Sep 2026) | Auto-post is not offered on a receipt *(interaction)* · A sale document must be in a sale journal · A purchase document must be in a purchase journal *(both validation, check type 1)* | `6ab0a730805aef703286d1c1` · `6ab0aa83805aef703286d2da` · `6ab0aa847d58b0f449316788` |
+| Controls, bundle 15 | **Journal Type**, a stored lookup of Journals' Type through the Journal relation, read-only, on Other Info | `6ab0aa1de54d2a34fa4e7c07` |
 | Views | Invoices (the skeleton's own view, renamed from *All*) · Bills · Journal Entries | `6aa90facf363582dd37a62fb` · `6aa9f87d7d58b0f44930e8b5` · `6aa9f87e7d58b0f44930e8b7` |
 | Buttons | Confirm · Cancel · Reset to Draft | `6aa9f89be43d174ab3749b55` · `6aa9f990bd43f55762c6f603` · `6aa9f993805aef7032865196` |
 | Button workflows | Confirm (the numbering: a search, two formulas, a count, three updates and two branches) · Cancel · Reset to Draft, one update step each — all published | `6aa9f89b4f2a99acac043704` · `6aa9f99016473257ad4d3bc6` · `6aa9f9938e75db182e78a8b3` |
@@ -448,6 +471,42 @@ designed: the eight fields are locked on a posted and on a cancelled document an
 
 ### Found while building
 
+- **A Relation's picker filter cannot follow another dropdown on the same form, and that is why Odoo's Journal
+  domain is not built** (21 Sep 2026, `15-ui-conformance.md` §1.3). Odoo narrows the picker itself:
+  `journal_id`'s domain is `[('id', 'in', suitable_journal_ids)]`, and `_get_suitable_journal_ids` keeps the
+  journals whose Type is **sale** for the three customer types, **purchase** for the three vendor types and
+  **general** — Miscellaneous — for a journal entry (`account_move.py`, `_get_invoice_filter_type_domain`; the
+  19.0 checkout and the tenant's `fields_get` agree). Ours offered every journal.
+  A HAP picker filter compares a field of the **candidate** record with a literal, or with a value read off the
+  form being edited (`dynamicSource` — three of them are already in this app: Products' Packagings, Product
+  Variants' Extra Packagings and Chart of Accounts' Parent Account, all comparing a **record id or a text
+  value**). The value this one needs is the document's Type, and a dropdown's form value is an **option key** of
+  *this* worksheet's Type control. Journals' Type is a different dropdown with its own keys — `1eb997f4…` Sales
+  against `af9b889e…` Customer Invoice — and nothing in HAP maps one option set onto another, so the comparison
+  could never match. Seven document types collapse onto three journal types, so the keys cannot be made to agree
+  either. A **static** filter is worse than none: it would have to name one journal type, and a journal entry
+  legitimately uses Miscellaneous. **The only conceivable shape** is a pair of computed text bridges — a text of
+  the journal's Type on Journals, a text of the wanted journal type on Invoices, compared as text — which adds a
+  control to two worksheets for a filter that runs in the browser only and so cannot be proved from the CLI at
+  all. It was not built.
+- **…so what is built is Odoo's constraint instead, which it turns out Odoo also has.**
+  `@api.constrains('journal_id', 'move_type') _check_journal_move_type` raises *"Cannot create a sale document in
+  a non sale journal"* and *"Cannot create a purchase document in a non purchase journal"*. Two validation rules
+  (check type 1, hint type 0) carry those two messages verbatim, standing on a new stored lookup **Journal Type**
+  (field 25). **Proved through the CLI, both ways**, by `record update` sending Type unchanged — the condition
+  field has to be in the write (`BUILDING.md`):
+  - **refused, `resultCode 32`**: MISC/2026/00002, a *Customer Credit Note* in *Miscellaneous Operations* — the
+    document 15 §1.3 found — and **INV/2026/00004, a *Vendor Bill* numbered from the *Sales* journal**, which the
+    conformance pass had not spotted. Both are live seeded documents and were left as they are for the owner;
+    editing either in the form now raises the message until its Journal is corrected, exactly as Odoo would;
+  - **accepted**: INV/2026/00002 (Customer Invoice · Sales), MISC/2026/00001 and MISC/2026/00003 (Journal Entry ·
+    Miscellaneous Operations — neither half of Odoo's constraint covers an entry, and neither do these rules),
+    and a draft whose Journal had been emptied, which is what the *Journal Type is filled* clause is for.
+
+  Two differences remain, both in §3: Odoo **prevents the choice** where this **refuses the save**, and a journal
+  entry may be written in any journal here where Odoo's picker would have offered it only the Miscellaneous ones.
+  And `record create` is not rule-checked at all (`BUILDING.md`), so a seed or import can still write a mismatched
+  document through the API; the form checks it.
 - **A search step can sort, can be limited to one record, and its record's fields reach a later formula.** That is
   the whole of what the highest-number step needs: `sorts` `[{controlId, controlType, isAsc: false}]` on the
   *search* node (flowNodeType 7, actionId 406, which returns a single record by definition), a filter whose
@@ -560,8 +619,8 @@ documents, no two sharing a number. The next Sales invoice confirmed will be **I
 | 9 | A new record and the defaults | Invoices → + Record; look before touching anything | Number **Draft**, Type **Customer Invoice**, Status **Draft**, Accounting Date **today**, Tax mode **Tax Excluded**, Auto-post **No**, the four amounts **0.00**, Due Date and Invoice Date **empty** (no "two days from today"). Type, Accounting Date, Journal and Auto-post are marked required. **Delivery Address is shown** (the Type is already a customer one) and **Auto-post until is not** |  **Pass**, after a fix — on the first run **Accounting Date came up empty**; the default was re-encoded and the create form now opens with today. Everything else was right first time |
 | 10 | Rule · Delivery Address is for customer documents | On that new record, switch Type through Vendor Bill, Journal Entry, Purchase Receipt, then back to Sales Receipt and Customer Credit Note | **Delivery Address disappears** for the three vendor types and for Journal Entry, and comes back for Customer Invoice, Customer Credit Note and Sales Receipt |  **Pass** — gone for the three vendor types and for Journal Entry, back for Customer Invoice, Customer Credit Note and Sales Receipt |
 | 11 | Rule · a vendor document must carry its date, and · every document but an entry has a tax mode | Same record: set Type **Vendor Bill**, fill Customer / Vendor and Journal, clear Invoice Date and Tax mode → Submit. Then fill the Invoice Date → Submit. Then set Type **Journal Entry**, clear Tax mode → Submit | Vendor Bill: refused, **Invoice Date** and **Tax mode** both marked required. With both filled it saves. Journal Entry: Tax mode is **not** required and the record saves without one; Invoice Date is not required either. Name the saved record `TEST UI rules` and keep it for test 20 |  **Pass** — “Please fill in Invoice Date” and “Please fill in Accounting Date” on a Vendor Bill; with both filled it saved; a Journal Entry needs neither the date nor a tax mode |
-| 12 | Rule · a posted or cancelled document is closed for editing | Open **INV/2026/00001** (Posted). Then open the Sunway draft. Then open a cancelled document — Cancel the `TEST UI rules` record from test 11 first if none is to hand | On the posted invoice, **Type, Customer / Vendor, Journal, Invoice Date, Accounting Date, Due Date, Payment Terms and Tax mode are all read-only**; Customer Reference, Salesperson, Recipient Bank, Payment Reference, Delivery Date, Terms and Conditions, Auto-post and Delivery Address stay editable. On the **draft** all eight are editable again. On the **cancelled** document the eight are read-only, as on the posted one |  **Pass** — on Posted *and* on Cancelled, with the two relations (Customer / Vendor, Journal) locked as well; Delivery Address, Salesperson, the two references, Delivery Date, Terms and Conditions and Auto-post stay editable, and a draft is fully editable |
-| 13 | Rule · Auto-post until follows Auto-post | On a draft, Other Info → set Auto-post to **Monthly**, then **At Date**, then back to **No** | **Auto-post until appears** for Monthly and At Date and **disappears** again for No. Close without saving |  **Pass** — Auto-post until appears for Monthly and is gone again for No |
+| 12 | Rule · a posted or cancelled document is closed for editing | Open **INV/2026/00001** (Posted). Then open the Sunway draft. Then open a cancelled document — Cancel the `TEST UI rules` record from test 11 first if none is to hand | On the posted invoice, **Type, Customer / Vendor, Journal, Invoice Date, Accounting Date, Due Date, Payment Terms, Tax mode, Delivery Address, Delivery Date, Auto-post and Auto-post until are all read-only**, and the Lines table offers neither *Add a row* nor *Batch Operation*; Customer Reference, Salesperson, Recipient Bank, Payment Reference and Terms and Conditions stay editable. On the **draft** they are all editable again. On the **cancelled** document they are read-only, as on the posted one |  **Re-run needed for the last four.** The 16 Sep pass proved the first eight on Posted *and* Cancelled, with a draft fully editable. 15 §1.1 then found **Delivery Address, Delivery Date, Auto-post and Auto-post until** still editable on the posted INV/2026/00001 — the tenant carries `readonly="state != 'draft'"` on all four — and they joined the rule on 21 Sep 2026. An interaction rule is browser-side, so only the UI can show it |
+| 13 | Rule · Auto-post until follows Auto-post, and · Auto-post is not offered on a receipt | On a draft, Other Info → set Auto-post to **Monthly**, then **At Date**, then back to **No**. Then set Type to **Sales Receipt**, and to **Purchase Receipt** | **Auto-post until appears for Monthly, Quarterly and Yearly only** — **At Date** hides it, as *No* does. On either receipt type the **Auto-post dropdown itself disappears** (and Auto-post until with it); it comes back on every other Type. Close without saving |  **Re-run needed.** The 16 Sep pass read “Auto-post until appears for Monthly and is gone again for No”, which was right for the rule as it then stood; 15 §1.2 found *At Date* showing it too, and both rules were rewritten on 21 Sep 2026. Nothing here is provable from the CLI |
 | 14 | The three tabs and their notes | On any document, open **Invoice Lines**, **Other Info** and **MyInvois** | Each tab renders its remark block as a paragraph of text — *The lines arrive with 07 Invoice Lines.*, *Also on Odoo's Other Info tab:*, *MyInvois is Malaysia's e-invoicing clearance.* — with the bold lead-in, no field label and no input. Other Info also shows the two divider headings **Invoice** and **Accounting** above their groups |  **Pass** — all three blocks render with their bold lead-in, no label and no input, and Other Info also shows the Invoice and Accounting headings |
 | 15 | **Confirm · the numbering** | New record: Type Customer Invoice, Customer / Vendor Sunway Construction Group, Journal **Sales**, Accounting Date today, Customer Reference `TEST UI 1` → Submit. Open it and press **Confirm**. Repeat with `TEST UI 2` | No confirmation dialog. The first becomes **INV/2026/00004**, the second **INV/2026/00005** — the numbers follow each other. Both: Status **Posted**, Invoice Date **today** (it was empty), Payment Reference **the same number**. `invoices.py document "INV/2026/00004"` confirms the stored values |  **Pass** — run on the vendor bill from test 11: Confirm with no dialog, Status Posted, **INV/2026/00004** — a Vendor Bill written in the Sales journal, so the prefix follows the *journal*, not the type, as in Odoo. Its Payment Reference stayed empty, being a vendor document. Two Sales invoices numbered one after the other were proved by the CLI self-check rather than in the browser |
 | 16 | Confirm · a credit note on a journal with a dedicated sequence | New record: Type **Customer Credit Note**, Journal **Sales** (Dedicated Credit Note Sequence ticked), Accounting Date today, Customer Reference `TEST UI 3` → Submit → **Confirm** | The number is **RINV/2026/00002** — the R prefix, and its own counter, separate from INV |  **Pass** — **RINV/2026/00002**, the R prefix on its own counter. The draft was written with the CLI and confirmed with the button |
@@ -574,6 +633,7 @@ documents, no two sharing a number. The next Sales invoice confirmed will be **I
 | 23 | The three documents survive the test | `~/.hap-venv/bin/python nocoly/build/invoices.py verify` and `check` | `verify`: "3 in the seed file; **0 missing or differing**", the TEST documents listed as not in it. `check`: "OK — controls, tabs, options, defaults, rules, views, buttons and the numbering workflow as specified" |  **Pass** — “3 in the seed file; 0 missing or differing”, and `check` reports controls, tabs, options, defaults, rules, views, buttons and the numbering workflow as specified |
 | 24 | Odoo side by side | casimir.odoo.com → Invoicing › Customers › Invoices, and INV/2026/00001's form | The same customer invoices with the same numbers, customers, dates and totals; the form shows the same Customer, Invoice Date, Due Date, Payment Terms, Journal and Tax Excl./Incl. in the same places, and the same Other Info group. Everything Odoo shows that is not here is in *Not built now* |  **Pass** — the tenant still shows the same three documents with the same numbers, customers, dates and totals. Read from the tenant's own records: its web list view would not open in the test tab |
 | 25 | A posted document's lines are read-only | Open **INV/2026/00001** (Posted) → tab **Invoice Lines** → the Lines table. Then the same on the Sunway Construction Group **draft** | The rule *A posted or cancelled document is closed for editing* now names the subtable, so the posted document's table should be locked and the draft's should not. Nothing about this could be proved through the CLI: an interaction rule is browser-side, and the API writes a posted document's lines either way | **Pass** — on **INV/2026/00001** the table has **no *Add a row* and no *Batch Operation***, and the Display Type column has lost its required asterisk; on the **Sunway draft** both controls are there and the table is editable as before. A HAP read-only rule over a 子表 hides the row controls, which is the first time this app has established that. Odoo locks a posted move's lines the same way — so difference 11 of 07 is resolved, not documented |
+| 26 | The two journal checks | On a **draft**, set Type **Customer Invoice** and Journal **Miscellaneous Operations**. Then Type **Vendor Bill** with Journal **Sales**. Then put each back to a journal that suits it. Then a **Journal Entry** on Miscellaneous Operations | The first raises *"Cannot create a sale document in a non sale journal"* on the Journal field, the second *"Cannot create a purchase document in a non purchase journal"*; the message should appear as the Journal is picked, not only on Submit, and Submit should be refused while it stands. A journal entry is refused nothing, whichever journal it uses | **Proved through the CLI, not the browser.** `record update` sending Type was refused `resultCode 32` on MISC/2026/00002 (Customer Credit Note · Miscellaneous Operations) and on INV/2026/00004 (Vendor Bill · Sales), and accepted on INV/2026/00002 (Customer Invoice · Sales), on MISC/2026/00001 and MISC/2026/00003 (Journal Entry · Miscellaneous Operations) and on a draft whose Journal had been emptied. Whether the message reaches the **form** as the Journal is picked — which needs the Journal Type lookup to recompute in the open form — is for the UI pass |
 
 ### Differences from Odoo to look for
 
@@ -631,6 +691,35 @@ documents, no two sharing a number. The next Sales invoice confirmed will be **I
    roll-up — none of it refused. Odoo blocks the equivalent writes in the ORM. Not a defect of the rule (07's
    difference 11 records the same thing for the lines); it is the reason a build script can seed a cancelled
    document at all, and the reason a rule is never the place to put a real constraint.
+
+16. **The Journal picker is not narrowed by the document Type, and the check comes on save instead.** Added
+   21 Sep 2026 (15 §1.3). Odoo does **both**: `journal_id`'s domain offers only the journals whose Type suits the
+   document — sale for the three customer types, purchase for the three vendor ones, *general* (Miscellaneous) for
+   a journal entry — and `_check_journal_move_type` refuses the save afterwards. **Only the refusal is built**, as
+   the two validation rules in §1, with Odoo's two messages verbatim. So:
+   - our picker still lists **every** journal, archived ones included (difference 5), and a person can pick a
+     wrong one and only learn of it when the form refuses;
+   - a **journal entry** may be written in any journal here, where Odoo would have offered it the Miscellaneous
+     ones alone — Odoo's constraint says nothing about an entry either, so this half is only the picker;
+   - `record create` is not rule-checked, so an import can still write a mismatched document through the API.
+
+   Why the picker could not be built is in §2 *Found while building*: a HAP picker filter can read a value off the
+   form, but a dropdown's form value is an option key of **this** worksheet's control, and Journals' Type is a
+   different dropdown with its own keys.
+
+17. **Two live documents are on the wrong journal, and the new rules now refuse to save them.** MISC/2026/00002
+   is a *Customer Credit Note* written in *Miscellaneous Operations* (which is why it carries a MISC number), and
+   **INV/2026/00004 is a *Vendor Bill* numbered from the *Sales* journal** — found by the CLI on 21 Sep 2026 while
+   the rules were being proved, and not by the screen pass. Both were left exactly as they are: they are the
+   evidence for tests 15 and 17, and changing seeded data needs the owner. Anyone opening either in the form will
+   now meet the message until its Journal is corrected, which is what Odoo would do as well.
+
+18. **The form carries a field Odoo's does not: *Journal Type*.** A read-only lookup of the Journal's own Type,
+   on the Other Info tab beside Auto-post until, added 21 Sep 2026 because a HAP rule condition can only name a
+   control of its own worksheet and the two journal checks have to compare it. Odoo reads `journal_id.type`
+   straight off the relation and puts nothing on the form. It is read-only everywhere, and the posted-or-cancelled
+   rule does not name it — it cannot be typed into in any state.
+
 
 ### Test records left in the worksheet
 

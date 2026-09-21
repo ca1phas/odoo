@@ -202,7 +202,11 @@ ADVANCED = {  # the advancedSetting keys this script owns
 REVERSE = 'States'
 REVERSE_ALIAS = 'state_ids'
 REVERSE_PLACE = (4, 0, 12)                        # under the remark block; a showtype-2 list renders as a tab
-REVERSE_PERMISSION = '101'                        # read-only: a state is given its country on the state
+# Read-only — a state is given its country on the state — **and hidden on create** ("100") since 21 Sep 2026
+# (15 §1): a "101" reverse renders on the Create Record form, where Odoo has no states list on a country that
+# does not exist yet. "011" would take the table column with it; hidden-on-create does not (BUILDING.md), and
+# PERMISSION above already carries "100" for two of this worksheet's own controls.
+REVERSE_PERMISSION = '100'
 REVERSE_COLUMNS = (NAME, CODE)                    # exactly Odoo's two columns there
 REVERSE_DESC = ('The states of this country — Odoo state_ids, the reverse of Country on States. Set the country '
                 'on the state.')

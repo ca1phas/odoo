@@ -376,6 +376,14 @@ What decides is **whether the value being compared is in the write**.
 - A **lookup of a Relation stores the related record's title as text** (`sourceControlType` 2): it shows and sorts,
   but a picker filter cannot compare a record id with it. Compare the candidate's title field with the lookup
   instead (Product Variants' Extra Packagings).
+- **…and a lookup of a *single select* stores the source dropdown's own option key** (`sourceControlType` 11),
+  not its label: Invoice Lines' Status reads back `[{"key": "0979d4bb-…", "value": "Draft"}]`, the key minted on
+  **Invoices'** Status control. So a rule or filter standing on such a lookup compares the **source** worksheet's
+  keys, and its `dataType` is the source control's type (**11**), not the lookup's 30 — the editors read a type-30
+  lookup as its source type (pd-openweb `redefineComplexControl`), as they do a function formula. Proved by
+  Invoices' two journal checks, which are enforced on `record update` (`resultCode` 32) with exactly that shape
+  (06 §2, 21 Sep 2026). A lookup added to a live worksheet **computes on every existing record at once** — all 36
+  invoices carried their journal's Type the moment the control was saved, with no nudge.
 
 ### Views
 
@@ -466,6 +474,17 @@ What decides is **whether the value being compared is in the write**.
   remark blocks included.
 - **Relation picker filters run in the browser only**: the picker query through the API ignores them, so prove a
   picker filter in the UI. A picker filter can compare a candidate with a Relation field on the form being edited.
+- **…but its dynamic value cannot bridge two different dropdowns.** `dynamicSource` reads the *form's* value of a
+  control on the holding worksheet, and a single select's value is an **option key minted on that control**. The
+  candidate worksheet's own dropdown has its own keys, so a filter comparing the two matches nothing, ever, and
+  nothing in HAP maps one option set onto another. Every picker filter in this app that uses `dynamicSource`
+  compares a **record id or a text value** for exactly this reason (Products' Packagings, Product Variants' Extra
+  Packagings, Chart of Accounts' Parent Account). It is why Odoo's `account.move.journal_id` domain — sale
+  journals for a customer document, purchase for a vendor one — **could not be built**, and its constraint
+  `_check_journal_move_type` was built as two validation rules instead (06 §2, 15 §1.3). The only conceivable
+  bridge is a computed text on each worksheet, which adds a control to both for a filter the CLI cannot prove.
+- **An empty dynamic value drops its condition** rather than matching nothing, so a picker on a record whose
+  source field is still blank offers everything (03 §2).
 - **Read-only (type 4) on a 子表 (type 34) hides the table's row controls.** A rule item accepts the subtable
   among its controls and the server stores it unchanged — `childControlIds: []`, `permission: []`, exactly as
   sent — and in the browser the table loses ***Add a row* and *Batch Operation*** and its required columns lose
@@ -722,6 +741,18 @@ What decides is **whether the value being compared is in the write**.
   `causeMsg` **"未通过分支"** (Chart of Accounts' automation on an emptied Type).
 - **A branch converges**, so an empty path is not a stop: both paths run into the gateway's `nextId` and carry on
   to whatever follows the branch. To stop a run before a later step, a path must end in an **abort node**.
+- **…or the step moves *into* the path, which is usually the better answer.** A branch path can hold a data step:
+  `hap workflow node add --type 6 --after <the branch-path node>` sets that path's `nextId` to the new node, which
+  then takes its configuration through `node save --type 6` like any other, reads back `isException: false` and
+  publishes. So "do the work only when the condition fails" needs no abort at all — hang the work off the path and
+  leave the gateway converging on nothing. That matters because **an abort is visible to the user**: an aborted
+  run draws HAP's own toast, a warning icon and the untranslated word **中止**, which no name or description
+  changes. A run that simply ends comes back `status` **2** with an empty `causeMsg` and draws nothing (Journals'
+  archive guard, restructured 21 Sep 2026; 15 §6.6). **There is no "move a node" call**: create the new step
+  inside the path, copy the old node's `actionId`, `appId`, `selectNodeId` and `fields` onto it, read them back,
+  and only then delete the old node — all on the draft, which `hap workflow rollback <pid> -y` undoes.
+  Consequence for anything that reads such a workflow back: **both** paths now carry a `nextId`, so "the path with
+  a step on it" no longer identifies the conditioned one — tell them apart by which node they run into.
 - **A branch path with no condition is the default/else path** (hap-cli `_build_branch`), and that is how a
   comparison HAP has no operator for is written: put the condition it *does* have on a path with no steps and
   hang the work off the unconditioned one. A Relation compared with **another node's** Relation is `conditionId`

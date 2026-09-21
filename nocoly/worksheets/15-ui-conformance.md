@@ -4,7 +4,7 @@
 casimir tenant (saas~19.4+e) against ERP Master, and — for Invoices and Invoice Lines — a **functional** pass
 that actually pressed the buttons, ran the workflow, created a document and updated it.
 
-| Date | 21 Sep 2026 |
+| Date | 21 Sep 2026 · **defect resolutions appended the same day** (§1, §5, §6.6) |
 |---|---|
 | Tenant | casimir.odoo.com · Invoicing · **free trial expires in 1 day** |
 | App | ERP Master `6cb4d051-a33c-4bf9-b56f-5f47f0e85dc9` |
@@ -50,6 +50,11 @@ header field rendered as plain read-only text while Delivery Address still drew 
 
 **Fix:** add the four controls to the rule's target list in `nocoly/build/invoices.py`.
 
+> **Resolved — 21 Sep 2026.** All four joined `CLOSED_FIELDS` in `invoices.py`; `invoices.py rules` read the rule
+> back naming **thirteen** controls (the nine above plus Delivery Address, Delivery Date, Auto-post and Auto-post
+> until) and `check` passes. An interaction rule is browser-side, so **test 12 of `06-invoices.md` needs a re-run**
+> to see the four render as text on a posted document.
+
 ### 1.2 *Auto-post until* is shown where Odoo hides it
 
 The tenant's arch reads `invisible="auto_post in ('no', 'at_date')"`. Our rule shows the field whenever
@@ -60,6 +65,10 @@ where Odoo keeps it hidden.
 as the Taxes form and the CRM feature groups: the repo at `7bbce824` is behind saas~19.4.
 
 **Fix:** the rule's condition becomes *Auto-post is Monthly, Quarterly or Yearly*.
+
+> **Resolved — 21 Sep 2026.** `RULE_AUTO_POST` now names Monthly, Quarterly and Yearly, and read back with exactly
+> those three option keys. `06-invoices.md` §1 quotes the **tenant's** arch, says the old quote was the 19.0 repo
+> at `7bbce824`, and its test 13 is rewritten and marked for a re-run.
 
 ### 1.3 The Journal picker is unfiltered
 
@@ -83,10 +92,44 @@ entry leaks into it.)
 **Fix:** a picker filter on the Journal relation, the same shape as `taxes.py`'s `tax_picker` — Journal Type
 is Sales for the three customer types, Purchase for the three vendor types.
 
+> **Partly resolved — 21 Sep 2026. The picker filter cannot be built; Odoo's own constraint was built instead.**
+>
+> *Why not the picker.* A HAP Relation's picker filter compares a field of the **candidate** record with a literal
+> or with a value read off the form being edited (`dynamicSource`; the app already has three, on Products'
+> Packagings, Product Variants' Extra Packagings and Chart of Accounts' Parent Account, **all comparing a record
+> id or a text value**). The value this filter needs is the document's Type, and a dropdown's form value is an
+> **option key** of *this* worksheet's Type control — `af9b889e-…` for Customer Invoice. Journals' Type is a
+> different dropdown with its own keys — `1eb997f4-…` for Sales — and nothing in HAP maps one option set onto
+> another, so the comparison would never match; seven document types collapsing onto three journal types means
+> the keys cannot be made to agree either. The only conceivable shape is a pair of computed text bridges, one on
+> each worksheet, for a filter that runs in the browser only and so cannot be proved from the CLI at all. Not
+> built, and recorded as a gap in `06-invoices.md` §2 and difference 16.
+>
+> *What was built.* Odoo does not only narrow the picker — it also refuses the save, in
+> `@api.constrains('journal_id', 'move_type') _check_journal_move_type`. Two **validation rules** (check type 1)
+> now carry its two messages verbatim — *"Cannot create a sale document in a non sale journal"* and *"Cannot
+> create a purchase document in a non purchase journal"* — standing on a new read-only lookup **Journal Type**
+> (the Journal's own Type, read through the relation). Proved through the CLI both ways: a `record update`
+> sending Type was **refused `resultCode 32`** on MISC/2026/00002 *and on INV/2026/00004, a Vendor Bill numbered
+> from the Sales journal that this pass had not spotted*, and **accepted** on INV/2026/00002, on the two journal
+> entries and on a draft whose Journal had been emptied.
+>
+> *What is still a difference.* Odoo prevents the choice where we refuse the save; the picker still lists every
+> journal; a journal entry may use any journal here where Odoo's picker offers it only the Miscellaneous ones
+> (`_get_suitable_journal_ids` maps `entry` to **`general`**, not to "any type"); and `record create` is not
+> rule-checked, so an import can still write a mismatched document. Both wrong documents were left as they are —
+> they are evidence for 06's tests 15 and 17, and seeded data is the owner's.
+
 ### 1.4 Auto-post is offered on receipts
 
 Odoo: `invisible="move_type in ('out_receipt', 'in_receipt')"`. Ours shows Auto-post on every Type. Minor,
 one more clause on an existing rule.
+
+> **Resolved — 21 Sep 2026.** Not a clause on the existing rule but a rule of its own, *Auto-post is not offered
+> on a receipt*, written **hide · equals** so Auto-post is visible from the start on a document whose Type is
+> still empty. Auto-post until follows it down, depending on Auto-post already. Auto-post stays *required* on the
+> control — normally wrong for a field a rule hides — because it carries the default **No**, so a receipt always
+> saves with it filled. For the browser to confirm; `06-invoices.md` test 13 covers it.
 
 ---
 
@@ -96,7 +139,7 @@ one more clause on an existing rule.
 |---|---|---|
 | 5 | **No Journal default on create.** Odoo defaults a customer invoice to the Sales journal; our create form leaves the required field empty | new — worth adding with 1.3 |
 | 6 | **No Salesperson default.** Odoo defaults `invoice_user_id` to the current user; ours shows an empty **+** | new, minor |
-| 7 | Picking a product fills **Account** and **Taxes** (automation B) but not **Label**, **Unit** or **Unit Price**. Odoo's onchange fills all five | Label and Unit are recorded in 07 §*Not built now*; **Unit Price is not recorded anywhere** — add it |
+| 7 | Picking a product fills **Account** and **Taxes** (automation B) but not **Label**, **Unit** or **Unit Price**. Odoo's onchange fills all five | Label and Unit are recorded in 07 §*Not built now*; **Unit Price is not recorded anywhere** — add it. **Done 21 Sep 2026**: the *Not built now* row now names all three and says where Odoo's Unit Price comes from (`_compute_price_unit` — the product's Sales Price on a customer document, its Cost on a vendor one), and difference 6 was rewritten from "picking a product fills nothing in" to *three of five* |
 | 8 | Automations run **on save**, so Payment Terms appears only after Submit; Odoo fills it the moment the customer is picked | inherent to HAP; already understood, not written down |
 | 9 | The four roll-up amounts need a **refresh** before they show; they read 0.00 immediately after a line is saved | inherent to HAP roll-ups |
 
@@ -227,6 +270,28 @@ narrows it by country. Both are recorded in `12-states.md`; neither is new.
 **Two of the eight create-form leaks are confirmed here**: **# Variants** and **Variants** both render on the
 Create Record form, where Odoo has no such controls on a product that does not exist yet.
 
+> **Resolved — 21 Sep 2026, and there were nine, not eight.** Every `fieldPermission` "101" that reaches a create
+> form became **"100"** — read-only *and* hidden on create, `field_permission_str(readonly=True,
+> hidden_on_create=True)`, the precedent being Product Variants' Display Name. `"011"` would have been wrong
+> throughout: a hidden field never shows as a table column either, and each of these is a column of some view.
+>
+> | Builder | Controls | Step run |
+> |---|---|---|
+> | `products.py` | **Variants · # Variants** | a new **`perms`** step — a version-pinned save of those two controls alone. `layout` was *not* run: its places and views predate another administrator's changes of 17 Sep and would revert them (03 §2) |
+> | `prodcat.py` | **Child Categories · Products · # Products** | `layout` |
+> | `states.py` | **States**, the reverse on Countries | `reverse` |
+> | `invlines.py` | **Number · Accounting Date · Status** | `layout` |
+>
+> **Subtotal and Total on Invoice Lines deliberately stay "101"** — visible and read-only. They are figures a
+> person watches while typing a line, and Odoo shows its Amount live as the quantity and price are entered.
+>
+> Two more were looked at and left alone: Product Variants' **Product** is "101" but create is switched off on
+> that worksheet, so it never reaches a create form; and Invoices' own **Number** and **Status** are faithful —
+> Odoo's new-invoice form does show the word *Draft* and the Draft status bar.
+>
+> Each builder's `check` passes afterwards. `prodcat check` still reports one **pre-existing** difference that is
+> none of this work's — *Products / Category: row 10 vs 9*, drift from another administrator's edits to Products.
+
 ### 6.4 Product Variants
 
 | # | Step | Result |
@@ -266,14 +331,82 @@ dialog to raise from a button workflow and that the message therefore arrives as
 not say is that the user's immediate feedback is a Chinese word. Either the toast needs to be suppressed, or
 the worksheet needs to tell a reviewer to expect it.
 
+> **Resolved — 21 Sep 2026. The toast is gone, because nothing aborts any more.**
+>
+> The abort was only there because a HAP branch **converges**: with *Archive the journal* on the trunk, both
+> paths reached it, so the drafts path had to end in 中止流程. **A branch path can hold a data step** —
+> `hap workflow node add --type 6 --after <the path node>` sets that path's `nextId` to the new node, and it
+> saves, reads back `isException: false` and publishes. So the update moved onto the **No** path: a second update
+> step was created inside the path, the old node's `actionId`, `appId`, `selectNodeId` and `fields` were copied
+> onto it and read back, and only then were the trunk node and the abort deleted. There is no "move a node" call
+> in HAP or hap-cli; all of it happens on the draft, which `hap workflow rollback <pid> -y` can undo.
+>
+> `journals.py draftcheck` still passes both ways: **TEST draft guard**, holding two draft documents, was refused
+> and kept `Active=1`, and **TEST Journal**, holding none, archived and was unarchived again. The difference is
+> in the run: the refusal at 11:20, before the change, came back `status` **3**, `cause` **6666**, `causeMsg`
+> **中止**, naming *Stop — leave Active alone*; the refusal at 11:48, after it, came back `status` **2** with an
+> empty `causeMsg` and a node trace of **trigger → count → branch → Cannot archive this journal**. A completed
+> run draws no toast. `journals.py check` now fails if any abort node reappears, and `draftguard` recognises the
+> new shape and writes nothing on a re-run.
+>
+> What is left is difference 7 of `05-journals.md`, unchanged and still the honest gap: the click reports
+> *Operation completed*, the row does not move, and Odoo's explanation waits in the notification centre.
+> **Test 19 of `05-journals.md` is worth a re-run** — a reviewer should now see no Chinese on screen at all.
+
+### 6.7 The abort toast fix leaves a *false success* — new, found while verifying
+
+**Verified in the UI on 21 Sep 2026, after the fix.** Archiving the **Sales** journal, which holds draft
+invoices, now behaves like this:
+
+- the journal is **not** archived — Active untouched, Sales still first in the list ✓
+- the Workflow notification **"Cannot archive this journal…"** arrives ✓
+- the `中止` toast is **gone** ✓
+- **but the toast that replaces it is a green tick reading "Operation completed".**
+
+So the reported defect is fixed and a smaller one takes its place: the immediate feedback on a refusal is
+now *legible and wrong*, where before it was *illegible and right*. A user presses Archive, reads
+"Operation completed", and the journal is still active.
+
+The cause is structural. The run now **completes** — the guard simply ends the branch path instead of
+aborting it — and HAP draws its ordinary success toast for a completed run. That is the same property that
+removed the Chinese word.
+
+**Three ways out, for the owner:**
+
+1. **Accept it.** The notification carries the truth and the data is safe. Cheapest.
+2. **Put the Archive step back on the trunk behind the abort**, i.e. revert B1. The toast returns to `中止`
+   — untranslated, but it does signal that something stopped.
+3. **Find out whether HAP's success toast can be suppressed per workflow.** Not investigated; the agent had
+   no browser and this only became visible in the UI.
+
+Recorded, not chosen.
+
 ## 5 · Still owed
 
-1. **Fix §1.1–1.4** in `invoices.py` — one implementation agent.
+1. ~~**Fix §1.1–1.4** in `invoices.py`~~ — **done 21 Sep 2026.** §1.1, §1.2 and §1.4 are resolved; §1.3 is
+   **partly**: Odoo's picker narrowing cannot be built in HAP and is recorded as a gap, and Odoo's own
+   `_check_journal_move_type` was built in its place as two validation rules. Read the block under §1.3.
 2. ~~The functional pass on 01–05~~ — **done on 21 Sep 2026, section 6.** It raised one new defect (§6.6,
-   the untranslated abort toast) and confirmed two of the eight create-form leaks on Products.
-3. **Record §2.7** (Unit Price is not filled from the product) in 07's *Not built now*.
+   the untranslated abort toast, **since resolved**) and confirmed two of the create-form leaks on Products.
+3. ~~**Record §2.7** (Unit Price is not filled from the product) in 07's *Not built now*~~ — **done.**
 4. **Test data.** Ours holds 25 invoices to Odoo's 7 and 39 invoice lines; the Journal picker shows four TEST
    journals and the Product picker several TEST products. A clean-up needs the owner's approval, as does
    deleting **INV/2026/00011**, left as a Draft by this pass.
 5. **The trial.** casimir's banner said the free trial expires **in 1 day** on 21 Sep. Anything else that has
    to be read off the tenant should be read now.
+
+**What is now owed instead — all of it in the browser, none of it provable from the CLI.** Six re-runs and one
+new test:
+
+| Worksheet | Test | What to look for |
+|---|---|---|
+| 06 | **12** | Delivery Address, Delivery Date, Auto-post and Auto-post until render as read-only text on a posted *and* on a cancelled document, and are editable again on a draft |
+| 06 | **13** | *Auto-post until* appears for Monthly, Quarterly and Yearly and **not** for At Date; the Auto-post dropdown itself disappears on a Sales Receipt and a Purchase Receipt |
+| 06 | **26** (new) | The two journal messages reach the **form** — a sale document on a non-sale journal, a purchase document on a non-purchase journal — as the Journal is picked, not only on Submit. This is the one thing about §1.3 the CLI could not settle: it needs the *Journal Type* lookup to recompute in the open form |
+| 05 | **19** | The refused Archive draws **no 中止 toast** — no Chinese on screen at all. The notification still arrives |
+| 03 · 08 · 11 · 07 | create forms | Variants, # Variants, Child Categories, Products, # Products, the States list on a country, and Invoice Lines' Number, Accounting Date and Status are all **absent from the Create Record form** and still **present as table columns** |
+
+**And two documents for the owner to decide on.** MISC/2026/00002 (a Customer Credit Note in Miscellaneous
+Operations) and **INV/2026/00004** (a Vendor Bill numbered from the Sales journal) are on journals their Type
+does not allow. They are evidence for 06's tests 15 and 17, so they were left alone — but the new rules now
+refuse to save either from the form until its Journal is corrected.

@@ -516,21 +516,27 @@ def step_buttons():
 # journal that still has draft entries. It waited for 06 Invoices, which is where a draft entry lives; the
 # note was left in §1 *Not built now* and in DECISIONS.md on 16 Sep 2026.
 #
-# The check goes inside the Archive **button's** workflow, in front of the step that unchecks Active:
+# The check goes inside the Archive **button's** workflow, and the update that unchecks Active hangs off the
+# branch path that finds no drafts:
 #
 #     Trigger by button
 #       → Draft entries in this journal          a 汇总 step (107): how many Invoices point at this journal
 #                                                with Status Draft
 #       → Does the journal still hold draft entries?
-#            · Yes (one or more)  → Tell the user the journal cannot be archived   (站内通知)
-#                                 → Stop — leave Active alone                      (中止流程, node type 30)
-#            · No                 → (nothing)
-#       → Archive the journal                    the first build's update step, untouched
+#            · Yes (one or more)  → Cannot archive this journal                    (站内通知) — the path ends
+#            · No                 → Archive the journal                            the update step
+#       (nothing after the gateway)
 #
-# The abort node is what makes the guard work: a HAP branch **converges**, so an empty path and a path whose
-# steps have run both carry on to whatever follows the gateway. Only 中止流程 stops the run before it reaches
-# the update. Unarchive gets no such check — Odoo's constraint deliberately fires on archiving only
-# (`self.filtered(lambda j: not j.active)`).
+# **Restructured on 21 Sep 2026 (15 §6.6).** The first cut left *Archive the journal* on the trunk, where a
+# HAP branch **converges** — an empty path and a path whose steps have run both carry on to whatever follows
+# the gateway — so the drafts path had to end in a 中止流程 abort (node type 30) to stop the run before the
+# update. That worked, and the guard refused correctly, but an aborted run draws HAP's own toast on screen:
+# a warning icon and the untranslated word **中止**, with Odoo's explanation only in the notification centre.
+# A branch path **can** hold a data step (`node add --type 6 --after <the path node>` sets the path's
+# `nextId` to it, and the node publishes with `isException` false), so the update moved onto the *No* path,
+# the abort was deleted, and nothing now follows the gateway: the drafts path simply ends after the notice
+# and no toast is drawn. Unarchive gets no such check — Odoo's constraint deliberately fires on archiving
+# only (`self.filtered(lambda j: not j.active)`).
 
 INVOICES = hap.ids()['worksheets']['Invoices']
 ARCHIVE_STEP = 'Archive the journal'                # the first build's update step; never touched
@@ -541,8 +547,10 @@ DRAFT_BRANCH = 'Does the journal still hold draft entries?'
 # what it does. 'Tell the user the journal cannot be archived' was the first cut's name and is renamed.
 TELL_STEP = 'Cannot archive this journal'
 TELL_STEP_WAS = 'Tell the user the journal cannot be archived'
-STOP_STEP = 'Stop — leave Active alone'
-GUARD_STEPS = (COUNT_STEP, DRAFT_BRANCH, TELL_STEP, STOP_STEP, ARCHIVE_STEP)   # the chain, in order
+# The 中止流程 the first cut hung after TELL_STEP. Deleted on 21 Sep 2026 with the restructuring above; the
+# name is kept so `draftguard` can find and remove one on a workflow built the old way.
+STOP_STEP_WAS = 'Stop — leave Active alone'
+GUARD_STEPS = (COUNT_STEP, DRAFT_BRANCH, TELL_STEP, ARCHIVE_STEP)   # the chain, in order
 
 NUMBER_FX = 'number_fx_id'                          # a formula node's own numeric result
 WORKSHEET_TOTAL = '107'                             # a workflow 汇总 step over a whole worksheet
@@ -612,14 +620,21 @@ def at_least_one_draft(count_node):
               'conditionId': AT_LEAST_ONE, 'sourceType': 0, 'conditionValues': [{'value': '1'}]}]]
 
 
-def branch_paths(proc, gateway_id):
-    """A gateway's two paths: the one that carries a step, then the fall-through."""
+def branch_paths(proc, gateway_id, yes_next=None):
+    """A gateway's two paths: the drafts path, then the one with none.
+
+    Both paths carry a step since the restructuring of 21 Sep 2026, so "the one that carries a step" no
+    longer tells them apart: the drafts path is the one that runs into `yes_next` — the 站内通知 node —
+    and the caller passes its id. Before the notice exists (the first `batch-add`), the fall-back is the
+    old rule."""
     paths = [n for n in proc['flowNodeMap'].values()
              if n.get('typeId') == BRANCH_PATH and n.get('prveId') == gateway_id]
     if len(paths) != 2:
         sys.exit(f'{DRAFT_BRANCH}: {len(paths)} paths, expected 2')
-    yes = next((p for p in paths if p.get('nextId') not in (None, '', '99')), None)
-    return yes or paths[0], next(p for p in paths if p['id'] != (yes or paths[0])['id'])
+    yes = next((p for p in paths if p.get('nextId') == yes_next), None) if yes_next else None
+    if not yes:
+        yes = next((p for p in paths if p.get('nextId') not in (None, '', '99')), None) or paths[0]
+    return yes, next(p for p in paths if p['id'] != yes['id'])
 
 
 def save_path(pid, path, name, conditions):
@@ -668,6 +683,12 @@ def nodes_by_name(pid):
     return proc, {n['name']: n for n in proc['flowNodeMap'].values()}
 
 
+def read_node(pid, node_id):
+    """One node's configuration, unwrapped (`node get` answers either shape)."""
+    got = hap.run('workflow', 'node', 'get', pid, node_id)
+    return got.get('data', got)
+
+
 def guard_differences():
     """The Archive workflow's draft-entry guard, read back: the chain, the count's filter, the branch
     condition, the message and its recipient, and that Unarchive still has no guard at all."""
@@ -678,15 +699,23 @@ def guard_differences():
     if missing:
         return [f'Archive workflow: {missing} missing']
     chain = {n: byname[n]['id'] for n in GUARD_STEPS}
-    want_next = [(proc['startEventId'], chain[COUNT_STEP]), (chain[COUNT_STEP], chain[DRAFT_BRANCH]),
-                 (chain[DRAFT_BRANCH], chain[ARCHIVE_STEP]), (chain[TELL_STEP], chain[STOP_STEP])]
+    ends = lambda node_id: proc['flowNodeMap'][node_id].get('nextId') in (None, '', '99')
+    want_next = [(proc['startEventId'], chain[COUNT_STEP]), (chain[COUNT_STEP], chain[DRAFT_BRANCH])]
     for node_id, nxt in want_next:
         if proc['flowNodeMap'][node_id].get('nextId') != nxt:
             problems.append(f"{proc['flowNodeMap'][node_id]['name']!r} runs into "
                             f"{proc['flowNodeMap'].get(proc['flowNodeMap'][node_id].get('nextId'), {}).get('name')!r}")
-    if proc['flowNodeMap'][chain[STOP_STEP]].get('typeId') != ABORT:
-        problems.append(f'{STOP_STEP!r} is node type {proc["flowNodeMap"][chain[STOP_STEP]].get("typeId")}, '
-                        f'not {ABORT} (中止流程) — a branch converges, so only an abort stops the update')
+    # Nothing follows the gateway, and each path ends where its own last step does: the update hangs off the
+    # *No* path, so the drafts path needs no abort and an aborted run's 中止 toast is never drawn (15 §6.6).
+    for name in (DRAFT_BRANCH, TELL_STEP, ARCHIVE_STEP):
+        if not ends(chain[name]):
+            problems.append(f'{name!r} runs into '
+                            f'{proc["flowNodeMap"].get(proc["flowNodeMap"][chain[name]].get("nextId"), {}).get("name")!r}'
+                            ' — the gateway must converge on nothing and every path must end at its last step')
+    aborts = [n['name'] for n in proc['flowNodeMap'].values() if n.get('typeId') == ABORT]
+    if aborts:
+        problems.append(f'abort node(s) {aborts} still in the workflow — an aborted run draws HAP\'s '
+                        'untranslated 中止 toast, which is what the restructuring removed')
     count = hap.run('workflow', 'node', 'get', pid, chain[COUNT_STEP])
     count = count.get('data', count)
     if (count.get('actionId'), count.get('appId'), count.get('reportControlId'), count.get('reportType')) != \
@@ -703,7 +732,7 @@ def guard_differences():
         problems.append(f'{COUNT_STEP} filter {got}')
     if [v.get('nodeId') for c in conds for v in c['conditionValues']][:1] != [proc['startEventId']]:
         problems.append(f'{COUNT_STEP}: the Journal is not compared with the triggering journal')
-    yes, no = branch_paths(proc, chain[DRAFT_BRANCH])
+    yes, no = branch_paths(proc, chain[DRAFT_BRANCH], chain[TELL_STEP])
     for path, name, want_cond in ((yes, 'Yes', [(chain[COUNT_STEP], NUMBER_FX, AT_LEAST_ONE, ['1'])]),
                                   (no, 'No', [])):
         got = hap.run('workflow', 'node', 'get', pid, path['id'])
@@ -712,6 +741,10 @@ def guard_differences():
                 for g in got.get('conditions') or [] for c in g]
         if path.get('name') != name or live != want_cond:
             problems.append(f'branch path {path.get("name")!r}: {live}')
+    for path, step in ((yes, TELL_STEP), (no, ARCHIVE_STEP)):
+        if path.get('nextId') != chain[step]:
+            problems.append(f'branch path {path.get("name")!r} runs into '
+                            f'{proc["flowNodeMap"].get(path.get("nextId"), {}).get("name")!r}, not {step!r}')
     tell = hap.run('workflow', 'node', 'get', pid, chain[TELL_STEP])
     tell = tell.get('data', tell)
     if tell.get('sendContent') != DRAFT_MESSAGE:
@@ -751,14 +784,44 @@ def step_draftguard():
         hap.run('workflow', 'node', 'rename', pid, byname[TELL_STEP_WAS]['id'], '-n', TELL_STEP)
         proc, byname = nodes_by_name(pid)
         changed = True
-    if STOP_STEP not in byname:
-        # 中止流程 (node type 30) has no builder in hap-cli's DSL; add it by hand, last in the Yes path.
-        hap.run('workflow', 'node', 'add', pid, '--type', str(ABORT), '-n', STOP_STEP,
-                '--after', byname[TELL_STEP]['id'])
+    yes, no = branch_paths(proc, byname[DRAFT_BRANCH]['id'], byname[TELL_STEP]['id'])
+    if byname[ARCHIVE_STEP].get('prveId') != no['id']:
+        # Move the update off the converged trunk and onto the *No* path (15 §6.6). There is no "move a
+        # node" call: `node add --type 6 --after <the path node>` makes a second one inside the path — the
+        # path's `nextId` becomes it — its configuration is copied over from the old node, and only then is
+        # the old node deleted. The whole of it happens on the draft; `workflow rollback <pid> -y` restores
+        # the last published version if it goes wrong.
+        old = byname[ARCHIVE_STEP]
+        cfg = read_node(pid, old['id'])
+        added = hap.run('workflow', 'node', 'add', pid, '--type', '6', '-n', ARCHIVE_STEP + ' (moving)',
+                        '--after', no['id'], '-a', cfg['actionId'], '--app-id', cfg['appId'])
+        new_id = (added.get('addFlowNodes') or [{}])[0].get('id') or \
+            next(n['id'] for n in nodes_by_name(pid)[0]['flowNodeMap'].values()
+                 if n.get('name') == ARCHIVE_STEP + ' (moving)')
+        hap.run('workflow', 'node', 'save', pid, new_id, '--type', '6', '-n', ARCHIVE_STEP, '-c', json.dumps(
+            {'actionId': cfg['actionId'], 'appId': cfg['appId'], 'appType': cfg.get('appType') or 1,
+             'selectNodeId': cfg['selectNodeId'], 'fields': cfg['fields']}, ensure_ascii=False))
+        back = read_node(pid, new_id)
+        if back.get('isException') or [f['fieldId'] for f in back.get('fields') or []] != \
+                [f['fieldId'] for f in cfg.get('fields') or []]:
+            sys.exit(f'{ARCHIVE_STEP} on the No path reads back exception={back.get("isException")} '
+                     f'fields={[f.get("fieldId") for f in back.get("fields") or []]} — nothing was deleted; '
+                     f'`hap workflow rollback {pid} -y` restores the published version')
+        hap.run('workflow', 'node', 'delete', pid, old['id'], '-y')
         proc, byname = nodes_by_name(pid)
+        yes, no = branch_paths(proc, byname[DRAFT_BRANCH]['id'], byname[TELL_STEP]['id'])
         changed = True
+        print(f"  {ARCHIVE_STEP!r}: moved from the trunk onto the No path ({old['id']} -> {new_id})")
+    for node in [n for n in proc['flowNodeMap'].values() if n.get('typeId') == ABORT]:
+        # The first cut's 中止流程. With the update off the trunk the drafts path just ends, and the abort —
+        # whose only visible mark is HAP's untranslated 中止 toast — is no longer needed (15 §6.6).
+        hap.run('workflow', 'node', 'delete', pid, node['id'], '-y')
+        print(f"  abort node {node.get('name')!r} deleted — the drafts path now ends after the notice")
+        changed = True
+    if changed:
+        proc, byname = nodes_by_name(pid)
+        yes, no = branch_paths(proc, byname[DRAFT_BRANCH]['id'], byname[TELL_STEP]['id'])
     changed |= save_notice(pid, byname[TELL_STEP], DRAFT_MESSAGE, dict(TRIGGER_USER))
-    yes, no = branch_paths(proc, byname[DRAFT_BRANCH]['id'])
     changed |= save_path(pid, yes, 'Yes', at_least_one_draft(byname[COUNT_STEP]['id']))
     changed |= save_path(pid, no, 'No', [])
     print(f"  {'published' if changed else 'already built; not re-published'}:",
