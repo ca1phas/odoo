@@ -11,11 +11,19 @@ owner approved — deliberately nothing else.
                                                            #    version-pinned save
     ~/.hap-venv/bin/python nocoly/build/orders.py dots     # 5. two decimals on those three roll-ups, so a money
                                                            #    total draws 270.00 — one version-pinned save
-    ~/.hap-venv/bin/python nocoly/build/orders.py check    # read rules, Expiration and the roll-ups back and
+    ~/.hap-venv/bin/python nocoly/build/orders.py controls # 6. Is Template and Template Name, appended
+    ~/.hap-venv/bin/python nocoly/build/orders.py customer # 7. clear `required` on Customer, one pinned save
+    ~/.hap-venv/bin/python nocoly/build/orders.py views    # 8. the Templates view (the owner's three untouched)
+    ~/.hap-venv/bin/python nocoly/build/orders.py wipe     # 9. delete the three test orders the owner approved
+    ~/.hap-venv/bin/python nocoly/build/orders.py seed     # 10. the tenant's twelve orders
+    ~/.hap-venv/bin/python nocoly/build/orders.py figures  # 11. the three roll-ups beside the tenant's amounts
+    ~/.hap-venv/bin/python nocoly/build/orders.py check    # read rules, Expiration, the roll-ups, the two new
+                                                           #    controls, the view and the seed back, and
                                                            #    report drift
     ~/.hap-venv/bin/python nocoly/build/orders.py show     # the live controls and rules
 
-**There is no `fields`, `layout`, `views`, `buttons`, `seed` or `records` step, and there must not be one.**
+**There is no `fields`, `layout` or `buttons` step, and there must not be one** — `views` writes one view of
+its own and `seed` writes records, neither of which replaces a control.
 The owner is building Orders **by hand in the browser** — on 21 Sep 2026 they added Delivery Date, Delivery
 Status and Locked and six business rules between 11:51 and 12:23 while this script was being written, and then
 rebuilt the worksheet from twelve controls to thirty-five. HAP has no per-field endpoint: a layout step is a
@@ -32,7 +40,7 @@ Requirements: nocoly/worksheets/16-orders.md (§7.1 for what `totals` does). Ord
 is `orderlines.py`'s — run its `fields` step before `totals`, so the columns the subtable names all exist.
 Generic helpers: common.py.
 """
-import json, sys
+import json, os, sys
 
 import common as C
 import hap
@@ -108,6 +116,9 @@ RULE_EXPIRATION = 'Expiration is for an unconfirmed quotation'
 RULE_CONFIRMED = 'A confirmed or cancelled order is closed for editing'
 RULE_LOCKED = 'A locked or cancelled order is closed for editing'
 RULE_TAX_MODE = 'Tax Mode is fixed once the quotation is confirmed'
+# The two the template flag brings with it (§6 below builds the controls they stand on).
+RULE_CUSTOMER = 'A quotation needs a customer, a template does not'
+RULE_TEMPLATE_NAME = 'Template Name is for templates'
 
 # Odoo's `readonly="state in ['cancel','sale']"` covers eight fields on `sale.order`'s form. Three of them were
 # on the worksheet when the rule was first built; the evening rebuild of 21 Sep 2026 added **Online Signature,
@@ -195,10 +206,31 @@ def rule_specs(f):
         (RULE_TAX_MODE, C.INTERACTION,
          C.any_of([is_any_of(f, 'Status', ['Quotation Sent', 'Sales Order', 'Cancelled'])]),
          [C.item(C.READONLY, *ctrl(TAX_MODE_FIELDS))], {}),
+    ] + (template_rule_specs(f) if all(n in f for n in NEW) else [])
+
+
+def template_rule_specs(f):
+    """The two rules the template flag needs, as `upsert_rules` takes them.
+
+    * *A quotation needs a customer, a template does not* — REQUIRE on Customer while **Is Template is not
+      ticked**. The condition is `NE` (6) against "1", the operator the owner's own *Hide Delivery Status when
+      Quotation is not Sales Order* already uses successfully on this worksheet. A rule applies its action
+      while its condition holds and **the opposite when it fails**, so the inverse leaves Customer optional on
+      a template — which is the whole point, and why `customer` had to take `required` off the control first: a
+      rule cannot relax a field-level Required.
+    * *Template Name is for templates* — two items on one rule, both conditioned on **Is Template is ticked**:
+      SHOW it, and REQUIRE it. Two items rather than one rule each because a field a rule hides must not be
+      required on the field itself (BUILDING.md), and the show half is what hides it on an ordinary quotation.
+    """
+    return [
+        (RULE_CUSTOMER, C.INTERACTION, C.any_of([C.cond(f[IS_TEMPLATE], C.NE, 1)]),
+         [C.item(C.REQUIRE, f[CUSTOMER])], {}),
+        (RULE_TEMPLATE_NAME, C.INTERACTION, C.any_of([is_ticked(f, IS_TEMPLATE)]),
+         [C.item(C.SHOW, f[TEMPLATE_NAME]), C.item(C.REQUIRE, f[TEMPLATE_NAME])], {}),
     ]
 
 
-RULES = (RULE_EXPIRATION, RULE_CONFIRMED, RULE_LOCKED, RULE_TAX_MODE)
+RULES = (RULE_EXPIRATION, RULE_CONFIRMED, RULE_LOCKED, RULE_TAX_MODE, RULE_CUSTOMER, RULE_TEMPLATE_NAME)
 
 
 def step_rules():
@@ -217,11 +249,15 @@ def step_rules():
     else:
         print('  the four rules are already as specified; nothing saved')
     live = {r['name']: r for r in hap.listing('worksheet', 'rules', ws())}
-    for name in RULES:
+    wanted = [spec[0] for spec in rule_specs(f)]
+    for name in wanted:
         if name not in live:
             sys.exit(f'rule {name!r} did not come back from the worksheet')
         C.remember('rules', KEY + name, live[name]['ruleId'])
-    print(f'  {len(live)} rules on {WORKSHEET}; the four above are this builder\'s '
+    if not all(n in f for n in NEW):
+        print(f'  note: {list(NEW)} are not on the worksheet, so {RULE_CUSTOMER!r} and {RULE_TEMPLATE_NAME!r} '
+              'were not built — run `controls` first')
+    print(f'  {len(live)} rules on {WORKSHEET}; the {len(wanted)} above are this builder\'s '
           f'({[s[0] for s in specs]} written this run)')
     return bool(specs)
 
@@ -701,6 +737,587 @@ def step_dots():
     return pinned_write('dots', dots_spec(), 'orders_controls_pre_dots')
 
 
+# ── 6 · Is Template and Template Name ───────────────────────────────────────
+#
+# **Neither is an Odoo field.** `sale.order` has no `is_template` and no `template_name`: Odoo keeps a quotation
+# template in a model of its own, `sale.order.template`, and this app instead marks an *order* as the thing to
+# recreate from (the owner's decision, relayed 21 Sep 2026). Both are this app's own invention and their `desc`
+# says so.
+#
+# They are **appended** with `common.append_controls` — `AddWorksheetControls` with no client-side id, so the
+# server mints real ones and not one of the owner's thirty-five controls is re-sent. `add-fields` parks a new
+# control at row 9999 col 0 whatever the payload carries, and only a full save places one, which this builder
+# must not make (see the module docstring) — so `NEW_PLACE` is the intent recorded for the owner, not what will
+# read back: they will find both at the foot of the form and place them in the designer.
+IS_TEMPLATE, TEMPLATE_NAME = 'Is Template', 'Template Name'
+NEW = (IS_TEMPLATE, TEMPLATE_NAME)
+CHECKBOX, TEXT = 36, 2
+NEW_TYPE = {IS_TEMPLATE: CHECKBOX, TEMPLATE_NAME: TEXT}
+NEW_PLACE = {IS_TEMPLATE: (23, 0, 6), TEMPLATE_NAME: (23, 1, 6)}
+NEW_ALIAS = {IS_TEMPLATE: 'is_template', TEMPLATE_NAME: 'template_name'}
+NEW_DESC = {
+    IS_TEMPLATE: 'A template is a quotation kept to be recreated from, not sent to a customer. Use the record '
+                 "menu's Recreate to start a real quotation from it — Recreate copies the order lines, Copy "
+                 'does not. Not an Odoo field: `sale.order` has no `is_template`.',
+    TEMPLATE_NAME: 'What this template is called in the Templates view. Not an Odoo field: `sale.order` has no '
+                   '`template_name`.',
+}
+
+
+def new_controls():
+    """The two controls, as `append_controls` takes them (its own copy drops the `controlId`).
+
+    `showtype` "1" is what the owner's own three checkboxes on this worksheet carry (Locked, Online Payment,
+    Online Signature); hap-cli's SWITCH template defaults to "0", which would draw this one differently from
+    its three neighbours."""
+    return {
+        IS_TEMPLATE: C.control('SWITCH', IS_TEMPLATE, NEW_PLACE[IS_TEMPLATE], alias=NEW_ALIAS[IS_TEMPLATE],
+                               hint='', desc=NEW_DESC[IS_TEMPLATE],
+                               advanced_setting={'showtype': '1', 'itemnames': '', 'sorttype': 'zh'}),
+        TEMPLATE_NAME: C.control('TEXT', TEMPLATE_NAME, NEW_PLACE[TEMPLATE_NAME], alias=NEW_ALIAS[TEMPLATE_NAME],
+                                 hint='', desc=NEW_DESC[TEMPLATE_NAME]),
+    }
+
+
+def new_spec():
+    """What each appended control must read back as. `fieldPermission` is deliberately left as the append
+    leaves it (`""`): `add-fields` stores it empty and only a save that sends `"111"` writes the platform
+    default (BUILDING.md), and `""` is what most of the owner's own controls on this worksheet read."""
+    return {
+        IS_TEMPLATE: {'type': CHECKBOX, 'alias': NEW_ALIAS[IS_TEMPLATE], 'desc': NEW_DESC[IS_TEMPLATE],
+                      'required': False,
+                      'advancedSetting.defsource': C.static_default(0),
+                      'advancedSetting.showtype': '1'},
+        TEMPLATE_NAME: {'type': TEXT, 'alias': NEW_ALIAS[TEMPLATE_NAME], 'desc': NEW_DESC[TEMPLATE_NAME],
+                        'required': False, 'enumDefault': 2},
+    }
+
+
+def step_controls():
+    """Append Is Template and Template Name, then check the append stored everything and repair what it did not
+    in one version-pinned save limited to the two ids just minted.
+
+    Not `C.add_fields`: that appends and then re-saves the whole control set, which is exactly the clobber this
+    builder exists to avoid on a worksheet the owner is hand-building. The pattern is
+    `orderlines.py step_fields`."""
+    f = guard()
+    missing = [n for n in NEW if n not in f]
+    if missing:
+        hap.backup('orders_controls_pre_controls', hap.controls(ws()))
+        built = new_controls()
+        C.append_controls(ws(), [built[n] for n in missing])
+        f = C.fields(ws())
+        gone = [n for n in missing if n not in f]
+        if gone:
+            sys.exit(f'{gone} did not come back from the worksheet — the append did not store')
+        for n in missing:
+            print(f"  added {n}: {f[n]['controlId']} (t{f[n]['type']}, row {f[n].get('row')} — `add-fields` "
+                  f'parks a new control at row 9999; the owner places it)')
+    else:
+        print(f'  {list(NEW)} are already on {WORKSHEET}; nothing appended')
+    spec = new_spec()
+    stale = {n: drift(f[n], spec[n]) for n in NEW if drift(f[n], spec[n])}
+    if stale:
+        print('  the append did not store everything; repairing in one pinned save:')
+        for n, diff in stale.items():
+            for k, (got, want) in diff.items():
+                print(f'    {n}.{k}: {got!r} -> {want!r}')
+        if not pinned_write('controls', {f[n]['controlId']: {k: spec[n][k] for k in stale[n]} for n in stale},
+                            'orders_controls_pre_controls_repair'):
+            sys.exit('the repair found nothing to write, which contradicts the drift above')
+        f = C.fields(ws())
+        left = {n: drift(f[n], spec[n]) for n in NEW if drift(f[n], spec[n])}
+        if left:
+            sys.exit(f'{WORKSHEET}: read back with differences {json.dumps(left, ensure_ascii=False)}')
+    for n in NEW:
+        C.remember('controls', KEY + n, f[n]['controlId'])
+        c = f[n]
+        print(f"  {n:<14} {c['controlId']} t{c['type']:<3} alias={c.get('alias') or '-':<14} "
+              f"perm={c.get('fieldPermission') or '-':<4} r{c.get('row')}c{c.get('col')}")
+    return True
+
+
+# ── 7 · Customer stops being required on the control ────────────────────────
+#
+# **A rule cannot relax a field-level Required.** A required field is required whatever any rule says, so
+# RULE_CUSTOMER below can only make Customer *conditionally* required once the flag is off the control — the
+# same reasoning that took Expiration's flag off in `expiry`, and the same reasoning behind BUILDING.md's rule
+# that a field a rule hides must not be required on the field itself.
+#
+# Odoo does require `sale.order.partner_id`. This app keeps that for a real quotation, through the rule; a
+# template is the exception the owner asked for (relayed 21 Sep 2026).
+CUSTOMER = 'Customer'
+
+
+def step_customer():
+    """Clear `required` on Customer in one version-pinned save that changes nothing else."""
+    f = guard()
+    if not f[CUSTOMER].get('required'):
+        print(f'  {CUSTOMER} is already not required; nothing saved')
+        return False
+    return pinned_write('customer', {CONTROLS[CUSTOMER]: {'required': False}}, 'orders_controls_pre_customer')
+
+
+# ── 8 · the Templates view ──────────────────────────────────────────────────
+#
+# **The owner's three views are theirs and this step does not touch them.** `C.upsert_views` writes only the
+# views it is given, and `C.sort_views` is deliberately not called — it would re-order the whole view bar, and a
+# new view is appended last, which is where it belongs.
+#
+# None of *All*, *Quotations* or *Orders* carries a filter, so a template will appear in all three until the
+# owner adds one; `check` prints the filter they need.
+VIEW_TEMPLATES = 'Templates'
+OWNER_VIEWS = ('All', 'Quotations', 'Orders')
+
+
+def step_views():
+    """The Templates view — a table filtered to *Is Template is ticked*, sorted by Template Name."""
+    f = guard()
+    for n in NEW:
+        if n not in f:
+            sys.exit(f'{n} is not on {WORKSHEET} — run `controls` first')
+    i = lambda *names: [f[n]['controlId'] for n in names]
+    columns = i(TEMPLATE_NAME, 'Number', CUSTOMER, 'Quotation/Order Date', 'Total', 'Status')
+    views = {VIEW_TEMPLATES: (dict(viewType='table', filter=C.switch_filter(f[IS_TEMPLATE], 'eq'),
+                                   tableFields=columns),
+                              C.sort_spec([f[TEMPLATE_NAME]]), columns)}
+    for name, vid in C.upsert_views(ws(), APP, views, 'orders_views_pre_views').items():
+        C.remember('views', KEY + name, vid)
+    C.print_views(ws(), APP)
+    print(f'  the owner\'s {list(OWNER_VIEWS)} were not touched, and none of them filters templates out — '
+          f'{template_filter_note()}')
+    return True
+
+
+def template_filter_note():
+    f = C.fields(ws())
+    cid = (f.get(IS_TEMPLATE) or {}).get('controlId', '<Is Template>')
+    return (f'each needs the condition {IS_TEMPLATE} ({cid}) filterType {C.NE} (is not) value "1", '
+            f'values ["1"], dataType {CHECKBOX}, in a group of its own')
+
+
+# ── 9 · the records the owner approved deleting ──────────────────────────────
+#
+# The owner approved clearing **these two worksheets' records and nothing else** (relayed 21 Sep 2026): the
+# three hand-made orders and the two lines under them, all test data. The approval is pinned to the records it
+# covered — every row that was live when it was given, read off the app at 16:0x on 21 Sep 2026 — so this step
+# can never grow into "delete whatever is there": once the three are gone it is a no-op, and a fourth order the
+# owner made in the meantime stops it rather than being swept up.
+#
+# The delete is a **soft** delete: `--permanent` is not passed, so each row goes to the worksheet's record
+# recycle bin. `--trigger-workflow` is written out in full because the CLI sends `triggerWorkflow: false`
+# without it (BUILDING.md), and `-y` because the command otherwise prompts and a script then hangs.
+WIPE = {                                       # rowid -> the Number it must still carry
+    '81d3b6a8-25f9-4c0c-820f-07339353ed4b': 'S00002',
+    '2007c59b-7b82-4324-9bd0-1ce17c67812d': 'S00004',
+    'de9055e0-09b2-4cb9-bdad-668b031ff2d2': 'S00005',
+}
+
+
+def read_record(worksheet, rowid):
+    """One record through `record get`, which returns every control — `record list` blanks a hidden field and
+    leaves a Text or Number its view does not show out of the row altogether (BUILDING.md)."""
+    return hap.run('worksheet', 'record', 'get', worksheet, rowid, '-a', APP)['data']
+
+
+def wipe_records(worksheet, label, approved, identify):
+    """Delete the approved records, and only those. `identify` returns a record's identity for the check that
+    it is still the row the approval named; a record the approval does not name is left where it is.
+
+    Returns the number deleted. Idempotent: once the approved rows are gone this is a no-op, whatever else the
+    worksheet holds — which is what makes it safe to re-run after the seed."""
+    live = {r['rowid']: r for r in C.records(worksheet, APP)}
+    todo = [rowid for rowid in approved if rowid in live]
+    others = sorted(set(live) - set(approved))
+    if not todo:
+        print(f'  {label}: none of the {len(approved)} approved records is still live; nothing deleted'
+              + (f' ({len(others)} other records left untouched)' if others else ''))
+        return 0
+    if others:
+        sys.exit(f'{label} holds {len(others)} record(s) the owner\'s deletion did not cover '
+                 f'({others}) while {len(todo)} approved record(s) are still live — the approval names exactly '
+                 f'{sorted(approved)}; stopping rather than widening it')
+    full = {rowid: read_record(worksheet, rowid) for rowid in todo}
+    hap.backup(f'{label.lower().replace(" ", "")}_records_pre_wipe', full)
+    for rowid in todo:
+        got, want = identify(full[rowid]), approved[rowid]
+        if got != want:
+            sys.exit(f'{label} {rowid} reads {got!r}, and the approval named {want!r} — stopping')
+    for rowid in todo:
+        hap.run('worksheet', 'record', 'delete', worksheet, '--row-ids', rowid, '-a', APP,
+                '--trigger-workflow', '-y')
+        print(f'  deleted {rowid}  {approved[rowid]!r}')
+    back = C.records(worksheet, APP)
+    still = [r['rowid'] for r in back if r['rowid'] in approved]
+    if still:
+        sys.exit(f'{label}: {still} read back from the worksheet — the delete did not store')
+    print(f'  {label}: {len(todo)} deleted, {len(back)} record(s) left')
+    return len(todo)
+
+
+def step_wipe():
+    """Delete the three test orders the owner approved clearing. Run **after** `orderlines.py wipe`: a line
+    whose parent is gone is an orphan, and the child worksheet's own approval covers both of its rows."""
+    guard()
+    if any(r['rowid'] in WIPE for r in C.records(ws(), APP)):
+        parents = set()
+        for r in C.records(LINES_WS, APP):
+            parents |= set(relation_ids(read_record(LINES_WS, r['rowid']).get('order_id')))
+        blocked = sorted(parents & set(WIPE))
+        if blocked:
+            sys.exit(f'Order Lines still holds rows under {[WIPE[b] for b in blocked]} — run '
+                     '`orderlines.py wipe` first (children before parents)')
+    return bool(wipe_records(ws(), WORKSHEET, WIPE, lambda d: d.get(CONTROLS['Number']) or ''))
+
+
+# ── 10 · the tenant's twelve orders ─────────────────────────────────────────
+#
+# `nocoly/data/sale-orders-casimir.json`, read off casimir over read-only RPC on 21 Sep 2026: twelve orders and
+# thirty lines. The file is the source — nothing here re-derives it — and its `_note` explains the Sequence
+# renumbering, which matters because Odoo's own `sequence` is 10 on nearly every line.
+#
+# **The match key is (Customer, Quotation/Order Date)**, unique across all twelve, because Orders' Number is an
+# **auto-number control (type 33)**: a seeded order gets whatever the app's counter issues next and can never
+# carry the tenant's S00010–S00022. `seeded_orders` is that index, and the tenant name → assigned Number
+# mapping goes into ids.json under `numbers` so the seed stays traceable. Whether Number should become a plain
+# text control that carries Odoo's own numbers is the owner's decision; nothing here changes the control.
+SEED_PATH = os.path.join(hap.HERE, os.pardir, 'data', 'sale-orders-casimir.json')
+
+# {worksheet id: the control whose value is a record's title}, for resolving a Relation by display name at run
+# time. Every one of these worksheets is somebody else's builder's and nothing here writes to them.
+CONTACTS = ('6aa8a3b34a22ad87b728c4fe', 'Display Name')
+PAYMENT_TERMS = ('6aab893fe43d174ab374ce17', 'Payment Terms')
+SALES_TEAMS = ('6aad0f727d58b0f4493141c4', 'Sales Team')
+
+# Odoo `sale.order.state` -> Status, `invoice_status` -> Invoice Status (the control the brief calls Invoicing
+# Status), `document_tax_mode` -> Tax Mode. Every label is looked up in the live option table, never assumed.
+STATE_STATUS = {'draft': 'Quotation', 'sent': 'Quotation Sent', 'sale': 'Sales Order', 'cancel': 'Cancelled'}
+INVOICE_STATUS = {'to invoice': 'To Invoice', 'invoiced': 'Fully Invoiced', 'no': 'Nothing to Invoice',
+                  'upselling': 'Upselling Opportunity'}
+TAX_MODES = {'tax_excluded': 'Tax Excluded', 'tax_included': 'Tax Included'}
+
+# **Prepayment Percentage is deliberately not seeded.** Odoo's `prepayment_percent` is a *ratio* — 1.0 on every
+# one of the twelve, meaning 100 % — while this control is a plain Number carrying `advancedSetting.suffix`
+# "%", so the tenant's 1 would draw "1.00 %" and the figure the tenant's own form shows is 100. That is a unit
+# conversion, not a copy, and the brief did not ask for one: the field is left empty and reported instead.
+NOT_SEEDED = ('Prepayment Percentage', 'Delivery Status', 'Journal', 'Tags', 'Template', 'Incoterm Location',
+              TEMPLATE_NAME)
+
+
+_SEED = None
+
+
+def seed_data():
+    """The seed file and its lines grouped by order, with the sanity check the brief asks for: every order's
+    lines must sum exactly to its `amount_untaxed`. Read and checked once per run."""
+    global _SEED
+    if _SEED is not None:
+        return _SEED
+    with open(SEED_PATH) as fh:
+        data = json.load(fh)
+    lines = {}
+    for line in data['lines']:
+        lines.setdefault(line['order'], []).append(line)
+    if len(data['orders']) != 12 or len(data['lines']) != 30:
+        sys.exit(f"the seed holds {len(data['orders'])} orders and {len(data['lines'])} lines, expected 12 / 30")
+    bad = [f"{o['name']}: its lines sum to {round(sum(l['subtotal'] for l in lines.get(o['name'], [])), 2)}, "
+           f"amount_untaxed is {round(o['amount_untaxed'], 2)}"
+           for o in data['orders']
+           if round(sum(l['subtotal'] for l in lines.get(o['name'], [])), 2) != round(o['amount_untaxed'], 2)]
+    if bad:
+        sys.exit('the seed does not add up:\n  ' + '\n  '.join(bad))
+    names = [o['name'] for o in data['orders']]
+    if len(set(names)) != len(names):
+        sys.exit(f'the seed names an order twice: {names}')
+    print(f"  seed: data/{os.path.basename(SEED_PATH)} — {len(data['orders'])} orders, {len(data['lines'])} "
+          f"lines; every order's lines sum exactly to its amount_untaxed")
+    _SEED = (data, lines)
+    return _SEED
+
+
+# ── reading a cell back, by control type ────────────────────────────────────
+
+def relation_cells(value):
+    """A Relation read back through `record get` is a list of {sid, name} (a JSON string on some paths)."""
+    if isinstance(value, str):
+        value = json.loads(value) if value.startswith('[') else []
+    return [x for x in (value or []) if isinstance(x, dict)]
+
+
+def relation_ids(value):
+    return [x.get('sid') for x in relation_cells(value)]
+
+
+def relation_names(value):
+    return [x.get('name') for x in relation_cells(value)]
+
+
+def member_ids(value):
+    return [x.get('accountId') for x in relation_cells(value)]
+
+
+def option_keys(value):
+    """A single select through the v3 `record get` is [{key, value}]; through GetRowDetail it is a list of bare
+    keys (BUILDING.md). Both are reduced to the keys."""
+    if isinstance(value, str):
+        value = json.loads(value) if value.startswith('[') else ([value] if value else [])
+    return [x.get('key') if isinstance(x, dict) else x for x in (value or [])]
+
+
+def number_of(value):
+    return None if value in (None, '') else round(float(value), 2)
+
+
+READERS = {29: relation_ids, 26: member_ids, 11: option_keys, 9: option_keys,
+           36: lambda v: '1' if str(v) == '1' else '0',
+           6: number_of, 8: number_of, 31: number_of, 37: number_of, 53: lambda v: v or '',
+           2: lambda v: v or '', 15: lambda v: v or '', 16: lambda v: v or '', 33: lambda v: v or ''}
+
+
+def read_cell(c, record):
+    """The value of control `c` on a record, in the form `want` is written in. `record get` keys a value by the
+    control's **alias**, and by its controlId when it has none (BUILDING.md) — Orders carries no aliases at
+    all, Order Lines carries one on every control."""
+    raw = record.get(c.get('alias') or c['controlId'])
+    return READERS.get(c['type'], lambda v: v)(raw)
+
+
+def differences(c_by_name, live, want):
+    """{control name: (got, wanted)} for every cell of `want` the record does not already carry."""
+    out = {}
+    for name, value in want.items():
+        got = read_cell(c_by_name[name], live)
+        if got != value:
+            out[name] = (got, value)
+    return out
+
+
+# ── resolving a seeded relation by display name ─────────────────────────────
+
+def titles(worksheet, control_name):
+    """{title: [rowid, ...]} over a worksheet, for resolving a Relation by display name.
+
+    `record list` leaves a Text the default view does not show out of the row altogether, so a title that comes
+    back missing is re-read with `record get` rather than treated as empty (BUILDING.md)."""
+    f = C.fields(worksheet)
+    c = f[control_name]
+    out = {}
+    for r in C.records(worksheet, APP):
+        title = r.get(c['controlId'])
+        if title in (None, ''):
+            title = read_cell(c, read_record(worksheet, r['rowid']))
+        out.setdefault(title, []).append(r['rowid'])
+    return out
+
+
+def resolve(index, name, what, gaps):
+    """The one record titled `name`, or None with the gap recorded. Nothing here creates a record in another
+    worksheet: this build may only touch Orders and Order Lines, so a name the app does not hold leaves the
+    cell empty and is reported."""
+    rows = index.get(name) or []
+    if len(rows) == 1:
+        return rows[0]
+    gaps.setdefault((what, name), 0)
+    gaps[(what, name)] += 1
+    return None
+
+
+def option_key(c, label):
+    keys = [o['key'] for o in c.get('options') or [] if o['value'] == label and not o.get('isDeleted')]
+    if len(keys) != 1:
+        sys.exit(f"{c['controlName']}: {label!r} matches {len(keys)} live options among "
+                 f"{[o['value'] for o in c.get('options') or []]}")
+    return keys[0]
+
+
+def order_key(customer_rowid, date):
+    """What matches a live order with a seeded one: (Customer, Quotation/Order Date). Not the Number — that is
+    an auto-number control and the app's own counter owns it."""
+    return (customer_rowid or '', date or '')
+
+
+def seeded_orders():
+    """{tenant name: (rowid, Number)} for every seeded order that is live, matched on (Customer, Date)."""
+    f = C.fields(ws())
+    data, _lines = seed_data()
+    live = {}
+    for r in C.records(ws(), APP):
+        d = read_record(ws(), r['rowid'])
+        live[order_key((read_cell(f[CUSTOMER], d) or [None])[0], read_cell(f['Quotation/Order Date'], d))] = \
+            (r['rowid'], read_cell(f['Number'], d))
+    contacts = titles(*CONTACTS)
+    out, gaps = {}, {}
+    for o in data['orders']:
+        rows = contacts.get(o['partner']) or []
+        key = order_key(rows[0] if len(rows) == 1 else None, o['date_order'])
+        if key in live:
+            out[o['name']] = live[key]
+    return out
+
+
+def order_want(f, o, index, gaps):
+    """{control name: value} — every cell the seed writes on one order, and nothing else.
+
+    A relation the app cannot resolve is **left out of `want` altogether**, so it is neither written nor
+    compared and a later run picks it up the day the record exists; every one of them is reported."""
+    contacts, payterms, teams, salespeople = index['contacts'], index['payterms'], index['teams'], index['people']
+    want = {
+        'Status': [option_key(f['Status'], STATE_STATUS[o['state']])],
+        'Invoice Status': [option_key(f['Invoice Status'], INVOICE_STATUS[o['invoice_status']])],
+        'Tax Mode': [option_key(f['Tax Mode'], TAX_MODES[o['tax_mode']])],
+        'Quotation/Order Date': o['date_order'],
+        'Expiration': o['validity_date'] or '',
+        'Customer Reference': o['client_order_ref'] or '',
+        'Source Document': o['origin'] or '',
+        'Online Signature': '1' if o['require_signature'] else '0',
+        'Online Payment': '1' if o['require_payment'] else '0',
+        'Locked': '1' if o['locked'] else '0',
+        IS_TEMPLATE: '0',                      # a seeded order is never a template
+    }
+    if o['commitment_date']:
+        want['Delivery Date'] = o['commitment_date']
+    for field, name, kind, idx in ((CUSTOMER, o['partner'], 'contact', contacts),
+                                   ('Invoice Address', o['invoice_address'], 'contact', contacts),
+                                   ('Delivery Address', o['delivery_address'], 'contact', contacts),
+                                   ('Payment Terms', o['payment_term'], 'payment term', payterms),
+                                   ('Sales Teams', o['sales_team'], 'sales team', teams)):
+        if not name:
+            continue
+        rowid = resolve(idx, name, kind, gaps)
+        if rowid:
+            want[field] = [rowid]
+    if o['salesperson']:
+        account = salespeople.get(o['salesperson'])
+        if account:
+            want['Salesperson'] = [account]
+        else:
+            gaps.setdefault(('member', o['salesperson']), 0)
+            gaps[('member', o['salesperson'])] += 1
+    return want
+
+
+def members(names):
+    """{name: accountId} for the seed's salespeople, resolved through the organisation's own directory.
+
+    `contact search` is a keyword search, so a name that matches more than one member is refused rather than
+    guessed — the tenant's "Casimir" is this organisation's "Casimir Chiong Ming Yuan"."""
+    out = {}
+    for name in sorted(names):
+        res = hap.run('contact', 'search', name)
+        users = (res or {}).get('users') or []
+        if len(users) == 1:
+            out[name] = users[0]['id']
+            print(f"  salesperson {name!r} -> {users[0]['name']} ({users[0]['id']})")
+        else:
+            print(f'  salesperson {name!r}: {len(users)} members match '
+                  f"{[u['name'] for u in users]} — left empty and reported")
+    return out
+
+
+def seed_index(data):
+    return {'contacts': titles(*CONTACTS), 'payterms': titles(*PAYMENT_TERMS), 'teams': titles(*SALES_TEAMS),
+            'people': members({o['salesperson'] for o in data['orders'] if o['salesperson']})}
+
+
+def write_record(worksheet, rowid, values):
+    body = json.dumps(values, ensure_ascii=False)
+    if rowid:
+        hap.run('worksheet', 'record', 'update', worksheet, rowid, '-a', APP, '--fields-json', body)
+        return rowid
+    return C.row_id(hap.run('worksheet', 'record', 'create', worksheet, '-a', APP, '--fields-json', body))
+
+
+def step_seed():
+    """The tenant's twelve orders, matched by (Customer, Quotation/Order Date) and re-running to nothing.
+
+    Nothing is written to any other worksheet: a Customer, an Invoice or Delivery Address, a Payment Term or a
+    Sales Team whose record this app does not hold is left empty and reported, because creating it would mean
+    writing to Contacts, Payment Terms or Sales Teams."""
+    f = guard()
+    for n in NEW:
+        if n not in f:
+            sys.exit(f'{n} is not on {WORKSHEET} — run `controls` first')
+    if f[CUSTOMER].get('required'):
+        sys.exit(f'{CUSTOMER} still carries `required` on the control, so an order with no customer cannot be '
+                 'seeded — run `customer` first')
+    data, lines = seed_data()
+    index = seed_index(data)
+    live = {}
+    for r in C.records(ws(), APP):
+        d = read_record(ws(), r['rowid'])
+        live[order_key((read_cell(f[CUSTOMER], d) or [None])[0],
+                       read_cell(f['Quotation/Order Date'], d))] = (r['rowid'], d)
+    hap.backup('orders_records_pre_seed', {rowid: d for rowid, d in live.values()})
+    gaps, numbers, problems = {}, {}, []
+    for o in data['orders']:
+        want = order_want(f, o, index, gaps)
+        key = order_key((want.get(CUSTOMER) or [None])[0], want['Quotation/Order Date'])
+        rowid, record = live.get(key, (None, {}))
+        diff = differences(f, record, want) if rowid else want
+        if rowid and not diff:
+            numbers[o['name']] = read_cell(f['Number'], record)
+            print(f"  {o['name']}: already seeded as {numbers[o['name']]} ({rowid})")
+        else:
+            values = ([{'id': f[n]['controlId'], 'value': want[n]} for n in diff] if rowid else
+                      [{'id': f[n]['controlId'], 'value': v} for n, v in want.items()
+                       if v not in ('', [], None)])
+            rowid = write_record(ws(), rowid, values)
+            record = read_record(ws(), rowid)
+            numbers[o['name']] = read_cell(f['Number'], record)
+            print(f"  {o['name']}: {'updated' if key in live else 'created'} as {numbers[o['name']]} ({rowid})")
+        left = differences(f, record, want)
+        if left:
+            problems.append(f"{o['name']} ({numbers[o['name']]}): {json.dumps(left, ensure_ascii=False, default=str)}")
+        C.remember('records', KEY + o['name'], rowid)
+        C.remember('numbers', KEY + o['name'], numbers[o['name']])
+    print(f'  tenant name -> assigned Number: '
+          + ', '.join(f'{n} -> {numbers[n]}' for n in (o['name'] for o in data['orders'])))
+    report_gaps(gaps)
+    print(f'  not seeded (no tenant value, or out of this build\'s scope): {list(NOT_SEEDED)}')
+    if problems:
+        sys.exit('  the seed read back with differences:\n    ' + '\n    '.join(problems))
+    return True
+
+
+def report_gaps(gaps):
+    if not gaps:
+        print('  every relation the seed names resolved to exactly one record')
+        return
+    print(f'  {len(gaps)} name(s) the seed points at are not in this app, so the cell was left empty:')
+    for (what, name), count in sorted(gaps.items()):
+        print(f'    {what:<13} {name!r} — on {count} cell(s); create it in its own worksheet and re-run `seed`')
+
+
+# ── 11 · the figures: what the app computed against what the tenant holds ────
+#
+# Untaxed Amount, Tax and Total are 汇总 over the Order Lines subtable and the seed writes none of them —
+# nothing here "fixes" a figure, because a mismatch is a finding about the roll-ups and the line formulas
+# they sum, not about the data.
+AMOUNTS = (('Untaxed Amount', 'amount_untaxed'), ('Tax', 'amount_tax'), ('Total', 'amount_total'))
+
+
+def step_figures():
+    """Each seeded order's three roll-ups beside the tenant's own amount_untaxed / amount_tax / amount_total."""
+    f = guard()
+    data, _lines = seed_data()
+    live = seeded_orders()
+    diffs = 0
+    for o in data['orders']:
+        if o['name'] not in live:
+            print(f"  {o['name']}: not seeded — run `seed`")
+            diffs += 1
+            continue
+        rowid, number = live[o['name']]
+        d = read_record(ws(), rowid)
+        got = [(name, read_cell(f[name], d), round(o[key], 2)) for name, key in AMOUNTS]
+        bad = [x for x in got if x[1] != x[2]]
+        diffs += len(bad)
+        print(f"  {'DIFF' if bad else 'OK  '} {o['name']} -> {number}  "
+              + '  '.join(f'{n}={v if v is not None else "(empty)"}/{w}' for n, v, w in got))
+    print(f'  {diffs} figure(s) differ from the tenant (app value / tenant value above)')
+    return diffs
+
+
 # ── the guard ───────────────────────────────────────────────────────────────
 
 def guard():
@@ -721,7 +1338,7 @@ def guard():
                 for name, cid in CONTROLS.items() if (f.get(name) or {}).get('controlId') != cid]
     if problems:
         sys.exit(f'{WORKSHEET}: ' + '; '.join(problems) + ' — re-read the worksheet before writing a rule')
-    unknown = sorted(set(f) - set(CONTROLS))
+    unknown = sorted(set(f) - set(CONTROLS) - set(NEW))
     if unknown:
         print(f'  note: {WORKSHEET} also carries {unknown} — added by the owner, and no rule here names them')
     for name in CONTROLS:
@@ -796,6 +1413,55 @@ def step_check():
           f'not exist, deferred to its own bundle')
     print(f"  the owner's: 'Only require Prepayment Percentage if Online Payment is needed' — a SHOW rule on a "
           f"field whose fieldPermission is 011 (hidden by design); left exactly as it is")
+    # the two appended controls, Customer's flag, the Templates view and the seed
+    missing = [n for n in NEW if n not in f]
+    if missing:
+        problems.append(f'{missing} are not on the worksheet — run `controls`')
+    else:
+        spec = new_spec()
+        for n in NEW:
+            diff = drift(f[n], spec[n])
+            if diff:
+                problems.append(f'{n}: {json.dumps(diff, ensure_ascii=False)} — run `controls`')
+            else:
+                print(f"  OK  {n} as specified ({f[n]['controlId']}, alias {f[n].get('alias')})")
+    if f[CUSTOMER].get('required'):
+        problems.append(f'{CUSTOMER} carries `required` on the control, so {RULE_CUSTOMER!r} cannot relax it on '
+                        'a template — run `customer`')
+    else:
+        print(f'  OK  {CUSTOMER} is not required on the control; {RULE_CUSTOMER!r} requires it conditionally')
+    views = {v['name']: v['viewId'] for v in hap.listing('worksheet', 'view', 'list', ws(), '-a', APP)}
+    if VIEW_TEMPLATES not in views:
+        problems.append(f'the {VIEW_TEMPLATES!r} view is missing — run `views`')
+    elif IS_TEMPLATE in f:
+        info = C.view_info(ws(), APP, views[VIEW_TEMPLATES])
+        flt = [(c['controlId'], c['filterType'], c.get('values')) for c in info.get('filters') or []]
+        want = [(f[IS_TEMPLATE]['controlId'], C.EQ, ['1'])]
+        if flt != want:
+            problems.append(f'the {VIEW_TEMPLATES!r} view filters {flt}, wanted {want} — run `views`')
+        else:
+            print(f'  OK  {VIEW_TEMPLATES} filters {IS_TEMPLATE} is ticked ({views[VIEW_TEMPLATES]})')
+    for name in OWNER_VIEWS:
+        info = C.view_info(ws(), APP, views[name]) if name in views else {}
+        if not (info.get('filters') or []):
+            print(f"  the owner's {name!r} view has no filter, so **templates appear in it** — "
+                  f'{template_filter_note()}')
+    data, _lines = seed_data()
+    seeded = seeded_orders()
+    absent = [o['name'] for o in data['orders'] if o['name'] not in seeded]
+    if absent:
+        problems.append(f'{len(absent)} seeded order(s) are not on the worksheet ({absent}) — run `seed`')
+    else:
+        print(f'  OK  all {len(seeded)} seeded orders are live: '
+              + ', '.join(f'{n} -> {seeded[n][1]}' for n in (o['name'] for o in data['orders'])))
+        index, gaps = seed_index(data), {}
+        for o in data['orders']:
+            rowid, number = seeded[o['name']]
+            left = differences(f, read_record(ws(), rowid), order_want(f, o, index, gaps))
+            if left:
+                problems.append(f"{o['name']} ({number}): {json.dumps(left, ensure_ascii=False, default=str)} "
+                                '— run `seed`')
+        report_gaps(gaps)
     if problems:
         print('  check: ' + '\n         '.join(problems))
         sys.exit(1)
@@ -826,7 +1492,9 @@ def step_show():
 
 
 STEPS = {'rules': step_rules, 'retire': step_retire, 'expiry': step_expiry, 'totals': step_totals,
-         'dots': step_dots, 'check': step_check, 'show': step_show}
+         'dots': step_dots, 'controls': step_controls, 'customer': step_customer, 'views': step_views,
+         'wipe': step_wipe, 'seed': step_seed, 'figures': step_figures,
+         'check': step_check, 'show': step_show}
 
 if __name__ == '__main__':
     if len(sys.argv) < 2 or sys.argv[1] not in STEPS:

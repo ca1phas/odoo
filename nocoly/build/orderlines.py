@@ -11,6 +11,11 @@
     ~/.hap-venv/bin/python nocoly/build/orderlines.py rules      # 4. a section or a note carries no figures
     ~/.hap-venv/bin/python nocoly/build/orderlines.py alias      # 5. the Odoo field names into `alias`, one
                                                                  #    pinned save
+    ~/.hap-venv/bin/python nocoly/build/orderlines.py wipe       # 6. delete the two test lines the owner
+                                                                 #    approved (children before parents)
+    ~/.hap-venv/bin/python nocoly/build/orderlines.py seed       # 7. the tenant's thirty lines
+    ~/.hap-venv/bin/python nocoly/build/orderlines.py figures    # 8. each line's computed Subtotal, Tax Amount
+                                                                 #    and Total beside the tenant's own
     ~/.hap-venv/bin/python nocoly/build/orderlines.py check      # read everything back and report drift
     ~/.hap-venv/bin/python nocoly/build/orderlines.py show       # the live controls and rules
 
@@ -18,7 +23,8 @@
 they are still working in it. HAP has no per-field endpoint — hap-cli's own `field update` goes through
 `SaveWorksheetControls` too — so an ordinary `layout` step would replace the whole control set and revert
 whatever they had typed since the read. **There is therefore no `fields`-as-full-save, no `layout` and no
-`views` step here, and there must not be one.** Every step that touches a control is one of two shapes:
+`views` step here, and there must not be one.** Every step that touches a *control* is one of two shapes
+(`wipe`, `seed` and `figures` touch records, not controls):
 
   * an **append** (`common.append_controls`) — `AddWorksheetControls` with no `controlId`, so the server mints
     real ids and nothing that was already on the worksheet is re-sent;
@@ -26,7 +32,9 @@ whatever they had typed since the read. **There is therefore no `fields`-as-full
     version=…)`, which refuses (code 10, 数据过时) if the owner saved in between, followed by a signature diff
     proving the save changed only the controls this step names. The pattern is `products.py step_perms`.
 
-Nothing here deletes anything, creates a record, or opens the Sales app. Requirements:
+Nothing here opens the Sales app, and nothing here deletes or creates a **control**. `wipe` deletes the two
+records the owner explicitly approved clearing and `seed` creates the tenant's thirty lines; both are scoped to
+this worksheet's own rows. Requirements:
 nocoly/worksheets/16-orders.md §2 (Lines) and §7.2. Generic helpers: common.py.
 """
 import json
@@ -695,6 +703,219 @@ def step_alias():
     return bool(changed) or renamed
 
 
+# ── 6 · the records the owner approved deleting ──────────────────────────────
+#
+# The owner approved clearing **these two worksheets' records and nothing else** (relayed 21 Sep 2026): the two
+# hand-made lines here and the three orders above them, all test data. As on Orders the approval is pinned to
+# the rows it covered, read off the app on 21 Sep 2026 — so this step can never grow into "delete whatever is
+# there": once the two are gone it is a no-op, which is what makes it safe to re-run after the seed, and a third
+# line the owner made in the meantime stops it rather than being swept up. The delete is a **soft** delete
+# (`--permanent` is not passed), so each row goes to the worksheet's record recycle bin.
+WIPE = {                                           # rowid -> the (order Number, Description) it must still carry
+    '6d0f8acc-3a71-4719-9b05-76b2528d4e52': ('S00002', 'TEST rollup line'),
+    'd06d417a-f50d-4792-b49e-b5664ebf8a89': ('S00005', 'TEST rollup line'),
+}
+
+
+def step_wipe():
+    """Delete the two test lines the owner approved clearing. Run **before** `orders.py wipe`: children first,
+    because a line whose parent is gone is an orphan."""
+    guard()
+    return bool(O.wipe_records(ws(), WORKSHEET, WIPE,
+                               lambda d: ((O.relation_names(d.get('order_id')) or [''])[0],
+                                          d.get('name') or '')))
+
+
+# ── 7 · the tenant's thirty lines ───────────────────────────────────────────
+#
+# `nocoly/data/sale-orders-casimir.json` again — `orders.py` owns the loader, the relation resolver and the
+# read-back-by-control-type, so the two halves of one seed cannot drift apart. Its `_note` explains the
+# **Sequence renumbering**: Odoo's own `sequence` is 10 on nearly every line, so the file renumbers 10, 20, 30
+# in Odoo's own returned order, which is what keeps the lines in their on-screen order here.
+#
+# **The match key is (the order's rowid, Sequence)** — not the order's Number, which the app's auto-number
+# control minted and which says nothing about which tenant order a line belongs to. `invlines.py seed_key` keys
+# its lines the same way and for the same reason.
+#
+# **Subtotal, Tax Amount and Total are never written.** Subtotal is the owner's Currency carrying a *function
+# default*, which is evaluated client-side in the form and not by the API (BUILDING.md: the API applies no
+# defaults), and the other two are type 31 Formulas computed from it. The seed's figures are read back and
+# compared in `figures`, and a mismatch is reported, never repaired.
+NOT_WRITTEN = ('Subtotal', 'Tax Amount', 'Total', 'Tax rate', 'Product Unit')
+
+# The seed names five variants this app does not hold, and creating them would mean writing to Product
+# Variants, which this build may not touch. Each stands for the product's single active variant, exactly as
+# `invlines.py`'s own SEED rows do and for the same reason: Phase 1 keeps one placeholder variant per product,
+# so the tenant's archived originals ([FURN-0001], [FURN-0002], [IT-0002]) and its colour variants
+# (Ergonomic Office Chair Blue / Red) have no record of their own. The line keeps the **tenant's own
+# Description**, which is where the reference survives.
+VARIANT_STANDS_FOR = {
+    '[IT-0002] 27" 4K Monitor': '27" 4K Monitor',
+    '[FURN-0001] Ergonomic Office Chair': 'Ergonomic Office Chair',
+    '[FURN-0002] Height-Adjustable Desk 140cm': 'Height-Adjustable Desk 140cm',
+    'Ergonomic Office Chair (Red)': 'Ergonomic Office Chair',
+    'Ergonomic Office Chair (Blue)': 'Ergonomic Office Chair',
+}
+# A tax is named by **Tax Name and Tax Type**, never by name alone: this app holds four taxes called *10% G* and
+# *8% S* — a Sales one and a Purchases one of each — so the seed's bare names are resolved against the **Sales**
+# ones. Every one of the twelve orders is a customer document, and `invlines.py` resolves its own the same way.
+TAX_TYPE = 'Sales'
+
+
+def tax_index():
+    """{(Tax Name, Tax Type): [rowid, ...]} over the Taxes worksheet."""
+    taxes = C.fields(TAXES())
+    name, kind = taxes['Tax Name'], taxes['Tax Type']
+    labels = {o['key']: o['value'] for o in kind.get('options') or []}
+    out = {}
+    for r in C.records(TAXES(), APP):
+        keys = O.option_keys(r.get(kind['controlId']))
+        out.setdefault((r.get(name['controlId']), labels.get(keys[0]) if keys else None), []).append(r['rowid'])
+    return out
+
+
+def VARIANTS():
+    return C.fields(ws())['Product']['dataSource']
+
+
+def UNITS():
+    return C.fields(ws())['Unit']['dataSource']
+
+
+def TAXES():
+    return C.fields(ws())['Taxes']['dataSource']
+
+
+def line_key(order_rowid, sequence):
+    return (order_rowid or '', None if sequence is None else round(float(sequence), 2))
+
+
+def line_want(f, line, order_rowid, index, gaps):
+    """{control name: value} — every cell the seed writes on one line, and nothing else.
+
+    A row with **no product and no unit** — S00021's Down Payments section and its two down-payment rows —
+    simply sends neither cell, exactly as `invlines.py` does for its own section row. A product the app cannot
+    resolve is left out too, and reported."""
+    want = {
+        'Orders': [order_rowid],
+        'Sequence': float(line['sequence']),
+        'Display Type': [O.option_key(f['Display Type'], line['display_type'])],
+        'Description': line['description'] or '',
+        'Quantity': round(float(line['quantity']), 2),
+        'Quantity Invoiced': round(float(line['qty_invoiced']), 2),
+        'Quantity Delivered': round(float(line['qty_delivered']), 2),
+        'Unit Price': round(float(line['unit_price']), 2),
+        'Discount': round(float(line['discount']), 2),
+        'Lead Time': round(float(line['lead_time']), 2),
+        'Optional Line': '1' if line['optional_line'] else '0',
+    }
+    if line['product']:
+        rowid = O.resolve(index['variants'], VARIANT_STANDS_FOR.get(line['product'], line['product']),
+                          'product variant', gaps)
+        if rowid:
+            want['Product'] = [rowid]
+    if line['unit']:
+        rowid = O.resolve(index['units'], line['unit'], 'unit', gaps)
+        if rowid:
+            want['Unit'] = [rowid]
+    if line['taxes']:
+        rows = [O.resolve(index['taxes'], (name, TAX_TYPE), 'tax', gaps) for name in line['taxes']]
+        if all(rows):
+            want['Taxes'] = rows
+    return want
+
+
+def step_seed():
+    """The tenant's thirty lines, matched by (the order's rowid, Sequence) and re-running to nothing.
+
+    Runs **after** `orders.py seed`: a line's Orders relation is the back-relation the subtable is built on, so
+    the row shows inside its order straight away, and an order that is not there yet has no rowid to point at."""
+    f = guard()
+    data, grouped = O.seed_data()
+    orders = O.seeded_orders()
+    absent = [o['name'] for o in data['orders'] if o['name'] not in orders]
+    if absent:
+        sys.exit(f'{absent} are not on Orders — run `orders.py seed` first')
+    index = {'variants': O.titles(VARIANTS(), 'Display Name'), 'units': O.titles(UNITS(), 'Unit Name'),
+             'taxes': tax_index()}
+    live = {}
+    for r in C.records(ws(), APP):
+        d = O.read_record(ws(), r['rowid'])
+        live[line_key((O.read_cell(f['Orders'], d) or [None])[0], O.read_cell(f['Sequence'], d))] = (r['rowid'], d)
+    hap.backup('orderlines_records_pre_seed', {rowid: d for rowid, d in live.values()})
+    gaps, problems, made = {}, [], 0
+    for o in data['orders']:
+        order_rowid, number = orders[o['name']]
+        for line in grouped.get(o['name'], []):
+            want = line_want(f, line, order_rowid, index, gaps)
+            key = line_key(order_rowid, line['sequence'])
+            rowid, record = live.get(key, (None, {}))
+            diff = O.differences(f, record, want) if rowid else None
+            if rowid and not diff:
+                continue
+            values = ([{'id': f[n]['controlId'], 'value': want[n]} for n in diff] if rowid else
+                      [{'id': f[n]['controlId'], 'value': v} for n, v in want.items()
+                       if v not in ('', [], None)])
+            was = rowid
+            rowid = O.write_record(ws(), rowid, values)
+            record = O.read_record(ws(), rowid)
+            made += 1
+            print(f"  {o['name']} ({number}) line {line['sequence']}: "
+                  f"{'updated' if was else 'created'} {rowid}")
+            left = O.differences(f, record, want)
+            if left:
+                problems.append(f"{o['name']} line {line['sequence']}: "
+                                f'{json.dumps(left, ensure_ascii=False, default=str)}')
+            C.remember('records', f"{KEY}{o['name']} line {line['sequence']}", rowid)
+    print(f'  {made} line(s) written this run; {len(data["lines"])} in the seed')
+    O.report_gaps(gaps)
+    print(f'  never written by the seed: {list(NOT_WRITTEN)} — computed by the app and compared in `figures`')
+    if problems:
+        sys.exit('  the seed read back with differences:\n    ' + '\n    '.join(problems))
+    return bool(made)
+
+
+# ── 8 · the figures: what the app computed against what the tenant holds ────
+
+# Not `FIGURES` — that name is the *rule*'s list of the thirteen controls a section hides, and shadowing it
+# emptied the rule's targets on the first run of this step.
+COMPUTED = (('Subtotal', 'subtotal'), ('Tax Amount', 'tax_amount'), ('Total', 'total'))
+
+
+def step_figures():
+    """Each seeded line's computed Subtotal, Tax Amount and Total beside the tenant's own — reported, never
+    repaired: a mismatch is a finding about Subtotal's function default and the two Formulas built on it."""
+    f = guard()
+    data, grouped = O.seed_data()
+    orders = O.seeded_orders()
+    live = {}
+    for r in C.records(ws(), APP):
+        d = O.read_record(ws(), r['rowid'])
+        live[line_key((O.read_cell(f['Orders'], d) or [None])[0], O.read_cell(f['Sequence'], d))] = d
+    diffs, seen = 0, 0
+    for o in data['orders']:
+        if o['name'] not in orders:
+            print(f"  {o['name']}: not seeded — run `orders.py seed`")
+            continue
+        order_rowid, number = orders[o['name']]
+        for line in grouped.get(o['name'], []):
+            d = live.get(line_key(order_rowid, line['sequence']))
+            if d is None:
+                print(f"  MISSING {o['name']} line {line['sequence']} — run `seed`")
+                diffs += 1
+                continue
+            seen += 1
+            got = [(name, O.read_cell(f[name], d), round(line[key], 2)) for name, key in COMPUTED]
+            bad = [x for x in got if x[1] != x[2]]
+            diffs += len(bad)
+            print(f"  {'DIFF' if bad else 'OK  '} {o['name']}/{number} line {line['sequence']:>3}  "
+                  + '  '.join(f'{n}={v if v is not None else "(empty)"}/{w}' for n, v, w in got)
+                  + f"  rate={O.read_cell(f['Tax rate'], d)}")
+    print(f'  {seen} line(s) compared, {diffs} figure(s) differ from the tenant '
+          f'(app value / tenant value above)')
+    return diffs
+
+
 # ── check ───────────────────────────────────────────────────────────────────
 
 def condition_state(filters, names):
@@ -796,6 +1017,40 @@ def step_check():
           f'Quantity Delivered waits on Inventory (16-orders.md §4)')
     print(f'  not built: the three appended controls are at row {f[RATE].get("row") if RATE in f else "?"} — '
           f'`add-fields` parks a new control and only a full save places one, which this builder must not make')
+    data, grouped = O.seed_data()
+    orders = O.seeded_orders()
+    missing_orders = [o['name'] for o in data['orders'] if o['name'] not in orders]
+    if missing_orders:
+        problems.append(f'{missing_orders} are not on Orders — run `orders.py seed`')
+    else:
+        index = {'variants': O.titles(VARIANTS(), 'Display Name'), 'units': O.titles(UNITS(), 'Unit Name'),
+                 'taxes': tax_index()}
+        live = {}
+        for r in C.records(ws(), APP):
+            d = O.read_record(ws(), r['rowid'])
+            live[line_key((O.read_cell(f['Orders'], d) or [None])[0], O.read_cell(f['Sequence'], d))] = d
+        gaps, absent, drifted = {}, [], []
+        for o in data['orders']:
+            order_rowid, number = orders[o['name']]
+            for line in grouped.get(o['name'], []):
+                key = line_key(order_rowid, line['sequence'])
+                want = line_want(f, line, order_rowid, index, gaps)
+                if key not in live:
+                    absent.append(f"{o['name']} line {line['sequence']}")
+                    continue
+                left = O.differences(f, live[key], want)
+                if left:
+                    drifted.append(f"{o['name']} line {line['sequence']}: "
+                                   f'{json.dumps(left, ensure_ascii=False, default=str)}')
+        extra = len(live) - (len(data['lines']) - len(absent))
+        if absent:
+            problems.append(f'{len(absent)} seeded line(s) are missing ({absent}) — run `seed`')
+        if drifted:
+            problems.append(f'{len(drifted)} seeded line(s) differ — run `seed`:\n    ' + '\n    '.join(drifted))
+        if not absent and not drifted:
+            print(f"  OK  all {len(data['lines'])} seeded lines are live and as the seed writes them"
+                  + (f' ({extra} other line(s) on the worksheet)' if extra else ''))
+        O.report_gaps(gaps)
     report(f)
     if problems:
         print('  check: ' + '\n         '.join(problems))
@@ -813,7 +1068,8 @@ def step_show():
 
 
 STEPS = {'fields': step_fields, 'computed': step_computed, 'formulas': step_formulas, 'rules': step_rules,
-         'alias': step_alias, 'check': step_check, 'show': step_show}
+         'alias': step_alias, 'wipe': step_wipe, 'seed': step_seed, 'figures': step_figures,
+         'check': step_check, 'show': step_show}
 
 if __name__ == '__main__':
     if len(sys.argv) < 2 or sys.argv[1] not in STEPS:

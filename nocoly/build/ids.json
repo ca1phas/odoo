@@ -109,7 +109,8 @@
   "States: Duplicate codes": "6aad02af805aef703286ab80",
   "Taxes: Taxes": "6aad1034805aef703286ac33",
   "Taxes: Archived": "6aad11d1e54d2a34fa4e584b",
-  "Taxes: Duplicate names": "6aad11e77d58b0f449314258"
+  "Taxes: Duplicate names": "6aad11e77d58b0f449314258",
+  "Orders: Templates": "6ab0e816e43d174ab3753a42"
  },
  "controls": {
   "Journals: Journal Name": "6aa8f6c81204328eb1af1676",
@@ -315,7 +316,9 @@
   "Orders: Prepayment Percentage": "6ab0c324805aef703286d777",
   "Orders: Untaxed Amount": "6ab0c740e43d174ab37535b8",
   "Orders: Tax": "6ab0c740e43d174ab37535b9",
-  "Orders: Total": "6ab0c740e43d174ab37535ba"
+  "Orders: Total": "6ab0c740e43d174ab37535ba",
+  "Orders: Is Template": "6ab0e7dee43d174ab3753a3d",
+  "Orders: Template Name": "6ab0e7dee43d174ab3753a3e"
  },
  "rules": {
   "Journals: Payment Communications only for Sales": "6aa9dae5e54d2a34fa4dfde2",
@@ -361,7 +364,9 @@
   "Orders: A confirmed or cancelled order is closed for editing": "6ab0ba6e805aef703286d6fd",
   "Orders: A locked or cancelled order is closed for editing": "6ab0ba6ee54d2a34fa4e7fe2",
   "Order Lines: A section or a note carries no figures": "6ab0d4e0e43d174ab375378c",
-  "Orders: Tax Mode is fixed once the quotation is confirmed": "6ab0d518e54d2a34fa4e8326"
+  "Orders: Tax Mode is fixed once the quotation is confirmed": "6ab0d518e54d2a34fa4e8326",
+  "Orders: A quotation needs a customer, a template does not": "6ab0e7fe7d58b0f449317067",
+  "Orders: Template Name is for templates": "6ab0e7fe805aef703286dcd5"
  },
  "records": {
   "Invoices: customer Sunway Construction Group": "a4935a3f-0262-4d68-9b3b-6049d32e390b",
@@ -872,7 +877,49 @@
   "Invoice Lines: S00021 line 1": "cfecc05b-d10d-4f63-aa7a-ccfc8fd26195",
   "Invoice Lines: S00021 line 2": "bf2a2cbf-1c8d-4543-8db6-840134f08d7c",
   "Invoice Lines: S00021 line 3": "099f33d7-b808-406f-97ad-ddcc384c5af7",
-  "Invoice Lines: TEST section with figures": "76ba1c1e-3c1d-4990-9a1d-4fbf949ee991"
+  "Invoice Lines: TEST section with figures": "76ba1c1e-3c1d-4990-9a1d-4fbf949ee991",
+  "Orders: S00010": "310a9244-5b7f-45d0-869c-41e3381e2556",
+  "Orders: S00011": "711bafaa-4219-46ad-b286-37bec36ef59b",
+  "Orders: S00012": "3cf7ee29-43ff-4915-81ec-78f962e50975",
+  "Orders: S00013": "31cd7873-59e0-43e8-b5b3-f41527f85c8c",
+  "Orders: S00014": "ad569a17-81f4-40cc-abac-1afb4d16f6c6",
+  "Orders: S00015": "2631c70a-c6ca-46ba-bb36-49981c2dfdad",
+  "Orders: S00016": "1f92540f-29cf-40a6-a951-f462c1cbba80",
+  "Orders: S00017": "a1579e40-dce1-4de7-9ea1-0a8425957c31",
+  "Orders: S00019": "7f230e77-f74a-4a02-b345-21568ffc4b05",
+  "Orders: S00020": "9cd5afa8-52b2-4d78-bb82-ef8ef6eae648",
+  "Orders: S00021": "ffc890c2-9cae-4a60-92cf-204e9c00c34e",
+  "Orders: S00022": "7eb62258-b2dd-4ca2-90a7-8af9d38af1a5",
+  "Order Lines: S00010 line 10": "430e4aea-ef8d-4571-b463-7cea1f13e585",
+  "Order Lines: S00010 line 20": "c716ea14-b2d9-4bc2-a17c-425bb4b6f18b",
+  "Order Lines: S00010 line 30": "d5f1a3ec-c010-4112-b7f9-978c99082a79",
+  "Order Lines: S00010 line 40": "d464e307-8ac7-44bb-8505-8f13fdfbd8a7",
+  "Order Lines: S00011 line 10": "e4865424-bdbe-4d3d-9229-2caddb1066c2",
+  "Order Lines: S00011 line 20": "8dc18dbe-28ac-49be-9391-60a62c8720ea",
+  "Order Lines: S00011 line 30": "d2c99faf-f3e8-40bb-af1a-fedcd6733b36",
+  "Order Lines: S00012 line 10": "b2bb358e-a044-4ec0-947b-23a76a452d17",
+  "Order Lines: S00012 line 20": "e8cba71c-8869-4f65-99cc-b1722fb53b72",
+  "Order Lines: S00012 line 30": "4e99e4bc-c92a-4a94-bcd1-53cff15f121d",
+  "Order Lines: S00013 line 10": "4dfb4636-d258-42ca-9368-64465e8d0a5e",
+  "Order Lines: S00013 line 20": "e5b6f185-8ab8-45ae-8f6e-a297a9dd5f04",
+  "Order Lines: S00014 line 10": "5f561f66-ca8f-4633-ac94-017892bb8c03",
+  "Order Lines: S00014 line 20": "ec9f7290-9e8a-49b6-a8bc-01b4f8cf096f",
+  "Order Lines: S00014 line 30": "91f00bcf-6d24-4f8f-86a1-965130fb49c4",
+  "Order Lines: S00015 line 10": "2c0a063e-f045-416e-8315-fe5e169b6115",
+  "Order Lines: S00015 line 20": "5e19984e-6462-44b2-9d26-05721613be30",
+  "Order Lines: S00016 line 10": "eb8417eb-314e-4cd8-9929-360ae7e4625a",
+  "Order Lines: S00016 line 20": "c45e0937-ce1d-4d60-a769-2e5cb2b0afe6",
+  "Order Lines: S00017 line 10": "da781bb0-c6fd-411f-b0ea-d9f737053a34",
+  "Order Lines: S00017 line 20": "13b4ed28-300c-43f4-bed7-b711b3f1771a",
+  "Order Lines: S00019 line 10": "8779d2a4-055a-43e7-bbb1-61a7ef59b9c3",
+  "Order Lines: S00020 line 10": "e292306c-c103-4562-8676-a9b38520cb9a",
+  "Order Lines: S00020 line 20": "5b5f28cb-500a-46fb-a11a-7907c7f1607d",
+  "Order Lines: S00021 line 10": "10b54fc3-cf83-4e83-96e9-c33907f4371e",
+  "Order Lines: S00021 line 20": "666ca8fe-546a-4dbc-a22f-5348a930faaf",
+  "Order Lines: S00021 line 30": "887a60c3-b76d-4377-b011-dc4857c7975c",
+  "Order Lines: S00021 line 40": "bf072bd0-8f34-4118-b73c-8c745d6979c2",
+  "Order Lines: S00021 line 50": "fc24f112-ab4c-4f2a-b73e-5644d034802f",
+  "Order Lines: S00022 line 10": "4e923a86-3de2-43c8-b6a1-fbbb439787e0"
  },
  "roles": {
   "Administrator": "25ef76ef-5538-4779-a5e6-ab1fbce9dcfe",
@@ -884,5 +931,19 @@
   "Accountant": "7d648fbc-52b4-4c37-9d65-46c2a6d14ede",
   "Invoicing": "8802a8e6-8113-4175-a8c1-78a53b66257a",
   "Accounting Read-only": "b145704f-4a80-4603-a9c4-671461742892"
+ },
+ "numbers": {
+  "Orders: S00010": "S00006",
+  "Orders: S00011": "S00007",
+  "Orders: S00012": "S00008",
+  "Orders: S00013": "S00009",
+  "Orders: S00014": "S00010",
+  "Orders: S00015": "S00011",
+  "Orders: S00016": "S00012",
+  "Orders: S00017": "S00013",
+  "Orders: S00019": "S00014",
+  "Orders: S00020": "S00015",
+  "Orders: S00021": "S00016",
+  "Orders: S00022": "S00017"
  }
 }
