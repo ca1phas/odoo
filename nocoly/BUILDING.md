@@ -3,6 +3,23 @@
 How ERP Master is built, for whoever builds or changes a worksheet — a person or an implementation agent. Why
 things are this way is in `DECISIONS.md`; how a worksheet is reviewed is in `REVIEWING.md`.
 
+> **This file is 1080 lines. Read the section you need, not the file.** Line numbers drift as it grows, so
+> find your section by heading rather than by number.
+>
+> | Section | What is in it |
+> |---|---|
+> | **Worksheets and fields** | control types, `fieldPermission`, adding vs saving controls, the clobber trap |
+> | **No duplicates** | where the uniqueness flag is real and where it is decoration |
+> | **Formulas and lookups** | what computes where, and why a function default is not a formula |
+> | **Views** | filters, sorts, columns, quick filters |
+> | **Rules** | item types, filter operators, the group-wrapper shape, inverted actions |
+> | **Buttons** | action specs, `enableWhen`, batch |
+> | **Workflows** | nodes, branches, search and rollup steps, publishing |
+> | **Records** | writing, reading back, what a listing silently omits |
+> | **Roles** | permissions, and testing one without a member |
+> | **In the UI** | what the browser does that the API does not tell you |
+> | dated sections at the end | findings from a particular build, newest last |
+
 ## Setup
 
 ```bash
