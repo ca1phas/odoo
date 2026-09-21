@@ -123,6 +123,14 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   Lines' *Tax rate* (`enumDefault` 5, sum of Taxes' Amount through the Taxes relation, `filterType` **51** with the
   Percentage option key) reads **3** on a line carrying a 3 % tax and a **Fixed 7** tax, and **0** on a line carrying
   the Fixed tax alone — so 51 is not limited to the single select of a 子表 (bundle 6, 18 Sep 2026).
+- **…and over a *reverse* relation, on a checkbox, added to a 汇总 that was already live.** Products' *# Variants*
+  (`enumDefault` 6, a count through the reverse of Product Variants' Product) was filtered to **Active is ticked**
+  — a checkbox's "is" is **filterType 2** with `values` `["1"]`, the shape every Active picker filter here carries,
+  not the single select's 51 — by a version-pinned save that changed that one control and nothing else. It
+  **recomputed at once and on every record**: the TEST product with one active and one archived variant went 2 → 1
+  in the same breath, the other eighteen stayed 1, and no record was touched and no nudge needed (21 Sep 2026,
+  `variants.set_filters`). A filter written this way also **survives a later full `layout` save** of the holding
+  worksheet, which sends each control's `advancedSetting` back as it read it.
 - **A 汇总 over a multi-Relation follows the relation, and a *number formula* can read it.** `$<the 汇总>$` inside a
   type-31 expression computes — Invoice Lines' *Total* is `Subtotal × (1 + Tax rate ÷ 100)` — and recomputes on every
   change of the relation through the open API, with no workflow and no re-save (four probes, bundle 6). What it does
@@ -159,6 +167,20 @@ Each worksheet's hand-off is also published as a page for the reviewer, kept in 
   form grid, whatever row the layout gives it. And a list with no `showControls` shows its row count over the
   words ***No visible fields*** — the columns have to be named, by controlId, from the *target* worksheet
   (Product Categories' Child Categories and Products lists).
+- **…and no stored setting narrows which records that tab shows.** The tab is drawn from
+  `Worksheet/GetRowRelationRows` `{appId, worksheetId: the holding worksheet, rowId, controlId, pageIndex,
+  pageSize}` — the same call read from the CLI's session — and on Products' *Variants* (the reverse of Product
+  Variants' Product, `showtype` "2") over a product with one active and one archived variant it answered **both
+  rows** whatever was stored: with `advancedSetting.filters` set to *Active is ticked*, and with `viewId` bound to
+  the target worksheet's own Active-filtered view. A Relation's `filters` is the **picker's** filter and nothing
+  else — the entry above says it runs in the browser, and a read-only list offers no picker at all. `viewId` is
+  not inert: the rows came back in that view's **sort order**, repeatably, and in the tab's own order again once
+  it was cleared — so a bound view gives such a list its order, not its rows. The server itself can filter:
+  the same call with **`filterControls`** in the *request* answered one row. So the narrowing has to come from
+  whoever calls, and nothing stored makes the call carry it. Consequence for a reverse one2many that Odoo
+  active-filters: the **汇总 over it can be made active-only** (below) while the **list beside it cannot** —
+  Products' *# Variants* reads 1 where its *Variants* tab lists 2 (21 Sep 2026; whether the browser narrows
+  what it renders is for the UI pass).
 - **The tab bar at the foot of a record has an order of its own** (pd-openweb `getControlsByTab`): the type-52 tabs
   and the relation lists with `showtype` **"6"** come first, in row order, and the lists with `showtype` **"2"** after
   all of them. Product Categories' Child Categories is a "6" and Products a "2", so an Accounting tab placed under the

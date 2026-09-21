@@ -974,6 +974,23 @@ COUNT_DESC = "The number on Odoo's Variants smart button (product_variant_count)
 # "[Internal Reference] Name".
 REVERSE_COLUMNS = ('Display Name', 'Sales Price', 'Cost', 'Barcode', 'Unit')
 
+# **The list itself cannot be narrowed, and this step deliberately stores nothing that pretends it can.**
+# Measured on 21 Sep 2026 against the call the tab is drawn from — `Worksheet/GetRowRelationRows` {appId,
+# worksheetId: Products, rowId, controlId: the reverse} — on TEST Auto Variant Product, whose two variants are
+# TEST-0002 (Active) and TEST-0002-OLD (archived):
+#
+#   nothing stored                      count 2, both rows
+#   advancedSetting.filters = Active    count 2, both rows        the setting is the **picker's**, not the list's
+#   viewId = the Product Variants view  count 2, both rows        but in that view's sort order, repeatably —
+#                                                                 so a bound view gives the list its order, not
+#                                                                 its rows (reverted; the tab keeps its own order)
+#   filterControls sent in the request  count 1, TEST-0002 alone  the server can filter — only the caller may ask
+#
+# So the narrowing would have to come from whoever calls, and no stored setting makes the call carry it.
+# BUILDING.md carries the same finding under the list-style Relation trap. Odoo's own Variants smart button
+# therefore differs here: its count is active-only (below), its list is not.
+LIST_FILTER = None
+
 
 def products_ws():
     return hap.ids()['worksheets'][PRODUCTS]
@@ -1026,6 +1043,95 @@ def set_reverse_columns(reserved):
     return True
 
 
+# ── the Active filter both controls wanted ─────────────────────────────────
+#
+# Odoo's `product.template.product_variant_ids` is **active-filtered**: the one2many carries no context, so it
+# obeys `active_test`, and `product_variant_count` is `len(product_variant_ids)`. Measured on casimir.odoo.com
+# (saas~19.4) on 21 Sep 2026, in the default context and again with `active_test: False`:
+#
+#   Ergonomic Office Chair   product_variant_count 3, and 4 read with active_test False (3 active + 1 archived)
+#   27" 4K Monitor                                 2, and 3                             (2 active + 1 archived)
+#   Height-Adjustable Desk                         2, and 3                             (2 active + 1 archived)
+#
+# So both controls built here must leave archived variants out. A 汇总 carries its own filter
+# (`rollup_control(filters=…)`, stored at `advancedSetting.filters`), which bundle 6 proved over a **multi
+# Relation** as well as over a mounted 子表 — Invoice Lines' *Tax rate*, filtered to Tax Computation is
+# Percentage (BUILDING.md). This is the same thing one step further out: the relation it counts is a *reverse*.
+EQ_CHECKED = 2                                  # the filter editor's "is" on a checkbox (dataType 36)
+
+
+def active_filter():
+    """`advancedSetting.filters` for *the variant's Active is ticked*, in the view-editor enum.
+
+    A checkbox's "is" is `filterType` **2** with `values` ["1"] — the shape every Active picker filter in this
+    build already carries (`active_only` above, `products.picker_filters`), not the single select's 51."""
+    active = C.fields(ws())['Active']
+    return [{'controlId': active['controlId'], 'dataType': active['type'], 'spliceType': 1,
+             'filterType': EQ_CHECKED, 'dateRange': 0, 'dateRangeType': 0, 'value': '1', 'values': ['1'],
+             'minValue': '', 'maxValue': '', 'isAsc': False, 'dynamicSource': [], 'isGroup': False,
+             'groupFilters': None, 'emptyRule': 0}]
+
+
+def filter_state(value):
+    """A stored `filters` string in comparable form. The server re-serialises a JSON-valued `advancedSetting`
+    key and returns its own key order (BUILDING.md), so compare it parsed, never as a string."""
+    try:
+        items = json.loads(value) if isinstance(value, str) else (value or [])
+    except (TypeError, ValueError):
+        return value
+    return sorted((i.get('controlId'), i.get('dataType'), i.get('filterType'), tuple(sorted(i.get('values') or [])))
+                  for i in (items or []))
+
+
+def filter_names(value):
+    """A stored `filters` string with its control ids resolved to names on Product Variants, for a read-back."""
+    names = {c['controlId']: c['controlName'] for c in hap.controls(ws())}
+    try:
+        items = json.loads(value) if isinstance(value, str) else (value or [])
+    except (TypeError, ValueError):
+        return value
+    return [(names.get(i.get('controlId'), i.get('controlId')), i.get('filterType'), i.get('values'))
+            for i in (items or [])]
+
+
+def set_filters(control_id, label, filters):
+    """Store `filters` on one control of Products, in one version-pinned save; `None` takes the key away again.
+
+    Idempotent: when the stored filter already reads back as `filters` nothing is written. Only that one
+    control may change, and the filter is read back after the save."""
+    pw, want = products_ws(), filter_state(filters)
+    live = next((c for c in hap.controls(pw) if c['controlId'] == control_id), None)
+    if not live:
+        sys.exit(f'{label}: {control_id} is not on {PRODUCTS}')
+    if filter_state((live.get('advancedSetting') or {}).get('filters')) == want:
+        print(f'  {label}: filter already {filter_names(filters)}; nothing saved')
+        return False
+    ctrls, version = C.controls_with_version(pw)
+    hap.backup(f"products_controls_pre_{label.strip('# ').replace(' ', '_').lower()}_filter", ctrls)
+    before = products_signature(ctrls)
+    target = next((c for c in ctrls if c['controlId'] == control_id), None)
+    if not target:
+        sys.exit(f'{label}: {control_id} is not in the control set just read from {PRODUCTS}')
+    was = (target.get('advancedSetting') or {}).get('filters')
+    adv = target.setdefault('advancedSetting', {})
+    if filters is None:
+        adv.pop('filters', None)
+    else:
+        adv['filters'] = json.dumps(filters, ensure_ascii=False)
+    # Version-pinned, through the CLI's session, exactly as set_reverse_columns saves.
+    C.save_controls(pw, ctrls, version=version)
+    after = products_signature()
+    changed = sorted(k for k in set(before) | set(after) if before.get(k) != after.get(k))
+    if changed != [control_id]:
+        sys.exit(f'{PRODUCTS}: the save changed {changed}, wanted only {control_id}')
+    back = next((c for c in hap.controls(pw) if c['controlId'] == control_id), None)
+    got = (back or {}).get('advancedSetting', {}).get('filters')
+    if filter_state(got) != want:
+        sys.exit(f'{label}: filters read back {got!r}, wanted {json.dumps(filters, ensure_ascii=False)!r}')
+    print(f'  {label}: filter {filter_names(was)} -> {filter_names(got)}')
+    return True
+
+
 def step_reverse():
     """Give Products the reverse of Product Variants' Product relation, plus Odoo's variant count."""
     forward = C.fields(ws()).get('Product')
@@ -1062,7 +1168,8 @@ def step_reverse():
     else:
         from hap_cli.core.app_creator.fields import rollup_control
         count = rollup_control(VARIANT_COUNT, via_control_id=reserved,
-                               source_control_id=pf['Name']['controlId'], aggregate='count')
+                               source_control_id=pf['Name']['controlId'], aggregate='count',
+                               filters=active_filter())          # Odoo counts the active variants only
         row, col, size = COUNT_PLACE
         count.update(controlName=VARIANT_COUNT, alias='product_variant_count', row=row, col=col, size=size,
                      dot=0, desc=COUNT_DESC, hint='', fieldPermission='101')
@@ -1070,6 +1177,10 @@ def step_reverse():
         print(f'  {VARIANT_COUNT} added (count over {REVERSE})')
 
     set_reverse_columns(reserved)
+    # The count is active-only, as Odoo's is. The **list** is not, and cannot be: no stored setting narrows it
+    # (LIST_FILTER above), so the step keeps it unfiltered rather than storing a filter that does nothing.
+    set_filters(hap.by_name(hap.controls(pw))[VARIANT_COUNT]['controlId'], VARIANT_COUNT, active_filter())
+    set_filters(reserved, REVERSE, LIST_FILTER)
 
     names = {c['controlId']: c['controlName'] for c in hap.controls(ws())}
     for c in hap.controls(pw):
@@ -1077,6 +1188,7 @@ def step_reverse():
             C.remember('controls', KEY + c['controlName'], c['controlId'])
             print(f"  {c['controlName']:14} {c['controlId']} r{c.get('row')} c{c.get('col')} "
                   f"type={c['type']} perm={c.get('fieldPermission')}")
+            print(f"  {'':14} filter  {filter_names((c.get('advancedSetting') or {}).get('filters'))}")
             if c['controlName'] == REVERSE:
                 print(f"  {'':14} columns {[names.get(x, x) for x in (c.get('showControls') or [])]}")
     return 0
