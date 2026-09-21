@@ -1,7 +1,8 @@
 # crm.tag — as on casimir.odoo.com (Odoo saas~19.4+e)
 
-Read-only extract, 21 Sep 2026. Menu: **CRM ▸ Configuration ▸ Tags**. Defined in **`sales_team`**
-(`addons/sales_team/models/crm_tag.py`), not in `crm`.
+Read-only extract, 21 Sep 2026. Menu: **CRM ▸ Configuration ▸ Pipeline ▸ Tags**. Defined in **`sales_team`**,
+not in `crm`. The unique constraint below is **confirmed on the tenant** (`crm_tag_name_uniq`), not just in the
+19.0 source.
 
 ## Fields
 

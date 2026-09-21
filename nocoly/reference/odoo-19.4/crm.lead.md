@@ -11,8 +11,20 @@ Menu: **CRM ▸ Sales ▸ My Pipeline** (`crm.crm_lead_opportunities`), with Lea
 
 `crm.lead` is **two things in one table**. `type` is a required selection — `lead` · `opportunity` — rendered as
 a **badge in the form header**, and almost every view is doubled: `crm.lead.list.lead` and
-`crm.lead.list.opportunity`, `crm.lead.search.lead` and `crm.lead.search.opportunity`. A build that models only
-the opportunity is modelling half the table.
+`crm.lead.list.opportunity`, `crm.lead.search.lead` and `crm.lead.search.opportunity`.
+
+**But on this tenant the lead half is switched off.** `crm.group_use_lead` is **false** (checked 21 Sep 2026),
+so Odoo's own menu bar reads *CRM · Sales · Reporting · Configuration* with **no Leads entry**, `type` is forced
+to `opportunity`, and none of the `…lead` views ever renders. A worksheet that models the opportunity alone is
+therefore **faithful to this tenant as configured** — it only becomes a gap if the group is ever turned on.
+`crm.group_use_recurring_revenues` is **false** too, which hides `recurring_revenue`,
+`recurring_revenue_monthly` and `recurring_plan` on the form and the whole Recurring Plans menu.
+
+## What the screen actually is
+
+The CRM app opens on a **kanban board grouped by `stage_id`** — the pipeline — with a column per stage
+(New · Qualified · Proposition · Won), a `+` on each to quick-create, and the folded stages behind a `»`. The
+lists are secondary. **A build with no board has not built the primary CRM screen.**
 
 ## Fields the form and lists actually name
 

@@ -1,7 +1,11 @@
 # utm.campaign — as on casimir.odoo.com (Odoo saas~19.4+e)
 
-Read-only extract, 21 Sep 2026. Menu: **CRM ▸ Configuration ▸ Campaigns**. Defined in `utm`, extended by
-`sale`, `crm` and the marketing apps.
+Read-only extract, 21 Sep 2026. Menu: **Link Tracker ▸ UTMs ▸ Campaigns** — **not a CRM screen.** Checked on
+the tenant on 21 Sep 2026: the CRM ▸ Configuration menu does not carry Campaigns, Mediums or Sources at all.
+Defined in `utm`, extended by `sale`, `crm` and the marketing apps.
+
+**Unique constraint on the tenant: `utm_campaign_unique_name = UNIQUE(name)`, *"The name must be unique"* — on
+`name`, the Campaign Identifier, not on `title`, the Campaign Name.**
 
 ## Fields
 

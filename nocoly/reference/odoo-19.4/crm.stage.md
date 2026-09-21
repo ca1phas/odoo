@@ -1,6 +1,8 @@
 # crm.stage — as on casimir.odoo.com (Odoo saas~19.4+e)
 
-Read-only extract, 21 Sep 2026. Menu: **CRM ▸ Configuration ▸ Stages**. `_order = 'sequence, name, id'`.
+Read-only extract, 21 Sep 2026. Menu: **CRM ▸ Configuration ▸ Pipeline ▸ Stages** — Odoo groups Stages, Tags
+and Lost Reasons under a *Pipeline* heading. **No unique constraint**: `ir.model.constraint` on the tenant lists
+only foreign keys, so two stages may share a name. `_order = 'sequence, name, id'`.
 
 ## Fields
 

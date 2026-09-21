@@ -1,6 +1,8 @@
 # utm.source — as on casimir.odoo.com (Odoo saas~19.4+e)
 
-Read-only extract, 21 Sep 2026. Menu: **CRM ▸ Configuration ▸ Sources**.
+Read-only extract, 21 Sep 2026. Menu: **Link Tracker ▸ UTMs ▸ Sources** — not a CRM screen.
+
+**Unique constraint on the tenant: `utm_source_unique_name = UNIQUE(name)`, *"The name must be unique"*.**
 
 ## Fields
 

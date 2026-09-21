@@ -1,6 +1,7 @@
 # crm.lost.reason — as on casimir.odoo.com (Odoo saas~19.4+e)
 
-Read-only extract, 21 Sep 2026. Menu: **CRM ▸ Configuration ▸ Lost Reasons**.
+Read-only extract, 21 Sep 2026. Menu: **CRM ▸ Configuration ▸ Pipeline ▸ Lost Reasons**. **No unique
+constraint** — the tenant lists only foreign keys on this model.
 
 ## Fields
 
