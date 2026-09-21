@@ -168,52 +168,80 @@ invoice. That is Odoo's own difference, not a slip — do not "fix" it into line
 |---|---|
 | A confirmed order must have a Quotation/Order Date | `sale_order_date_order_conditional_required` — `CHECK((state = 'sale' AND date_order IS NOT NULL) OR state != 'sale')`. Confirm sets it, so this is a guard rather than something a person trips |
 
-### Buttons
+### Buttons — all twenty, and where each one lives
 
-Read from `addons/sale/models/sale_order.py` on 21 Sep 2026 — the conditions from the form arch, the
-behaviour from the methods themselves.
+**An earlier draft of this section listed four.** It was built from a "header buttons" extract that was
+itself truncated, and it was never re-read against the arch. The twenty exist in **four different places**,
+which is why one table missed most of them:
 
-| Button | Enabled when | What Odoo does | State |
+| Where | Which |
+|---|---|
+| **`<header>`** | Send · Confirm · Download · Preview · Cancel · Set to Quotation · Lock · Unlock · Create Invoice · Reopen Invoicing · Capture / Void Transaction |
+| **`<control>` inside the lines list** | Add Line · Add Section · Add Note · Catalog |
+| **below the lines** | Discount |
+| **cog "Actions" — `ir.actions.server` bound to `sale.order`** | Mark as Sent (501) · Confirm Orders (502, batch) · Share (503) · Deliver (504) · Send an email (505, batch) · Close Invoicing (506) · Save as template (531) · Create Project (541) |
+| **the portal, not the back end** | Sign & Accept |
+
+Nothing named *Add Subsection* is in the arch — the lines list offers **three** controls, Add Line, Add
+Section and Add Note. `line_subsection` is a `display_type` value the UI reaches another way.
+
+#### What each does, and what it becomes here
+
+The rule for the last column: **prefer a Nocoly native feature over a built workflow.**
+
+| # | Button | Odoo behaviour | Here |
 |---|---|---|---|
-| **Send** | Status is Quotation, Quotation Sent **or** Sales Order | opens the mail composer; sending marks the order **Quotation Sent** | **built** — `6ab0aac1e54d2a34fa4e7c1b`, workflow `6ab0aac1789584ded3230fe1`: *Trigger by button → Get Customer → branch → Email quotation → Set Status: Quotation Sent*, and its filter already carries the three statuses |
-| **Confirm** | Status is Quotation or Quotation Sent | **guards first**, then writes Status → **Sales Order** and **Quotation/Order Date → now** | not built |
-| **Cancel** | Status is Quotation, Quotation Sent or Sales Order, **and Locked unticked** | **refuses a locked order**, cancels the order's draft invoices, writes Status → **Cancelled** | not built |
-| **Set to Quotation** | Status is **Cancelled or Quotation Sent** | Status → **Quotation**, and clears the signature fields | not built |
+| 1 | **Send** | mail composer; sending marks the order Quotation Sent | **workflow** — send-email node, then set Status. Not yet working |
+| 2 | **Download** | `sale.action_report_saleorder`, the quotation PDF | **System Print** with a print template — native, no workflow |
+| 3 | **Confirm** | guards, then Status → Sales Order and **Quotation/Order Date → now** | **button + workflow** (the guard is a branch) |
+| 4 | **Preview** | `act_url` to `get_portal_url()` — the customer-facing page | **Public Sharing** — native, effectively already there |
+| 5 | **Cancel** | refuses a locked order; Status → Cancelled | **button**, disabled while Locked is ticked |
+| 6 | **Create Invoice** | action 495 → a wizard that writes `account.move` | **workflow** — **blocked**, no order → invoice link (§4) |
+| 7 | **Set to Quotation** | from Cancelled **or Quotation Sent** → Quotation; clears the signature fields | **button** — one field to write |
+| 8 | **Sign & Accept** | on the **portal**: the customer signs, writing `signature` · `signed_by` · `signed_on`, and confirms | **Public Sharing + a shared form.** A share link is read-only by default, so accepting a signature needs a form that writes back. **Three controls missing** |
+| 9 | **Discount** | wizard applying a percentage across every line | **button + workflow** over the subtable |
+| 10 | **Mark as Sent** | refuses unless Quotation; Status → Quotation Sent | **button** |
+| 11 | **Deliver** | `deliver_sold_quantity` — sets each line's **Delivered = Quantity** (`qty_delivered` is writable) | **button + workflow** over the subtable |
+| 12 | **Reopen Invoicing** | clears `invoicing_closed` | **button** + the missing control below |
+| 13 | **Save as template** | creates a `sale.order.template` from this order | **already solved** — Recreate plus Is Template, §1.1 of 17 |
+| 14 | **Create Project** | creates a project | **not built** — Services phase |
+| 15 | **Add Section** | a line with `display_type = line_section` | **built** — the subtable's Add a row plus Display Type |
+| 16 | **Add Note** | `display_type = line_note` | **built**, same |
+| 17 | **Duplicate** | Odoo's generic copy | **Recreate** — and it must be Recreate, not Copy: Copy leaves the order lines behind, proved 21 Sep |
+| 18 | **Add Subsection** | not a control in the arch | Display Type already carries **Subsection** |
+| 19 | **Catalog** | a product-picker grid | **not built** — needs a catalogue UI |
+| 20 | **Close Invoicing** | sets `invoicing_closed` | **button** + the missing control below |
 
-**Confirm's guard is a real validation, not decoration.** `_confirmation_error_message` refuses with *"Some
-order lines are missing a product, you need to correct them before going further."* when any line that is
-**not a section, subsection or note and not a down payment** has no Product. Our Order Lines already carries
-Display Type, so the condition is expressible; down payments are not modelled, so that half of the test drops
-out. Build it as a branch in the button's workflow that ends on Odoo's own wording rather than confirming.
+#### What these buttons need that does not exist yet
 
-**Cancel's guard likewise** — *"You cannot cancel a locked order. Please unlock it first."* Odoo raises it;
-here Locked is an editable checkbox, so the same condition simply disables the button, which is what the
-table above says. Keep Odoo's message if the branch is built rather than the filter.
+| Control | Odoo | Needed by |
+|---|---|---|
+| **Invoicing Closed** | `invoicing_closed`, *Manually Closed For Invoicing*, boolean, stored | 12 and 20 — neither works without it |
+| **Signature · Signed By · Signed On** | `signature` binary · `signed_by` char · `signed_on` datetime, all stored | 8, and 7 clears them |
 
-**Two corrections to an earlier draft of this table.**
+#### Also in Odoo, and not on the list of twenty
 
-- Confirm does **not** "fill Quotation/Order Date if empty" — `_prepare_confirmation_values` returns
-  `{'state': 'sale', 'date_order': now}`, so it **overwrites it unconditionally**. That is the mechanism
-  behind the field carrying two labels: on a confirmed order the value genuinely is the confirmation date,
-  not the date the quotation was raised.
-- Confirm does **not** assign the Number. In Odoo the sequence fires on creation; in this app Number is an
-  **auto-number control**, which the reseed proved — the twelve seeded orders took S00006–S00017 the moment
-  they were written. No button touches it.
+**Lock / Unlock** — owner's decision, 21 Sep 2026: **not built.** Locked is an ordinary editable checkbox;
+the read-only rule it drives is unchanged and Cancel still hides while it is ticked, so the behaviour
+survives and only the buttons go. **Update Prices** needs Pricelists. **Capture / Void Transaction** needs
+payment providers. **Share** (503) is Public Sharing again. **Confirm Orders** (502) and **Send an email**
+(505) are the batch forms of 3 and 1, and HAP custom actions already run over a selection.
 
-**Set to Quotation** also clears `signature`, `signed_by` and `signed_on`. **None of the three is built** —
-online signature is a checkbox asking for one, not a stored signature — so the button writes Status alone,
-and this is a difference to record rather than a gap to close.
+#### Two corrections to the earlier draft
 
-**Not built — owner's decision, 21 Sep 2026: Lock and Unlock.** Odoo gates a confirmed order behind those
-two buttons; here **Locked is an ordinary editable checkbox** a person ticks. The read-only rule it drives
-is unchanged, and Cancel still hides while it is ticked — so the behaviour survives, only the buttons go.
+- Confirm does **not** "fill Quotation/Order Date if empty". `_prepare_confirmation_values` returns
+  `{'state': 'sale', 'date_order': now}` — it **overwrites unconditionally**. That is the mechanism behind
+  the field carrying two labels: on a confirmed order the value is the confirmation date.
+- Confirm does **not** assign the Number. In this app Number is an **auto-number control**, which the reseed
+  proved — the twelve seeded orders took S00006–S00017 the moment they were written.
 
-**One still to read:** Odoo's `action_confirm` docstring says it *"also locks the Sale Order"* when a company
-setting is enabled. The setting's value on casimir has not been read, so whether Confirm should also tick
-Locked is **open**.
+#### The guards, which are validations rather than decoration
 
-**Deferred, and why** — *Create Invoice* and *Reopen Invoicing* (§4, no order → invoice link), *Preview* and
-*Download* (HAP generates no quotation PDF), *Capture* and *Void Transaction* (no payment providers).
+- **Confirm** — *"Some order lines are missing a product, you need to correct them before going further."*
+  when any line that is not a section, subsection or note, and not a down payment, has no Product. Order
+  Lines carries Display Type, so the condition is expressible; down payments are not modelled.
+- **Cancel** — *"You cannot cancel a locked order. Please unlock it first."*
+- **Mark as Sent** — *"Only draft orders can be marked as sent directly."*
 
 ### Views
 
