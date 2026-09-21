@@ -61,7 +61,13 @@
   "States: the key and the duplicate check": "6aacf9524f2a99acac2c1fff",
   "Taxes: Archive": "6aad11fb8e75db182e9dccf4",
   "Taxes: Unarchive": "6aad11fd87707da9d62ab172",
-  "Taxes: the key and the duplicate check": "6aad12174f2a99acac2d4f4c"
+  "Taxes: the key and the duplicate check": "6aad12174f2a99acac2d4f4c",
+  "Orders: Confirm": "6ab10707886e6e7c8b386eb3",
+  "Orders: Cancel": "6ab1070a94093ab76bcc899e",
+  "Orders: Set to Quotation": "6ab1070d789584ded32f15e7",
+  "Orders: Mark as Sent": "6ab10711a2c872a5c1305bae",
+  "Orders: Close Invoicing": "6ab10714789584ded32f164d",
+  "Orders: Reopen Invoicing": "6ab10717886e6e7c8b38701c"
  },
  "buttons": {
   "Archive": "6aa8a5654720c515252bda3d",
@@ -82,7 +88,14 @@
   "Payment Terms: Archive": "6aab8a517d58b0f449311726",
   "Payment Terms: Unarchive": "6aab8a557d58b0f449311728",
   "Taxes: Archive": "6aad11fbbd43f55762c7587f",
-  "Taxes: Unarchive": "6aad11fd805aef703286ac59"
+  "Taxes: Unarchive": "6aad11fd805aef703286ac59",
+  "Orders: Send Quotation": "6ab0aac1e54d2a34fa4e7c1b",
+  "Orders: Confirm": "6ab10707e43d174ab3753de1",
+  "Orders: Cancel": "6ab1070abd43f55762c78d2d",
+  "Orders: Set to Quotation": "6ab1070dbd43f55762c78d2f",
+  "Orders: Mark as Sent": "6ab10711e54d2a34fa4e89ab",
+  "Orders: Close Invoicing": "6ab10714805aef703286e022",
+  "Orders: Reopen Invoicing": "6ab10717805aef703286e024"
  },
  "views": {
   "Units & Packagings: Units & Packagings": "6aa8d14d4a73a3142152d3fa",

@@ -23,13 +23,20 @@ owner approved — deliberately nothing else.
     ~/.hap-venv/bin/python nocoly/build/orders.py wipe     # 10. delete the three test orders the owner approved
     ~/.hap-venv/bin/python nocoly/build/orders.py seed     # 11. the tenant's twelve orders
     ~/.hap-venv/bin/python nocoly/build/orders.py figures  # 12. the three roll-ups beside the tenant's amounts
+    ~/.hap-venv/bin/python nocoly/build/orders.py buttons  # 13. Part 2 of the button build: Confirm · Cancel ·
+                                                           #     Set to Quotation · Mark as Sent · Close
+                                                           #     Invoicing · Reopen Invoicing, their workflows,
+                                                           #     and Odoo's missing-product guard on Confirm
+    ~/.hap-venv/bin/python nocoly/build/orders.py selfcheck# 13b. press all six through the CLI on one tenant
+                                                           #     order and put it back, and prove the guard
+                                                           #     refuses the order whose lines have no Product
     ~/.hap-venv/bin/python nocoly/build/orders.py check    # read rules, Expiration, the roll-ups, the two new
-                                                           #    controls, the view and the seed back, and
-                                                           #    report drift
+                                                           #    controls, the views, the six buttons with their
+                                                           #    workflows and the seed back, and report drift
     ~/.hap-venv/bin/python nocoly/build/orders.py show     # the live controls and rules
 
-**There is no `fields`, `layout` or `buttons` step, and there must not be one** — `views` writes one view of
-its own and `seed` writes records, neither of which replaces a control.
+**There is no `fields` or `layout` step, and there must not be one** — `views` writes one view of its own,
+`seed` writes records and `buttons` writes custom actions and their workflows; none of them replaces a control.
 The owner is building Orders **by hand in the browser** — on 21 Sep 2026 they added Delivery Date, Delivery
 Status and Locked and six business rules between 11:51 and 12:23 while this script was being written, and then
 rebuilt the worksheet from twelve controls to thirty-five. HAP has no per-field endpoint: a layout step is a
@@ -46,7 +53,7 @@ Requirements: nocoly/worksheets/16-orders.md (§7.1 for what `totals` does). Ord
 is `orderlines.py`'s — run its `fields` step before `totals`, so the columns the subtable names all exist.
 Generic helpers: common.py.
 """
-import json, os, sys
+import json, os, sys, time
 
 import common as C
 import hap
@@ -1708,6 +1715,872 @@ def step_figures():
     return diffs
 
 
+# ── 13 · the six state buttons, and Confirm's guard ─────────────────────────
+#
+# **Part 2 of the Orders button build** — 16-orders.md §3's twenty actions. Part 1 (§6b) appended the four
+# controls two of these six write; these are the six that are **nothing but a state change**, plus the one guard
+# Odoo puts in front of a state change.
+#
+# **Why buttons at all.** Status carries `fieldPermission` "100" — read-only and hidden on create — so nobody can
+# type an order from a Quotation into a Sales Order. Before this step nothing in the app could move an order's
+# state at all.
+#
+# Every condition below is Odoo's, read off the `sale.order` form arch and the server actions on casimir:
+#
+# | Button | `enableWhen` | writes | `isBatch` |
+# |---|---|---|---|
+# | Confirm            | Status is Quotation or Quotation Sent          | Status → Sales Order **and Quotation/Order Date → now** | yes |
+# | Cancel             | Status is Quotation, Quotation Sent or Sales Order, **and Locked is not ticked** | Status → Cancelled | no |
+# | Set to Quotation   | Status is Cancelled or Quotation Sent          | Status → Quotation, **and Signature, Signed By and Signed On cleared** | no |
+# | Mark as Sent       | Status is Quotation                            | Status → Quotation Sent | yes |
+# | Close Invoicing    | Status is Sales Order, **and Invoicing Closed is not ticked** | Invoicing Closed → ticked | yes |
+# | Reopen Invoicing   | Status is Sales Order, **and Invoicing Closed is ticked**     | Invoicing Closed → unticked | no |
+#
+# `isBatch` mirrors each Odoo action's own `binding_view_types`: *Confirm Orders* (502), *Mark as Sent* (501) and
+# *Close Invoicing* (506) are bound to the **list**, so their singular twins here carry batch and HAP gives us
+# the batch form for free. The other three are header buttons on one record in Odoo and stay single here.
+#
+# **Cancel's `enableWhen` is the whole of Odoo's lock check.** `action_cancel` raises *"You cannot cancel a
+# locked order. Please unlock it first."*; here the button is simply not offered while Locked is ticked, which is
+# the same protection one dialog earlier, so the confirmation asks only whether to cancel the order — the shape
+# `invoices.py`'s `MSG_CANCEL` takes.
+#
+# **Confirm overwrites the date unconditionally.** `_prepare_confirmation_values` returns
+# `{'state': 'sale', 'date_order': fields.Datetime.now()}` — there is no "only if empty" branch, unlike the
+# Invoice Date that `invoices.py step_numbering` fills, so the date write sits in the same update step as the
+# Status write rather than behind a branch. The field is type **16** (DATE_TIME), not the 15 Invoices' date is.
+#
+# **Confirm does not number anything.** Number is an auto-number control here (16-orders.md §3), so none of
+# `invoices.py`'s `sequence.mixin` chain is repeated.
+#
+# ── Confirm's guard ─────────────────────────────────────────────────────────
+#
+# Odoo refuses to confirm with *"Some order lines are missing a product, you need to correct them before going
+# further."* when any line that is not a section, subsection or note — and not a down payment, which is not
+# modelled here — has no Product (`_confirmation_error_message`, sale_order.py:1210).
+#
+# This **cannot be an `enableWhen`**: a button condition compares fields of the order, and this one aggregates
+# over the Order Lines subtable. So it is built the way `invoices.py step_numbering` builds its count and
+# `journals.py step_draftguard` builds Odoo's archive refusal — a 汇总 step over the child worksheet and a
+# branch on its result:
+#
+#     Trigger by button
+#       → Product lines with no product          a 汇总 (107) count over Order Lines: the Orders relation is
+#                                                this order, Display Type is Product, Product is empty
+#       → Is a product line missing its product?
+#            · Yes (one or more) → Some order lines are missing a product      (站内通知) — the path ends
+#            · No                → Confirm the order                          Status and the date
+#       (nothing after the gateway)
+#
+# **The update has to sit inside the *No* path, not on the trunk.** A HAP branch *converges*: an empty path and a
+# path whose steps have run both carry on to whatever follows the gateway, so an update left on the trunk would
+# run for a refused order too. `C.upsert_buttons` builds it on the trunk (that is all a one-step button
+# workflow is), and `ensure_product_guard` then moves it onto the No path with the same three-move dance
+# `journals.py` uses — there is no "move a node" call in HAP: add a second update inside the path, copy the
+# configuration onto it, read it back, and only then delete the old one. All of it happens on the draft, and
+# `hap workflow rollback <pid> -y` restores the last published version.
+#
+# **The abort node is deliberately absent.** The first cut of the journals guard ended its refusal path in a
+# 中止流程, which stops the run before the trunk update — and draws HAP's own untranslated **中止** toast
+# (15 §6.6). With the update off the trunk the refusal path simply ends, so no abort is needed and no Chinese
+# reaches the screen.
+#
+# **What the user sees when Confirm is refused, and the defect that comes with it** (15 §6.7, still open):
+# the order is not confirmed, the notification *【Some order lines are missing a product】Some order lines are
+# missing a product, you need to correct them before going further.* arrives in the notification centre — and
+# the toast on screen is HAP's ordinary green tick, the button's `advancedSetting.tiptext`, which reads
+# **"Operation completed"**. The run *completes*: the branch path ends, nothing aborts, and HAP cannot tell a
+# guarded end from a successful one. Nothing in a workflow node changes that; the one knob that exists is the
+# button's own `tiptext`, which is a single string for **both** outcomes, so wording it as a refusal would lie
+# on every successful Confirm. It is recorded here and left to the owner, exactly as 15 §6.7 leaves the
+# identical defect on Journals' Archive.
+
+MSG_CANCEL = 'Are you sure you want to cancel this order?'
+# Odoo's own text, verbatim (addons/sale/models/sale_order.py:1216).
+MSG_NO_PRODUCT = 'Some order lines are missing a product, you need to correct them before going further.'
+
+CONFIRM, CANCEL = 'Confirm', 'Cancel'
+SET_TO_QUOTATION, MARK_AS_SENT = 'Set to Quotation', 'Mark as Sent'
+CLOSE_INVOICING, REOPEN_INVOICING = 'Close Invoicing', 'Reopen Invoicing'
+BUTTONS = (CONFIRM, CANCEL, SET_TO_QUOTATION, MARK_AS_SENT, CLOSE_INVOICING, REOPEN_INVOICING)
+
+# The owner's, and never this builder's: their *Send Quotation* button with its own workflow, and their
+# *Sign & Acccept* SEARCH_BTN control (three c's — their spelling, kept). `step_buttons` compares both, byte for
+# byte, before and after everything it writes.
+OWNERS_BUTTON = 'Send Quotation'
+OWNERS_BUTTON_ID = '6ab0aac1e54d2a34fa4e7c1b'
+OWNERS_WORKFLOW = '6ab0aac1789584ded3230fe1'
+OWNERS_CONTROL, OWNERS_CONTROL_ID = 'Sign & Acccept', '6ab0f80f7d58b0f449317238'
+SEARCH_BTN = 49
+
+# Each button's one update step. The name is what the workflow editor and `workflow structure` show.
+STEP = {CONFIRM: 'Confirm the order',
+        CANCEL: 'Cancel the order',
+        SET_TO_QUOTATION: 'Set the order back to a quotation',
+        MARK_AS_SENT: 'Mark the quotation as sent',
+        CLOSE_INVOICING: 'Close invoicing on this order',
+        REOPEN_INVOICING: 'Reopen invoicing on this order'}
+
+# Confirm's guard, in order. The 站内通知's **name is part of what the user reads** — HAP renders the
+# notification as 【<node name>】<message> — so it is named as the heading Odoo's dialog does not have.
+COUNT_STEP = 'Product lines with no product'
+PRODUCT_BRANCH = 'Is a product line missing its product?'
+TELL_STEP = 'Some order lines are missing a product'
+GUARD_STEPS = (COUNT_STEP, PRODUCT_BRANCH, TELL_STEP, STEP[CONFIRM])
+
+DROPDOWN, RELATION, NUMBER, MEMBER = 11, 29, 6, 26
+NOTICE, ABORT, BRANCH_PATH, UPDATE_NODE = 27, 30, 2, 6      # flowNodeType: 站内通知 · 中止流程 · a path · 数据操作
+NUMBER_FX = 'number_fx_id'                     # a 汇总 step's own numeric result field
+WORKSHEET_TOTAL = '107'                        # a workflow 汇总 step over a whole worksheet
+# workflow conditionIds — a different enum from the worksheet filter's (BUILDING.md).
+EMPTY, IS_ANY_OF, RELATION_EQ, AT_LEAST_ONE = '8', '1', '33', '14'
+SYSTEM_NODE = '5d39140d381d42d20db0c4da'       # the fixed 系统 node: current time, trigger time, trigger user
+LINES_ORDERS = '6ab0c740e43d174ab37535b1'      # Order Lines' back-relation to Orders — the 子表's own parent link
+
+# The person who pressed the button. HAP's fixed 系统 node carries them as `triggeraid`; `kind: triggerUser` in
+# hap-cli's DSL keys `uaid` off the trigger node instead, which on a button trigger reads back as **Last
+# modifier** — the order's last editor rather than whoever clicked (journals.py, 21 Sep 2026).
+TRIGGER_USER = {'type': 6, 'entityId': SYSTEM_NODE, 'entityName': 'System', 'roleId': 'triggeraid',
+                'roleTypeId': 0, 'roleName': 'Trigger', 'controlType': MEMBER, 'avatar': '', 'count': 0,
+                'appType': 100, 'actionId': ''}
+
+
+def status_when(f, labels, also=None):
+    """A button's `enableWhen`: *Status is any of `labels`*, optionally AND-ed with one more condition.
+
+    The three buttons that test a second field go through the same builder rather than hand-rolling a group
+    each: `translate_filter_group` flattens an AND group into the wire's condition list with `spliceType` 1 on
+    every condition, so a second child *is* the AND. `status_is` is §9's — a view's and a button's condition on
+    a single select are the same filterType 51 (BUILDING.md)."""
+    children = [status_is(f, labels)]
+    if also is not None:
+        children.append(also)
+    return {'type': 'group', 'logic': 'AND', 'children': children}
+
+
+def switch_when(f, field, ticked):
+    """A checkbox condition for a button's `enableWhen`: ticked (`eq`) or not ticked (`ne`) against "1" — the
+    shape `not_a_template` already uses on this worksheet for the Templates filters."""
+    return {'field': f[field]['controlId'], 'dataType': CHECKBOX,
+            'operator': 'eq' if ticked else 'ne', 'value': ['1']}
+
+
+BUTTON_DESC = {
+    CONFIRM: 'Confirm this quotation as a sales order, and stamp Quotation/Order Date with the confirmation '
+             'time. Refused, with a notification, while any product line has no Product.',
+    CANCEL: 'Cancel this order. Not offered on a locked order — untick Locked first, as Odoo asks you to '
+            'unlock it.',
+    SET_TO_QUOTATION: 'Put a cancelled or already-sent order back to a plain quotation, clearing the '
+                      'signature the customer left.',
+    MARK_AS_SENT: 'Mark this quotation as sent without emailing it — for a quotation sent some other way.',
+    CLOSE_INVOICING: 'Stop asking for this order to be invoiced, without cancelling it.',
+    REOPEN_INVOICING: 'Ask for this order to be invoiced again.',
+}
+
+
+def button_specs(f):
+    """The six buttons as `C.upsert_buttons` takes them: (action spec, the workflow's field writes, step name).
+
+    The field writes here are only what `batch-add` puts on the new update step; `set_writes` rewrites every one
+    of them afterwards in the shape the server actually stores, and is what the step verifies."""
+    status, closed = f['Status']['controlId'], f[INVOICING_CLOSED]['controlId']
+    # A workflow update step stores a dropdown as the **bare option key** in `fieldValue`: a list is refused
+    # with an HTTP 500 from flowNode/saveNode, and a JSON array string is accepted and stored empty
+    # (BUILDING.md, found while building Invoices).
+    to_status = lambda label: {'fieldId': status, 'type': DROPDOWN, 'value': STATUS_KEYS[label]}
+    to_closed = lambda on: {'fieldId': closed, 'type': CHECKBOX, 'value': '1' if on else '0'}
+    spec = lambda name, **kw: dict({'name': name, 'type': 'triggerWorkflow', 'desc': BUTTON_DESC[name]}, **kw)
+    return [
+        (spec(CONFIRM, isBatch=True,
+              enableWhen=status_when(f, ['Quotation', 'Quotation Sent'])),
+         [to_status('Sales Order')], STEP[CONFIRM]),
+        (spec(CANCEL, isBatch=False, confirm=True, confirmMsg=MSG_CANCEL, sureName='Cancel order',
+              cancelName='Back',
+              enableWhen=status_when(f, ['Quotation', 'Quotation Sent', 'Sales Order'],
+                                     switch_when(f, 'Locked', False))),
+         [to_status('Cancelled')], STEP[CANCEL]),
+        (spec(SET_TO_QUOTATION, isBatch=False,
+              enableWhen=status_when(f, ['Cancelled', 'Quotation Sent'])),
+         [to_status('Quotation')], STEP[SET_TO_QUOTATION]),
+        (spec(MARK_AS_SENT, isBatch=True,
+              enableWhen=status_when(f, ['Quotation'])),
+         [to_status('Quotation Sent')], STEP[MARK_AS_SENT]),
+        (spec(CLOSE_INVOICING, isBatch=True,
+              enableWhen=status_when(f, ['Sales Order'], switch_when(f, INVOICING_CLOSED, False))),
+         [to_closed(True)], STEP[CLOSE_INVOICING]),
+        (spec(REOPEN_INVOICING, isBatch=False,
+              enableWhen=status_when(f, ['Sales Order'], switch_when(f, INVOICING_CLOSED, True))),
+         [to_closed(False)], STEP[REOPEN_INVOICING]),
+    ]
+
+
+def patch(field_id, kind, value='', node='', source='', system=False, clear=False):
+    """One field write for an update step, in the shape the server actually stores (`invoices.patch`):
+
+    a dropdown as its bare option key in `fieldValue`; a **text** taken from another node as the template
+    `$<nodeId>-<fieldId>$`, again in `fieldValue`; every other type from a node as `nodeId` + `fieldValueId`, and
+    from the fixed 系统 node with `nodeTypeId` / `nodeAppType` 100 — send `appType` instead and the server
+    rewrites it, so the comparison below would re-save for ever.
+
+    **Emptying a field needs `isClear: true`** — the editor's 清空. Sent as a plain empty `fieldValue` the entry
+    is **dropped on save**: `fields` reads back without it, with no error, and the step writes nothing
+    (BUILDING.md; measured again here on Set to Quotation's three signature fields, 21 Sep 2026)."""
+    wire = {'fieldId': field_id, 'type': kind, 'addType': 0, 'fieldValue': value, 'fieldValueId': '', 'nodeId': ''}
+    if clear:
+        wire['isClear'] = True
+    if system:
+        wire.update(nodeId=SYSTEM_NODE, sureNodeId=SYSTEM_NODE, fieldValueId=source, nodeTypeId=100,
+                    nodeAppType=100)
+    elif node and kind == TEXT:
+        wire['fieldValue'] = f'${node}-{source}$'
+    elif node:
+        wire.update(nodeId=node, sureNodeId=node, fieldValueId=source, nodeAppType=1)
+    return wire
+
+
+def writes_wanted(f):
+    """{button name: [the field writes its update step must carry]} — the second column of §13's table.
+
+    **Confirm's date is "now"**, taken from the 系统 node's `nowTime` the way `invoices.step_numbering` fills an
+    empty Invoice Date — but with no branch in front of it, because `_prepare_confirmation_values` overwrites
+    `date_order` unconditionally, and with type **16** (DATE_TIME) where Invoices' date is a 15."""
+    status, closed = f['Status']['controlId'], f[INVOICING_CLOSED]['controlId']
+    date = f['Quotation/Order Date']['controlId']
+    return {
+        CONFIRM: [patch(status, DROPDOWN, value=STATUS_KEYS['Sales Order']),
+                  patch(date, DATE_TIME, source='nowTime', system=True)],
+        CANCEL: [patch(status, DROPDOWN, value=STATUS_KEYS['Cancelled'])],
+        SET_TO_QUOTATION: [patch(status, DROPDOWN, value=STATUS_KEYS['Quotation']),
+                           patch(f[SIGNATURE_FIELD]['controlId'], SIGN_PAD, clear=True),
+                           patch(f[SIGNED_BY]['controlId'], TEXT, clear=True),
+                           patch(f[SIGNED_ON]['controlId'], DATE_TIME, clear=True)],
+        MARK_AS_SENT: [patch(status, DROPDOWN, value=STATUS_KEYS['Quotation Sent'])],
+        CLOSE_INVOICING: [patch(closed, CHECKBOX, value='1')],
+        REOPEN_INVOICING: [patch(closed, CHECKBOX, value='0')],
+    }
+
+
+# ── the workflow calls these six share with journals.py and invoices.py ─────
+
+def nodes_by_name(pid):
+    proc = hap.run('workflow', 'node', 'list', pid)
+    return proc, {n['name']: n for n in proc['flowNodeMap'].values()}
+
+
+def read_node(pid, node_id):
+    """One node's configuration, unwrapped (`node get` answers either shape)."""
+    got = hap.run('workflow', 'node', 'get', pid, node_id)
+    return got.get('data', got)
+
+
+def set_writes(pid, node, wanted, select_node):
+    """Give an update step exactly these field writes, keeping the rest of its configuration; True when it
+    changed. `select_node` is the node whose record is written: an update step pointed at another **update**
+    step comes back `isException: true` and stores no field at all (BUILDING.md)."""
+    d = read_node(pid, node['id'])
+    fields = list(d.get('fields') or [])
+    changed = d.get('selectNodeId') != select_node
+    for want in wanted:
+        entry = next((x for x in fields if x.get('fieldId') == want['fieldId']), None)
+        if entry and all(entry.get(k) == v for k, v in want.items()):
+            continue
+        if entry:
+            entry.update(want)
+        else:
+            fields.append(want)
+        changed = True
+    if not changed:
+        return False
+    hap.run('workflow', 'node', 'save', pid, node['id'], '--type', str(UPDATE_NODE), '-c', json.dumps(
+        {'actionId': d.get('actionId', '2'), 'appId': d.get('appId') or ws(), 'appType': 1,
+         'selectNodeId': select_node, 'fields': fields}, ensure_ascii=False), '-n', node['name'])
+    back = read_node(pid, node['id'])
+    if back.get('isException'):
+        sys.exit(f"{node['name']}: reads back isException — `hap workflow rollback {pid} -y` restores the "
+                 f'last published version')
+    return True
+
+
+def write_state(entry):
+    """One stored field write in comparable form: the server adds `fieldValueName`, `sourceType` and friends."""
+    return dict({k: entry.get(k) for k in ('fieldId', 'type', 'addType', 'fieldValue', 'fieldValueId', 'nodeId')},
+                isClear=bool(entry.get('isClear')))
+
+
+def writes_live(pid, node_id):
+    return [write_state(x) for x in read_node(pid, node_id).get('fields') or []]
+
+
+def branch_paths(proc, gateway_id, yes_next=None):
+    """A gateway's two paths: the refusal path, then the clean one. Both carry a step once the guard is
+    restructured, so "the one that carries a step" no longer tells them apart — the refusal path is the one
+    that runs into `yes_next`, the 站内通知 node, and the caller passes its id. Before that node exists the
+    fall-back is the old rule (journals.py)."""
+    paths = [n for n in proc['flowNodeMap'].values()
+             if n.get('typeId') == BRANCH_PATH and n.get('prveId') == gateway_id]
+    if len(paths) != 2:
+        sys.exit(f'{PRODUCT_BRANCH}: {len(paths)} paths, expected 2')
+    yes = next((p for p in paths if p.get('nextId') == yes_next), None) if yes_next else None
+    if not yes:
+        yes = next((p for p in paths if p.get('nextId') not in (None, '', '99')), None) or paths[0]
+    return yes, next(p for p in paths if p['id'] != yes['id'])
+
+
+def save_path(pid, path, name, conditions):
+    """A branch path's name and condition. `node get` returns them as `conditions`; `node save --type 2` wants
+    `operateCondition`, and neither `batch-add` nor `node save -n` sets the name (BUILDING.md)."""
+    got = read_node(pid, path['id'])
+    key = lambda c: {k: c.get(k) for k in ('nodeId', 'filedId', 'conditionId')}
+    changed = [[key(c) for c in g] for g in got.get('conditions') or []] != \
+              [[key(c) for c in g] for g in conditions]
+    if changed:
+        hap.run('workflow', 'node', 'save', pid, path['id'], '--type', str(BRANCH_PATH),
+                '-c', json.dumps({'operateCondition': conditions}, ensure_ascii=False), '-n', name)
+    if path.get('name') != name:
+        hap.run('workflow', 'node', 'rename', pid, path['id'], '-n', name)
+        changed = True
+    return changed
+
+
+def save_notice(pid, node, content, account):
+    """The 站内通知 step's message and its one recipient, read back first. The node's `flowNodeMap` "106" — the
+    in-app-message channel config the server needs or the node counts as incomplete — goes back exactly as it
+    came (BUILDING.md: without it publish fails with warningType 200)."""
+    got = read_node(pid, node['id'])
+    channel = got.get('flowNodeMap') or {}
+    key = lambda a: {k: a.get(k) for k in ('type', 'entityId', 'roleId', 'controlType')}
+    if got.get('sendContent') == content and channel.get('106', {}).get('name') == node['name'] \
+            and [key(a) for a in got.get('accounts') or []] == [key(account)]:
+        return False
+    if '106' in channel:                           # the channel config carries the node name too
+        channel['106']['name'] = node['name']
+    hap.run('workflow', 'node', 'save', pid, node['id'], '--type', str(NOTICE), '-c', json.dumps(
+        {'appType': got.get('appType', 1), 'selectNodeId': '', 'sendContent': content,
+         'accounts': [account], 'formProperties': [], 'showTitle': True,
+         'flowNodeMap': channel}, ensure_ascii=False), '-n', node['name'])
+    back = read_node(pid, node['id'])
+    if back.get('sendContent') != content:
+        sys.exit(f"{node['name']}: message read back {back.get('sendContent')!r}")
+    return True
+
+
+# ── Confirm's guard: the count, the branch, the notice ──────────────────────
+
+def guard_nodes():
+    """The 汇总 count and the branch, for `batch-add` in front of Confirm's update step.
+
+    The count is over **Order Lines**, the child worksheet, and its three conditions are Odoo's:
+    the line belongs to this order (conditionId 33, a Relation compared with another node's record — here the
+    trigger order's own rowid), its Display Type **is Product** (so a Section, Subsection or Note is exempt, as
+    Odoo exempts a `display_type`), and its Product **is empty**. The server rewrites each condition's `nodeId`
+    to the 汇总 node's own id, so what `left.node` says does not matter; what does is the comparison value."""
+    line = lambda name, kind: {'node': {'nodeAlias': 'trigger'}, 'fieldId': CHILD[name], '_filedTypeId': kind}
+    return [
+        {'nodeAlias': 'orphans', 'nodeType': 'rollup', 'name': COUNT_STEP,
+         'config': {'mode': 'worksheet', 'worksheet': LINES_WS, 'aggregate': 'count', 'filter': {
+             'logic': 'and', 'items': [
+                 {'left': {'node': {'nodeAlias': 'trigger'}, 'fieldId': LINES_ORDERS, '_filedTypeId': RELATION},
+                  'op': RELATION_EQ,
+                  'right': {'kind': 'field', 'node': {'nodeAlias': 'trigger'}, 'fieldId': 'rowid'}},
+                 {'left': line('Display Type', DROPDOWN), 'op': IS_ANY_OF,
+                  'right': {'kind': 'literal',
+                            'values': [{'key': PRODUCT_LINE, 'value': 'Product', 'isDeleted': False}]}},
+                 {'left': line('Product', RELATION), 'op': EMPTY},
+             ]}}},
+        {'nodeAlias': 'product_branch', 'nodeType': 'branch', 'name': PRODUCT_BRANCH, 'config': {'paths': [
+            {'alias': 'missing', 'name': 'Yes', 'nodes': [
+                {'nodeAlias': 'tell', 'nodeType': 'send_internal_notice', 'name': TELL_STEP,
+                 'config': {'content': MSG_NO_PRODUCT, 'accounts': [dict(TRIGGER_USER)]}}]},
+            {'alias': 'clean', 'name': 'No'}]}},
+    ]
+
+
+def at_least_one(count_node):
+    """The Yes path's condition: the 汇总 step's own numeric result is 1 or more."""
+    return [[{'nodeId': count_node, 'filedId': NUMBER_FX, 'filedValue': COUNT_STEP, 'filedTypeId': NUMBER,
+              'conditionId': AT_LEAST_ONE, 'sourceType': 0, 'conditionValues': [{'value': '1'}]}]]
+
+
+def ensure_product_guard(f):
+    """Odoo's *"Some order lines are missing a product…"* in front of Confirm's update step. Returns True when
+    something was written. Re-runnable: every node is matched by name and read back before it is written."""
+    pid = hap.ids()['workflows'][KEY + CONFIRM]
+    proc, byname = nodes_by_name(pid)
+    if STEP[CONFIRM] not in byname:
+        sys.exit(f'{STEP[CONFIRM]!r} is not in the {CONFIRM} workflow — `upsert_buttons` did not build it')
+    print('  backup:', hap.backup('orders_confirm_workflow_pre_guard', proc))
+    changed = COUNT_STEP not in byname
+    if changed:
+        # batch-add inserts after the trigger, so the update step that was the whole workflow becomes what the
+        # branch converges on — and the move below then takes it off that trunk.
+        hap.run('workflow', 'node', 'batch-add', pid, '--nodes', json.dumps(guard_nodes(), ensure_ascii=False),
+                '--trigger-node-id', proc['startEventId'], '--trigger-alias', 'trigger')
+        proc, byname = nodes_by_name(pid)
+        for name in GUARD_STEPS:
+            if name not in byname:
+                sys.exit(f'{name!r} is not in the workflow after batch-add: {sorted(byname)}')
+    yes, no = branch_paths(proc, byname[PRODUCT_BRANCH]['id'], byname[TELL_STEP]['id'])
+    if byname[STEP[CONFIRM]].get('prveId') != no['id']:
+        # Move the update off the converged trunk and onto the *No* path. There is no "move a node" call:
+        # `node add --type 6 --after <the path node>` makes a second one inside the path — the path's `nextId`
+        # becomes it — its configuration is copied over, read back, and only then is the old node deleted
+        # (journals.py, 15 §6.6). All of it is on the draft; `workflow rollback <pid> -y` undoes it.
+        old = byname[STEP[CONFIRM]]
+        cfg = read_node(pid, old['id'])
+        moving = STEP[CONFIRM] + ' (moving)'
+        added = hap.run('workflow', 'node', 'add', pid, '--type', str(UPDATE_NODE), '-n', moving,
+                        '--after', no['id'], '-a', cfg['actionId'], '--app-id', cfg['appId'])
+        new_id = (added.get('addFlowNodes') or [{}])[0].get('id') or \
+            next(n['id'] for n in nodes_by_name(pid)[0]['flowNodeMap'].values() if n.get('name') == moving)
+        hap.run('workflow', 'node', 'save', pid, new_id, '--type', str(UPDATE_NODE), '-n', STEP[CONFIRM],
+                '-c', json.dumps({'actionId': cfg['actionId'], 'appId': cfg['appId'],
+                                  'appType': cfg.get('appType') or 1, 'selectNodeId': cfg['selectNodeId'],
+                                  'fields': cfg['fields']}, ensure_ascii=False))
+        back = read_node(pid, new_id)
+        if back.get('isException') or [x['fieldId'] for x in back.get('fields') or []] != \
+                [x['fieldId'] for x in cfg.get('fields') or []]:
+            sys.exit(f'{STEP[CONFIRM]} on the No path reads back exception={back.get("isException")} '
+                     f'fields={[x.get("fieldId") for x in back.get("fields") or []]} — nothing was deleted; '
+                     f'`hap workflow rollback {pid} -y` restores the published version')
+        hap.run('workflow', 'node', 'delete', pid, old['id'], '-y')
+        proc, byname = nodes_by_name(pid)
+        yes, no = branch_paths(proc, byname[PRODUCT_BRANCH]['id'], byname[TELL_STEP]['id'])
+        changed = True
+        print(f"  {STEP[CONFIRM]!r}: moved from the trunk onto the No path ({old['id']} -> {new_id})")
+    for node in [n for n in proc['flowNodeMap'].values() if n.get('typeId') == ABORT]:
+        # No abort is ever built here; one could only arrive by hand, and it is what draws the untranslated
+        # 中止 toast the journals restructuring removed (15 §6.6).
+        hap.run('workflow', 'node', 'delete', pid, node['id'], '-y')
+        print(f"  abort node {node.get('name')!r} deleted — the refusal path just ends after the notice")
+        changed = True
+    if changed:
+        proc, byname = nodes_by_name(pid)
+        yes, no = branch_paths(proc, byname[PRODUCT_BRANCH]['id'], byname[TELL_STEP]['id'])
+    changed |= save_notice(pid, byname[TELL_STEP], MSG_NO_PRODUCT, dict(TRIGGER_USER))
+    changed |= save_path(pid, yes, 'Yes', at_least_one(byname[COUNT_STEP]['id']))
+    changed |= save_path(pid, no, 'No', [])
+    return changed
+
+
+# ── what the owner owns, compared before and after ──────────────────────────
+
+def owners_button_state():
+    """The owner's *Send Quotation* button and its workflow, as one comparable blob: the custom action exactly
+    as `custom-actions` returns it, plus every node of workflow 6ab0aac1789584ded3230fe1."""
+    live = [b for b in hap.listing('worksheet', 'custom-actions', ws()) if b['name'] == OWNERS_BUTTON]
+    if len(live) != 1 or live[0]['btnId'] != OWNERS_BUTTON_ID:
+        sys.exit(f'{OWNERS_BUTTON!r} is not the one button {OWNERS_BUTTON_ID} — read the worksheet again '
+                 f'before writing anything')
+    proc = hap.run('workflow', 'node', 'list', OWNERS_WORKFLOW)
+    return json.dumps({'button': live[0], 'workflow': proc}, ensure_ascii=False, sort_keys=True, default=str)
+
+
+def owners_control_state():
+    """The owner's *Sign & Acccept* SEARCH_BTN, in `control_state`'s comparable form."""
+    c = next((x for x in hap.controls(ws()) if x['controlId'] == OWNERS_CONTROL_ID), None)
+    if c is None or c['controlName'] != OWNERS_CONTROL or c['type'] != SEARCH_BTN:
+        sys.exit(f'{OWNERS_CONTROL!r} {OWNERS_CONTROL_ID} is not on the worksheet as a t{SEARCH_BTN} any more')
+    return json.dumps(control_state(c), ensure_ascii=False, sort_keys=True, default=str)
+
+
+def untouched_state():
+    """Everything this step must not change: the owner's button and its workflow, their SEARCH_BTN control, and
+    the whole control set's signature — `step_buttons` writes no control at all, so *nothing* here may move."""
+    return {'the owner\'s ' + OWNERS_BUTTON: owners_button_state(),
+            'the owner\'s ' + OWNERS_CONTROL: owners_control_state(),
+            'the control set': json.dumps(signature(hap.controls(ws())), ensure_ascii=False, sort_keys=True,
+                                          default=str)}
+
+
+def compare_untouched(before):
+    after = untouched_state()
+    moved = sorted(k for k in before if before[k] != after[k])
+    if moved:
+        sys.exit(f'{WORKSHEET}: {moved} changed while the buttons were built — nothing here writes a control '
+                 f"or the owner's button, so this is a bug or someone else saved at the same moment")
+    print(f'  untouched, byte for byte: {sorted(before)}')
+
+
+# ── the step ────────────────────────────────────────────────────────────────
+
+def button_state(b):
+    """One stored button in comparable form: its condition, its batch flag and its confirmation.
+
+    The confirmation is read as `enableConfirm` **or** `clickType` 2, because those are the two ways the same
+    thing is written: the spec adapter sends 二次确认 as `clickType` 2, and the server stores it as `clickType`
+    **1** with `enableConfirm` true — which is exactly what the owner's own *Send Quotation* carries. Comparing
+    `clickType` alone would make this step's verification fail on every run."""
+    return (filter_state(b.get('filters')), bool(b.get('isBatch')),
+            bool(b.get('enableConfirm')) or b.get('clickType') == 2,
+            b.get('workflowType'), b.get('confirmMsg') or '', b.get('sureName') or '',
+            b.get('cancelName') or '')
+
+
+def button_wanted(spec):
+    """The same, from a spec: what `build_button_payload` will lower it to."""
+    from hap_cli.core.action_spec_adapter import build_button_payload
+    return button_state(build_button_payload(spec))
+
+
+def step_buttons():
+    """Odoo's six state buttons, their one-step workflows, and the product guard in front of Confirm.
+
+    Writes **no control, no rule and no view**, and nothing at all on Order Lines: the whole of it is custom
+    actions and their own workflows. The owner's *Send Quotation* button, its workflow and their
+    *Sign & Acccept* control are compared byte for byte before and after.
+
+    Re-runnable: a button that exists by name is never re-created (`create-custom-action --action-spec` ignores
+    `--btn-id` and would add a duplicate), every workflow node is matched by name and read back before it is
+    written, and each workflow is republished only when something changed."""
+    f = guard()
+    for name in PART1:
+        if name not in f:
+            sys.exit(f'{name} is not on {WORKSHEET} — run `part1` first; two of these buttons write it')
+    if f['Status'].get('fieldPermission') != READ_ONLY_PERMISSION:
+        sys.exit(f"Status carries fieldPermission {f['Status'].get('fieldPermission')!r}, not "
+                 f'{READ_ONLY_PERMISSION!r} — these buttons exist because nobody may type it')
+    before = untouched_state()
+    specs = button_specs(f)
+    C.upsert_buttons(ws(), APP, specs, KEY, 'orders_buttons_pre_buttons')
+    wanted, trouble = writes_wanted(f), []
+    for spec, _, step in specs:
+        name = spec['name']
+        pid = hap.ids()['workflows'][KEY + name]
+        proc, byname = nodes_by_name(pid)
+        if step not in byname:
+            sys.exit(f'{name}: {step!r} is not in workflow {pid} — {sorted(byname)}')
+        changed = set_writes(pid, byname[step], wanted[name], proc['startEventId'])
+        if name == CONFIRM:
+            changed |= ensure_product_guard(f)
+        print(f"  {name}: {C.publish(pid) if changed else 'already built; not re-published'}")
+        live = writes_live(pid, nodes_by_name(pid)[1][step]['id'])
+        if live != [write_state(x) for x in wanted[name]]:
+            trouble.append(f'{name}: {step!r} stored {json.dumps(live, ensure_ascii=False)}, wanted '
+                           f'{json.dumps([write_state(x) for x in wanted[name]], ensure_ascii=False)}')
+    for b in hap.listing('worksheet', 'custom-actions', ws()):
+        if b['name'] not in BUTTONS:
+            continue
+        spec = next(s for s, _, _ in specs if s['name'] == b['name'])
+        if button_state(b) != button_wanted(spec):
+            trouble.append(f'{b["name"]}: stored {button_state(b)}, wanted {button_wanted(spec)}')
+    compare_untouched(before)
+    if trouble:
+        sys.exit('  ' + '\n  '.join(trouble))
+    for name in BUTTONS:
+        print(C.structure(hap.ids()['workflows'][KEY + name]))
+    return True
+
+
+# ── 13b · driving all six from the CLI ──────────────────────────────────────
+#
+# `hap workflow trigger <processId> -s <rowid>` runs a button's workflow on one record, which is the only check
+# of a button this repo can make without a browser (BUILDING.md). It runs the **workflow**, so it does not test
+# `enableWhen` — whether the button is offered, greyed out or hidden is the UI test's — but it does test every
+# write and the guard.
+#
+# **It runs on the tenant's own orders, because nothing may be created or deleted here.** Two of the twelve
+# happen to be exactly the two cases needed, which is why no TEST order was made:
+#
+#   * **S00009** (a Quotation Sent whose two lines both carry a Product) is driven through all six buttons and
+#     then put back to the Quotation Sent it started as, with its seeded date;
+#   * **S00016** (a Quotation Sent with **two product lines that have no Product**) is the guard's own case: it
+#     is confirmed and must come back **unchanged**.
+#
+# `check` is the proof the restore worked: it matches a seeded order on (Customer, Quotation/Order Date) and
+# compares every cell the seed writes, so a Status or a date left behind fails it.
+CLEAN_ORDER, GUARDED_ORDER = 'S00009', 'S00016'
+SIGNER, SIGNED_AT = 'TEST signer', '2026-09-20 10:11:12'
+
+
+def by_number():
+    """{Number: rowid} over the live orders."""
+    f = C.fields(ws())
+    return {read_cell(f['Number'], read_record(ws(), r['rowid'])): r['rowid'] for r in C.records(ws(), APP)}
+
+
+def order_state(f, rowid):
+    """The five cells these six buttons write, read back."""
+    d = read_record(ws(), rowid)
+    return {n: read_cell(f[n], d) for n in ('Status', 'Quotation/Order Date', INVOICING_CLOSED,
+                                            SIGNED_BY, SIGNED_ON)}
+
+
+def status_label(keys):
+    label = {v: k for k, v in STATUS_KEYS.items()}
+    return '/'.join(label.get(k, k) for k in keys or []) or '(empty)'
+
+
+def press(name, rowid):
+    hap.run('workflow', 'trigger', hap.ids()['workflows'][KEY + name], '-s', rowid)
+
+
+def wait_until(f, rowid, wanted, seconds=30):
+    for _ in range(seconds):
+        state = order_state(f, rowid)
+        if wanted(state):
+            return state
+        time.sleep(1)
+    return order_state(f, rowid)
+
+
+def write_cells(rowid, values):
+    """`record update` — it ignores field permission and every interaction rule, which is how a read-only Status
+    is put back (BUILDING.md)."""
+    hap.run('worksheet', 'record', 'update', ws(), rowid, '-a', APP,
+            '--fields-json', json.dumps(values, ensure_ascii=False))
+
+
+def step_selfcheck():
+    """Press all six buttons through the CLI on S00009 and put it back, then press Confirm on S00016 — the order
+    whose two product lines have no Product — and prove it does not move."""
+    f = guard()
+    rows = by_number()
+    for number in (CLEAN_ORDER, GUARDED_ORDER):
+        if number not in rows:
+            sys.exit(f'{number} is not on {WORKSHEET} — this step drives the tenant orders and creates none')
+    clean, guarded = rows[CLEAN_ORDER], rows[GUARDED_ORDER]
+    cid = lambda n: f[n]['controlId']
+    problems = []
+
+    # ── the guard: an order with two product lines and no Product must not move ──
+    was = order_state(f, guarded)
+    print(f'  {GUARDED_ORDER} before: {status_label(was["Status"])}, date {was["Quotation/Order Date"]!r} '
+          f'(two of its five lines are product lines with no Product)')
+    press(CONFIRM, guarded)
+    after = wait_until(f, guarded, lambda s: s['Status'] != was['Status'], seconds=12)
+    if after == was:
+        print(f'  OK    {CONFIRM} on {GUARDED_ORDER} was refused: still {status_label(after["Status"])}, date '
+              f'still {after["Quotation/Order Date"]!r}')
+    else:
+        problems.append(f'{CONFIRM} on {GUARDED_ORDER} moved the order: {was} -> {after}')
+
+    # ── the happy path: every button in turn, then back where it started ──
+    start = order_state(f, clean)
+    if status_label(start['Status']) != 'Quotation Sent':
+        sys.exit(f'{CLEAN_ORDER} is {status_label(start["Status"])}, expected Quotation Sent — restore it '
+                 f'with `seed` before running this')
+    print(f'  {CLEAN_ORDER} before: {status_label(start["Status"])}, date {start["Quotation/Order Date"]!r}')
+    now = time.strftime('%Y-%m-%d %H:%M:%S')
+    got = {}
+    for name, wanted in ((CONFIRM, 'Sales Order'), (CLOSE_INVOICING, None), (REOPEN_INVOICING, None),
+                         (CANCEL, 'Cancelled'), (SET_TO_QUOTATION, 'Quotation'),
+                         (MARK_AS_SENT, 'Quotation Sent')):
+        if name == CANCEL:
+            # Give Set to Quotation something to clear. Signature itself is control type 42 and is not written
+            # here — a signature pad's value is not something `record update` can put in honestly — so the
+            # clear of Signature is the one write of the six this step cannot prove; the UI test signs and
+            # then presses Set to Quotation.
+            write_cells(clean, [{'id': cid(SIGNED_BY), 'value': SIGNER},
+                                {'id': cid(SIGNED_ON), 'value': SIGNED_AT}])
+        press(name, clean)
+        if wanted:
+            state = wait_until(f, clean, lambda s, w=wanted: status_label(s['Status']) == w)
+        else:
+            on = '1' if name == CLOSE_INVOICING else '0'
+            state = wait_until(f, clean, lambda s, o=on: s[INVOICING_CLOSED] == o)
+        got[name] = state
+        print(f"  {name:<17} -> {status_label(state['Status']):<14} date={state['Quotation/Order Date']!r} "
+              f"{INVOICING_CLOSED}={state[INVOICING_CLOSED]!r} {SIGNED_BY}={state[SIGNED_BY]!r} "
+              f"{SIGNED_ON}={state[SIGNED_ON]!r}")
+    # Odoo's `_prepare_confirmation_values` overwrites `date_order` unconditionally, so the date must have moved
+    # off the seeded one and onto the confirmation time.
+    confirmed = got[CONFIRM]['Quotation/Order Date']
+    if status_label(got[CONFIRM]['Status']) != 'Sales Order':
+        problems.append(f'{CONFIRM}: Status {status_label(got[CONFIRM]["Status"])}')
+    if confirmed == start['Quotation/Order Date'] or confirmed[:10] != now[:10]:
+        problems.append(f'{CONFIRM}: Quotation/Order Date is {confirmed!r} — it was '
+                        f'{start["Quotation/Order Date"]!r} and the confirmation ran at {now}')
+    else:
+        print(f'  OK    {CONFIRM} moved Quotation/Order Date {start["Quotation/Order Date"]!r} -> '
+              f'{confirmed!r} (the run was at {now})')
+    if got[CLOSE_INVOICING][INVOICING_CLOSED] != '1':
+        problems.append(f'{CLOSE_INVOICING} left {INVOICING_CLOSED} '
+                        f'{got[CLOSE_INVOICING][INVOICING_CLOSED]!r}')
+    if got[REOPEN_INVOICING][INVOICING_CLOSED] != '0':
+        problems.append(f'{REOPEN_INVOICING} left {INVOICING_CLOSED} '
+                        f'{got[REOPEN_INVOICING][INVOICING_CLOSED]!r}')
+    if status_label(got[CANCEL]['Status']) != 'Cancelled':
+        problems.append(f'{CANCEL}: Status {status_label(got[CANCEL]["Status"])}')
+    requoted = got[SET_TO_QUOTATION]
+    if status_label(requoted['Status']) != 'Quotation':
+        problems.append(f'{SET_TO_QUOTATION}: Status {status_label(requoted["Status"])}')
+    if (requoted[SIGNED_BY], requoted[SIGNED_ON]) != ('', ''):
+        problems.append(f'{SET_TO_QUOTATION} did not clear the signature fields: '
+                        f'{SIGNED_BY}={requoted[SIGNED_BY]!r} {SIGNED_ON}={requoted[SIGNED_ON]!r}')
+    else:
+        print(f'  OK    {SET_TO_QUOTATION} cleared {SIGNED_BY} and {SIGNED_ON} '
+              f'(Signature itself is type {SIGN_PAD} and is for the UI test)')
+    if status_label(got[MARK_AS_SENT]['Status']) != 'Quotation Sent':
+        problems.append(f'{MARK_AS_SENT}: Status {status_label(got[MARK_AS_SENT]["Status"])}')
+
+    # ── put the order back exactly as the seed wrote it ──
+    write_cells(clean, [{'id': cid('Status'), 'value': [start['Status'][0]]},
+                        {'id': cid('Quotation/Order Date'), 'value': start['Quotation/Order Date']},
+                        {'id': cid(INVOICING_CLOSED), 'value': start[INVOICING_CLOSED]},
+                        {'id': cid(SIGNED_BY), 'value': start[SIGNED_BY]},
+                        {'id': cid(SIGNED_ON), 'value': start[SIGNED_ON]}])
+    back = order_state(f, clean)
+    if back != start:
+        problems.append(f'{CLEAN_ORDER} was not restored: {start} -> {back}')
+    else:
+        print(f'  OK    {CLEAN_ORDER} restored: {status_label(back["Status"])}, date '
+              f'{back["Quotation/Order Date"]!r} — `check` re-compares it against the seed')
+    if problems:
+        print('  selfcheck: ' + '\n             '.join(problems))
+        sys.exit(1)
+    print(f'  selfcheck: OK — all six buttons drive {CLEAN_ORDER} and the guard refuses {GUARDED_ORDER}')
+    return True
+
+
+# ── 13c · reading the six buttons and the guard back ────────────────────────
+
+def button_problems():
+    """Every difference between the six buttons — their conditions, batch flags, confirmations, workflows and
+    Confirm's guard — and §13's spec, plus the owner's button and control read back. Printed by `check`."""
+    ctrls = hap.controls(ws())
+    f, problems = hap.by_name(c for c in ctrls if c['type'] != C.TAB), []
+    names = {c['controlId']: c['controlName'] for c in ctrls}
+    live = {b['name']: b for b in hap.listing('worksheet', 'custom-actions', ws())}
+    label = {v: k for k, v in STATUS_KEYS.items()}
+    wanted, workflows = writes_wanted(f), hap.ids().get('workflows', {})
+    for spec, _, step in button_specs(f):
+        name = spec['name']
+        b = live.get(name)
+        if b is None:
+            problems.append(f'the {name!r} button is missing — run `buttons`')
+            continue
+        if button_state(b) != button_wanted(spec):
+            problems.append(f'{name}: stored {button_state(b)}, wanted {button_wanted(spec)} — run `buttons`')
+            continue
+        conds = [(names.get(cid, cid), ftype, [label.get(v, v) for v in vals])
+                 for cid, _dt, _sp, ftype, vals in filter_state(b.get('filters'))]
+        print(f"  OK  {name:<17} btnId={b['btnId']} isBatch={bool(b.get('isBatch'))} "
+              f"clickType={b.get('clickType')} confirm={b.get('confirmMsg') or ''!r}\n"
+              f"        when {conds}")
+        pid = workflows.get(KEY + name)
+        if not pid:
+            problems.append(f'{name}: no workflow id in ids.json — run `buttons`')
+            continue
+        proc, byname = nodes_by_name(pid)
+        if step not in byname:
+            problems.append(f'{name}: {step!r} is not in workflow {pid} ({sorted(byname)})')
+            continue
+        got = writes_live(pid, byname[step]['id'])
+        want = [write_state(x) for x in wanted[name]]
+        if got != want:
+            problems.append(f'{name}: {step!r} writes {json.dumps(got, ensure_ascii=False)}, wanted '
+                            f'{json.dumps(want, ensure_ascii=False)} — run `buttons`')
+        else:
+            print('        then ' + ', '.join(
+                f"{names.get(x['fieldId'], x['fieldId'])} = "
+                + (f"{label.get(x['fieldValue'], x['fieldValue'])!r}" if x['fieldValue'] != ''
+                   else ('now' if x['nodeId'] == SYSTEM_NODE else 'cleared'))
+                for x in got))
+        if name != CONFIRM:
+            steps = [n['name'] for n in proc['flowNodeMap'].values()
+                     if n.get('typeId') not in (None, 0, 100) and n.get('prveId')]
+            if steps != [step]:
+                problems.append(f'{name}: workflow holds {steps}, wanted only [{step!r}] — Odoo checks nothing '
+                                f'else on it')
+    problems += guard_problems()
+    # The owner's, never touched by this builder: read both back so `check` fails if either has gone.
+    b = live.get(OWNERS_BUTTON)
+    if not b or b['btnId'] != OWNERS_BUTTON_ID:
+        problems.append(f"the owner's {OWNERS_BUTTON!r} button {OWNERS_BUTTON_ID} is gone — this builder must "
+                        f'never delete it')
+    else:
+        proc = hap.run('workflow', 'node', 'list', OWNERS_WORKFLOW)
+        steps = [n['name'] for n in proc['flowNodeMap'].values()
+                 if n.get('typeId') not in (None, 0, 100) and n.get('prveId')]
+        print(f"  the owner's {OWNERS_BUTTON!r} {b['btnId']} / workflow {OWNERS_WORKFLOW}: {len(steps)} step(s) "
+              f'{steps} — left exactly as it is')
+    c = next((x for x in hap.controls(ws()) if x['controlId'] == OWNERS_CONTROL_ID), None)
+    if c is None or c['controlName'] != OWNERS_CONTROL or c['type'] != SEARCH_BTN:
+        problems.append(f"the owner's {OWNERS_CONTROL!r} {OWNERS_CONTROL_ID} (t{SEARCH_BTN}) is gone — this "
+                        f'builder must never delete it')
+    else:
+        print(f"  the owner's {OWNERS_CONTROL!r} {OWNERS_CONTROL_ID} t{c['type']} at r{c.get('row')}"
+              f"c{c.get('col')}s{c.get('size')} — untouched")
+    for name in BUTTONS:
+        if live.get(name):
+            C.remember('buttons', KEY + name, live[name]['btnId'])
+    return problems
+
+
+def guard_problems():
+    """Confirm's product guard, read back: the chain, the count's three conditions, the branch condition, the
+    notification and its recipient, that nothing follows the gateway, and that no abort node exists."""
+    pid = hap.ids().get('workflows', {}).get(KEY + CONFIRM)
+    if not pid:
+        return [f'no workflow id for {CONFIRM} in ids.json — run `buttons`']
+    proc, byname = nodes_by_name(pid)
+    missing = [n for n in GUARD_STEPS if n not in byname]
+    if missing:
+        return [f'{CONFIRM} workflow: {missing} missing — run `buttons`']
+    problems, chain = [], {n: byname[n]['id'] for n in GUARD_STEPS}
+    ends = lambda node_id: proc['flowNodeMap'][node_id].get('nextId') in (None, '', '99')
+    for node_id, nxt in ((proc['startEventId'], chain[COUNT_STEP]),
+                         (chain[COUNT_STEP], chain[PRODUCT_BRANCH])):
+        if proc['flowNodeMap'][node_id].get('nextId') != nxt:
+            problems.append(f"{proc['flowNodeMap'][node_id]['name']!r} runs into "
+                            f"{proc['flowNodeMap'].get(proc['flowNodeMap'][node_id].get('nextId'), {}).get('name')!r}")
+    # Nothing follows the gateway and each path ends at its own last step: the update hangs off the *No* path,
+    # so the refusal path needs no abort and HAP's untranslated 中止 toast is never drawn (15 §6.6).
+    for name in (PRODUCT_BRANCH, TELL_STEP, STEP[CONFIRM]):
+        if not ends(chain[name]):
+            problems.append(f'{name!r} runs into '
+                            f'{proc["flowNodeMap"].get(proc["flowNodeMap"][chain[name]].get("nextId"), {}).get("name")!r}'
+                            ' — the gateway must converge on nothing and every path end at its last step')
+    aborts = [n['name'] for n in proc['flowNodeMap'].values() if n.get('typeId') == ABORT]
+    if aborts:
+        problems.append(f"abort node(s) {aborts} in the {CONFIRM} workflow — an aborted run draws HAP's "
+                        'untranslated 中止 toast (15 §6.6)')
+    count = read_node(pid, chain[COUNT_STEP])
+    if (count.get('actionId'), count.get('appId'), count.get('reportControlId'), count.get('reportType')) != \
+            (WORKSHEET_TOTAL, LINES_WS, '', 0):
+        problems.append(f"{COUNT_STEP}: actionId={count.get('actionId')} appId={count.get('appId')} "
+                        f"reportControlId={count.get('reportControlId')!r} reportType={count.get('reportType')}")
+    conds = [c for flt in count.get('filters') or [] for group in flt.get('conditions') or [] for c in group]
+    got = [(c['filedId'], c['conditionId'],
+            [v.get('controlId') or (v.get('value') or {}).get('value') for v in c['conditionValues']])
+           for c in conds]
+    want = [(LINES_ORDERS, RELATION_EQ, ['rowid']),
+            (CHILD['Display Type'], IS_ANY_OF, ['Product']),
+            (CHILD['Product'], EMPTY, [])]
+    if got != want:
+        problems.append(f'{COUNT_STEP} filter {got}, wanted {want}')
+    elif [v.get('nodeId') for c in conds for v in c['conditionValues']][:1] != [proc['startEventId']]:
+        problems.append(f'{COUNT_STEP}: the Orders relation is not compared with the triggering order')
+    else:
+        print(f'  OK  {COUNT_STEP} counts Order Lines where Orders is this order, Display Type is Product and '
+              f'Product is empty')
+    yes, no = branch_paths(proc, chain[PRODUCT_BRANCH], chain[TELL_STEP])
+    for path, name, want_cond in ((yes, 'Yes', [(chain[COUNT_STEP], NUMBER_FX, AT_LEAST_ONE, ['1'])]),
+                                  (no, 'No', [])):
+        got = read_node(pid, path['id'])
+        live = [(c['nodeId'], c['filedId'], c['conditionId'], [v.get('value') for v in c['conditionValues']])
+                for g in got.get('conditions') or [] for c in g]
+        if path.get('name') != name or live != want_cond:
+            problems.append(f'branch path {path.get("name")!r}: {live}, wanted {want_cond}')
+    for path, step in ((yes, TELL_STEP), (no, STEP[CONFIRM])):
+        if path.get('nextId') != chain[step]:
+            problems.append(f'branch path {path.get("name")!r} runs into '
+                            f'{proc["flowNodeMap"].get(path.get("nextId"), {}).get("name")!r}, not {step!r}')
+    tell = read_node(pid, chain[TELL_STEP])
+    if tell.get('sendContent') != MSG_NO_PRODUCT:
+        problems.append(f'{TELL_STEP}: message {tell.get("sendContent")!r}, wanted {MSG_NO_PRODUCT!r}')
+    who = [(a.get('type'), a.get('entityId'), a.get('roleId')) for a in tell.get('accounts') or []]
+    if who != [(TRIGGER_USER['type'], TRIGGER_USER['entityId'], TRIGGER_USER['roleId'])]:
+        problems.append(f'{TELL_STEP}: recipient {who}, wanted the person who pressed the button')
+    if not problems:
+        print(f'  OK  {CONFIRM} refuses an order with a product line that has no Product: the count, the '
+              f'branch, Odoo\'s own notification on the Yes path and the update on the No path — no abort node')
+        print(f'  NOTE the refusal still draws HAP\'s green "Operation completed" toast (15 §6.7, unresolved): '
+              f'the run completes, the order does not move, and the explanation waits in the notification '
+              f'centre')
+    return problems
+
+
 # ── the guard ───────────────────────────────────────────────────────────────
 
 def guard():
@@ -1890,6 +2763,7 @@ def step_check():
         if not (info.get('filters') or []):
             print(f"  the owner's {name!r} view has no filter, so **templates appear in it** — "
                   f'{template_filter_note()}')
+    problems += button_problems()
     data, _lines = seed_data()
     seeded = seeded_orders()
     absent = [o['name'] for o in data['orders'] if o['name'] not in seeded]
@@ -1911,8 +2785,9 @@ def step_check():
         sys.exit(1)
     print(f'  check: OK — {len(RULES)} rules, the retired five, Expiration, three roll-ups at {MONEY_DOT} '
           f'decimals, the {len(SUBTABLE_COLUMNS)} subtable columns, {INVOICING_STATUS} at '
-          f'{READ_ONLY_PERMISSION}, the {len(PART1)} controls of §6b at {READ_ONLY_PERMISSION} and '
-          f'{len(VIEW_ROWS)} views returning {list(VIEW_ROWS.values())} rows')
+          f'{READ_ONLY_PERMISSION}, the {len(PART1)} controls of §6b at {READ_ONLY_PERMISSION}, '
+          f'{len(VIEW_ROWS)} views returning {list(VIEW_ROWS.values())} rows and the {len(BUTTONS)} buttons of '
+          f"§13 with their workflows (the owner's {OWNERS_BUTTON!r} and {OWNERS_CONTROL!r} untouched)")
 
 
 def step_show():
@@ -1940,8 +2815,8 @@ def step_show():
 STEPS = {'rules': step_rules, 'retire': step_retire, 'expiry': step_expiry, 'totals': step_totals,
          'dots': step_dots, 'controls': step_controls, 'part1': step_part1, 'customer': step_customer,
          'invstatus': step_invstatus, 'views': step_views,
-         'wipe': step_wipe, 'seed': step_seed, 'figures': step_figures,
-         'check': step_check, 'show': step_show}
+         'wipe': step_wipe, 'seed': step_seed, 'figures': step_figures, 'buttons': step_buttons,
+         'selfcheck': step_selfcheck, 'check': step_check, 'show': step_show}
 
 if __name__ == '__main__':
     if len(sys.argv) < 2 or sys.argv[1] not in STEPS:

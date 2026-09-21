@@ -534,6 +534,20 @@ What decides is **whether the value being compared is in the write**.
   button up by name with `hap worksheet custom-actions <ws>` first.
 - A button that runs a workflow gets a hidden workflow; while it has no steps, its trigger's `nextId` is `99`.
   Deleting the button deletes that workflow too.
+- **A 二次确认 button is stored as `clickType` 1 with `enableConfirm` true**, not as the `clickType` **2** the
+  action-spec adapter sends: the server flattens the two shapes and keeps the `confirmMsg`, `sureName` and
+  `cancelName`. So a step that compares what it sent with what came back must read the confirmation off
+  `enableConfirm` (or `clickType == 2`), or it re-saves the button for ever — Orders' Cancel, and the owner's own
+  *Send Quotation*, both read back 1 with the dialog intact (21 Sep 2026, `orders.button_state`).
+- **The success toast's text is the button's own `advancedSetting.tiptext`**, default *"Operation completed"*.
+  It is **one string for every outcome** of the click, so it cannot distinguish a run that did the work from a
+  guarded run that deliberately did not — which is the whole of the §6.7 defect in `worksheets/15-ui-conformance.md`.
+  A button created by `create-custom-action` carries no `tiptext` at all and draws HAP's default; the owner's
+  *Send Quotation*, made in the UI, carries the default written out.
+- **A button's `enableWhen` AND-s several conditions on different controls**: `translate_filter_group` flattens an
+  AND group into the wire's condition list with `spliceType` 1 on each, so a second child *is* the AND. Orders'
+  Cancel (Status is any of three **and** Locked is not ticked) and its two invoicing buttons are built that way,
+  and read back as sent — one filterType **51** condition beside a checkbox's 6 or 2 (21 Sep 2026).
 - A button's condition **hides** it on a full-page record — a posted Invoices document shows Reset to Draft and
   neither Confirm nor Cancel — and **greys it out in the pop-up record** a table row opens: Payment Terms' Unarchive
   reads disabled beside Archive in the pop-up and is absent from the same record's own page (bundle 3). Write the test
