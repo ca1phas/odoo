@@ -62,7 +62,7 @@
       const st=status(id,S); if(st.hard.length) blocked+=m.count; else if(st.miss.length) degraded+=m.count;});
     let hrs=HOURS.core+act0().reduce((a,b)=>a+(HOURS.bundles[b]||0),0)+(act0().length?HOURS.bundleApp:0)
       +PHASES.filter(x=>x[0]<=p).reduce((a,x)=>a+(HOURS.phases[x[0]]||0),0);
-    stats.innerHTML=`<span>worksheets built <b>${built}</b> of 233</span>`
+    stats.innerHTML=`<span>worksheets built <b>${built}</b> of 234</span>`
       +`<span>elapsed <b>${(hrs/HOURS.week).toFixed(1)}</b> weeks at 40 h/week · ~${Math.round(hrs)} h</span>`
       +(blocked?`<span class="warn">blocked <b>${blocked}</b> — a required worksheet isn't built yet</span>`:'')
       +(degraded?`<span>degraded <b>${degraded}</b> — an optional bundle they use is switched off</span>`:'');

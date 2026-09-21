@@ -1,0 +1,766 @@
+{
+ "_source": "casimir.odoo.com (Odoo saas~19.4+e), account.tax, read 18 Sep 2026 — see nocoly/reference/odoo-19.4/account.tax.md",
+ "_note": "All 35. Every record is Malaysia, sequence 1, tax_exigibility on_invoice, price_include_override empty, include_base_amount false, is_base_affected true, analytic false, no children_tax_ids, no invoice_legal_notes, company casimir — those constants are not repeated per record. description is the plain text of Odoo html (one <div>). formula is only read when amount_type is code; the other 32 carry the module default.",
+ "taxes": [
+  {
+   "id": 1,
+   "name": "0% NA",
+   "type_tax_use": "sale",
+   "tax_scope": false,
+   "amount_type": "percent",
+   "amount": 0.0,
+   "active": true,
+   "sequence": 1,
+   "description": "Not Applicable",
+   "invoice_label": "0%",
+   "tax_group": "Not Applicable",
+   "country": "Malaysia",
+   "fiscal_positions": [
+    "MY Domestic"
+   ],
+   "formula": "price_unit * 0.10",
+   "l10n_my_tax_type": "06"
+  },
+  {
+   "id": 2,
+   "name": "0% NA",
+   "type_tax_use": "purchase",
+   "tax_scope": false,
+   "amount_type": "percent",
+   "amount": 0.0,
+   "active": true,
+   "sequence": 1,
+   "description": "Not Applicable",
+   "invoice_label": "0%",
+   "tax_group": "Not Applicable",
+   "country": "Malaysia",
+   "fiscal_positions": [
+    "MY Domestic"
+   ],
+   "formula": "price_unit * 0.10",
+   "l10n_my_tax_type": "06"
+  },
+  {
+   "id": 3,
+   "name": "5% G",
+   "type_tax_use": "sale",
+   "tax_scope": "consu",
+   "amount_type": "percent",
+   "amount": 5.0,
+   "active": true,
+   "sequence": 1,
+   "description": "SST 5%",
+   "invoice_label": "5%",
+   "tax_group": "SST 5%",
+   "country": "Malaysia",
+   "fiscal_positions": [
+    "MY Domestic"
+   ],
+   "formula": "price_unit * 0.10",
+   "l10n_my_tax_type": "01"
+  },
+  {
+   "id": 4,
+   "name": "6% S",
+   "type_tax_use": "sale",
+   "tax_scope": "service",
+   "amount_type": "percent",
+   "amount": 6.0,
+   "active": false,
+   "sequence": 1,
+   "description": "SST 6%",
+   "invoice_label": "6%",
+   "tax_group": "SST 6%",
+   "country": "Malaysia",
+   "fiscal_positions": [
+    "MY Domestic"
+   ],
+   "formula": "price_unit * 0.10",
+   "l10n_my_tax_type": "02"
+  },
+  {
+   "id": 5,
+   "name": "8% S",
+   "type_tax_use": "sale",
+   "tax_scope": "service",
+   "amount_type": "percent",
+   "amount": 8.0,
+   "active": true,
+   "sequence": 1,
+   "description": "SST 8% Other than Group H",
+   "invoice_label": "8%",
+   "tax_group": "SST 8%",
+   "country": "Malaysia",
+   "fiscal_positions": [
+    "MY Domestic"
+   ],
+   "formula": "price_unit * 0.10",
+   "l10n_my_tax_type": "02"
+  },
+  {
+   "id": 6,
+   "name": "8% S H",
+   "type_tax_use": "sale",
+   "tax_scope": "service",
+   "amount_type": "percent",
+   "amount": 8.0,
+   "active": true,
+   "sequence": 1,
+   "description": "SST 8% Group H",
+   "invoice_label": "8%",
+   "tax_group": "SST 8%",
+   "country": "Malaysia",
+   "fiscal_positions": [
+    "MY Domestic"
+   ],
+   "formula": "price_unit * 0.10",
+   "l10n_my_tax_type": "02"
+  },
+  {
+   "id": 7,
+   "name": "10% G",
+   "type_tax_use": "sale",
+   "tax_scope": "consu",
+   "amount_type": "percent",
+   "amount": 10.0,
+   "active": true,
+   "sequence": 1,
+   "description": "SST 10%",
+   "invoice_label": "10%",
+   "tax_group": "SST 10%",
+   "country": "Malaysia",
+   "fiscal_positions": [
+    "MY Domestic"
+   ],
+   "formula": "price_unit * 0.10",
+   "l10n_my_tax_type": "01"
+  },
+  {
+   "id": 8,
+   "name": "25 Per Card",
+   "type_tax_use": "sale",
+   "tax_scope": false,
+   "amount_type": "code",
+   "amount": 0.0,
+   "active": false,
+   "sequence": 1,
+   "description": "Credit card or Charge card service",
+   "invoice_label": "RM25",
+   "tax_group": "SST 25 Per Card",
+   "country": "Malaysia",
+   "fiscal_positions": [
+    "MY Domestic"
+   ],
+   "formula": "quantity * 25",
+   "l10n_my_tax_type": "06"
+  },
+  {
+   "id": 9,
+   "name": "X Per Litre G",
+   "type_tax_use": "sale",
+   "tax_scope": "consu",
+   "amount_type": "code",
+   "amount": 0.0,
+   "active": false,
+   "sequence": 1,
+   "description": "Goods under schedule 2 (Per Litre)",
+   "invoice_label": false,
+   "tax_group": "SST X Per Litre",
+   "country": "Malaysia",
+   "fiscal_positions": [
+    "MY Domestic"
+   ],
+   "formula": "quantity * 0.30",
+   "l10n_my_tax_type": "E"
+  },
+  {
+   "id": 10,
+   "name": "X Per Kilogram G",
+   "type_tax_use": "sale",
+   "tax_scope": "consu",
+   "amount_type": "code",
+   "amount": 0.0,
+   "active": false,
+   "sequence": 1,
+   "description": "Goods under schedule 2 (Per Kilogram)",
+   "invoice_label": false,
+   "tax_group": "SST X Per Kilogram",
+   "country": "Malaysia",
+   "fiscal_positions": [
+    "MY Domestic"
+   ],
+   "formula": "quantity * 0.01",
+   "l10n_my_tax_type": "E"
+  },
+  {
+   "id": 11,
+   "name": "X%",
+   "type_tax_use": "sale",
+   "tax_scope": "consu",
+   "amount_type": "percent",
+   "amount": 0.0,
+   "active": false,
+   "sequence": 1,
+   "description": "Goods under schedule 2 (Ad-volerem)",
+   "invoice_label": false,
+   "tax_group": "SST X %",
+   "country": "Malaysia",
+   "fiscal_positions": [
+    "MY Domestic"
+   ],
+   "formula": "price_unit * 0.10",
+   "l10n_my_tax_type": "E"
+  },
+  {
+   "id": 12,
+   "name": "EX",
+   "type_tax_use": "sale",
+   "tax_scope": "consu",
+   "amount_type": "percent",
+   "amount": 0.0,
+   "active": true,
+   "sequence": 1,
+   "description": "Sales exempted from tax, export",
+   "invoice_label": "Export",
+   "tax_group": "Exempt",
+   "country": "Malaysia",
+   "fiscal_positions": [
+    "Foreign Trade"
+   ],
+   "formula": "price_unit * 0.10",
+   "l10n_my_tax_type": "E"
+  },
+  {
+   "id": 13,
+   "name": "Exempt A",
+   "type_tax_use": "sale",
+   "tax_scope": "consu",
+   "amount_type": "percent",
+   "amount": 0.0,
+   "active": false,
+   "sequence": 1,
+   "description": "Sales exempted from tax, schedule A",
+   "invoice_label": "Exempt",
+   "tax_group": "Exempt",
+   "country": "Malaysia",
+   "fiscal_positions": [
+    "Exempted person under Schedule A"
+   ],
+   "formula": "price_unit * 0.10",
+   "l10n_my_tax_type": "E"
+  },
+  {
+   "id": 14,
+   "name": "Exempt B",
+   "type_tax_use": "sale",
+   "tax_scope": "consu",
+   "amount_type": "percent",
+   "amount": 0.0,
+   "active": false,
+   "sequence": 1,
+   "description": "Sales exempted from tax, schedule B",
+   "invoice_label": "Exempt",
+   "tax_group": "Exempt",
+   "country": "Malaysia",
+   "fiscal_positions": [
+    "Exempted person under Schedule B"
+   ],
+   "formula": "price_unit * 0.10",
+   "l10n_my_tax_type": "E"
+  },
+  {
+   "id": 15,
+   "name": "Exempt C 1,2",
+   "type_tax_use": "sale",
+   "tax_scope": "consu",
+   "amount_type": "percent",
+   "amount": 0.0,
+   "active": false,
+   "sequence": 1,
+   "description": "Sales exempted from tax, schedule C, Item 1 and 2",
+   "invoice_label": "Exempt",
+   "tax_group": "Exempt",
+   "country": "Malaysia",
+   "fiscal_positions": [
+    "Exempted person under Schedule C"
+   ],
+   "formula": "price_unit * 0.10",
+   "l10n_my_tax_type": "E"
+  },
+  {
+   "id": 16,
+   "name": "Exempt C 3,4",
+   "type_tax_use": "sale",
+   "tax_scope": "consu",
+   "amount_type": "percent",
+   "amount": 0.0,
+   "active": false,
+   "sequence": 1,
+   "description": "Sales exempted from tax, schedule C, Item 3 and 4",
+   "invoice_label": "Exempt",
+   "tax_group": "Exempt",
+   "country": "Malaysia",
+   "fiscal_positions": [
+    "Exempted person under Schedule C"
+   ],
+   "formula": "price_unit * 0.10",
+   "l10n_my_tax_type": "E"
+  },
+  {
+   "id": 17,
+   "name": "Exempt C 5",
+   "type_tax_use": "sale",
+   "tax_scope": "consu",
+   "amount_type": "percent",
+   "amount": 0.0,
+   "active": false,
+   "sequence": 1,
+   "description": "Sales exempted from tax, schedule C, Item 5",
+   "invoice_label": "Exempt",
+   "tax_group": "Exempt",
+   "country": "Malaysia",
+   "fiscal_positions": [
+    "Exempted person under Schedule C"
+   ],
+   "formula": "price_unit * 0.10",
+   "l10n_my_tax_type": "E"
+  },
+  {
+   "id": 18,
+   "name": "Exempt",
+   "type_tax_use": "sale",
+   "tax_scope": "consu",
+   "amount_type": "percent",
+   "amount": 0.0,
+   "active": false,
+   "sequence": 1,
+   "description": "Services exempted from tax, schedule C, Item 5",
+   "invoice_label": "Exempt",
+   "tax_group": "Exempt",
+   "country": "Malaysia",
+   "fiscal_positions": [
+    "Exempted person under Schedule C"
+   ],
+   "formula": "price_unit * 0.10",
+   "l10n_my_tax_type": "E"
+  },
+  {
+   "id": 19,
+   "name": "5% G",
+   "type_tax_use": "purchase",
+   "tax_scope": "consu",
+   "amount_type": "percent",
+   "amount": 5.0,
+   "active": true,
+   "sequence": 1,
+   "description": "SST 5%",
+   "invoice_label": "5%",
+   "tax_group": "SST 5%",
+   "country": "Malaysia",
+   "fiscal_positions": [
+    "MY Domestic"
+   ],
+   "formula": "price_unit * 0.10",
+   "l10n_my_tax_type": "01"
+  },
+  {
+   "id": 20,
+   "name": "6% S",
+   "type_tax_use": "purchase",
+   "tax_scope": "service",
+   "amount_type": "percent",
+   "amount": 6.0,
+   "active": false,
+   "sequence": 1,
+   "description": "SST 6%",
+   "invoice_label": "6%",
+   "tax_group": "SST 6%",
+   "country": "Malaysia",
+   "fiscal_positions": [
+    "MY Domestic"
+   ],
+   "formula": "price_unit * 0.10",
+   "l10n_my_tax_type": "02"
+  },
+  {
+   "id": 21,
+   "name": "8% S",
+   "type_tax_use": "purchase",
+   "tax_scope": "service",
+   "amount_type": "percent",
+   "amount": 8.0,
+   "active": true,
+   "sequence": 1,
+   "description": "SST 8%",
+   "invoice_label": "8%",
+   "tax_group": "SST 8%",
+   "country": "Malaysia",
+   "fiscal_positions": [
+    "MY Domestic"
+   ],
+   "formula": "price_unit * 0.10",
+   "l10n_my_tax_type": "02"
+  },
+  {
+   "id": 22,
+   "name": "10% G",
+   "type_tax_use": "purchase",
+   "tax_scope": "consu",
+   "amount_type": "percent",
+   "amount": 10.0,
+   "active": true,
+   "sequence": 1,
+   "description": "SST 10%",
+   "invoice_label": "10%",
+   "tax_group": "SST 10%",
+   "country": "Malaysia",
+   "fiscal_positions": [
+    "MY Domestic"
+   ],
+   "formula": "price_unit * 0.10",
+   "l10n_my_tax_type": "01"
+  },
+  {
+   "id": 23,
+   "name": "Exempt C 1,2",
+   "type_tax_use": "purchase",
+   "tax_scope": "consu",
+   "amount_type": "percent",
+   "amount": 0.0,
+   "active": false,
+   "sequence": 1,
+   "description": "Purchase under the schedule C, item 1 and 2",
+   "invoice_label": "Exempt",
+   "tax_group": "Exempt",
+   "country": "Malaysia",
+   "fiscal_positions": [],
+   "formula": "price_unit * 0.10",
+   "l10n_my_tax_type": "E"
+  },
+  {
+   "id": 24,
+   "name": "Exempt C 3,4",
+   "type_tax_use": "purchase",
+   "tax_scope": "consu",
+   "amount_type": "percent",
+   "amount": 0.0,
+   "active": false,
+   "sequence": 1,
+   "description": "Purchase under the schedule C, item 3 and 4",
+   "invoice_label": "Exempt",
+   "tax_group": "Exempt",
+   "country": "Malaysia",
+   "fiscal_positions": [],
+   "formula": "price_unit * 0.10",
+   "l10n_my_tax_type": "E"
+  },
+  {
+   "id": 25,
+   "name": "Exempt C 5",
+   "type_tax_use": "purchase",
+   "tax_scope": "consu",
+   "amount_type": "percent",
+   "amount": 0.0,
+   "active": false,
+   "sequence": 1,
+   "description": "Purchase under the schedule C, item 5",
+   "invoice_label": "Exempt",
+   "tax_group": "Exempt",
+   "country": "Malaysia",
+   "fiscal_positions": [],
+   "formula": "price_unit * 0.10",
+   "l10n_my_tax_type": "E"
+  },
+  {
+   "id": 26,
+   "name": "IM S",
+   "type_tax_use": "purchase",
+   "tax_scope": "service",
+   "amount_type": "percent",
+   "amount": 6.0,
+   "active": false,
+   "sequence": 1,
+   "description": "Imported services",
+   "invoice_label": "Import",
+   "tax_group": "SST 6%",
+   "country": "Malaysia",
+   "fiscal_positions": [
+    "Foreign Trade"
+   ],
+   "formula": "price_unit * 0.10",
+   "l10n_my_tax_type": "02"
+  },
+  {
+   "id": 27,
+   "name": "IM Others S",
+   "type_tax_use": "purchase",
+   "tax_scope": "service",
+   "amount_type": "percent",
+   "amount": 8.0,
+   "active": false,
+   "sequence": 1,
+   "description": "Other imported services",
+   "invoice_label": "Import",
+   "tax_group": "SST 8%",
+   "country": "Malaysia",
+   "fiscal_positions": [
+    "Foreign Trade"
+   ],
+   "formula": "price_unit * 0.10",
+   "l10n_my_tax_type": "02"
+  },
+  {
+   "id": 28,
+   "name": "5% G OU",
+   "type_tax_use": "sale",
+   "tax_scope": "consu",
+   "amount_type": "percent",
+   "amount": 5.0,
+   "active": false,
+   "sequence": 1,
+   "description": "Value of Goods For Own Used / Disposed. Value of Free Services",
+   "invoice_label": false,
+   "tax_group": "SST 5%",
+   "country": "Malaysia",
+   "fiscal_positions": [],
+   "formula": "price_unit * 0.10",
+   "l10n_my_tax_type": "01"
+  },
+  {
+   "id": 29,
+   "name": "10% G OU",
+   "type_tax_use": "sale",
+   "tax_scope": "consu",
+   "amount_type": "percent",
+   "amount": 10.0,
+   "active": false,
+   "sequence": 1,
+   "description": "Value of Goods For Own Used / Disposed. Value of Free Services",
+   "invoice_label": false,
+   "tax_group": "SST 6%",
+   "country": "Malaysia",
+   "fiscal_positions": [],
+   "formula": "price_unit * 0.10",
+   "l10n_my_tax_type": "01"
+  },
+  {
+   "id": 30,
+   "name": "6% S OU",
+   "type_tax_use": "sale",
+   "tax_scope": "service",
+   "amount_type": "percent",
+   "amount": 6.0,
+   "active": false,
+   "sequence": 1,
+   "description": "Value of Goods For Own Used / Disposed. Value of Free Services",
+   "invoice_label": false,
+   "tax_group": "SST 8%",
+   "country": "Malaysia",
+   "fiscal_positions": [],
+   "formula": "price_unit * 0.10",
+   "l10n_my_tax_type": "02"
+  },
+  {
+   "id": 31,
+   "name": "8% S OU",
+   "type_tax_use": "sale",
+   "tax_scope": "service",
+   "amount_type": "percent",
+   "amount": 8.0,
+   "active": false,
+   "sequence": 1,
+   "description": "Value of Goods For Own Used / Disposed. Value of Free Services",
+   "invoice_label": false,
+   "tax_group": "SST 10%",
+   "country": "Malaysia",
+   "fiscal_positions": [],
+   "formula": "price_unit * 0.10",
+   "l10n_my_tax_type": "02"
+  },
+  {
+   "id": 32,
+   "name": "5% G D",
+   "type_tax_use": "purchase",
+   "tax_scope": "consu",
+   "amount_type": "percent",
+   "amount": 5.0,
+   "active": false,
+   "sequence": 1,
+   "description": "SST 5% (Deduction)",
+   "invoice_label": "5%",
+   "tax_group": "SST 5%",
+   "country": "Malaysia",
+   "fiscal_positions": [],
+   "formula": "price_unit * 0.10",
+   "l10n_my_tax_type": "01"
+  },
+  {
+   "id": 33,
+   "name": "10% G D",
+   "type_tax_use": "purchase",
+   "tax_scope": "consu",
+   "amount_type": "percent",
+   "amount": 10.0,
+   "active": false,
+   "sequence": 1,
+   "description": "SST 10% (Deduction)",
+   "invoice_label": "10%",
+   "tax_group": "SST 10%",
+   "country": "Malaysia",
+   "fiscal_positions": [],
+   "formula": "price_unit * 0.10",
+   "l10n_my_tax_type": "01"
+  },
+  {
+   "id": 34,
+   "name": "5% G SC",
+   "type_tax_use": "sale",
+   "tax_scope": "consu",
+   "amount_type": "percent",
+   "amount": 5.0,
+   "active": false,
+   "sequence": 1,
+   "description": "SST 5% (Sub-contracting)",
+   "invoice_label": "5%",
+   "tax_group": "SST 5%",
+   "country": "Malaysia",
+   "fiscal_positions": [],
+   "formula": "price_unit * 0.10",
+   "l10n_my_tax_type": "01"
+  },
+  {
+   "id": 35,
+   "name": "10% G SC",
+   "type_tax_use": "sale",
+   "tax_scope": "consu",
+   "amount_type": "percent",
+   "amount": 10.0,
+   "active": false,
+   "sequence": 1,
+   "description": "SST 10% (Sub-contracting)",
+   "invoice_label": "10%",
+   "tax_group": "SST 10%",
+   "country": "Malaysia",
+   "fiscal_positions": [],
+   "formula": "price_unit * 0.10",
+   "l10n_my_tax_type": "01"
+  }
+ ],
+ "tax_groups": [
+  {
+   "id": 1,
+   "name": "SST 5%",
+   "country": "Malaysia",
+   "sequence": 10,
+   "tax_payable_account": "SST Payable",
+   "tax_receivable_account": "SST Receivable",
+   "advance_tax_payment_account": false,
+   "preceding_subtotal": false
+  },
+  {
+   "id": 2,
+   "name": "SST 6%",
+   "country": "Malaysia",
+   "sequence": 10,
+   "tax_payable_account": "SST Payable",
+   "tax_receivable_account": "SST Receivable",
+   "advance_tax_payment_account": false,
+   "preceding_subtotal": false
+  },
+  {
+   "id": 3,
+   "name": "SST 8%",
+   "country": "Malaysia",
+   "sequence": 10,
+   "tax_payable_account": "SST Payable",
+   "tax_receivable_account": "SST Receivable",
+   "advance_tax_payment_account": false,
+   "preceding_subtotal": false
+  },
+  {
+   "id": 4,
+   "name": "SST 10%",
+   "country": "Malaysia",
+   "sequence": 10,
+   "tax_payable_account": "SST Payable",
+   "tax_receivable_account": "SST Receivable",
+   "advance_tax_payment_account": false,
+   "preceding_subtotal": false
+  },
+  {
+   "id": 5,
+   "name": "SST 25 Per Card",
+   "country": "Malaysia",
+   "sequence": 10,
+   "tax_payable_account": "SST Payable",
+   "tax_receivable_account": "SST Receivable",
+   "advance_tax_payment_account": false,
+   "preceding_subtotal": false
+  },
+  {
+   "id": 6,
+   "name": "SST X Per Litre",
+   "country": "Malaysia",
+   "sequence": 10,
+   "tax_payable_account": "SST Payable",
+   "tax_receivable_account": "SST Receivable",
+   "advance_tax_payment_account": false,
+   "preceding_subtotal": false
+  },
+  {
+   "id": 7,
+   "name": "SST X Per Kilogram",
+   "country": "Malaysia",
+   "sequence": 10,
+   "tax_payable_account": "SST Payable",
+   "tax_receivable_account": "SST Receivable",
+   "advance_tax_payment_account": false,
+   "preceding_subtotal": false
+  },
+  {
+   "id": 8,
+   "name": "SST X %",
+   "country": "Malaysia",
+   "sequence": 10,
+   "tax_payable_account": "SST Payable",
+   "tax_receivable_account": "SST Receivable",
+   "advance_tax_payment_account": false,
+   "preceding_subtotal": false
+  },
+  {
+   "id": 9,
+   "name": "Not Applicable",
+   "country": "Malaysia",
+   "sequence": 10,
+   "tax_payable_account": "SST Payable",
+   "tax_receivable_account": "SST Receivable",
+   "advance_tax_payment_account": false,
+   "preceding_subtotal": false
+  },
+  {
+   "id": 10,
+   "name": "Exempt",
+   "country": "Malaysia",
+   "sequence": 10,
+   "tax_payable_account": "SST Payable",
+   "tax_receivable_account": "SST Receivable",
+   "advance_tax_payment_account": false,
+   "preceding_subtotal": false
+  }
+ ],
+ "product_taxes": {
+  "_note": "product.template taxes_id / supplier_taxes_id on all 14 products",
+  "goods (8)": {
+   "sales": "10% G",
+   "purchase": "0% NA"
+  },
+  "services (6)": {
+   "sales": "8% S",
+   "purchase": "0% NA"
+  }
+ },
+ "account_taxes": {
+  "_note": "account.account tax_ids (Default Taxes) — not one of the accounts has any",
+  "accounts": []
+ }
+}

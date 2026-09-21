@@ -329,3 +329,33 @@ state picker on a contact, tested three ways over RPC.
 **No surprises.** The differences are the ones §3 records, and every one of them is HAP's shape rather than a
 misreading of Odoo: the tie-break at equal code, the composite constraint, both workflows firing in one save, and
 the relation list's newest-first order.
+
+## 13 · Taxes — `account.tax`
+
+Checked 18 Sep 2026, the day it was built. Odoo: *Invoicing › Configuration › Accounting › **Taxes***, plus a
+tax form, the two tax fields on a product, and the taxes on all 31 invoice lines over RPC.
+
+**The 19.0 source in this repo is out of date for this model**, and reading it alone would have produced the
+wrong form: 19.4 has moved **Description** up into the header and **Tax Scope** and **Active** down into
+*Advanced Options*, and three installed modules extend the form that a source read never shows —
+`account_tax_python`'s **Formula**, MyInvois' **Malaysian Tax Type**, and `account_edi_ubl_cii`'s **Tax Category
+Code**. The layout was taken from the tenant's own `arch_db`.
+
+| | Odoo's screen | ERP Master |
+|---|---|---|
+| List | **Tax Name · Description · Tax Type · Tax Scope · Label on Invoices · Active**, inactive rows drawn muted; the action opens with `active_test: False` and a *Sale or Purchase* facet, so all **35** show, not the ten active | The same six columns and all 35 (plus four `TEST`), ordered `sequence, id` — the tenant's own order, read row for row. Odoo's facet becomes a **Tax Type** quick filter, with Tax Scope and Active beside it |
+| Form, header | Tax Name · Tax Computation · *Formula* · *Malaysian Tax Type* · Amount **%** · Description \| Tax Type · Fiscal Position · Replaces | Tax Name \| Tax Type · Tax Computation \| **Amount** · Formula \| Sequence · Description \| Label on Invoices. Fiscal Position and Replaces are *Not built now* |
+| Form, tabs | *Definition* (the two distribution lists, or Children Taxes) and *Advanced Options*; a **Legal Notes** group closes it | **No tab** — Definition would be empty, so a single divider **Advanced Options** marks the boundary, as Chart of Accounts did |
+| Amount | `float(16, 4)` — 10% G reads **10.0000**, with a `%` after it unless the computation is Fixed | **10.0000.** Read on both screens the same afternoon |
+| Tax Group | A relation to `account.tax.group`, required; its own menu is behind **`base.group_no_one`** | A **Dropdown** of the tenant's ten names. The ten differ only in the name — same country, sequence, payable and receivable accounts — so nothing is lost; the model is *Not built now* (`DECISIONS.md`) |
+| One name per type and scope | `_constrains_name`, unique on **(company, name, Tax Type, Tax Scope, Country)** and skipped for Tax Type *None* — refused outright, *"Tax names must be unique!"* | **Caught, not refused**, exactly as States is: a duplicate saves, then loses its Tax key, gains a ticked *Duplicate name*, stops its workflow at an abort node, and appears in the *Duplicate names* view. Eight of the 27 distinct names are legitimately shared by two records, which is why the key is four-part |
+| A product's taxes | Sales Price · **Sales Taxes** · Cost · **Purchase Taxes** · Category, each domain-filtered by Tax Type | The same fields in the same reading order, picker-filtered the same way. The eight goods carry *10% G* / *0% NA* and the six services *8% S* / *0% NA*, as on the tenant. **Ours also offers archived taxes** where Odoo's does not (§3, difference 2) |
+| A line's taxes | `tax_ids` with `{'active_test': False}` — the picker deliberately offers archived taxes — and `price_total` beside the subtotal | **Taxes** (unfiltered, so archived taxes show, which is Odoo's own behaviour here) and **Total**, both columns of the Invoice Lines tab and the standalone list. A hidden 汇总, *Tax rate*, sums the chosen taxes' Amount |
+| An account's default taxes | `tax_ids` on the Accounting tab, column switched off | **Default Taxes** under Type, column switched off. **Empty on every account**, as on the tenant |
+| The document's tax | Odoo writes one `display_type = 'tax'` line per distinct tax, with `tax_base_amount`, and totals them | **No tax lines** — they are Odoo's own, not a person's, and 07 left them out. The figure is Σ (the lines' Total) − Σ (their Subtotal), which is the same number to the cent: 10 460.32 · 1 143.20 · 14 400.00 on the three documents |
+| Distribution | Base 100 % / tax 100 %, sale taxes to *SST Control Account*, with **Tax Grids** | *Not built now.* All 36 lines on the tenant are the default; nothing varies |
+| Access | `account.group_account_manager` writes; everybody else reads — **identical to `account.account`** | Accounting Administrator *full*, the other three *view* — Chart of Accounts' row unchanged |
+
+**One thing the cross-check caught that the build had not.** Odoo's Invoice Lines tab carries a **Taxes** column
+between the price and the amount; ours had gained *Total* without it, so a line showed a tax-inclusive amount
+with no way to see or change the tax behind it. Added during the UI test (§3, test 23).

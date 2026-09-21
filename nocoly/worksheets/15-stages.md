@@ -1,4 +1,4 @@
-# 13 · Stages
+# 15 · Stages
 
 | | |
 |---|---|
@@ -7,7 +7,7 @@
 | Odoo model | `crm.stage` |
 | Reference used for this hand-off | Teh Li Wei's authenticated `ohyes.odoo.com` English UI, 18 Sep 2026. Re-check against `casimir.odoo.com` before final repository sign-off because that remains this repository's shared tenant reference |
 | Phase | 2 — CRM worksheet 1 of 4 |
-| Status | Existing worksheet repaired in place; 4 records preserved; Relation and view read back; rendered pipeline checked. **Manual navigation move remains** |
+| Status | Existing worksheet repaired in place; 4 records preserved. Owner moved it under CRM › Configuration; CLI and sidebar confirmed on 21 Sep. |
 
 ## 1 · Delivered scope
 
@@ -27,11 +27,11 @@ The default table view no longer points at the deleted stock Name/Description/At
 
 No record was deleted or recreated.
 
-## 3 · Validation and open item
+## 3 · Validation
 
 - CLI/MCP count: 4.
 - Existing test opportunity rendered Stage **New**; Won workflow selected the real **Won** row.
 - All Relations opened without a deleted-worksheet error.
-- The Personal MCP returned success when asked to move this worksheet into Configuration, but the sidebar did not change. Move **Stages** under CRM › Configuration manually, then re-check the sidebar.
+- The Personal MCP previously returned success when asked to move this worksheet into Configuration, but the sidebar did not change. On 21 Sep, the owner completed the move manually; `hap app info` shows Stages under Configuration and the browser sidebar agrees. This confirms the current UI state, not that the earlier MCP call worked.
 
 No product ticket was submitted.

@@ -110,7 +110,28 @@
     </div>
   </section>
 
+  <section aria-labelledby="later-title">
+    <div class="section-head"><span class="n">+</span><h2 class="section" id="later-title">Since the pass: bundles 4, 5 and 6</h2></div>
+
+    <div class="block">
+      <h3>The three worksheets built after this comparison</h3>
+      <p class="prose">Each was cross-checked against the tenant on the day it was built, and the full side-by-side tables are in <code>nocoly/CROSSCHECK.md</code>. What follows is what a reviewer most needs to know before opening them.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Worksheet</th><th>What matched</th><th>What does not, and why</th></tr></thead>
+          <tbody>
+            <tr><td class="label">11 · Countries<br><code>res.country</code></td><td>All 251, their codes, calling codes, VAT labels and the two address switches; the picker on a contact</td><td>Odoo's list ships with <strong>New and Delete switched off</strong> because the data ships with the database — so all four business roles have view here and only an app administrator writes</td></tr>
+            <tr><td class="label">12 · States<br><code>res.country.state</code></td><td>All 2,102 in 74 countries; a country's list of states; the picker offering every state in the world, labelled <em>Selangor (MY)</em>, exactly as Odoo's does</td><td>Odoo's <strong>unique code per country</strong> is refused by its database; here a duplicate saves and is then marked. A save that changes country <em>and</em> state does both things at once, which Odoo's form never does</td></tr>
+            <tr><td class="label">13 · Taxes<br><code>account.tax</code></td><td>All 35, in the tenant's own list order, with the ten active ones ticked; the products' taxes; the taxes on all eight invoice lines, and the three documents' figures to the cent</td><td>The same uniqueness ceiling as States, on a <strong>five-way</strong> key. <strong>Tax Group is a dropdown</strong>, not a relation — Odoo hides its menu behind developer mode and the ten groups differ only in the name. The tax distribution is not built: all 36 lines on the tenant are the default</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="prose"><strong>One thing the Taxes pass caught that the build had not.</strong> Odoo's Invoice Lines tab carries a <strong>Taxes</strong> column between the price and the amount; ours had gained <em>Total</em> without it, so a line showed a tax-inclusive amount with no way to see or change the tax behind it. It was added during that worksheet's UI test.</p>
+      <p class="prose"><strong>And one trap worth repeating for Taxes in particular.</strong> The Odoo 19.0 source in this repository is <em>out of date</em> for <code>account.tax</code>: 19.4 has moved Description up into the header and Tax Scope and Active down into Advanced Options, and three installed modules extend the form that a source read never shows. The comparison was made against the tenant's own stored view, not the source.</p>
+    </div>
+  </section>
+
   <footer class="foot">
-    <p>Cross-check of 18 September 2026 · <code>nocoly/CROSSCHECK.md</code> · the worksheets it compares are <code>nocoly/worksheets/01…10</code>, each with its own review page. Next in the build: <strong>Countries</strong>, then <strong>States</strong>, then <strong>Taxes</strong>.</p>
+    <p>Cross-check of 18 September 2026 · <code>nocoly/CROSSCHECK.md</code> · the worksheets it compares are <code>nocoly/worksheets/01…13</code>, each with its own review page. <strong>All six bundles are built</strong>; what remains in Phase 1 is reviewer sign-off.</p>
   </footer>
 </main>

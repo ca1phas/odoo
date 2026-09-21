@@ -1,0 +1,160 @@
+<title>ERP Master Taxes</title>
+<meta name="description" content="Review pack for worksheet 13 of the Odoo-to-Nocoly build, the sixth and last feature bundle: requirements, build ids and UI test results.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<link rel="stylesheet" href="review.css">
+
+<main class="page">
+
+  <header class="identity">
+    <div class="eyebrow"><span>ERP Master</span><span>Phase 1</span><span>Bundle 6 of 6 — the last</span></div>
+    <h1>Taxes <span class="model">account.tax</span></h1>
+    <p class="lede">The figure five worksheets have been deferring. A line carries some taxes, each tax a percentage, and the document's Tax is what they add — so this bundle is the one that makes <strong>an invoice's Tax a real number</strong> instead of a figure copied from the tenant. It brings Odoo's <strong>35 Malaysian SST taxes</strong>, ten of them active, and then goes back to the four worksheets that left a hole for it: Products gains Sales and Purchase Taxes, Chart of Accounts gains Default Taxes, and Invoice Lines gains Taxes and Total.</p>
+    <dl class="meta">
+      <div><dt>Reference</dt><dd>casimir.odoo.com — Odoo saas~19.4+e</dd></div>
+      <div><dt>Records verified against</dt><dd>the tenant, field by field and by digest — 35 records, 10 active, amounts summing to 139</dd></div>
+      <div><dt>Nocoly</dt><dd>App ERP Master · menu group Invoicing, between Chart of Accounts and Journals</dd></div>
+      <div><dt>Built and tested</dt><dd>18 September 2026</dd></div>
+    </dl>
+    <div class="scoreline">
+      <span class="chip pass">19 of 23 tests pass</span>
+      <span class="chip note">3 fixed during the test</span>
+      <span class="chip note">1 not isolated</span>
+      <span class="chip note">35 taxes · 14 products · 8 lines · 3 documents</span>
+    </div>
+  </header>
+
+  <aside class="callout" aria-labelledby="note-title">
+    <span class="chip note small" style="justify-self:start">Worth knowing before you review</span>
+    <h2 id="note-title">Odoo 19.4 has moved this form since the source we read</h2>
+    <p>Reading the Odoo 19.0 source alone would have produced the wrong form. On the tenant, <strong>Description has moved up into the header</strong> and <strong>Tax Scope and Active down into Advanced Options</strong>, and three installed modules extend the form that a source read never shows: <code>account_tax_python</code>'s <strong>Formula</strong>, MyInvois' <strong>Malaysian Tax Type</strong> and <code>account_edi_ubl_cii</code>'s <strong>Tax Category Code</strong>. The layout here follows the tenant's own stored view. The one thing that needs your eye is <strong>uniqueness</strong>: Odoo's constraint is a five-way key and it <em>refuses</em> a clash, where HAP can only catch one after the save — the same ceiling the owner accepted for States.</p>
+  </aside>
+
+  <nav class="toc" aria-label="Sections">
+    <a href="#requirements"><span>1</span>Requirements</a>
+    <a href="#build"><span>2</span>Build</a>
+    <a href="#tests"><span>3</span>Tests and differences</a>
+  </nav>
+
+  <section id="requirements" aria-labelledby="req-title">
+    <div class="section-head"><span class="n">1</span><h2 class="section" id="req-title">Requirements</h2></div>
+
+    <div class="block">
+      <h3>The tax</h3>
+      <p class="aside">Labels are Odoo 19.4's; aliases are Odoo's field names.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th class="num">#</th><th>Field</th><th>Odoo field</th><th>Nocoly type</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td class="num">1</td><td class="label">Tax Name</td><td><code>name</code></td><td>Text · required · <strong>title</strong></td><td><strong>Not</strong> "no duplicates" — Odoo's key is five fields, so eight names are legitimately shared by two records</td></tr>
+            <tr><td class="num">2</td><td class="label">Tax Type</td><td><code>type_tax_use</code></td><td>Dropdown · required · Sales</td><td>Sales · Purchases · None</td></tr>
+            <tr><td class="num">3</td><td class="label">Tax Scope</td><td><code>tax_scope</code></td><td>Dropdown</td><td>Goods · Services; empty means both, as five of the 35 leave it</td></tr>
+            <tr><td class="num">4</td><td class="label">Tax Computation</td><td><code>amount_type</code></td><td>Dropdown · required · Percentage</td><td>Group of Taxes · Fixed · Percentage · Percentage Tax Included · Custom Formula</td></tr>
+            <tr><td class="num">5</td><td class="label">Amount</td><td><code>amount</code></td><td>Number, <strong>4 decimals</strong> · required</td><td>10% G reads 10.0000, as it does on Odoo</td></tr>
+            <tr><td class="num">6</td><td class="label">Formula</td><td><code>formula</code></td><td>Text</td><td>Shown and required only for a Custom Formula tax — three archived ones use it</td></tr>
+            <tr><td class="num">7</td><td class="label">Description</td><td><code>description</code></td><td>Text</td><td>Odoo's is rich text; every value is one short plain line, and it is a list column</td></tr>
+            <tr><td class="num">8</td><td class="label">Label on Invoices</td><td><code>invoice_label</code></td><td>Text</td><td>What prints on the document; seven of the 35 are empty and Odoo falls back to the name</td></tr>
+            <tr><td class="num">9</td><td class="label">Tax Group</td><td><code>tax_group_id</code></td><td>Dropdown · required</td><td>Odoo's is a relation; the ten groups differ only in the name — see the differences</td></tr>
+            <tr><td class="num">10</td><td class="label">Country</td><td><code>country_id</code></td><td>Relation → Countries · required · Malaysia</td><td>All 35 are Malaysia</td></tr>
+            <tr><td class="num">11</td><td class="label">Included in Price</td><td><code>price_include_override</code></td><td>Dropdown</td><td>Empty means the company's own setting, which here is Tax Excluded</td></tr>
+            <tr><td class="num">12</td><td class="label">Affect Base of Subsequent Taxes</td><td><code>include_base_amount</code></td><td>Checkbox</td><td>Clear on all 35</td></tr>
+            <tr><td class="num">13</td><td class="label">Base Affected by Previous Taxes</td><td><code>is_base_affected</code></td><td>Checkbox, ticked</td><td>Odoo hides it behind developer mode; here it is simply visible</td></tr>
+            <tr><td class="num">14</td><td class="label">Active</td><td><code>active</code></td><td>Checkbox, ticked</td><td><strong>25 of the 35 are archived</strong>, and Odoo's own list shows them anyway</td></tr>
+            <tr><td class="num">15</td><td class="label">Sequence</td><td><code>sequence</code></td><td>Number · required · 1</td><td>The list order; all 35 are 1, so it reads in creation order</td></tr>
+            <tr><td class="num">16</td><td class="label">Legal Notes</td><td><code>invoice_legal_notes</code></td><td>Rich text</td><td>Its own group at the foot; empty on all 35</td></tr>
+            <tr><td class="num">—</td><td class="label">Duplicate name</td><td>—</td><td>Checkbox, read-only, hidden on create</td><td><strong>Not an Odoo field.</strong> What a person sees in place of Odoo's refusal</td></tr>
+            <tr><td class="num">—</td><td class="label">Tax key</td><td>—</td><td>Text, hidden, read-only, no duplicates</td><td><code>MY|sale|consu|10% G</code> — written by the workflow, never typed</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="prose"><strong>No tab, one divider.</strong> Odoo's <em>Definition</em> page holds only the tax distribution lists, none of which is built, so it would be empty and its <em>Advanced Options</em> page would stand alone. A divider marks the boundary instead — the call Chart of Accounts made. <strong>No reverse field anywhere</strong>: Odoo's tax form lists neither the products nor the accounts nor the lines that use it, so every relation this bundle adds is one-way.</p>
+    </div>
+
+    <div class="block">
+      <h3>What it changes on four other worksheets</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Worksheet</th><th>Gains</th><th>With what in it</th></tr></thead>
+          <tbody>
+            <tr><td class="label">Products</td><td><strong>Sales Taxes</strong>, <strong>Purchase Taxes</strong> — in Odoo's own reading order, each picker filtered by Tax Type</td><td>The eight goods take <em>10% G</em> and <em>0% NA</em>; the six services <em>8% S</em> and <em>0% NA</em></td></tr>
+            <tr><td class="label">Chart of Accounts</td><td><strong>Default Taxes</strong>, under Type</td><td><strong>Nothing</strong> — not one of the tenant's accounts has a default tax</td></tr>
+            <tr><td class="label">Invoice Lines</td><td><strong>Taxes</strong>, a hidden <strong>Tax rate</strong> roll-up, and <strong>Total</strong> (Odoo's <code>price_total</code>)</td><td>The eight seeded lines take the tenant's taxes; Total is Subtotal × (1 + rate ÷ 100)</td></tr>
+            <tr><td class="label">Invoices</td><td><strong>Nothing new</strong> — Tax keeps its field and its id</td><td>It stops being a seeded figure: the two roll-up workflows now write it as the lines' Total less their Subtotal</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="prose">That last line is the point of the bundle. <strong>No per-line tax figure was invented</strong>: Odoo has no tax column on a journal item either, and Σ Total − Σ Subtotal is the same number to the cent, because each line's Total is itself rounded to two decimals and this company rounds per line.</p>
+    </div>
+
+    <div class="block">
+      <h3>Left out on purpose</h3>
+      <p class="prose"><strong>The tax distribution</strong> (invoice and refund repartition lines, and their Tax Grids) — all 36 lines on the tenant are the default, so nothing varies. <strong>Fiscal positions</strong> and <em>Replaces</em>, which are a model of their own. <strong>Groups of taxes</strong> — the option stays in the dropdown because Odoo has it, but no tax on this tenant is one. <strong>Tax exigibility</strong> and its cash-basis account, which Odoo itself hides here because the company has cash basis off. <strong>Analytic cost</strong>, <strong>Malaysian Tax Type</strong>, <strong>Tax Category Code</strong> and the UBL exemption reasons — localisation and e-invoicing, as Contacts left SST and TTx. And <strong>a default tax on a new product</strong>, which Odoo takes from a company setting rather than a record.</p>
+    </div>
+  </section>
+
+  <section id="build" aria-labelledby="build-title">
+    <div class="section-head"><span class="n">2</span><h2 class="section" id="build-title">Build</h2></div>
+
+    <div class="block">
+      <h3>What is in the app</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Element</th><th>Built</th></tr></thead>
+          <tbody>
+            <tr><td class="label">Worksheet</td><td>Taxes, alias <code>account_tax</code>, in Invoicing between Chart of Accounts and Journals — <strong>19 controls</strong>: sixteen Odoo fields, the <em>Advanced Options</em> divider, and the two duplicate-check helpers</td></tr>
+            <tr><td class="label">Rules</td><td><strong>Six</strong>, all of them Odoo's own visibility: Amount, Formula, Tax Group and the three switches follow Tax Computation; Duplicate name is read-only and off the create form</td></tr>
+            <tr><td class="label">Views</td><td><strong>Taxes</strong> (all 35, Odoo's six columns, three quick filters) · <strong>Archived</strong> (the 25) · <strong>Duplicate names</strong> — ours, not Odoo's, because Odoo's database refuses the second tax</td></tr>
+            <tr><td class="label">Buttons</td><td>Archive · Unarchive, the house pair</td></tr>
+            <tr><td class="label">Workflow</td><td><strong>G — the key and the duplicate check</strong>: quiet, 16 nodes, the duplicate path reading <em>tick · clear the key · stop</em>. It wrote all 35 keys itself</td></tr>
+            <tr><td class="label">Records</td><td>The tenant's <strong>35 taxes</strong>, plus four <code>TEST</code> probes</td></tr>
+            <tr><td class="label">Roles</td><td>Taxes takes <strong>Chart of Accounts' row unchanged</strong> — Accounting Administrator full, the other three view</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="prose">That roles row needed no ruling, where Countries and States each needed one: Odoo's access file gives <code>account.tax</code> exactly what it gives <code>account.account</code> — the accounting administrator writes, everybody else reads. Odoo's <em>menu</em> is stricter, but every internal user can read a tax, which is what lets an invoice line show one.</p>
+    </div>
+
+    <div class="block">
+      <h3>The three questions the requirements left open</h3>
+      <ol class="differences">
+        <li><span class="n">1</span><div class="head"><strong>A roll-up over a multi-relation does follow the relation — and a formula can read it</strong><span class="chip pass small">Measured</span></div><p>The worry was that HAP's roll-up holds only saved rows, as it does over a subtable. It does not here: a line with no tax reads rate 0 and total 100.00; add a 3 % tax and it reads 3.0 and 103.00. So Total is a plain formula and the workflow fallback was never needed.</p></li>
+        <li><span class="n">2</span><div class="head"><strong>The roll-up's filter takes on a dropdown of the related worksheet</strong><span class="chip pass small">Measured</span></div><p>A <em>Fixed 7</em> tax added nothing to the rate, alone or beside the 3 %. That matters: a fixed or custom-formula tax needs different arithmetic, and the filter makes it contribute nothing rather than something wrong.</p></li>
+        <li><span class="n">3</span><div class="head"><strong>The tax fill fits inside the existing account automation</strong><span class="chip pass small">Measured</span></div><p>Four of its seven paths gained one field each on their update step. No node, gateway or condition was added, moved or re-conditioned — so setting a product on a line now gives the line both its account and the product's taxes, and a line with no product still takes the journal's default account and no tax.</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="tests" aria-labelledby="tests-title">
+    <div class="section-head"><span class="n">3</span><h2 class="section" id="tests-title">Tests and differences</h2></div>
+
+    <div class="block">
+      <h3>Twenty-three checks in the browser</h3>
+      <p class="prose"><strong>Nineteen pass.</strong> The worksheet sits where it should; the list carries Odoo's six columns in the tenant's own order with the ten active taxes ticked; the form reads in the specified order with Amount at Odoo's four decimals and the ten tax-group names in the dropdown; the visibility rules all fire, and an archived Custom Formula tax shows its <code>quantity * 0.01</code> exactly as Odoo does. Products carry the right taxes, the Sales Taxes picker offers only sales taxes, and Chart of Accounts has Default Taxes and nothing in them.</p>
+      <p class="prose"><strong>The arithmetic was proved end to end.</strong> A line's Taxes drive its rate, the rate drives its Total, and the Total drives all four amounts on the invoice: putting <em>10% G</em> on a 10.00 line moved its invoice from <em>untaxed 110.00, tax —, total 110.00</em> to <strong>110.00 / 1.00 / 111.00</strong>, and taking it off moved it back. The three documents the earlier worksheets were built from now land on the tenant's own figures to the cent — <strong>10,460.32</strong>, <strong>1,143.20</strong> and <strong>14,400.00</strong>.</p>
+      <p class="prose"><strong>The duplicate check was run as a person would run it.</strong> A second tax typed into the form with a name, type, scope and country already taken <em>saved</em> — HAP cannot refuse it — and within fifteen seconds had lost its key, gained a ticked <em>Duplicate name</em>, and appeared in the <em>Duplicate names</em> view, while the original kept its key and its clear box.</p>
+      <p class="prose"><strong>Three things were fixed during the test</strong>, and re-checked the same day. The five dropdowns drew in the table as <em>progress-bar sliders</em> rather than text, because of one display setting that means something different on a dropdown than on a relation. The Invoice Lines tab had gained <em>Total</em> but not <em>Taxes</em>, so a line showed its tax-inclusive amount with no way to see or change the tax behind it — Odoo's own tab has that column, and it is now there. And the note at the top of the Invoice Lines tab still said the four amounts were figures copied from the tenant and that "taxes themselves need the Taxes bundle", which had stopped being true twice over.</p>
+      <p class="prose"><strong>One test could not be isolated</strong>: setting a tax from a line's own panel <em>inside</em> an invoice. Before the column fix the field was not on that panel at all, and afterwards the browser could not be steered to it twice running. The arithmetic it would prove was driven through the command line instead. It is worth a reviewer's minute.</p>
+    </div>
+
+    <div class="block">
+      <h3>Differences from Odoo</h3>
+      <ol class="differences">
+        <li><span class="n">1</span><div class="head"><strong>A duplicate name is marked, not refused</strong><span class="chip note small">HAP behaviour</span></div><p>Odoo raises <em>"Tax names must be unique!"</em> and the record never exists. Here it saves, then loses its key, gains a tick and sits in the <em>Duplicate names</em> view until someone mends it. HAP's uniqueness is one field where Odoo's key is five, and a workflow runs after the save, never before it. The owner accepted this ceiling for States.</p></li>
+        <li><span class="n">2</span><div class="head"><strong>A product's tax picker offers archived taxes</strong><span class="chip note small">Open for you</span></div><p>Odoo's product field filters them out; ours filters on Tax Type alone, because that is what the requirements named. One more condition would close it — but the same behaviour is <em>right</em> on an invoice line, where Odoo deliberately offers archived taxes. Your call.</p></li>
+        <li><span class="n">3</span><div class="head"><strong>A document with no taxed lines reads 0.00 rather than blank</strong><span class="chip note small">HAP behaviour</span></div><p>The roll-up always writes the figure. Odoo leaves the tax line off entirely.</p></li>
+        <li><span class="n">4</span><div class="head"><strong>Only a percentage tax contributes</strong><span class="chip note small">Scope</span></div><p>A fixed, tax-included or custom-formula tax on a line adds nothing to the rate — three different formulas cannot come out of one sum. Every active tax on this tenant is a percentage, so nothing real is lost.</p></li>
+        <li><span class="n">5</span><div class="head"><strong>Tax Group is a dropdown, not a relation</strong><span class="chip note small">Scope</span></div><p>Odoo's Tax Groups menu is behind developer mode, and its ten groups differ only in the name — same country, same sequence, same payable and receivable accounts. If the model is ever wanted, the dropdown becomes a relation the way a contact's Country and State did.</p></li>
+      </ol>
+    </div>
+
+    <div class="block">
+      <h3>Test records left for you</h3>
+      <p class="prose">On Taxes: <strong>TEST Duplicate Probe</strong> twice — one holding its key, one marked, which is what the <em>Duplicate names</em> view is for — and <strong>TEST Fixed 7</strong>, <strong>TEST Percent 3</strong> and <strong>TEST Type None</strong>, the probes that answered the three open questions. On Invoice Lines, <strong>TEST B category account</strong> was given a tax and had it taken off again, so it and its invoice read exactly as the earlier bundle left them. All go after sign-off, with your approval; the 35 taxes stay.</p>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <p>Bundle 6 of 6 · <code>nocoly/worksheets/13-taxes.md</code> · reference <code>nocoly/reference/odoo-19.4/account.tax.md</code> · build <code>nocoly/build/taxes.py</code>. <strong>This is the last of the six.</strong> With it, every amount on an invoice is computed from its lines rather than copied from the tenant.</p>
+  </footer>
+</main>

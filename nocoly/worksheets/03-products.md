@@ -45,7 +45,7 @@ Odoo's field help where it has one.
 
 | Odoo 19.4 | Nocoly |
 |---|---|
-| Button box: Variants · Documents · Sold | — (see Not built now) |
+| Button box: Variants · Documents · Sold | **# Variants** beside Active — Odoo's Variants count (21 Sep 2026); Documents and Sold see *Not built now* |
 | Header: ☆ Name; Sales ☑ Purchase ☑ under it; image on the right | Name, full width · Favorite \| Sales \| Purchase · Image |
 | Tab General Information — left: Product Type (radio), and fields of Sales, Inventory and e-invoicing; right: Sales Price per Unit · Sales Taxes · Cost per Unit · Purchase Taxes · Category · Reference · Barcode · Tags · tariff code; then Internal Notes | Product Type \| Sales Price · Unit \| Cost · Internal Reference · Internal Notes |
 | Tab Attributes & Variants | — |
@@ -101,7 +101,8 @@ None.
 | Sales Taxes, Purchase Taxes (`taxes_id`, `supplier_taxes_id`, `tax_string`) | Taxes bundle; module `account` |
 | ~~Income and Expense Accounts (`property_account_income_id`, `property_account_expense_id`)~~, Account Tags (`account_tag_ids`) | **The two accounts were built on 17 Sep 2026 by the Chart of Accounts bundle** — a tab Accounting after Inventory; see `worksheets/09-chart-of-accounts.md`. Account Tags are not among the six bundles |
 | Product Type **Combo**, Combo Choices (`combo_ids`) and the checks "A combo product must contain at least 1 combo choice." and "A sellable combo product can only contain sellable products." | Product Combos bundle; module `product` |
-| Attributes & Variants tab (`attribute_line_ids`), the Variants smart button | Product Variants bundle; module `product` |
+| Attributes & Variants tab (`attribute_line_ids`) | Product Variants bundle; module `product` |
+| ~~the Variants smart button~~ | **Built 21 Sep 2026**, not deferred after all. This row sent it to worksheet 04, which then declined to give Products a reverse field, and it fell between the two. Products now carries **Variants** (the reverse of `product_tmpl_id`, read-only, drawn as a tab at the foot) and **# Variants** (`product_variant_count`, a 汇总 count beside Active) — see `04-product-variants.md` › *The reverse on Products* |
 | Barcode (`barcode`) | Stored on the variant: worksheet 04 Product Variants |
 | Prices tab (`fixed_pricelist_rule_ids`, `pricelist_rule_ids`) | Pricelists bundle; module `product` |
 | Vendors (`seller_ids`), Purchase Description (`description_purchase`), the Purchase tab | Purchase — not installed on the tenant, whose form never shows that tab |

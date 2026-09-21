@@ -17,7 +17,12 @@ Two things:
      (11-countries.md §1 › Roles), so only the app Administrator creates, edits or deletes a country. The States
      bundle added **States**, and it does **not** follow Countries: `ir.model.access.csv` writes
      res.country.state from `base.group_partner_manager` — a contact manager — so every role gets the same cell
-     on States that it already has on **Contacts** (owner, 18 Sep 2026; 12-states.md §1 › Roles).
+     on States that it already has on **Contacts** (owner, 18 Sep 2026; 12-states.md §1 › Roles). The Taxes
+     bundle added **Taxes** with **Chart of Accounts' row unchanged**: `account.tax` has exactly the access
+     shape of `account.account` in the same file — `account.group_account_manager` reads, writes, creates and
+     deletes, every other group reads — so Accounting Administrator is full and the other three view
+     (13-taxes.md §1 › Roles). No field of it is hidden from a role: the two Odoo puts behind a group are one
+     that is not built (`analytic`) and one that is developer mode (`is_base_affected`).
 
 Run from the repo root with the CLI's interpreter:
 
@@ -68,7 +73,7 @@ STOCK = [  # (English name, the Chinese name HAP ships, roleType)
 FULL, EDIT, VIEW = 'full', 'view · add · edit', 'view'
 
 ORDER = ['Contacts', 'Countries', 'States', 'Units & Packagings', 'Products', 'Product Variants',
-         'Product Categories', 'Chart of Accounts', 'Journals', 'Payment Terms', 'Payment Term Lines',
+         'Product Categories', 'Chart of Accounts', 'Taxes', 'Journals', 'Payment Terms', 'Payment Term Lines',
          'Invoices', 'Invoice Lines']
 
 # Worksheets no business role may write, whatever its accounting level: Odoo keeps them behind a group none of
@@ -92,7 +97,8 @@ ROLES = {
         'everything except advanced configuration.',
         {'Contacts': EDIT, 'Countries': VIEW, 'States': EDIT, 'Units & Packagings': VIEW, 'Products': VIEW,
          'Product Variants': VIEW,
-         'Product Categories': VIEW, 'Chart of Accounts': VIEW, 'Journals': EDIT, 'Payment Terms': VIEW,
+         'Product Categories': VIEW, 'Chart of Accounts': VIEW, 'Taxes': VIEW, 'Journals': EDIT,
+         'Payment Terms': VIEW,
          'Payment Term Lines': VIEW, 'Invoices': EDIT, 'Invoice Lines': EDIT},
     ),
     'Invoicing': (
@@ -100,7 +106,8 @@ ROLES = {
         'reporting; cannot see accounting configuration, so Journals is read-only.',
         {'Contacts': EDIT, 'Countries': VIEW, 'States': EDIT, 'Units & Packagings': VIEW, 'Products': VIEW,
          'Product Variants': VIEW,
-         'Product Categories': VIEW, 'Chart of Accounts': VIEW, 'Journals': VIEW, 'Payment Terms': VIEW,
+         'Product Categories': VIEW, 'Chart of Accounts': VIEW, 'Taxes': VIEW, 'Journals': VIEW,
+         'Payment Terms': VIEW,
          'Payment Term Lines': VIEW, 'Invoices': EDIT, 'Invoice Lines': EDIT},
     ),
     'Accounting Read-only': (

@@ -7,7 +7,7 @@
 | Odoo model | `product.product` |
 | Reference | **casimir.odoo.com — Odoo saas~19.4+e**: the fields stored on the variant, form, list, kanban, search, order and all 21 variants, extracted read-only to `nocoly/reference/odoo-19.4/product.product.md`, with `product.template.md`, `uom.uom.md` and, for the variants invoice lines point at, `account.move.line.md`. Behaviour the tenant cannot show — sync between product and variant, archiving, constraints, display name — is read from the Odoo 19.0 source in this repo: `addons/product/models/product_product.py`, `addons/product/models/product_template.py`, `addons/product/views/product_views.xml` |
 | Phase | 1 — core worksheet 4 of 7 |
-| Status | Built with the hap CLI and seeded on 15 Sep 2026; Favorite and the list order moved to Odoo's after the planner's review the same day · CLI self-checks pass (automations, buttons, Favorite, Barcode uniqueness, seed and extract) · **UI-tested on 15 Sep 2026: 16 of 16 pass**, 5 differences from Odoo noted · ready for review |
+| Status | Built with the hap CLI and seeded on 15 Sep 2026; Favorite and the list order moved to Odoo's after the planner's review the same day · CLI self-checks pass (automations, buttons, Favorite, Barcode uniqueness, seed and extract) · **UI-tested on 15 Sep 2026: 16 of 16 pass**, 5 differences from Odoo noted · **21 Sep 2026: Products' reverse *Variants* and *# Variants* added, given the list's columns, and the count filtered to active variants as Odoo's is** — test 17's count half passes from the CLI, its tab half and 6th difference wait on the UI pass |
 
 A variant is one sellable version of a product. Order lines and invoice lines point at the variant, never at the
 product. Until the Product Variants bundle (attributes and their values) each product has exactly one variant,
@@ -25,7 +25,7 @@ but used by the display name, views or buttons.
 
 | # | Field | Odoo field | Nocoly type | Required | Default | Notes |
 |---|---|---|---|---|---|---|
-| 1 | Product | `product_tmpl_id` | Relation → Products (single, **one-way**), dropdown | yes | set by automation A | **Read-only**, as on Odoo's variant form (`readonly="1"`). Opens the product. The picker lists active products and its search matches their Internal Reference. No reverse field on Products. Odoo labels it Product Template |
+| 1 | Product | `product_tmpl_id` | Relation → Products (single, **two-way** — corrected 21 Sep 2026), dropdown | yes | set by automation A | **Read-only**, as on Odoo's variant form (`readonly="1"`). Opens the product. The picker lists active products and its search matches their Internal Reference. Odoo labels it Product Template. **Its reverse is Products' `Variants`** — see below |
 | 2 | Favorite | `is_favorite` | Checkbox | — | the product's | **Read-only**: the product's Favorite, copied by automations A, B and C — edit it on the product. Odoo relates the two (`related='product_tmpl_id.is_favorite'`, `product_product.py:123`) and shows it read-only on the variant form and list. Quick filter; the views list favourites first |
 | 3 | Sales | `sale_ok` | Lookup of the product's Sales | — | — | Beside Favorite, as Odoo's header. Quick filter |
 | 4 | Purchase | `purchase_ok` | Lookup of the product's Purchase | — | — | Beside Sales. Quick filter |
@@ -63,6 +63,81 @@ Name is the stored lookup of the product's Name, so renaming a product renames i
 Internal Reference reaches the variant through automation B and the formula recomputes on that save. This settles
 the open question in DECISIONS.md for variants: order and invoice lines (07) will show "[Internal Reference] Name";
 Products keeps showing its Name. The " (attribute values)" suffix waits for the Product Variants bundle.
+
+### The reverse on Products — corrected 21 Sep 2026
+
+§1 first said this relation was one-way and that **Products carried no reverse field**. That was wrong, and it
+was wrong in a way that hid itself: **03 had already deferred Odoo's *Variants* smart button to this worksheet**
+(`03-products.md` › *Not built now*: "Attributes & Variants tab, the Variants smart button | Product Variants
+bundle"), and this worksheet then declined to build a reverse. The field fell between the two documents.
+
+Odoo has it. `product.template.product_variant_ids` is a real one2many, and the product form surfaces it as the
+**Variants** smart button carrying `product_variant_count`. The app was also inconsistent with itself: Product
+Categories is the identical shape — a many2one on Products plus a stat button on the other side — and bundle 1
+built it **two-way**, with a read-only *Products* list on the category and a `# Products` 汇总 over it
+(`08-product-categories.md` §1, fields 5 and 6).
+
+**HAP had reserved the reverse all along.** The Product control's `sourceControlId` held
+`6aa90c7d4a22ad87b728e9f1` and no control on Products carried it — the dangling case `prodcat.ensure_reverses`
+describes, where `add-fields` reserves the id and the server makes nothing. Units & Packagings shows the
+finished shape: Reference Unit and Related UoMs each hold the other's id.
+
+`variants.py reverse` completes the handshake and adds the count:
+
+| | On Products | |
+|---|---|---|
+| **Variants** | Relation → Product Variants, multiple, **read-only** (`fieldPermission` "101"), `showtype` "2" so it draws as a tab at the foot of the record. Columns **Display Name · Sales Price · Cost · Barcode · Unit**; **no filter** — none is possible (see *Archived variants* below) | `6aa90c7d4a22ad87b728e9f1` — the id HAP had reserved, not a new one |
+| **# Variants** | 汇总 (type 37), **count** over Variants, read-only, row 3 beside Active — where Odoo puts its stat button. Filtered to **Active is ticked**, as Odoo's count is | `6ab07f06805aef703286c9a9`, alias `product_variant_count` |
+
+Both are placed so **no existing row moves**: the count takes the empty column beside Active, the list sits last.
+Read back on 21 Sep: the pair cross-references correctly, and the count reads **1** on all nineteen products —
+19 products, 20 variants, one of them archived (see *Archived variants* below).
+
+**Archived variants — corrected 21 Sep 2026.** Both controls first counted and listed **every** variant,
+archived ones included. Odoo's do not. `product.template.product_variant_ids` is a plain one2many with no
+context, so it obeys `active_test`, and `product_variant_count` is its length. Measured on casimir.odoo.com
+(saas~19.4) on 21 Sep, in the default context and again with `active_test: False`:
+
+| Product | `product_variant_count` | read with `active_test: False` |
+|---|---|---|
+| Ergonomic Office Chair | **3** | 4 (3 active + 1 archived original) |
+| 27" 4K Monitor | **2** | 3 (2 active + 1 archived) |
+| Height-Adjustable Desk | **2** | 3 (2 active + 1 archived) |
+
+So the count must leave archived variants out, and here it now does. `# Variants` carries its own filter —
+`advancedSetting.filters`, *Product Variants' **Active** is ticked* (a checkbox's "is" is `filterType` **2** with
+`values` `["1"]`, not the single select's 51) — which is the same mechanism as Invoice Lines' *Tax rate*, one
+step further out: the relation it counts is a reverse rather than a forward one. It recomputed at once, on
+every record and with nothing written to any record: *TEST Auto Variant Product*, whose two variants are
+`TEST-0002` (Active) and `TEST-0002-OLD` (archived), went **2 → 1**, and the other eighteen stayed 1.
+
+**The list beside it could not be filtered, and deliberately carries no filter.** The tab is drawn from
+`Worksheet/GetRowRelationRows` `{appId, worksheetId: Products, rowId, controlId: the reverse}`, and on *TEST
+Auto Variant Product* that call answered **both rows** whatever was stored:
+
+| stored on the Variants control | what the call returned |
+|---|---|
+| nothing | 2 rows — `TEST-0002` and `TEST-0002-OLD` |
+| `advancedSetting.filters` = Active is ticked | 2 rows — a Relation's `filters` is the **picker's**, and a read-only list offers no picker |
+| `viewId` = the *Product Variants* view (whose filter is Active is ticked) | 2 rows, but in **that view's sort order**, repeatably, and in the tab's own order again once cleared — a bound view gives the list its order, not its rows |
+| — (`filterControls` sent in the **request** instead) | **1 row**, `TEST-0002` — the server can filter; only the caller may ask it to |
+
+So the narrowing would have to come from whoever calls the list, and no stored setting makes the call carry it.
+Both probes were reverted: the control ships with no `filters` and no `viewId`, and `variants.py reverse`
+asserts that on every run rather than storing a filter that does nothing. The difference from Odoo stands and
+is recorded in `BUILDING.md` under the list-style Relation trap: **the count is active-only, the tab is not** —
+a product with an archived variant shows `# Variants` 1 above a *Variants* tab listing 2 rows. Whether the
+browser narrows what it *renders* from that answer is the one part of this the UI pass can still settle.
+
+**The list's columns — corrected 21 Sep 2026.** The tab first went in with no `showControls`, and a `showtype` "2"
+list with none shows its row count over the words *No visible fields* (`BUILDING.md`); the planner's UI check caught
+it reading "Total 1 row(s)" over those words. The columns are named by controlId **from Product Variants**, the way
+Product Categories' own *Products* list names Products' Name and Internal Reference. The five are Odoo's: the
+*Variants* smart button opens the `product.product` list, whose default-visible columns are image · Name ·
+Attributes · Sales Price · Cost · Barcode · On Hand · Free To Use · Unit — Attributes waiting for the Product
+Variants bundle and On Hand / Free To Use for Inventory, which leaves exactly the five the *Product Variants* view
+below already shows, Display Name standing for Odoo's Name as it does there. **Internal Reference is not among
+them**: Odoo's list carries it `optional="hide"`, and Display Name already reads "[Internal Reference] Name".
 
 ### Form layout
 
@@ -347,6 +422,7 @@ and the variant was checked in the UI. Test records are named `TEST …`.
 | 14 | Display name where variants are searched | Product Variants search box: "IT-0001", then "Laptop" | Both find "[IT-0001] Business Laptop 14" i7". (No worksheet picks a variant before 07 Invoice Lines, where the picker shows the same title) | **Pass** — both searches find only [IT-0001] Business Laptop 14" i7 |
 | 15 | Seeded data | `~/.hap-venv/bin/python nocoly/build/variants.py verify`; `products.py verify`; `units.py verify` | variants: every product OK, "0 whose own variant differs or is missing", the extra [TEST-0002-OLD] listed, "extract: 11 of 11 single-variant products match". products: 0 missing or differing. units: 0 differing, 0 stale | **Pass** — variants: 18 products, 0 differing, 1 extra, 11 of 11 match the extract; products: 0 missing or differing (4 TEST products); units: 0 differing, 0 stale |
 | 16 | Odoo side by side | casimir.odoo.com: a product's Variants smart button (Business Laptop 14" i7, Ergonomic Office Chair) vs Nocoly | The laptop's variant list and form hold §1's fields apart from Not built now; its display name, Sales Price and Cost match. The chair shows its attribute variants and archived original in Odoo, one variant here (Records) | **Pass** — read through the tenant's API (the Odoo tab would not render): [IT-0001] Business Laptop 14" i7 is 5,400 / 4,150, Units, active, no barcode, as here; the chair has the archived [FURN-0001] (899 / 540) and Red 1,019, Blue 959, Black 899 at cost 0 in Odoo, one Ergonomic Office Chair (899 / 0) here, as Records says. Odoo lists referenced variants before unreferenced ones (difference 2) |
+| 17 | The Variants smart button, archived variants left out of the count | Products → *TEST Auto Variant Product*: read **# Variants** beside Active, then open the **Variants** tab at the foot of the record. Compare with *Ergonomic Office Chair* | **# Variants 1** on both — the archived `[TEST-0002-OLD]` is not counted. The tab on the TEST product still lists **2** rows, `[TEST-0002]` and `[TEST-0002-OLD]`, with columns Display Name · Sales Price · Cost · Barcode · Unit: no stored setting filters a `showtype` "2" list (difference 6). The chair's tab lists its one variant | **Count: pass. Tab: fails, and the browser does not rescue it.** Read back through `record get` on 21 Sep 2026: TEST Auto Variant Product 1, Ergonomic Office Chair 1, and 1 on the other seventeen. **Checked on screen the same day**: the record shows **# Variants 1** above the notebook and, below it, a tab reading **Variants (2)** over *Total 2 row(s)* — `[TEST-0002-OLD]` and `[TEST-0002]`. So the browser forwards no filter either, and **the tab's own bracketed count comes from the list, not from the 汇总** — the two numbers contradict each other on one screen. Difference 6 |
 
 ### Differences from Odoo seen in testing
 
@@ -361,6 +437,15 @@ and the variant was checked in the UI. Test records are named `TEST …`.
 5. **Archive and Unarchive.** In a record opened as a full page only the button that applies is shown; in the record
    pop-up the other is greyed out, as on the other worksheets. Edits to Barcode or Extra Packagings are kept with Save
    on the *Modifying form data* bar.
+6. **The Variants tab lists archived variants; `# Variants` does not count them.** Odoo's smart button counts and
+   opens the active variants alone. The count here is filtered to Active and matches Odoo; the tab beside it cannot
+   be filtered at all — no stored setting narrows a `showtype` "2" list (*The reverse on Products* › *Archived
+   variants*). So *TEST Auto Variant Product* reads **# Variants 1** above a tab listing **2** rows, the archived
+   `[TEST-0002-OLD]` among them. **Confirmed on screen, 21 Sep**: the browser forwards no filter of its own, and
+   the **tab's bracketed count is the list's, not the 汇总's** — the label reads *Variants (2)* directly beside
+   *# Variants 1*, so the record contradicts itself in two places a reader sees at once. It is the only product
+   affected today: every other product has one variant and it is active. Worth re-reading when the Product
+   Variants bundle lands and archived originals become normal.
 
 ### Test records left in the worksheet
 

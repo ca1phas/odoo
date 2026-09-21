@@ -295,7 +295,10 @@ def products_fields():
 # `fields` adds it and **`products.py layout` places it**, that step being 03's own read-modify-write: it reads
 # the live controls and sends the same list back. Products' PLACE carries Category and Internal Reference on
 # row 6. Re-running `prodcat fields` never moves it back; this is only what `check` expects to find.
-CATEGORY_PLACE = (6, 0, 6)                        # Internal Reference sits beside it at (6, 1)
+CATEGORY_PLACE = (9, 0, 6)                        # Internal Reference sits beside it at (9, 1)
+# Row 9, not 6, since 21 Sep 2026: the Taxes bundle put Sales Taxes and Purchase Taxes above it, which is
+# where Odoo's own form has them (Sales Price · Sales Taxes · Cost · Purchase Taxes · Category · Reference).
+# `products.py` PLACE is the single source for the row; this constant follows it.
 
 
 def category_control(tab_id):

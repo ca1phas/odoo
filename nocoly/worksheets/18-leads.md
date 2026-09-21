@@ -1,13 +1,13 @@
-# 16 · Leads
+# 18 · Leads
 
 | | |
 |---|---|
 | Nocoly app | ERP Master · menu group **CRM** |
 | Worksheet | Leads |
 | Odoo model | `crm.lead` |
-| Reference used for this hand-off | Teh Li Wei's authenticated `ohyes.odoo.com` English Opportunity form, list and pipeline, 18 Sep 2026. Re-check against `casimir.odoo.com` before final repository sign-off |
+| Reference used for the initial build | Teh Li Wei's authenticated `ohyes.odoo.com` English Opportunity form, list and pipeline, 18 Sep 2026. The owner's 21 Sep decision makes Odoo the sole ERP Master reference; see the later [CRM conformance review](14-crm-conformance.md) |
 | Phase | 2 — CRM worksheet 4 of 4 |
-| Status | Built; 3 views, 1 rule, 2 custom actions and 2 published workflows; CLI/MCP post-check and core rendered UI checks pass. **Three presentation/default checks remain** |
+| Status | Built; 3 views, 1 rule, 2 custom actions and 2 published workflows. The owner reports manual UI corrections on 21 Sep; CLI read-back confirms navigation, but fresh-form validation was blocked by CAPTCHA. The conformance findings are not signed off |
 
 ## 1 · Requirements delivered
 
@@ -53,7 +53,7 @@ CRM Tags is intentionally separate from Contact Tags.
 
 | View | Id | Delivered behavior |
 |---|---|---|
-| My Pipeline | `6aad1284bd43f55762c7588b` | Kanban grouped by Stage; Open opportunities assigned to Teh Li Wei |
+| My Pipeline | `6aad1284bd43f55762c7588b` | CLI reports `viewType=1` and `viewControl=Stage`, with Open opportunities filtered to Teh Li Wei's static ID. The 21 Sep conformance review calls this "no pipeline board"; a fresh rendered comparison is needed to resolve the conflict |
 | All Opportunities | `6aad1284e54d2a34fa4e5862` | Opportunity, Contact, Email, Salesperson, Expected Revenue, Stage |
 | Lost | `6aad1284805aef703286ac64` | Lost outcome rows with Lost Reason and Closed On |
 
@@ -88,12 +88,13 @@ Passed:
 
 Open/manual:
 
-1. Clear the restored interrupted blank draft and confirm a genuinely fresh New Opportunity displays Stage **New**.
+1. Confirm a genuinely fresh New Opportunity displays Stage **New**. The raw Stage control still carries a `defsource` pointing at the New stage on 21 Sep; browser verification was blocked by CAPTCHA, so the raw value is not proof of the form result.
 2. My Pipeline uses Teh Li Wei's static account id; no verified dynamic `currentUser` view-filter wire was available.
 3. CRM Tags shows Raspberry in its lookup table, but a related tag on Leads renders as ordinary relation text rather than inheriting the colour.
+4. Reconcile the colleague's [Odoo conformance findings](14-crm-conformance.md), especially the pipeline UI, invented `Status`, Extra Info fields, roles and Odoo-only seed data. No destructive field change was made in this hand-off.
 
 CLI/MCP discrepancies are recorded in Chinese in the Nocoly workspace's 18 September limitation register. No product ticket was submitted.
 
 ## 4 · Not built now
 
-Activities, Meetings, Quotations, Lead Mining, Sales/Invoice bridges, dashboards and new roles are outside this Phase 2 slice.
+Activities, Meetings, Quotations, Lead Mining, Sales/Invoice bridges, dashboards and new roles are outside this Phase 2 slice. In particular, the planned Activities bundle (`mail.activity.type`, `mail.activity.plan`, `mail.activity.plan.template`) is not present in the ERP Master CLI inventory on 21 Sep. This says nothing about the older, separate Odoo CRM Malaysia app.
