@@ -17,11 +17,12 @@ BUND={'btax':h(ws=1,ms=1),'bcoa':h(ws=1,ms=1,extra=1),'bcat':h(ws=1,lk=1),'bterm
  'bpay':h(ws=2,lk=1,tx=1,wf=2),'bvar':h(ws=4,lk=2,ms=2,wf=2),'bpl':h(ws=2,ms=2,wf=2),
  'butm':h(ws=3,lk=3),'bteam':h(ws=1,ms=1),'bana':h(ws=2,ms=2),'bplan':h(ws=3,lk=3),
  'bgeo':h(ws=2,lk=2,extra=1),'bfp':h(ws=1,ms=1,ln=1),'binc':h(ws=1,lk=1),'bcur':h(ws=1,lk=1),
- 'bcombo':h(ws=2,lk=1,ms=1),'btag':h(ws=1,lk=1)}
+ 'bcombo':h(ws=2,lk=1,ms=1),'btag':h(ws=1,lk=1),
+ 'bqtpl':h(ws=2,ms=1,ln=1),'bqb':h(ws=1,lk=1)}
 CORE=h(ws=7,lk=1,ms=4,ln=1,tx=1,apps=1,wf=2)
 BUND_APP=h(apps=1)   # the Configuration section the bundles share
 PHASE={2:h(ws=4,lk=3,tx=1,apps=1,wf=3),
- 3:h(ws=5,lk=1,ms=1,ln=2,tx=1,apps=1,docs=1,wf=14,extra=1),
+ 3:h(ws=2,ln=1,tx=1,apps=1,docs=1,wf=14,extra=1),
  4:h(ws=12,lk=7,ms=2,ln=1,tx=2,apps=1,docs=1,wf=8),
  5:h(ws=45,lk=26,ms=10,ln=3,tx=6,apps=5,docs=3,wf=20,extra=12),
  6:h(ws=12,lk=7,ms=2,ln=1,tx=2,apps=2,wf=8,extra=8),
@@ -38,11 +39,11 @@ print(f"   model predicts {bt:.0f} h · actually spent ≈100 h · build is 88% 
 print(f"   → implied remaining ≈ {bt-100:.0f} h, which is the 12% tail + the unfinished click-through\n")
 NAME={'2':'CRM','3':'Sales','4':'Point of Sale','5':'Inventory & Manufacturing','6':'Services',
       '7':'Human Resources','8':'Finance','9':'Marketing','10':'Website','11':'Productivity'}
-WS={'2':4,'3':5,'4':12,'5':45,'6':12,'7':35,'8':4,'9':28,'10':49,'11':3}
+WS={'2':4,'3':2,'4':12,'5':45,'6':12,'7':35,'8':4,'9':28,'10':49,'11':3}
 print(f"{'ph':<4}{'phase':<26}{'ws':>4}{'hours':>8}{'weeks':>7}{'cum':>7}")
 print("="*58)
 cum=0
-for n,nm,ws,hrs in [('1','Core Foundation',7,CORE),('1','Optional bundles',29,tb)]+[(k,NAME[k],WS[k],PHASE[int(k)]) for k in NAME]:
+for n,nm,ws,hrs in [('1','Core Foundation',7,CORE),('1','Optional bundles',32,tb)]+[(k,NAME[k],WS[k],PHASE[int(k)]) for k in NAME]:
     cum+=hrs/WEEK
     print(f"{n:<4}{nm:<26}{ws:>4}{hrs:>8.0f}{hrs/WEEK:>7.1f}{cum:>7.1f}")
 print("="*58)

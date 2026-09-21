@@ -1,84 +1,139 @@
-# 17 · Headers/Footers — requirements
+# 17 · Quotation Templates and Quote Builder — two optional bundles
 
 | | |
 |---|---|
-| Odoo model | `quotation.document` (Enterprise, `sale_pdf_quote_builder`) |
-| Odoo menu | Sales › Configuration › **Headers/Footers**, action 539 |
+| Odoo models | `sale.order.template` (+ `sale.order.template.line`) and `quotation.document` |
+| Odoo menus | Sales › Configuration › **Quotation Templates** (action 530) and **Headers/Footers** (action 539) |
 | Reference | `nocoly/reference/odoo-19.4/quotation.document.md` |
-| Status | **§1 only — requirements.** The owner is building this worksheet by hand; nothing here has been built by a builder, and no `build/` script owns it |
-| Date | 21 Sep 2026, read from casimir before the trial expires |
+| Status | **Optional bundles, not core.** Moved out of Phase 3 on 21 Sep 2026 — `bqtpl` and `bqb` on the ground-up build page |
+| Date | 21 Sep 2026. Everything below was read off casimir, and the view definitions were read rather than inferred |
 
 ---
 
-## 1 · What it is, and the decision to take first
+## 1 · Why these are optional, and why they are two bundles
 
-A Header/Footer record is **a PDF file** that Odoo splices onto the front or the back of a quotation's PDF
-when the quotation is printed or sent. Where the uploaded PDF carries AcroForm fields, Odoo reads them into
-`form_field_ids` and fills them from the order at print time. The order's **Quote Builder** tab is where a
-salesperson picks which documents go onto a given quotation.
+The original draft of this page treated Headers/Footers as a core Phase 3 worksheet. It should not be, for a
+reason that does not go away with more build effort: **HAP generates no quotation PDF.** A Header/Footer
+record is a PDF that Odoo splices onto the front or back of a printed quotation, so the table is
+configuration for an assembler that does not exist here and is not on any roadmap. That is the definition of
+an optional bundle — a feature a client may want, priced and switchable on its own — not a gap in the core.
 
-**So this table is configuration for a PDF assembler, and HAP has no PDF assembler.** The records model
-cleanly — a file, a type, a sequence, two flags and a relation. What cannot be built is the thing they
-configure: nothing downstream will ever splice those pages onto anything.
+They are **two** bundles because they are useful independently:
 
-That makes it an owner's call, and it should be taken before the layout work, not after:
+| Bundle | Models | Buy it when |
+|---|---|---|
+| **`bqtpl` Quotation Templates** | `sale.order.template`, `sale.order.template.line` | the same quotation goes out more than once. **Useful on its own**, with no PDF work at all: a template is a pre-filled quotation — pick it and the lines, terms, validity and confirmation settings arrive filled in |
+| **`bqb` Quote Builder** | `quotation.document` | branded cover and terms pages on a quotation. **Carries the caveat**: it records which PDFs a quotation should carry and does not assemble them |
 
-- **Build it as a configuration table now.** Cheap, faithful, and it holds the files where Odoo holds them.
-  The worksheet's *Not built now* then has to say plainly that the documents are stored and never used.
-- **Defer the whole worksheet** until whatever generates a quotation PDF exists.
+`bqb` depends softly on `bqtpl` — only the template-side link needs it; picking documents per order does not.
 
-Two facts that bear on the call. The tenant holds **one record**, `exSlip_2026062401315.pdf`, a sample
-header with no templates attached and *Add By Default* off. And `sale.order.template` — the only table this
-worksheet relates to — holds **zero records**, because Quotation Templates has not been built either.
-Built today, this worksheet would be one sample row pointing at an empty table.
+**The caveat belongs on the bundle card**, not in a *Not built now* table at the bottom of a page. Someone
+switching Quote Builder on needs to know before they start that no PDF comes out of the other end.
 
-## 2 · Fields, if it is built
+## 2 · Where Headers/Footers is actually used
 
-Odoo's model delegates to `ir.attachment` (`_inherits`), so `name`, `description` and the file bytes are the
-attachment's. HAP has no delegation; an Attachment control and a Text control cover it, and the delegation
-is not a difference worth recording beyond a line in §3.
+Traced on the tenant, because the answer was not obvious. Three consumers, all in Odoo:
 
-| # | Field | Odoo | Type | Required | Default | Notes |
-|---|---|---|---|---|---|---|
-| 1 | Name | `name` (via attachment) | Text · title field | **yes** | — | Odoo makes it **read-only until a file is uploaded** (`readonly="not raw"`) — the upload names it. Worth reproducing with a rule |
-| 2 | Document | `raw` / `ir_attachment_id` | **Attachment**, single file | **yes** | — | the PDF. Odoo's `ir_attachment_id` is required; in the form it is edited as `raw` |
-| 3 | Document Type | `document_type` | Single Select, dropdown | **yes** | — | **Header · Footer** |
-| 4 | Sequence | `sequence` | Number, integer | — | 10 | the order pages are spliced in; the list sorts on it |
-| 5 | Quotation Templates | `quotation_template_ids` | Relation → Quotation Templates, **multiple** | — | — | **blocked** — that worksheet does not exist. Either build Quotation Templates first or leave this control out and record it |
-| 6 | Add By Default | `add_by_default` | Checkbox | — | unticked | put the document on a new quotation without being asked |
-| 7 | Description | `description` (via attachment) | Text, multi-line | — | — | not on Odoo's form, but it is on the model |
-| 8 | Active | `active` | Checkbox | — | ticked | hidden, as on every other worksheet; driven by Archive / Unarchive |
+1. **A quotation** — `sale.order.quotation_document_ids`, labelled *Headers/Footers*, on the order form's
+   **Quote Builder** tab. Both that field and `customizable_pdf_form_fields` are `invisible="1"`; what a
+   salesperson actually uses is a `customContentKanbanLikeWidget` card picker. The tab appears only once the
+   quotation **has a customer** (`invisible="not (partner_id and is_pdf_quote_builder_available)"`).
+2. **A quotation template** — `sale.order.template.quotation_document_ids`, labelled *Headers and footers*,
+   on the template's own **Quote Builder** page. That page is `invisible="not (id)"` — it does not exist on
+   an unsaved template, which is why a new template appears to have no such field. It holds exactly one
+   field and no widget: a plain list, where the order gets the card picker.
+3. **`add_by_default`** — puts a document on a new quotation without anyone choosing it.
 
-**Not a field to build:** `form_field_ids` (*Form Fields Included*) is read-only and computed by parsing the
-PDF's AcroForm fields. HAP cannot parse a PDF. Leave it out and say so.
+Supporting fields: `available_quotation_document_ids` (read-only, the candidate list, narrowed by template)
+and `customizable_pdf_form_fields` (JSON, the AcroForm values for that one order).
 
-## 3 · Rules, buttons and views
+**In ERP Master today it is used by nothing.** Orders has no relation to Headers/Footers, and neither does
+the Template worksheet. The only nearby link points the wrong way — see §4.
 
-**Rules.** One, and it is Odoo's: *Name is read-only until a document is uploaded*
-(`readonly="not raw"`). There are **no SQL or unique constraints** on this model — `ir.model.constraint`
-reports none, so a duplicate name is allowed.
+## 3 · Print Order — the one deliberate divergence
 
-**Buttons.** Archive / Unarchive, the same pair every other worksheet carries, with Odoo's confirmation
-*"Are you sure that you want to archive this record?"*. Nothing else — the model has no workflow.
+Odoo's field is `sequence`, and it is **global**: one integer per document, shared across every template and
+quotation. Proved on the tenant — the three documents carry 10, 11, 12, and template 1 returns them as
+`[2, 4, 3]`, i.e. sorted by those numbers rather than by the order they were attached. There is no
+intermediate model (`ir.model` holds only `quotation.document`), so a plain many-to-many has nowhere to store
+a per-template order, and **Odoo cannot express one either**.
 
-**Views.** Odoo's `view_mode` is **kanban, list, form** and kanban opens first. The list is
-`sequence · name · document_type · quotation_template_ids · add_by_default · company_id`, sorted by
-sequence. An **Archived** view, as elsewhere.
+It never appears on the form. In the list and kanban it is `<field name="sequence" widget="handle"/>` — the
+drag handle. HAP has no drag handle, so it has to be a typed number.
 
-## 4 · Not built now
+**What is built instead: `Print Order`, numbered within each type.** Two changes from Odoo, both cosmetic:
+
+- **The name.** *Sequence* is a developer's word and says nothing about what it does.
+- **The numbering.** Odoo runs one number line across both types, so a footer at 12 looks like it comes after
+  headers at 10 and 11 when it is simply the first footer. Numbering restarts per type, so *Footer · 1* reads
+  as *first page after the quotation*.
+
+The stored shape is still one integer per document, so it maps one-for-one onto `sequence` if this is ever
+synced. **A per-template order was considered and rejected** — it would need a join subtable in place of the
+relation, on both Orders and Template, inventing structure Odoo does not have to buy flexibility that in
+practice nobody uses. Revisit only if two templates ever need the same documents in a different order.
+
+## 4 · Headers/Footers (`quotation.document`) — fields
+
+The worksheet exists, hand-built, at `6ab099387d58b0f449316373` with **5 controls and 3 records**.
+
+| # | Field | Odoo | Type | Required | State |
+|---|---|---|---|---|---|
+| 1 | Name | `name` (via attachment) | Text · title | **yes** | built, **but not required** — Odoo's is `required=True`. Odoo also makes it read-only until a file is uploaded (`readonly="not raw"`), which is the one rule this model has |
+| 2 | Document | `raw` / `ir_attachment_id` | Attachment | **yes** | built |
+| 3 | Document Type | `document_type` | Single Select — Header · Footer | **yes** | built and correct; HAP's stray *Option 3* already carries `isDeleted` |
+| 4 | **Print Order** | `sequence` | Number, integer | — | **missing** — see §3 |
+| 5 | Quotation Templates | `quotation_template_ids` | Relation → Template, multiple | — | **built against the wrong worksheet** — it targets **Orders** `6ab09897e43d174ab3752d7b`. The id ordering explains it: this control was minted at `6ab09a…` and the Template worksheet not until `6ab0c3…`, so the intended target did not exist yet. Its `sourceControlId` also names a reverse control that is not on Orders — a parked reverse relation |
+| 6 | Add By Default | `add_by_default` | Checkbox | — | built |
+
+**Not built, each with a reason:**
 
 | What | Why |
 |---|---|
-| **The PDF assembly itself** — splicing headers and footers onto a quotation's PDF | HAP does not generate the quotation PDF. This is the feature the table configures, and it does not exist |
-| `form_field_ids` and the whole `sale.pdf.form.field` model | The list is computed by reading AcroForm fields out of the uploaded PDF |
-| `quotation_template_ids` | Quotation Templates (`sale.order.template`) is not built and holds zero records on the tenant |
-| `company_id` | Single company, as everywhere else in ERP Master |
+| **Active / Archive / Unarchive / an Archived view** | **Odoo surfaces no archive action on this model.** The form cog offers Duplicate and Delete; the kanban card menu offers Edit, Delete, Download; neither the form nor the list arch carries `active`. The field exists and is writable, and the scaffolding around it survives — a `web_ribbon` titled *Archived* on the kanban card and `Archived` / `All` filters in the search view — but nothing in the UI sets the flag. **This breaks the house pattern every other ERP Master worksheet follows**, and it is deliberate: the standing rule is to follow Odoo |
+| **Description** | `description`, delegated from `ir.attachment` and `store=False`. Absent from the form, the list *and* the kanban — no Odoo user of this screen can see or set it. Building it would put a box on the form that Odoo does not have |
+| `form_field_ids` / `sale.pdf.form.field` | Read-only, computed by parsing the PDF's AcroForm fields. HAP cannot parse a PDF |
+| `company_id` | Single company, as everywhere else |
+| **The PDF assembly** | The feature this table configures. HAP does not generate the quotation PDF — §1 |
 
-## 5 · Dependencies
+## 5 · Template (`sale.order.template`) — what stands
 
-| Needs | State |
-|---|---|
-| **Quotation Templates** (`sale.order.template`) | **not built**, and empty on the tenant |
-| Orders (`sale.order`) — the Quote Builder tab is the consumer | worksheet 16, requirements only |
+Hand-built at `6ab0c38dbd43f55762c78496` with **3 controls** — Name (required, title), Description,
+Attachment — and one record, *Testing*. Orders' *Template* relation already points at it.
 
-Neither blocks a configuration-table build; both block the feature being useful.
+That is a stub. Odoo's model also carries `sale_order_template_line_ids` (the lines — the main thing a
+template is for), `sale_order_template_option_ids`, `note` (Terms & Conditions), `number_of_days` (validity),
+`require_signature`, `require_payment`, `prepayment_percent`, `journal_id` and `quotation_document_ids`. The
+form's tabs are **Lines · Terms & Conditions · Settings**, plus **Quote Builder** once saved.
+
+**Without a Lines child table the bundle does not do its job** — applying a template is supposed to fill the
+order's lines. That is the bulk of `bqtpl`'s estimated hours.
+
+## 6 · The build, if either bundle is taken
+
+**`bqb` Quote Builder** — small, and mostly correction:
+
+1. Re-point **Quotation Templates** at the Template worksheet, and clear the parked reverse relation.
+2. Add **Print Order** (§3).
+3. **Name** required, and the rule *Name is read-only until a document is uploaded*.
+4. Aliases — every control carries `alias=''` today; the convention is the Odoo field name (`name`,
+   `document_type`, `ir_attachment_id`, `sequence`, `quotation_template_ids`, `add_by_default`).
+5. The two relations that make it mean anything: **Orders → Headers/Footers** and **Template →
+   Headers/Footers**, both multiple. Neither exists.
+6. Views: the list sorted by Document Type then Print Order. No Archived view — §4.
+
+**`bqtpl` Quotation Templates** — a real build: the Lines child table, the terms and validity fields, and the
+confirmation settings that a template hands to an order.
+
+## 7 · Estimates
+
+From the same cost model as every other bundle (`nocoly/analysis/timeline3.py`):
+
+| Bundle | Worksheets | Hours |
+|---|---|---|
+| `bqtpl` Quotation Templates | 2 | **7.3** |
+| `bqb` Quote Builder | 1 | **1.1** |
+
+Phase 3 Sales drops from 5 worksheets / 73.1 h to **2 worksheets / 64.8 h**; the optional bundles go from 17
+to **19**, and from 30 worksheets / 100 h to **33 / 108 h**. The project total is unchanged at 1502 h — this
+moves work between columns rather than adding it.

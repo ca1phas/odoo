@@ -22,7 +22,8 @@
   "Countries": "6aacb572805aef7032869637",
   "States": "6aace374805aef7032869ec9",
   "Taxes": "6aad1034805aef703286ac2f",
-  "Orders": "6ab09897e43d174ab3752d7b"
+  "Orders": "6ab09897e43d174ab3752d7b",
+  "Order Lines": "6ab0c740e43d174ab37535b2"
  },
  "workflows": {
   "Archive": "6aa8a565e589b8933dd4cc6d",
@@ -284,11 +285,37 @@
   "Orders: Delivery Address": "6ab0a141805aef703286cf85",
   "Orders: Quotation/Order Date": "6ab0a425805aef703286cfdb",
   "Orders: Payment Terms": "6ab0a425805aef703286cfdc",
-  "Orders: Order Lines": "6ab0a592e43d174ab3752fe5",
+  "Orders: Order Lines": "6ab0c740e43d174ab37535b0",
   "Orders: Status": "6ab0a847e54d2a34fa4e7b96",
   "Orders: Delivery Date": "6ab0a9dabd43f55762c78047",
   "Orders: Delivery Status": "6ab0a9dabd43f55762c78048",
-  "Orders: Locked": "6ab0af4f805aef703286d570"
+  "Orders: Locked": "6ab0af4f805aef703286d570",
+  "Order Lines: Orders": "6ab0c740e43d174ab37535b1",
+  "Order Lines: Sequence": "6ab0c740e43d174ab37535b7",
+  "Order Lines: Display Type": "6ab0c864e43d174ab37535f7",
+  "Order Lines: Product": "6ab0c864e43d174ab37535f8",
+  "Order Lines: Description": "6ab0c864e43d174ab37535fa",
+  "Order Lines: Quantity": "6ab0c864e43d174ab37535fb",
+  "Order Lines: Quantity Invoiced": "6ab0c864e43d174ab37535fc",
+  "Order Lines: Quantity Delivered": "6ab0c864e43d174ab37535fd",
+  "Order Lines: Unit": "6ab0c984e43d174ab3753634",
+  "Order Lines: Unit Price": "6ab0ca1be43d174ab3753657",
+  "Order Lines: Discount": "6ab0ca1be43d174ab3753658",
+  "Order Lines: Taxes": "6ab0c984e43d174ab3753636",
+  "Order Lines: Tax Amount": "6ab0cad0805aef703286d83d",
+  "Order Lines: Subtotal": "6ab0ca80805aef703286d82a",
+  "Order Lines: Total": "6ab0cad0805aef703286d83e",
+  "Order Lines: Product Unit": "6ab0c984e43d174ab3753638",
+  "Order Lines: Tax rate": "6ab0d4bbe43d174ab3753780",
+  "Order Lines: Lead Time": "6ab0d4bbe43d174ab3753781",
+  "Order Lines: Optional Line": "6ab0d4bbe43d174ab3753782",
+  "Orders: Tax Mode": "6ab0bfaf7d58b0f449316ad8",
+  "Orders: Online Signature": "6ab0c23fe54d2a34fa4e8051",
+  "Orders: Online Payment": "6ab0c324805aef703286d776",
+  "Orders: Prepayment Percentage": "6ab0c324805aef703286d777",
+  "Orders: Untaxed Amount": "6ab0c740e43d174ab37535b8",
+  "Orders: Tax": "6ab0c740e43d174ab37535b9",
+  "Orders: Total": "6ab0c740e43d174ab37535ba"
  },
  "rules": {
   "Journals: Payment Communications only for Sales": "6aa9dae5e54d2a34fa4dfde2",
@@ -332,7 +359,9 @@
   "Invoices: A purchase document must be in a purchase journal": "6ab0aa847d58b0f449316788",
   "Orders: Expiration is for an unconfirmed quotation": "6ab0ba6d805aef703286d6fb",
   "Orders: A confirmed or cancelled order is closed for editing": "6ab0ba6e805aef703286d6fd",
-  "Orders: A locked or cancelled order is closed for editing": "6ab0ba6ee54d2a34fa4e7fe2"
+  "Orders: A locked or cancelled order is closed for editing": "6ab0ba6ee54d2a34fa4e7fe2",
+  "Order Lines: A section or a note carries no figures": "6ab0d4e0e43d174ab375378c",
+  "Orders: Tax Mode is fixed once the quotation is confirmed": "6ab0d518e54d2a34fa4e8326"
  },
  "records": {
   "Invoices: customer Sunway Construction Group": "a4935a3f-0262-4d68-9b3b-6049d32e390b",
