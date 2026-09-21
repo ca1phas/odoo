@@ -25,7 +25,7 @@ but used by the display name, views or buttons.
 
 | # | Field | Odoo field | Nocoly type | Required | Default | Notes |
 |---|---|---|---|---|---|---|
-| 1 | Product | `product_tmpl_id` | Relation → Products (single, **one-way**), dropdown | yes | set by automation A | **Read-only**, as on Odoo's variant form (`readonly="1"`). Opens the product. The picker lists active products and its search matches their Internal Reference. No reverse field on Products. Odoo labels it Product Template |
+| 1 | Product | `product_tmpl_id` | Relation → Products (single, **two-way** — corrected 21 Sep 2026), dropdown | yes | set by automation A | **Read-only**, as on Odoo's variant form (`readonly="1"`). Opens the product. The picker lists active products and its search matches their Internal Reference. Odoo labels it Product Template. **Its reverse is Products' `Variants`** — see below |
 | 2 | Favorite | `is_favorite` | Checkbox | — | the product's | **Read-only**: the product's Favorite, copied by automations A, B and C — edit it on the product. Odoo relates the two (`related='product_tmpl_id.is_favorite'`, `product_product.py:123`) and shows it read-only on the variant form and list. Quick filter; the views list favourites first |
 | 3 | Sales | `sale_ok` | Lookup of the product's Sales | — | — | Beside Favorite, as Odoo's header. Quick filter |
 | 4 | Purchase | `purchase_ok` | Lookup of the product's Purchase | — | — | Beside Sales. Quick filter |
@@ -63,6 +63,35 @@ Name is the stored lookup of the product's Name, so renaming a product renames i
 Internal Reference reaches the variant through automation B and the formula recomputes on that save. This settles
 the open question in DECISIONS.md for variants: order and invoice lines (07) will show "[Internal Reference] Name";
 Products keeps showing its Name. The " (attribute values)" suffix waits for the Product Variants bundle.
+
+### The reverse on Products — corrected 21 Sep 2026
+
+§1 first said this relation was one-way and that **Products carried no reverse field**. That was wrong, and it
+was wrong in a way that hid itself: **03 had already deferred Odoo's *Variants* smart button to this worksheet**
+(`03-products.md` › *Not built now*: "Attributes & Variants tab, the Variants smart button | Product Variants
+bundle"), and this worksheet then declined to build a reverse. The field fell between the two documents.
+
+Odoo has it. `product.template.product_variant_ids` is a real one2many, and the product form surfaces it as the
+**Variants** smart button carrying `product_variant_count`. The app was also inconsistent with itself: Product
+Categories is the identical shape — a many2one on Products plus a stat button on the other side — and bundle 1
+built it **two-way**, with a read-only *Products* list on the category and a `# Products` 汇总 over it
+(`08-product-categories.md` §1, fields 5 and 6).
+
+**HAP had reserved the reverse all along.** The Product control's `sourceControlId` held
+`6aa90c7d4a22ad87b728e9f1` and no control on Products carried it — the dangling case `prodcat.ensure_reverses`
+describes, where `add-fields` reserves the id and the server makes nothing. Units & Packagings shows the
+finished shape: Reference Unit and Related UoMs each hold the other's id.
+
+`variants.py reverse` completes the handshake and adds the count:
+
+| | On Products | |
+|---|---|---|
+| **Variants** | Relation → Product Variants, multiple, **read-only** (`fieldPermission` "101"), `showtype` "2" so it draws as a tab at the foot of the record | `6aa90c7d4a22ad87b728e9f1` — the id HAP had reserved, not a new one |
+| **# Variants** | 汇总 (type 37), **count** over Variants, read-only, row 3 beside Active — where Odoo puts its stat button | `6ab07f06805aef703286c9a9`, alias `product_variant_count` |
+
+Both are placed so **no existing row moves**: the count takes the empty column beside Active, the list sits last.
+Read back on 21 Sep: the pair cross-references correctly, and the count reads **2** on *TEST Auto Variant
+Product* and **1** on the other eighteen — 19 products, 20 variants.
 
 ### Form layout
 

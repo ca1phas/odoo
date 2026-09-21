@@ -50,6 +50,11 @@ PLACE = {  # field name -> (row, col, size, tab)
     'Favorite': (1, 0, 4, None), 'Sales': (1, 1, 4, None), 'Purchase': (1, 2, 4, None),
     'Image': (2, 0, 12, None),
     'Active': (3, 0, 6, None),                                   # hidden by fieldPermission; Archive/Unarchive set it
+    # Odoo's Variants smart button and the one2many behind it, added 21 Sep 2026 (variants.py `reverse`).
+    # 03 had deferred the button to worksheet 04 and 04 declined the reverse, so the field fell between the
+    # two. The count sits beside Active because Odoo puts its stat button at the top of the form; the list
+    # is last, where `showtype` "2" draws it as a tab at the foot rather than in the grid. Both read-only.
+    '# Variants': (3, 1, 6, None),
     'Product Type': (5, 0, 6, GENERAL), 'Sales Price': (5, 1, 6, GENERAL),      # group_general | group_standard_price
     'Sales Taxes': (6, 0, 12, GENERAL),                          # bundle 6 (13-taxes.md)
     'Unit': (7, 0, 6, GENERAL), 'Cost': (7, 1, 6, GENERAL),
@@ -70,6 +75,7 @@ PLACE = {  # field name -> (row, col, size, tab)
     # by accounts.py `products`), added with `add-fields` and placed by this step, as Category was: after Inventory,
     # where Odoo has the page. Odoo's group title "Cost and Revenue" is left out, as the other group titles are.
     'Income Account': (18, 0, 6, ACCOUNTING), 'Expense Account': (18, 1, 6, ACCOUNTING),
+    'Variants': (19, 0, 12, None),
 }
 HINTS = {'Name': 'e.g. Cheese Burger', 'Internal Notes': 'This note is only for internal purposes.',
          'Sales Description': 'This note is added to sales orders and invoices.',
@@ -94,6 +100,9 @@ DESC = {  # Odoo field help (product_template.py)
                        'category will be used.',
 }
 HIDDEN = ['Active']
+# Read-only, as every reverse relation and roll-up in this app is: a variant says which product it belongs
+# to, and the count is computed from that. Same '101' prodcat gives its own reverses and # Products.
+READ_ONLY = ['Variants', '# Variants']
 MYR = json.dumps({'currencycode': 'MYR', 'symbol': 'RM'})
 PRODUCT_TYPES = ['Goods', 'Service']           # Combo waits for the Product Combos bundle
 
@@ -254,7 +263,7 @@ def step_layout():
         c.update(row=row, col=col, size=size, sectionId=tab[in_tab] if in_tab else '', hint=HINTS.get(name, ''))
         if name in DESC:
             c['desc'] = DESC[name]
-        c['fieldPermission'] = '011' if name in HIDDEN else '111'
+        c['fieldPermission'] = ('011' if name in HIDDEN else '101' if name in READ_ONLY else '111')
     units = C.fields(units_ws())
     # Odoo's unit dropdown shows "Days --8 Hours--" (uom formatted_display_name): the picker shows each
     # unit's Contains and Reference Unit, as the Reference Unit picker on Units & Packagings does.

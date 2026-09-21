@@ -271,7 +271,9 @@
   "Products: Sales Taxes": "6aad156dbd43f55762c758c2",
   "Products: Purchase Taxes": "6aad156dbd43f55762c758c4",
   "Taxes: Name (stock control, dropped by `fields`)": "6aad1034805aef703286ac30",
-  "Taxes: Attachment (stock control, dropped by `fields`)": "6aad1034805aef703286ac32"
+  "Taxes: Attachment (stock control, dropped by `fields`)": "6aad1034805aef703286ac32",
+  "Product Variants: Variants": "6aa90c7d4a22ad87b728e9f1",
+  "Product Variants: # Variants": "6ab07f06805aef703286c9a9"
  },
  "rules": {
   "Journals: Payment Communications only for Sales": "6aa9dae5e54d2a34fa4dfde2",

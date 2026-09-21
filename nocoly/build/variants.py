@@ -938,6 +938,84 @@ def product_differences(v, p):
     return {k: (str(a), str(b)) for k, (a, b) in pairs.items() if a != b}
 
 
+# ── the reverse on Products, and Odoo's Variants count ──────────────────────
+#
+# 04 §1 first said the Product relation was one-way and that Products carried no reverse. That was wrong twice
+# over: Odoo's `product.template.product_variant_ids` is a real one2many, surfaced on the product form as the
+# **Variants** smart button with `product_variant_count` — and 03 had already deferred that button *to this
+# worksheet*, so the field fell between the two documents and nobody built it.
+#
+# It was never one-way in HAP's eyes either. `add-fields` had **reserved** the reverse's id in the Product
+# control's `sourceControlId` and left it dangling, which is the second case prodcat.ensure_reverses describes:
+# the server reserves the id and makes no control. Units & Packagings shows the finished shape — Reference Unit
+# and Related UoMs each carry the other's id in `sourceControlId`. This step completes the same handshake.
+#
+# Both new controls are placed where **no existing row moves**: the count beside Active on row 3 (Odoo puts its
+# stat button at the top of the form too), and the list at row 19 under everything, where `showtype` "2" draws
+# it as a tab at the foot of the record rather than in the grid.
+
+REVERSE, VARIANT_COUNT = 'Variants', '# Variants'
+REVERSE_PLACE, COUNT_PLACE = (19, 0, 12), (3, 1, 6)
+REVERSE_DESC = ('The variants of this product. Odoo product_variant_ids — read-only here, as it is there: a '
+                'variant says which product it belongs to.')
+COUNT_DESC = "The number on Odoo's Variants smart button (product_variant_count)."
+
+
+def products_ws():
+    return hap.ids()['worksheets'][PRODUCTS]
+
+
+def step_reverse():
+    """Give Products the reverse of Product Variants' Product relation, plus Odoo's variant count."""
+    forward = C.fields(ws()).get('Product')
+    if not forward:
+        sys.exit('the Product relation is not on Product Variants')
+    reserved = forward.get('sourceControlId')
+    if not reserved:
+        sys.exit('Product carries no sourceControlId — it was saved one-way and needs re-creating')
+    pw = products_ws()
+    ctrls = hap.controls(pw)
+    have = {c['controlId'] for c in ctrls}
+    pf = hap.by_name(c for c in ctrls if c['type'] != C.TAB)
+
+    if reserved in have:
+        print(f'  the reverse {reserved} is already on {PRODUCTS}; not re-created')
+    else:
+        control = C.control('RELATE_SHEET', REVERSE, REVERSE_PLACE, alias='product_variant_ids', hint='',
+                            desc=REVERSE_DESC, data_source=ws(), multi=True,
+                            advanced_setting={'showtype': '2'})          # 2 = the related records as a list
+        control.update(controlId=reserved, sourceControlId=forward['controlId'], sourceControlType=6,
+                       fieldPermission='101')                            # read-only, as prodcat's reverses are
+        C.save_controls(pw, ctrls + [control])
+        print(f"  {REVERSE}: reverse {reserved} saved on {PRODUCTS}, pairing with Product "
+              f"({forward['controlId']})")
+        ctrls = hap.controls(pw)
+        pf = hap.by_name(c for c in ctrls if c['type'] != C.TAB)
+
+    back = next((c for c in ctrls if c['controlId'] == reserved), None)
+    if not back or back.get('sourceControlId') != forward['controlId'] or back.get('enumDefault') != 2:
+        sys.exit(f'the reverse read back wrong: {json.dumps(back, ensure_ascii=False)[:300]}')
+
+    if VARIANT_COUNT in pf:
+        print(f'  {VARIANT_COUNT} is already there; not re-created')
+    else:
+        from hap_cli.core.app_creator.fields import rollup_control
+        count = rollup_control(VARIANT_COUNT, via_control_id=reserved,
+                               source_control_id=pf['Name']['controlId'], aggregate='count')
+        row, col, size = COUNT_PLACE
+        count.update(controlName=VARIANT_COUNT, alias='product_variant_count', row=row, col=col, size=size,
+                     dot=0, desc=COUNT_DESC, hint='', fieldPermission='101')
+        C.add_fields(pw, [count])
+        print(f'  {VARIANT_COUNT} added (count over {REVERSE})')
+
+    for c in hap.controls(pw):
+        if c['controlName'] in (REVERSE, VARIANT_COUNT):
+            C.remember('controls', KEY + c['controlName'], c['controlId'])
+            print(f"  {c['controlName']:14} {c['controlId']} r{c.get('row')} c{c.get('col')} "
+                  f"type={c['type']} perm={c.get('fieldPermission')}")
+    return 0
+
+
 def step_seed(*only):
     """Give every product exactly its one variant: create the missing ones, correct what a variant copies from
     its product (Internal Reference, Cost, Weight, Volume, Favorite, Active). Barcode, Extra Packagings and Variant
@@ -1068,6 +1146,7 @@ def show():
 
 if __name__ == '__main__':
     steps = {'create': step_create, 'fields': step_fields, 'relations': step_relations, 'lookups': step_lookups,
+             'reverse': step_reverse,
              'display': step_display, 'layout': step_layout, 'rules': step_rules, 'views': step_views,
              'buttons': step_buttons, 'automations': step_automations, 'switches': step_switches,
              'seed': step_seed, 'verify': step_verify, 'order': step_order, 'variant': step_variant, 'raw': step_raw,
