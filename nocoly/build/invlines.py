@@ -21,9 +21,12 @@ helpers: common.py. Run from the repo root with the CLI's interpreter:
     ~/.hap-venv/bin/python nocoly/build/invlines.py rules      # 6. a section or a note carries no figures
     ~/.hap-venv/bin/python nocoly/build/invlines.py views      # 7. Lines: columns, three-level sort, quick filter
     ~/.hap-venv/bin/python nocoly/build/invlines.py rollup     # 8. the two workflows that write 06's amounts
-    ~/.hap-venv/bin/python nocoly/build/invlines.py seed       # 9. the eight lines of the three seeded documents
+    ~/.hap-venv/bin/python nocoly/build/invlines.py seed       # 9. the fourteen lines of the five seeded
+                                                               #    documents, then settle and verify
     ~/.hap-venv/bin/python nocoly/build/invlines.py amounts    # 10. recompute Untaxed Amount, Total and Amount
                                                                #    Due on every invoice that has lines
+    ~/.hap-venv/bin/python nocoly/build/invlines.py settle     # 10b. drive the roll-up over every invoice whose
+                                                               #    four amounts are out of step with its lines
     ~/.hap-venv/bin/python nocoly/build/invlines.py all        # every step above, then check
 
     ~/.hap-venv/bin/python nocoly/build/invlines.py verify     # the live lines against the seed, and every
@@ -879,11 +882,17 @@ def step_rollup():
         print(C.structure(pid))
 
 
-# ── 9 · the eight lines ─────────────────────────────────────────────────────
+# ── 9 · the fourteen lines ──────────────────────────────────────────────────
 
-# The lines of the three documents 06 seeded — eight of the tenant's 33 (worksheets/07-invoice-lines.md §1,
-# reference/odoo-19.4/account.move.line.md). The other 25 belong to documents 06 did not seed, or are the tax
-# and payment-term lines Odoo writes itself.
+# A tax is named by **Tax Name and Tax Type**, never by name alone: the tenant has four taxes called *10% G*
+# and *8% S* — a Sales one and a Purchases one of each. Both of bundle 7's documents are Customer Invoices, so
+# both take the Sales taxes, which is also what automation B's tax fill writes on a customer branch.
+SALES_10 = ('10% G', 'Sales')
+SALES_8 = ('8% S', 'Sales')
+
+# The lines of the documents 06 seeded — fourteen of the tenant's 33 (worksheets/07-invoice-lines.md §1,
+# reference/odoo-19.4/account.move.line.md). The other 19 belong to documents 06 still does not seed, or are
+# the tax and payment-term lines Odoo writes itself.
 #
 # [FURN-0001] Ergonomic Office Chair and [FURN-0002] Height-Adjustable Desk 140cm are the tenant's **archived
 # original** variants, which Phase 1 does not hold: those lines point at the product's single active variant
@@ -907,11 +916,57 @@ SEED = (
      1, 'Units', 18000.0, 0.0),
     ('STL-2026-0042', 1, '[SW-0002] Nocoly HAP Licence — Pro', '[SW-0002] Nocoly HAP Licence — Pro',
      25, 'Units', 7200.0, 10.0),
+    # ── bundle 7 · the six lines of the two documents 06 seeded on 21 Sep 2026 ─────────────────────────────
+    # Two columns more: the **Display Type**, so a Section can be seeded, and the line's **Taxes**, which the
+    # eight rows above leave to `taxes.py`'s own document-wide LINE_TAX_SEED.
+    #
+    # INV/2026/00002 — *two tax rates on one document*, which none of the first three has.
+    ('TEST demo run - delete me', 0, 'Ergonomic Office Chair', 'Ergonomic Office Chair (Blue)',
+     2, 'Units', 959.0, 0.0, 'Product', (SALES_10,)),
+    ('TEST demo run - delete me', 1, '[SRV-0001] Implementation Consulting',
+     '[SRV-0001] Implementation Consulting', 1, 'Units', 850.0, 0.0, 'Product', (SALES_8,)),
+    # The cancelled S00021 — a **Section**, which the roll-up must leave out, and two **negative** lines,
+    # which it must take in. Neither down payment carries a product on the tenant, so neither carries one
+    # here; a line with no product is also a line automation B cannot fill a tax into, so their Taxes are
+    # written by this seed.
+    ('S00021', 0, 'Ergonomic Office Chair', 'Ergonomic Office Chair (Blue)',
+     2, 'Units', 959.0, 0.0, 'Product', (SALES_10,)),
+    ('S00021', 1, '', 'Down Payments', 0, '', 0.0, 0.0, 'Section', ()),
+    ('S00021', 2, '', 'Down Payment (ref: INV/2026/00003)', -1, '', 575.40, 0.0, 'Product', (SALES_10,)),
+    ('S00021', 3, '', 'Down Payment (ref: INV/2026/00003)', -1, '', 255.0, 0.0, 'Product', (SALES_8,)),
 )
+# The tenant's own chair lines point at the variant *Ergonomic Office Chair (Blue)*, which this app does not
+# hold — Phase 1 keeps one placeholder variant per product until the Product Variants bundle. They point at
+# *Ergonomic Office Chair* and keep the tenant's own Label, exactly as the [FURN-000x] lines above do.
+
+SEED_FIELDS = ('ref', 'sequence', 'product', 'label', 'quantity', 'unit', 'price', 'discount',
+               'display_type', 'taxes')
+SEED_DEFAULTS = ('Product', ())                    # what an eight-column row means
+
+
+def spec(row):
+    """One seeded line as a dict. A row of eight is a **Product** line whose Taxes this script does not own;
+    a row of ten names its Display Type and its taxes as (Tax Name, Tax Type) pairs."""
+    given = len(SEED_FIELDS) - len(SEED_DEFAULTS)                      # the eight columns every row carries
+    return dict(zip(SEED_FIELDS, tuple(row) + SEED_DEFAULTS[len(row) - given:]))
 
 
 def subtotal_of(qty, price, discount):
     return round(qty * price * (1 - discount / 100), 2)
+
+
+def tax_rows():
+    """{rowid: (Tax Name, Tax Type)} over the Taxes worksheet, in the shape `row_of` resolves — which also
+    refuses a pair that matches more than one record. A tax is named by the **pair**, never by the name
+    alone: *10% G* and *8% S* each name a Sales tax **and** a Purchases one."""
+    if not TAXES:
+        sys.exit('the Taxes worksheet is not in ids.json — run taxes.py first')
+    f = C.fields(TAXES)
+    name, kind = f['Tax Name'], f['Tax Type']
+    labels = {o['key']: o['value'] for o in kind.get('options') or []}
+    use = lambda v: labels.get(option_label(v), option_label(v))     # `record list` gives the option **key**
+    return {r['rowid']: (r.get(name['controlId']), use(r.get(kind['controlId'])))
+            for r in C.records(TAXES, APP)}
 
 
 def titles(worksheet, control_name):
@@ -956,6 +1011,8 @@ def read_line(rowid):
                 display_type=option_label(d.get('display_type')), product=first('product_id'),
                 label=d.get('name') or '', quantity=number('quantity'), unit=first('product_uom_id'),
                 price=number('price_unit'), discount=number('discount'), subtotal=number('price_subtotal'),
+                taxes=relation_names(d.get('tax_ids')), rate=round(float(d.get('tax_rate') or 0), 4),
+                total=number('price_total'),
                 move_name=d.get('move_name') or '', date=d.get('date') or '',
                 status=option_label(d.get('parent_state')))
 
@@ -965,10 +1022,17 @@ def read_lines():
 
 
 def expected(seed, invoice_row):
-    ref, seq, product, label, qty, unit, price, discount = seed
-    return dict(invoice_row=invoice_row, sequence=seq, display_type='Product', product=product, label=label,
-                quantity=float(qty), unit=unit, price=price, discount=discount,
-                subtotal=subtotal_of(qty, price, discount))
+    """One seeded line as the worksheet should store it. **Taxes are only compared when the row names them**:
+    the eight rows of the first build leave their taxes to `taxes.py`'s own step, and a row that names none
+    says nothing about what is stored."""
+    s = spec(seed)
+    want = dict(invoice_row=invoice_row, sequence=s['sequence'], display_type=s['display_type'],
+                product=s['product'], label=s['label'], quantity=float(s['quantity']), unit=s['unit'],
+                price=s['price'], discount=s['discount'],
+                subtotal=subtotal_of(s['quantity'], s['price'], s['discount']))
+    if s['taxes']:
+        want['taxes'] = [name for name, _ in s['taxes']]
+    return want
 
 
 def differences(live, want):
@@ -989,45 +1053,89 @@ def seed_key(line):
     return (line['invoice_row'], line['sequence'])
 
 
+def line_taxes(rowid):
+    """The rowids of a line's Taxes, in stored order."""
+    d = hap.run('worksheet', 'record', 'get', ws(), rowid, '-a', APP)['data']
+    return [x.get('sid') for x in relation_cells(d.get('tax_ids'))]
+
+
+def settle_taxes(rowid, want, label, seconds=20):
+    """Make a line's Taxes read back as `want`, whatever automation B does to them.
+
+    Automation B (09, extended by 13) fills a **product** line's Taxes from the product's Sales or Purchase
+    Taxes, and a worksheet-event workflow runs **after** the save — so the value a create sends can be
+    overwritten a second later. Wait for B to settle on the wanted value; if it settles on something else, or
+    there is no product for it to read, write the taxes ourselves and read them back."""
+    for _ in range(seconds):
+        got = line_taxes(rowid)
+        if got == want:
+            return False
+        time.sleep(1)
+    hap.run('worksheet', 'record', 'update', ws(), rowid, '-a', APP, '--fields-json',
+            json.dumps([{'id': C.fields(ws())['Taxes']['controlId'], 'value': want}]))
+    got = line_taxes(rowid)
+    if got != want:
+        sys.exit(f'{label}: Taxes read back {got}, want {want}')
+    print(f'  {label}: Taxes written by hand ({want})')
+    return True
+
+
 def step_seed():
-    """The eight lines, matched by (the document's Number, Sequence). A line's Invoice is written as the
-    relation the subtable is built on, so the row shows inside its document straight away."""
+    """The seeded lines, matched by (the document's rowid, Sequence). A line's Invoice is written as the
+    relation the subtable is built on, so the row shows inside its document straight away.
+
+    A row carrying no Product or no Unit — bundle 7's Section and its two down payments — simply sends neither
+    cell. A row that names its **Taxes** has them written in the same call and then settled against automation
+    B; the first build's eight rows name none, and `taxes.py`'s own step owns theirs.
+
+    It ends in `settle`, which puts every invoice's four amounts in step with its own lines."""
     guard()
     f = C.fields(ws())
     cid = lambda n: f[n]['controlId']
     documents = invoice_numbers()
     variants, units = titles(VARIANTS, 'Display Name'), titles(UNITS, 'Unit Name')
+    taxes = tax_rows()
     live = {seed_key(d): d for d in read_lines().values()}
     hap.backup('invlines_records_pre_seed', {f'{k[0]} {k[1]}': v for k, v in live.items()})
     for seed in SEED:
-        ref = seed[0]
+        s = spec(seed)
+        ref = s['ref']
         if ref not in documents:
             sys.exit(f'the document {ref} is not in Invoices — run `invoices.py seed` first')
         rowid_invoice, number = documents[ref]
         want = expected(seed, rowid_invoice)
-        got = live.get((rowid_invoice, seed[1]))
+        got = live.get((rowid_invoice, s['sequence']))
         if got and not differences(got, want):
             continue
         values = [
             {'id': cid('Invoice'), 'value': [rowid_invoice]},
-            {'id': cid('Sequence'), 'value': seed[1]},
-            {'id': cid('Display Type'), 'value': [PRODUCT_LINE]},
-            {'id': cid('Product'), 'value': [row_of(variants, seed[2], 'variant')]},
-            {'id': cid('Label'), 'value': seed[3]},
-            {'id': cid('Quantity'), 'value': seed[4]},
-            {'id': cid('Unit'), 'value': [row_of(units, seed[5], 'unit')]},
-            {'id': cid('Unit Price'), 'value': seed[6]},
-            {'id': cid('Discount (%)'), 'value': seed[7]},
+            {'id': cid('Sequence'), 'value': s['sequence']},
+            {'id': cid('Display Type'), 'value': [OPTION_KEY['Display Type'][s['display_type']]]},
+            {'id': cid('Label'), 'value': s['label']},
+            {'id': cid('Quantity'), 'value': s['quantity']},
+            {'id': cid('Unit Price'), 'value': s['price']},
+            {'id': cid('Discount (%)'), 'value': s['discount']},
         ]
+        if s['product']:
+            values.append({'id': cid('Product'), 'value': [row_of(variants, s['product'], 'variant')]})
+        if s['unit']:
+            values.append({'id': cid('Unit'), 'value': [row_of(units, s['unit'], 'unit')]})
+        if s['taxes']:
+            values.append({'id': cid('Taxes'),
+                           'value': [row_of(taxes, key, 'tax') for key in s['taxes']]})
         body = json.dumps(values, ensure_ascii=False)
         if got:
             hap.run('worksheet', 'record', 'update', ws(), got['rowid'], '-a', APP, '--fields-json', body)
             rowid = got['rowid']
-            print(f'  updated {number} line {seed[1]}')
+            print(f"  updated {number} line {s['sequence']}")
         else:
             rowid = C.row_id(hap.run('worksheet', 'record', 'create', ws(), '-a', APP, '--fields-json', body))
-            print(f'  created {number} line {seed[1]}: {rowid}')
-        C.remember('records', f'{KEY}{ref} line {seed[1]}', rowid)
+            print(f"  created {number} line {s['sequence']}: {rowid}")
+        if s['taxes']:
+            settle_taxes(rowid, [row_of(taxes, key, 'tax') for key in s['taxes']],
+                         f"{ref} line {s['sequence']}")
+        C.remember('records', f"{KEY}{ref} line {s['sequence']}", rowid)
+    step_settle()
     return step_verify()
 
 
@@ -1088,30 +1196,94 @@ def step_amounts():
     return bad
 
 
+# ── 10b · settle: drive the roll-up where an invoice is out of step ─────────
+
+def line_sums():
+    """{invoice rowid: (Σ Subtotal, Σ Total)} over the **product** lines — the two sums the roll-up's own 汇总
+    steps make (07's step 2 and the Taxes bundle's 2b). A **Section**, a subsection and a note are left out,
+    exactly as the workflow's Display Type filter leaves them out; a **negative** line is taken in like any
+    other."""
+    out = {}
+    for line in read_lines().values():
+        if line['display_type'] == 'Product' and line['invoice_row']:
+            sub, total = out.get(line['invoice_row'], (0.0, 0.0))
+            out[line['invoice_row']] = (round(sub + line['subtotal'], 2), round(total + line['total'], 2))
+    return out
+
+
+def wanted_amounts(sub, total):
+    """What 06's four amounts should read for a document whose lines sum to (sub, total): Untaxed Amount is
+    Σ Subtotal, Total and Amount Due are Σ Total, and the Tax is the difference (the Taxes bundle, 13 §1)."""
+    return dict(untaxed=sub, tax=round(total - sub, 2), total=total, residual=total)
+
+
+def step_settle(*only):
+    """Put every invoice's four amounts in step with its own lines, **through the workflow** — nothing is
+    written into a document by hand here.
+
+    A `record create` on a line fires the roll-up by itself, so after a seed this usually finds nothing to do.
+    Where it does — a line changed while the workflow was off, or an invoice seeded with the tenant's figures
+    and never rolled up — it starts that invoice's own roll-up on one of its lines
+    (`hap workflow trigger <processId> -s <rowid>`, which runs a worksheet-event workflow on one record) and
+    reads the four amounts back. `only` narrows it to the named Customer References."""
+    pid = hap.ids()['workflows'][KEY + ROLLUP_WRITE]
+    lines_by_invoice = {}
+    for line in read_lines().values():
+        if line['invoice_row'] and line['display_type'] == 'Product':
+            lines_by_invoice.setdefault(line['invoice_row'], []).append(line['rowid'])
+    references = {rowid: ref for ref, (rowid, _) in invoice_numbers().items()}
+    bad, driven = 0, 0
+    for rowid, (sub, total) in sorted(line_sums().items(), key=lambda x: references.get(x[0], '')):
+        ref = references.get(rowid, rowid[:8])
+        if only and ref not in only:
+            continue
+        want = wanted_amounts(sub, total)
+        got = read_amounts(rowid)
+        if not differences(got, want):
+            print(f"  OK    {ref:<28} {got['number']:<16} untaxed={got['untaxed']:>12,.2f} "
+                  f"tax={got['tax']:>10,.2f} total={got['total']:>12,.2f} due={got['residual']:>12,.2f}")
+            continue
+        hap.run('workflow', 'trigger', pid, '-s', lines_by_invoice[rowid][0])
+        driven += 1
+        back = wait_for(rowid, lambda d: not differences(d, want))
+        diffs = differences(back, want)
+        bad += bool(diffs)
+        print(f"  {'OK  ' if not diffs else 'DIFF'}  {ref:<28} {back['number']:<16} "
+              f"untaxed={back['untaxed']:>12,.2f} tax={back['tax']:>10,.2f} total={back['total']:>12,.2f} "
+              f"due={back['residual']:>12,.2f}" + ('' if not diffs else f'  <- lines say {want} (was {got})'))
+    print(f'  {driven} invoices driven through the roll-up; {bad} still out of step')
+    return bad
+
+
 # ── verify ──────────────────────────────────────────────────────────────────
 
 def step_verify():
-    """The eight lines against the seed, and every invoice's amounts against its own lines."""
+    """Every seeded line against the seed, and every invoice's four amounts against its own lines."""
     documents = invoice_numbers()
     live = {seed_key(d): d for d in read_lines().values()}
     bad = 0
     for seed in SEED:
-        rowid_invoice, number = documents.get(seed[0], (None, None))
-        got = live.get((rowid_invoice, seed[1]))
+        s = spec(seed)
+        rowid_invoice, number = documents.get(s['ref'], (None, None))
+        got = live.get((rowid_invoice, s['sequence']))
         if not got:
-            print(f'  MISSING  {seed[0]} line {seed[1]}')
+            print(f"  MISSING  {s['ref']} line {s['sequence']}")
             bad += 1
             continue
         diffs = differences(got, expected(seed, rowid_invoice))
         bad += bool(diffs)
-        print(f'  {"OK  " if not diffs else "DIFF"}  {seed[0]:<14} {number:<15} {seed[1]}  '
-              f'{got["label"][:42]:<44}{got["quantity"]:>7,.2f} × {got["price"]:>10,.2f} − '
-              f'{got["discount"]:>5,.2f}%  = {got["subtotal"]:>12,.2f}' + (f'  <- {diffs}' if diffs else ''))
-    seeded = {(documents.get(x[0], (None, None))[0], x[1]) for x in SEED}
+        print(f'  {"OK  " if not diffs else "DIFF"}  {s["ref"][:24]:<26} {number:<15} {s["sequence"]}  '
+              f'{got["display_type"][:8]:<9}{got["label"][:40]:<42}{got["quantity"]:>7,.2f} × '
+              f'{got["price"]:>10,.2f} − {got["discount"]:>5,.2f}%  = {got["subtotal"]:>12,.2f}  '
+              f'{str(got["taxes"]):<14} total {got["total"]:>12,.2f}' + (f'  <- {diffs}' if diffs else ''))
+    seeded = {(documents.get(spec(x)['ref'], (None, None))[0], spec(x)['sequence']) for x in SEED}
     extra = sorted(f'{live[k]["invoice"]} line {k[1]}' for k in live if k not in seeded)
     print(f'  {len(SEED)} in the seed; {bad} missing or differing; {len(extra)} not in it {extra}')
-    for rowid, untaxed in sorted(sums_by_invoice().items()):
-        got, want = amounts_for(rowid, untaxed)
+    # The four amounts, against the lines themselves. Since the Taxes bundle the roll-up writes the **Tax**
+    # too — Σ Total − Σ Subtotal — so all four are checked here, not three (13 §1).
+    for rowid, (sub, total) in sorted(line_sums().items()):
+        got = read_amounts(rowid)
+        want = wanted_amounts(sub, total)
         diffs = differences(got, want)
         bad += bool(diffs)
         print(f'  {"OK  " if not diffs else "DIFF"}  {got["number"]:<16} ({rowid[:8]}) '
@@ -1149,6 +1321,7 @@ def step_order():
 # ── self-check: the roll-up, through the CLI ────────────────────────────────
 
 TEST_LABEL = 'TEST roll-up line'
+TEST_SECTION = 'TEST section with figures'
 
 
 def wait_for(rowid, wanted, seconds=40):
@@ -1216,7 +1389,39 @@ def step_selfcheck():
               f'tax={got["tax"]:,.2f} total={got["total"]:,.2f} due={got["residual"]:,.2f}'
               + ('' if ok else f'  <- wanted {want}'))
         line = read_line(line['rowid'])
-    print(f'  {TEST_LABEL} is left on {number}; nothing was deleted. A line removed is §3, test in the UI.')
+    # 3 · a **Section** line carrying figures, which the roll-up must leave out.
+    #
+    # Bundle 7's own Section — S00021's *Down Payments* — cannot prove this: it carries no quantity and no
+    # price, so its Subtotal is 0 and including it would change nothing. This line does carry them. The rule
+    # *A section or a note carries no figures* only **hides** the six fields in the browser (§3 difference 4),
+    # so the Subtotal formula computes over them all the same: 3 × 100 = 300. If the roll-up's Display Type
+    # filter did not hold, the invoice's Untaxed Amount would go up by exactly that.
+    before = read_amounts(rowid_invoice)
+    section = next((d for d in read_lines().values() if d['label'] == TEST_SECTION), None)
+    if not section:
+        rowid = C.row_id(hap.run('worksheet', 'record', 'create', ws(), '-a', APP, '--fields-json', json.dumps([
+            {'id': cid('Invoice'), 'value': [rowid_invoice]},
+            {'id': cid('Sequence'), 'value': 901},
+            {'id': cid('Display Type'), 'value': [OPTION_KEY['Display Type']['Section']]},
+            {'id': cid('Label'), 'value': TEST_SECTION},
+            {'id': cid('Quantity'), 'value': 3},
+            {'id': cid('Unit Price'), 'value': 100},
+            {'id': cid('Discount (%)'), 'value': 0}], ensure_ascii=False)))
+        C.remember('records', KEY + TEST_SECTION, rowid)
+        print(f'  created {TEST_SECTION}: {rowid} on {number}')
+        section = read_line(rowid)
+    # Start the roll-up **on the section line itself**, so the run cannot be said not to have happened.
+    hap.run('workflow', 'trigger', hap.ids()['workflows'][KEY + ROLLUP_WRITE], '-s', section['rowid'])
+    after = wait_for(rowid_invoice, lambda d: d != before, seconds=15)
+    section = read_line(section['rowid'])           # the formula has had the wait to compute
+    ok = section['subtotal'] == 300.0 and after == before
+    bad += not ok
+    print(f"  {'OK  ' if ok else 'DIFF'}  a Section carrying figures   {number} the line's own Subtotal is "
+          f"{section['subtotal']:,.2f} and the invoice still reads untaxed={after['untaxed']:,.2f} "
+          f"tax={after['tax']:,.2f} total={after['total']:,.2f} due={after['residual']:,.2f}"
+          + ('' if ok else f'  <- was {before}, and the line should carry 300.00'))
+    print(f'  {TEST_LABEL} and {TEST_SECTION} are left on {number}; nothing was deleted. A line removed is '
+          f'§3, test in the UI.')
     return bad
 
 
@@ -1358,6 +1563,7 @@ STEPS = {
     'rollup': step_rollup,
     'seed': step_seed,
     'amounts': step_amounts,
+    'settle': step_settle,
     'all': step_all,
     'verify': step_verify,
     'check': step_check,
@@ -1373,5 +1579,5 @@ if __name__ == '__main__':
     if step not in STEPS:
         raise SystemExit(f"Unknown step {step!r}; choose from {', '.join(STEPS)}")
     result = STEPS[step](*sys.argv[2:])
-    if step in ('verify', 'check', 'all', 'selfcheck', 'amounts') and result:
+    if step in ('verify', 'check', 'all', 'selfcheck', 'amounts', 'settle', 'seed') and result:
         sys.exit(1)

@@ -18,8 +18,8 @@ the CLI's interpreter:
     ~/.hap-venv/bin/python nocoly/build/invoices.py views       # 3. Invoices, Bills and Journal Entries
     ~/.hap-venv/bin/python nocoly/build/invoices.py buttons     # 4. Confirm / Cancel / Reset to Draft and their
                                                                 #    workflows, numbering included
-    ~/.hap-venv/bin/python nocoly/build/invoices.py customers   # 5. the three tenant customers, into Contacts
-    ~/.hap-venv/bin/python nocoly/build/invoices.py seed        # 6. the three tenant invoices, then verify
+    ~/.hap-venv/bin/python nocoly/build/invoices.py customers   # 5. the tenant customers, into Contacts
+    ~/.hap-venv/bin/python nocoly/build/invoices.py seed        # 6. the tenant invoices, then verify
     ~/.hap-venv/bin/python nocoly/build/invoices.py all         # every step above, then check
     ~/.hap-venv/bin/python nocoly/build/invoices.py numbering   #    just the Confirm chain (part of `buttons`)
 
@@ -988,10 +988,124 @@ def set_number(pid, f, byname, trigger):
 
 CONTACT_FIELDS = {'name': 'Name', 'email': 'Email', 'phone': 'Phone', 'street': 'Street', 'street2': 'Street 2',
                   'city': 'City', 'state': 'State', 'zip': 'ZIP', 'country': 'Country', 'comment': 'Notes'}
+_SEEDABLE = {}
+
+
+def seedable_contact_fields():
+    """The seed-file fields this step still writes — the ones whose Contacts control is a **text** field.
+
+    **State and Country are no longer among them.** Bundle 11 (Countries) and bundle 12 (States) turned those
+    two Contacts controls into Relations, and a text write into a Relation is accepted and stores nothing: from
+    then on this step found a difference on every run, re-wrote the same three records, and then failed its own
+    read-back (found 21 Sep 2026, while seeding bundle 7's Casimir). Linking a contact to its country and state
+    is those bundles' work, not this one's — the three customers' values are still in
+    `data/casimir-invoice-seed.json` and 06 §1 records that they are not seeded."""
+    if not _SEEDABLE:
+        f = C.fields(CONTACTS)
+        _SEEDABLE.update({k: n for k, n in CONTACT_FIELDS.items() if f[n]['type'] != RELATION})
+    return _SEEDABLE
+
+
+# ── bundle 7 · two more of the tenant's documents, read off casimir.odoo.com on 21 Sep 2026 ─────────────────
+#
+# §1 › Records passed over the tenant's records 4–8 as "demo and test traffic". Two of them are worth having
+# after all, because between them they exercise three things the first three documents do not:
+#
+#   * **two different tax rates on one document** — INV/2026/00002 carries a 10 % line and an 8 % one;
+#   * a **Section** line, which the roll-up must leave out (07 §1);
+#   * **negative** lines, which it must take in.
+#
+# They are held here rather than in `data/casimir-invoice-seed.json`: that file is the 15 Sep extract and is
+# left exactly as it was. `seed_file()` appends them, so every step — `customers`, `seed`, `verify` — reads
+# all five documents without knowing the difference.
+#
+# **Three fields were not in the tenant reading and are not invented quietly** (06 §1 › Records):
+#   * **Accounting Date** is required here, so both documents take the day their other dates carry, 2026-09-14
+#     — which is also what Odoo's `_post` books a document under when its Invoice Date is that day;
+#   * **Delivery Address** is Odoo's own default, the customer itself (`partner_shipping_id = partner_id`);
+#   * **Payment Reference** is left **empty** on both rather than guessed, even on the posted one, where our
+#     own Confirm would have written the number.
+EXTRA_PARTNERS = [
+    {
+        'name': 'Casimir',                         # the tenant's own partner record; a contact, not a company
+        'is_company': False,
+        'type': 'contact',
+        'email': '', 'phone': '', 'street': '', 'street2': '', 'city': '', 'state': '', 'zip': '',
+        'country': '', 'user_id': 'Casimir', 'comment': '', 'active': True,
+    },
+]
+EXTRA_MOVES = [
+    {
+        # The tenant's own demo run, and the document with two tax rates. **It is `paid` on the tenant, with
+        # Amount Due 0.00**; our roll-up writes Amount Due = Σ Total unconditionally, because there is no
+        # Payments model yet, so the seeded record reads 3,027.80. `amount_residual_tenant` keeps the tenant's
+        # own figure beside it; nothing reads it, and Amount Due is never hand-written to force a match.
+        'name': 'INV/2026/00002',
+        'move_type': 'out_invoice',
+        'state': 'posted',
+        'partner': 'Casimir',
+        'partner_shipping': 'Casimir',
+        'invoice_date': '2026-09-14',
+        'date': '2026-09-14',
+        'invoice_date_due': '2026-09-14',
+        'invoice_payment_term': '',
+        'journal': 'Sales',
+        'ref': 'TEST demo run - delete me',
+        'payment_reference': '',
+        'invoice_user_id': 'Casimir',
+        'invoice_origin': '',
+        'document_tax_mode': 'tax_excluded',
+        'amount_untaxed': 2768.0,
+        'amount_tax': 259.8,
+        'amount_total': 3027.8,
+        'amount_residual': 3027.8,
+        'amount_residual_tenant': 0.0,
+        'payment_state': 'paid',
+        'narration': '',
+        'delivery_date': '',
+        'auto_post': 'no',
+        'currency': 'MYR',
+    },
+    {
+        # The cancelled S00021: never numbered, so its Number is the word "Draft", and the document that
+        # carries the Section line and the two negative down payments.
+        'name': '',
+        'move_type': 'out_invoice',
+        'state': 'cancel',
+        'partner': 'Casimir',
+        'partner_shipping': 'Casimir',
+        'invoice_date': '',
+        'date': '2026-09-14',
+        'invoice_date_due': '2026-09-14',
+        'invoice_payment_term': '',
+        'journal': 'Sales',
+        'ref': 'S00021',
+        'payment_reference': '',
+        'invoice_user_id': 'Casimir',
+        'invoice_origin': '',
+        'document_tax_mode': 'tax_excluded',
+        'amount_untaxed': 1087.6,
+        'amount_tax': 113.86,
+        'amount_total': 1201.46,
+        'amount_residual': 1201.46,
+        'payment_state': 'not_paid',
+        'narration': '',
+        'delivery_date': '',
+        'auto_post': 'no',
+        'currency': 'MYR',
+    },
+]
 
 
 def seed_file():
-    return json.loads(SEED.read_text(encoding='utf-8'))
+    """The 15 Sep extract, with bundle 7's two documents and their customer appended. Both lists are keyed —
+    partners by Name, moves by Customer Reference — so nothing is added twice if the file ever gains them."""
+    data = json.loads(SEED.read_text(encoding='utf-8'))
+    have = {p['name'] for p in data['partners']}
+    data['partners'] = data['partners'] + [p for p in EXTRA_PARTNERS if p['name'] not in have]
+    refs = {m['ref'] for m in data['moves']}
+    data['moves'] = data['moves'] + [m for m in EXTRA_MOVES if m['ref'] not in refs]
+    return data
 
 
 def contacts_by_name():
@@ -1008,7 +1122,7 @@ def salesperson_id():
 def read_contact(rowid):
     """One customer as Contacts stores it, in the seed file's own vocabulary."""
     d = hap.run('worksheet', 'record', 'get', CONTACTS, rowid, '-a', APP)['data']
-    got = {k: d.get(k) or '' for k in CONTACT_FIELDS}
+    got = {k: d.get(k) or '' for k in seedable_contact_fields()}
     got['type'] = option_label(d.get('type'))
     got['user_id'] = ([x.get('accountId') for x in d.get('user_id') or []] or [''])[0]
     got['active'] = str(d.get('active')) in ('1', 'True', 'true')
@@ -1016,18 +1130,23 @@ def read_contact(rowid):
 
 
 def contact_differences(live, p):
-    want = {k: p.get(k) or '' for k in CONTACT_FIELDS}
+    want = {k: p.get(k) or '' for k in seedable_contact_fields()}
     want.update(type='Contact', user_id=salesperson_id(), active=True)
     return {k: (live.get(k), v) for k, v in want.items() if live.get(k) != v}
 
 
 def step_customers():
-    """The three companies the tenant's invoices point at, into Contacts — records only. Matched by Name and
+    """The customers the tenant's invoices point at, into Contacts — the three companies of the 15 Sep extract
+    and bundle 7's **Casimir**, the tenant's own contact. Records only. Matched by Name and
     compared field by field, so a second run writes nothing; no field, view, rule or other record in Contacts is
     touched, and the other worksheets' controls are compared by id before and after."""
     before = signatures()
     f = C.fields(CONTACTS)
     cid = lambda n: f[n]['controlId']
+    left_out = [n for k, n in CONTACT_FIELDS.items() if k not in seedable_contact_fields()]
+    if left_out:
+        print(f'  not seeded here: {left_out} — a Relation on Contacts since bundles 11 and 12, and a text '
+              f'write into one stores nothing (see seedable_contact_fields)')
     contact = next(o['key'] for o in f['Address Type']['options'] if o['value'] == 'Contact')
     live = contacts_by_name()
     hap.backup('invoices_contacts_pre_customers', {n: r.get('rowid') for n, r in live.items()})
@@ -1035,7 +1154,7 @@ def step_customers():
         row = live.get(p['name'])
         if row and not contact_differences(read_contact(row['rowid']), p):
             continue
-        values = [{'id': cid(CONTACT_FIELDS[k]), 'value': p[k]} for k in CONTACT_FIELDS if p.get(k)]
+        values = [{'id': cid(n), 'value': p[k]} for k, n in seedable_contact_fields().items() if p.get(k)]
         values += [{'id': cid('Address Type'), 'value': [contact]},
                    {'id': cid('Salesperson'), 'value': [salesperson_id()]},
                    {'id': cid('Active'), 'value': 1}]                # always explicit on API writes
@@ -1170,8 +1289,17 @@ def seed_key(d):
 
 
 def step_seed():
-    """The tenant's three invoices, matched by Customer Reference (SCG-PO-88213, KKD-2026-009, STL-2026-0042).
-    Their customers must be in Contacts already — run `customers` first."""
+    """The tenant's invoices, matched by Customer Reference — SCG-PO-88213, KKD-2026-009 and STL-2026-0042
+    from `data/casimir-invoice-seed.json`, and bundle 7's two (TEST demo run - delete me, S00021) from
+    `EXTRA_MOVES` above. Their customers must be in Contacts already — run `customers` first.
+
+    The four amounts are written here as the tenant reads them and then **recomputed by 07's roll-up** as soon
+    as the document has lines; the two figures agree for every document but INV/2026/00002, whose Amount Due
+    the tenant shows as 0.00 (see EXTRA_MOVES).
+
+    A **Cancelled** document is seeded exactly like any other: *A posted or cancelled document is closed for
+    editing* is an interaction rule, and an interaction rule is browser-side only — `record create` and
+    `record update` write the fields it greys out (BUILDING.md, 07 difference 11)."""
     guard()
     f = C.fields(WORKSHEET)
     partners, journals = titles(CONTACTS, 'Name'), titles(JOURNALS, 'Journal Name')
@@ -1212,7 +1340,8 @@ def step_verify():
               f"{got['partner']:<28} {got['date']} total={got['total']}" + (f'  <- {diffs}' if diffs else ''))
     extra = sorted(f"{d['number']} ({ref})" for ref, d in live.items()
                    if ref not in {m['ref'] for m in seed_file()['moves']})
-    print(f"  3 in the seed file; {bad} missing or differing; {len(extra)} not in it {extra}")
+    print(f"  {len(seed_file()['moves'])} in the seed file; {bad} missing or differing; "
+          f'{len(extra)} not in it {extra}')
     return bad
 
 

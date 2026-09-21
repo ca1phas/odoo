@@ -188,24 +188,50 @@ graph and activity views are not reproduced.
 
 ### Records
 
-The tenant's three genuine customer invoices, seeded from `data/casimir-invoice-seed.json`. Records 4–8 on the
-tenant are demo and test traffic — one says "TEST demo run - delete me", one is an empty draft, one is a payment
-entry — and are not seeded.
+The tenant's three genuine customer invoices, seeded from `data/casimir-invoice-seed.json`, and — **added on
+21 Sep 2026** — two more read off the tenant that day and held in `invoices.py`'s own `EXTRA_MOVES`. Of the
+tenant's records 4–8, originally all passed over as demo and test traffic, two turned out to be worth having:
+between them they exercise three things the first three do not — **two different tax rates on one document**, a
+**Section** line, and **negative** lines. The empty draft and the payment entry are still not seeded.
 
 | Number | Type | Status | Customer | Invoice Date | Accounting Date | Due Date | Terms | Journal | Reference | Source | Untaxed | Tax | Total |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | Draft | Customer Invoice | Draft | Sunway Construction Group | — | 2026-09-09 | 2026-10-09 | 30 Days | Sales | SCG-PO-88213 | S00011 | 104,603.20 | 10,460.32 | 115,063.52 |
 | INV/2026/00001 | Customer Invoice | Posted | Klinik Kesihatan Damansara | 2026-09-11 | 2026-09-11 | 2026-10-02 | 21 Days | Sales | KKD-2026-009 | S00014 | 11,432.00 | 1,143.20 | 12,575.20 |
 | Draft | Customer Invoice | Draft | Sarawak Timber Logistics | — | 2026-09-14 | 2026-10-29 | 45 Days | Sales | STL-2026-0042 | S00016 | 180,000.00 | 14,400.00 | 194,400.00 |
+| **INV/2026/00002** | Customer Invoice | **Posted** | Casimir | 2026-09-14 | 2026-09-14 | 2026-09-14 | — | Sales | TEST demo run - delete me | — | 2,768.00 | **259.80** | 3,027.80 |
+| **Draft** | Customer Invoice | **Cancelled** | Casimir | — | 2026-09-14 | 2026-09-14 | — | Sales | S00021 | — | 1,087.60 | **113.86** | 1,201.46 |
 
-All three are Tax Excluded, Auto-post *No*, Salesperson Casimir, Amount Due equal to Total, and the posted one
-carries its own number as the Payment Reference.
+All five are Tax Excluded, Auto-post *No*, Salesperson Casimir and Amount Due equal to Total; INV/2026/00001
+carries its own number as the Payment Reference. The last two have **no payment term**, which is why their Due
+Date is the only date of their own they carry, and the cancelled one was never numbered, so its Number is the
+word *Draft*.
 
-**Their customers go into Contacts first.** Contacts holds only `TEST …` records today, so the three companies are
-seeded there from the same file — name, Address Type *Contact*, email, phone, street, city, state, ZIP, country,
-salesperson and the tenant's own note. They are real records, not `TEST …`. The tenant's `res.partner` has no
-`company_registry` and no `duns` field, so Contacts' Company ID and DUNS stay empty on them. **Nothing else in
-Contacts may be touched** — no field, no view, no rule; records only.
+**Three fields of those two were not in the tenant reading, and none is invented quietly.** Accounting Date is
+required here, so both take 2026-09-14, the day their other dates carry and the day Odoo's `_post` would book
+the first under; Delivery Address is Odoo's own default, the customer itself; and **Payment Reference is left
+empty on both** — even on the posted one, where our own Confirm would have written the number — rather than
+guessed. The tenant's own `odoo_id` for neither was read, so neither carries one.
+
+**Amount Due on INV/2026/00002 is a difference, not a defect.** The tenant shows it `paid`, with Amount Due
+0.00 against a total of 3,027.80. The roll-up writes Amount Due = Σ Total unconditionally, because there is no
+Payments model until that bundle, so the seeded record reads **3,027.80**. It is *not* hand-written to force a
+match; the tenant's own figure is kept beside it in `EXTRA_MOVES` as `amount_residual_tenant`.
+
+**Their customers go into Contacts first.** Contacts held only `TEST …` records, so the three companies are
+seeded there from the same file — name, Address Type *Contact*, email, phone, street, city, ZIP,
+salesperson and the tenant's own note — and **Casimir**, the tenant's own contact, is created beside them with
+its name alone, since the two documents above carry nothing else of it. They are real records, not `TEST …`. The
+tenant's `res.partner` has no `company_registry` and no `duns` field, so Contacts' Company ID and DUNS stay empty
+on them. **Nothing else in Contacts may be touched** — no field, no view, no rule; records only.
+
+**State and Country are no longer seeded here** (found 21 Sep 2026). Bundle 11 (Countries) and bundle 12 (States)
+turned those two Contacts controls into **Relations**, and a text write into a Relation is accepted and stores
+nothing — so from bundle 12 on, `customers` found a difference on every run, re-wrote the same three records and
+then failed its own read-back. `seedable_contact_fields()` now leaves out any seed field whose Contacts control
+is a Relation, and says so when it runs. The three customers' State and Country values are still in the seed
+file and the three records still read empty: **linking a contact to its country and state is bundles 11 and 12's
+work, and has not been done for them.** One for the owner.
 
 ## 2 · Build
 
@@ -238,10 +264,21 @@ and otherwise from hap-cli's active profile; **nothing in `common.py` changed**.
 | Views | Invoices (the skeleton's own view, renamed from *All*) · Bills · Journal Entries | `6aa90facf363582dd37a62fb` · `6aa9f87d7d58b0f44930e8b5` · `6aa9f87e7d58b0f44930e8b7` |
 | Buttons | Confirm · Cancel · Reset to Draft | `6aa9f89be43d174ab3749b55` · `6aa9f990bd43f55762c6f603` · `6aa9f993805aef7032865196` |
 | Button workflows | Confirm (the numbering: a search, two formulas, a count, three updates and two branches) · Cancel · Reset to Draft, one update step each — all published | `6aa9f89b4f2a99acac043704` · `6aa9f99016473257ad4d3bc6` · `6aa9f9938e75db182e78a8b3` |
-| Records | the 3 tenant invoices, their 3 customers in Contacts, and 5 `TEST-SEQ-…` documents (§3) | — |
+| Records | the **5** tenant invoices, their **4** customers in Contacts, and 5 `TEST-SEQ-…` documents (§3) | — |
+| | bundle 7's two, added 21 Sep 2026 — INV/2026/00002 · the cancelled S00021 | `80aad832-11c4-4db5-b3e9-5bafe19440bd` · `29369e7c-b89b-4b20-95c8-bc31651a0e1a` |
+| | their customer, **Casimir**, in Contacts | `f16e2722-576e-4975-9b09-e0882622e61a` |
 
 Every id is in `nocoly/build/ids.json` under "Invoices: …" keys, the seeded rows in a new `records` section; no
 existing key was renamed. `worksheets` gained the key "Invoices".
+
+**Bundle 7 (21 Sep 2026) added records and nothing else.** Two more of the tenant's documents and their
+customer; no control, rule, view, button, workflow or view column changed, and `check` reads back exactly what
+it did before. The two documents' data lives in `invoices.py`'s own `EXTRA_MOVES` and `EXTRA_PARTNERS` rather
+than in `data/casimir-invoice-seed.json`, which stays as the 15 Sep extract; `seed_file()` appends them, keyed
+by Customer Reference and by Name, so `customers`, `seed` and `verify` read all five documents without knowing
+the difference. Their six lines are 07's, and what they proved is in 07 §2 › *Bundle 7*. The one change to an
+existing step is `seedable_contact_fields()` (§1 › Records) — the fix for `customers` re-writing the same three
+contacts on every run since bundle 12.
 
 **`account.move` has no `active` field.** A document is cancelled, never archived, so Invoices is the first
 worksheet in ERP Master with **no Active checkbox, no Archived view and no Archive / Unarchive buttons** — its
@@ -494,8 +531,10 @@ designed: the eight fields are locked on a posted and on a cancelled document an
 
 To run in the Nocoly UI, in Chrome, against `~/.hap-venv/bin/python nocoly/build/invoices.py document
 "<Number>"` / `order` / `verify` / `check` from the repo root for the stored values. Test records are named
-`TEST …`; the three tenant invoices and their three customers are real records and must come through the test
-unchanged (`verify` at the end).
+`TEST …`; the **five** tenant invoices and their **four** customers are real records and must come through the
+test unchanged (`verify` at the end). Two of those five — INV/2026/00002 and the cancelled S00021 — arrived with
+bundle 7 on 21 Sep 2026 and are **not** `TEST …` records, whatever their Customer Reference says: the tenant's
+own reference on the first is the string "TEST demo run - delete me".
 
 **The numbers a Confirm produces depend on what is already posted**, so the expected numbers below are the ones
 the first run through this list produced. **The worksheet now stands at**: INV/2026/00001 (seeded), 00003, 00004,
@@ -578,11 +617,32 @@ documents, no two sharing a number. The next Sales invoice confirmed will be **I
    carries a **Journal** column where Odoo's list carries **Last Reminder** and keeps Journal hidden; and Odoo
    **totals** Tax Excluded, Total and Amount Due at the foot of the list, which ours does not.
 
+14. **A paid document still shows its Total as Amount Due.** Added 21 Sep 2026 with bundle 7's
+   **INV/2026/00002**, the first seeded document the tenant shows as `paid`: the tenant reads Amount Due
+   **0.00** against a total of 3,027.80, ours reads **3,027.80**. The roll-up writes Amount Due = Σ Total
+   unconditionally, because nothing in the app can settle a document until the **Payments** bundle — Amount Due's
+   own description has said so since 06 was built. It is deliberately **not** hand-written to match: the tenant's
+   figure is kept beside it in `invoices.py` as `amount_residual_tenant`, and the day Payments arrives it becomes
+   Total less what is paid. Every other figure on that document agrees with the tenant to the cent.
+
+15. **A cancelled document's fields are locked in the browser only.** The rule *A posted or cancelled document
+   is closed for editing* is an interaction rule, so bundle 7's cancelled S00021 was created with Status
+   **Cancelled** in one `record create`, given its six lines, and had all four amounts written into it by the
+   roll-up — none of it refused. Odoo blocks the equivalent writes in the ORM. Not a defect of the rule (07's
+   difference 11 records the same thing for the lines); it is the reason a build script can seed a cancelled
+   document at all, and the reason a rule is never the place to put a real constraint.
+
 ### Test records left in the worksheet
 
 Eleven, as the worksheet stands after the UI test and the two fixes that followed it. `invoices.py selfcheck`
 created the seven `TEST-SEQ-…` and now leaves any of them that already carries a well-formed number alone, so
 re-running it changes none of these.
+
+**The gap at INV/2026/00002 is gone** — bundle 7 seeded a real document there on 21 Sep 2026, the tenant's own
+INV/2026/00002. Two entries below still talk about it as a gap, and both still mean what they say: TEST-SEQ-1's
+stale **Payment Reference** reads INV/2026/00002 and is not a link to anything, and TEST-SEQ-7 took the number
+*past* the gap rather than into it. The numbering is unaffected — Confirm reads the **highest** number under the
+prefix, which is INV/2026/00010, not the first free one.
 
 | Record | Number | Type · Journal | Status | What it is evidence for |
 |---|---|---|---|---|
@@ -598,6 +658,8 @@ re-running it changes none of these.
 | **TEST UI 4** | MISC/2026/00002 | Customer Credit Note · Miscellaneous Operations | Posted | Test 17 — **no R**, because that journal has no dedicated credit note sequence. Its Auto-post was toggled Monthly and back to No for test 13 |
 | **TEST UI 5** | BILL/2026/00002 | Vendor Bill · Purchases | **Cancelled** | Tests 17 and 19 |
 
-No two of them share a number. All are to be removed after sign-off, with the owner's approval. The three tenant
-invoices (SCG-PO-88213, KKD-2026-009, STL-2026-0042) and the three customers in Contacts are real records and
-stay; `verify` confirms all three unchanged after the test.
+No two of them share a number. All are to be removed after sign-off, with the owner's approval. The **five**
+tenant invoices (SCG-PO-88213, KKD-2026-009, STL-2026-0042, and bundle 7's TEST demo run - delete me and
+S00021) and the **four** customers in Contacts are real records and stay; `verify` confirms all five unchanged
+after the test. **INV/2026/00002 is one of the five, not a test record** — the words "TEST demo run - delete me"
+are the tenant's own Customer Reference on it, copied as read.

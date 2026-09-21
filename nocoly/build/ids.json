@@ -812,7 +812,17 @@
   "Taxes: MY|purchase|consu|5% G D": "b611e0da-c4dd-4177-8dd2-5f84df7f1d6d",
   "Taxes: MY|purchase|consu|10% G D": "2bd8d11f-336a-48fa-a3bd-f76b3c3be58f",
   "Taxes: MY|sale|consu|5% G SC": "e91f0437-6f63-4b34-9628-474bbc6d5ef5",
-  "Taxes: MY|sale|consu|10% G SC": "a1660a5f-6ee6-4b64-bc41-483dc9754e8c"
+  "Taxes: MY|sale|consu|10% G SC": "a1660a5f-6ee6-4b64-bc41-483dc9754e8c",
+  "Invoices: customer Casimir": "f16e2722-576e-4975-9b09-e0882622e61a",
+  "Invoices: TEST demo run - delete me": "80aad832-11c4-4db5-b3e9-5bafe19440bd",
+  "Invoices: S00021": "29369e7c-b89b-4b20-95c8-bc31651a0e1a",
+  "Invoice Lines: TEST demo run - delete me line 0": "fae9ebb6-ad67-4c42-b5c8-6252838b7a8b",
+  "Invoice Lines: TEST demo run - delete me line 1": "9a839f72-0cc9-49fb-a167-f89808643568",
+  "Invoice Lines: S00021 line 0": "35dc754e-0fa4-4aea-9caf-0edce36943b8",
+  "Invoice Lines: S00021 line 1": "cfecc05b-d10d-4f63-aa7a-ccfc8fd26195",
+  "Invoice Lines: S00021 line 2": "bf2a2cbf-1c8d-4543-8db6-840134f08d7c",
+  "Invoice Lines: S00021 line 3": "099f33d7-b808-406f-97ad-ddcc384c5af7",
+  "Invoice Lines: TEST section with figures": "76ba1c1e-3c1d-4990-9a1d-4fbf949ee991"
  },
  "roles": {
   "Administrator": "25ef76ef-5538-4779-a5e6-ab1fbce9dcfe",

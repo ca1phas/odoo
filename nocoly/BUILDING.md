@@ -829,6 +829,22 @@ What decides is **whether the value being compared is in the write**.
   `record update`, **2** for a workflow's step (button and worksheet-event workflows alike) and **8**
   for the reverse half of a Relation being paired. Set beside `approval history`'s run times it ties each run to
   the write that started it, which is how the Type-narrowed trigger was caught firing on an unchanged Type.
+- **A plain string written into a Relation is accepted and stores nothing** — and a seed step that compares
+  before it writes then re-writes the same records for ever. Contacts' State and Country were Text when
+  `invoices.py customers` was written and became **Relations** in bundles 11 and 12; from then on the step sent
+  `{"id": <the Relation's controlId>, "value": "Selangor"}` with every other cell, `record update` answered
+  success, the cell read back empty, the comparison found the same difference on the next run, and the step
+  finally failed its own read-back (21 Sep 2026). Nothing in the answer says which cell was dropped. Two
+  consequences for any seed or import: **check the control's type, not only its name**, before writing a value
+  a worksheet has carried since an earlier bundle; and treat a read-back that never converges as a type
+  mismatch rather than a stale read. `invoices.seedable_contact_fields` does the first — it drops any seed
+  field whose live control is no longer a text field and says so.
+- **A worksheet-event workflow can overwrite what a `record create` just sent.** It runs *after* the save, so a
+  field a workflow owns is the workflow's, not the create's: Invoice Lines' automation B fills a product line's
+  Taxes from the product a moment after the row is written. A seed that must put its own value in one of those
+  fields has to **settle** rather than write once — wait for the workflow to land, compare, and only then write
+  again (`invlines.settle_taxes`, bundle 7). Where the workflow lands on the same value, as it did on both of
+  INV/2026/00002's product lines, nothing is re-written.
 - Value formats differ by field type and a wrong one is accepted silently — see `hap guide record` before writing.
 
 ### Roles

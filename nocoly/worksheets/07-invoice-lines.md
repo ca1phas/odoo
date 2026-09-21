@@ -99,8 +99,10 @@ Discount (%) · Subtotal**, in Odoo's column order.
 
 ### Records
 
-The lines of the three seeded documents — eight of the tenant's 33. The rest belong to documents 4–8, which 06 did
-not seed, or are tax and payment-term lines.
+The lines of the five seeded documents — fourteen of the tenant's 33. The rest belong to the documents 06 still
+does not seed, or are tax and payment-term lines. The last six arrived with **bundle 7 on 21 Sep 2026**, when 06
+seeded two more of the tenant's documents; their Taxes are owned by this seed rather than by `taxes.py`'s
+document-wide `LINE_TAX_SEED`, because for the first time **one document carries two different rates**.
 
 | Document | Seq | Product (variant) | Label | Qty | Unit | Price | Disc % | Subtotal |
 |---|---|---|---|---|---|---|---|---|
@@ -113,7 +115,30 @@ not seed, or are tax and payment-term lines.
 | STL-2026-0042 | 0 | [SRV-0003] Annual Support Retainer | [SRV-0003] Annual Support Retainer | 1 | Units | 18,000.00 | 0 | 18,000.00 |
 | STL-2026-0042 | 1 | [SW-0002] Nocoly HAP Licence — Pro | [SW-0002] Nocoly HAP Licence — Pro | 25 | Units | 7,200.00 | 10 | 162,000.00 |
 
-Every one sums to the document's seeded Untaxed Amount: 104,603.20 · 11,432.00 · 180,000.00.
+The first eight sum to the document's seeded Untaxed Amount: 104,603.20 · 11,432.00 · 180,000.00.
+
+**Bundle 7's six**, with the Taxes they carry — the Display Type is *Product* unless the row says otherwise:
+
+| Document | Seq | Display Type | Product (variant) | Label | Qty | Unit | Price | Taxes | Subtotal |
+|---|---|---|---|---|---|---|---|---|---|
+| INV/2026/00002 | 0 | Product | Ergonomic Office Chair | Ergonomic Office Chair (Blue) | 2 | Units | 959.00 | **10% G** (Sales) | 1,918.00 |
+| INV/2026/00002 | 1 | Product | [SRV-0001] Implementation Consulting | [SRV-0001] Implementation Consulting | 1 | Units | 850.00 | **8% S** (Sales) | 850.00 |
+| S00021 (cancelled) | 0 | Product | Ergonomic Office Chair | Ergonomic Office Chair (Blue) | 2 | Units | 959.00 | **10% G** | 1,918.00 |
+| S00021 | 1 | **Section** | — | Down Payments | — | — | — | — | — |
+| S00021 | 2 | Product | — | Down Payment (ref: INV/2026/00003) | **−1** | — | 575.40 | **10% G** | **−575.40** |
+| S00021 | 3 | Product | — | Down Payment (ref: INV/2026/00003) | **−1** | — | 255.00 | **8% S** | **−255.00** |
+
+INV/2026/00002 sums to 2,768.00 untaxed and 3,027.80 in total, so **259.80** of tax from two different rates;
+S00021 to 1,087.60 and 1,201.46, so **113.86**.
+
+**The chair lines point at a variant the tenant does not have either.** On the tenant both name the variant
+*Ergonomic Office Chair (Blue)*, and this app holds one placeholder variant per product until the Product
+Variants bundle. They point at *Ergonomic Office Chair* and keep the tenant's own Label — the same treatment the
+two `[FURN-000x]` lines above get, and for the same reason. **No Blue variant was created.**
+
+**Neither down payment carries a product**, as on the tenant, so neither carries a Unit; and a line with no
+product is a line automation B cannot fill a tax into, which is why the two rates on those lines are written by
+this seed. The Section carries no product, no unit and no figures at all.
 
 **Two of the tenant's products are referenced by a variant we do not hold.** `[FURN-0001] Ergonomic Office Chair` and
 `[FURN-0002] Height-Adjustable Desk 140cm` are the **archived original** variants on the tenant, and Phase 1 keeps one
@@ -130,7 +155,8 @@ first, refuses to run unless the profile reaches ERP Master › Invoicing and th
 script's own work, reads back what it wrote, and is safe to re-run: a second `all` created, added, renamed and
 updated nothing, wrote no record and re-published no workflow. Helpers: `check` reads controls, options,
 defaults, the rule, the view, the mount and the two workflows back against this spec, `verify` compares the
-eight lines with the seed **and** every invoice's amounts with its own lines, `selfcheck` drives the roll-up end
+fourteen lines with the seed **and** every invoice's four amounts with its own lines, `settle` drives the
+roll-up over any invoice whose amounts are out of step with its lines, `selfcheck` drives the roll-up end
 to end through the CLI, `order` prints the view's records in the view's own order, `lines "<Number>"` one
 document's stored lines, `untouched` the other worksheets' control count and digest, and `show` the control
 list. The profile comes from `$HAP_PROFILE` and otherwise from hap-cli's active profile; **nothing in
@@ -151,7 +177,7 @@ list. The profile comes from `$HAP_PROFILE` and otherwise from hap-cli's active 
 | Rule | A section or a note carries no figures | `6aaa2d3c7d58b0f44930eb72` |
 | View | Lines (the stock *All* view, renamed) | `6aaa2b50e54d2a34fa4e0225` |
 | Workflows | Roll the lines up into the invoice (新增或更新) · Roll the lines up when a line is deleted (删除) — both published | `6aaa2d6aa1c923a16efc81a7` · `6aaa2ebba1c923a16efc8ecf` |
-| Records | the 8 tenant lines, and one `TEST roll-up line` (§3) | — |
+| Records | the **14** tenant lines, one `TEST roll-up line` and one `TEST section with figures` (§3) | — |
 
 Every id is in `nocoly/build/ids.json` under "Invoice Lines: …" keys, plus `"Invoices: Lines"` for the mounted
 control and `"Invoice Lines"` under `worksheets`; no existing key was renamed.
@@ -245,6 +271,52 @@ order. The four columns left out — Invoice, Number, Accounting Date, Status �
 would only repeat what the invoice already shows. **Odoo's drag handle has no equivalent**, which is why
 Sequence is the first visible column rather than a handle; it is the same decision Journals' Sequence records.
 
+### Bundle 7 · six more lines, and what they proved (21 Sep 2026)
+
+06 seeded two more of the tenant's documents and this worksheet their six lines. Nothing was built: no control,
+rule, view, workflow or column changed, and `check` reads back exactly what it did before. What changed is the
+seed table and three things it can now show.
+
+**1 · The Section line is excluded from the roll-up, and that is now measured, not assumed.** S00021's *Down
+Payments* cannot prove it: the tenant gives it no quantity and no price, so its Subtotal is 0 and including it
+would change nothing. `selfcheck` gained a third case that does prove it — `TEST section with figures`, a
+**Section** on MISC/2026/00001 carrying Quantity 3 and Unit Price 100. The rule *A section or a note carries no
+figures* only **hides** the six fields in the browser (difference 4), so the Subtotal formula computes over them
+all the same and the line's own Subtotal reads **300.00**. The roll-up was then started **on that very line**
+(`hap workflow trigger`), so the run cannot be said not to have happened, and the invoice stayed at
+**untaxed 450.00 · tax 0.00 · total 450.00 · due 450.00**. The Display Type filter on the 汇总 step is what does
+it.
+
+**2 · Negative lines are taken in like any other, and the Tax is still exact.** S00021's two down payments are
+−575.40 and −255.00, at 10 % and 8 %; their Totals are −632.94 and −275.40. Σ Subtotal is **1,087.60**,
+Σ Total **1,201.46**, and the Tax the roll-up writes — Σ Total − Σ Subtotal — is **113.86**, to the cent. Nothing
+in the chain treats a negative differently: the 汇总 sums it, the per-line rounding still happens per line, and
+the subtraction is the same one.
+
+**3 · Two rates on one document work, and automation B fills them.** INV/2026/00002 carries a 10 % line and an
+8 % one — 1,918.00 × 1.10 = 2,109.80 and 850.00 × 1.08 = 918.00 — so untaxed **2,768.00**, tax **259.80**, total
+**3,027.80**. The Tax rate 汇总 is per line, so a document-wide rate was never assumed anywhere. Both of those
+lines carry a product, and **automation B's tax fill put the right tax on each of them by itself**: the chair's
+Sales Taxes are *10% G*, Implementation Consulting's *8% S*. The seed sends the tax in the create as well and
+then settles against B (`settle_taxes`), because B runs *after* the save and would otherwise be free to
+overwrite it; on these two it settled on the same value and nothing was re-written. The two **down payment**
+lines have no product, so B cannot reach them — their taxes are the seed's own write.
+
+**A Cancelled document needed nothing done differently.** *A posted or cancelled document is closed for editing*
+is an interaction rule, and an interaction rule is browser-side only (difference 11): `record create` wrote
+S00021 with Status **Cancelled** in one call, the six lines went in under it, and the roll-up's update step
+wrote all four amounts into the cancelled invoice without being refused. No draft-then-cancel dance, and no
+order to get right.
+
+**The Amount Due difference on INV/2026/00002** — 3,027.80 here against the tenant's 0.00, because the tenant
+shows it paid and there is no Payments model — is recorded in 06 §1 and is not compensated for anywhere.
+
+Two helpers came out of it. `settle` drives the roll-up over any invoice whose four amounts are out of step with
+its own lines, **through the workflow** — nothing is written into a document by hand, unlike `amounts`, which
+predates the Taxes bundle and still computes Total as Untaxed + the stored Tax. `verify` now checks **all four**
+amounts against Σ Subtotal and Σ Total rather than three against Σ Subtotal, which is what the Taxes bundle made
+true; re-run over the ten invoices that carry lines, every one passed unchanged.
+
 ### Decisions taken while building
 
 | Decision | Why |
@@ -297,6 +369,21 @@ Sequence is the first visible column rather than a handle; it is the same decisi
 
   Both were read back from the invoice, not computed here, and both had to wait for the workflow to run. The
   empty Tax is deliberate: it is the case that caught the `nullZero` default below.
+- **A Section is excluded, not merely worth nothing** — bundle 7's third case, 21 Sep 2026. `TEST section with
+  figures` is a **Section** line on the same document carrying Quantity 3 and Unit Price 100, so its own
+  Subtotal computes to **300.00** (the rule hides those fields in the browser; it does not null them). The
+  roll-up was started on **that line**, and the invoice came back unchanged at **untaxed 450.00 · tax 0.00 ·
+  total 450.00 · due 450.00**. Had the Display Type filter not held, it would read 750.00.
+- **Bundle 7's two documents, to the cent** — `verify`, 21 Sep 2026, every figure read back from the invoice:
+
+  | Document | Lines | Untaxed Amount | Tax | Total | Amount Due |
+  |---|---|---|---|---|---|
+  | INV/2026/00002 | 2 product lines, **10% G** and **8% S** | **2,768.00** | **259.80** | **3,027.80** | **3,027.80** |
+  | S00021 (Cancelled) | 3 product lines (two **negative**) + 1 **Section** | **1,087.60** | **113.86** | **1,201.46** | **1,201.46** |
+
+  Every line's own Taxes were read back too: 10% G · 8% S on the first, and 10% G · — · 10% G · 8% S on the
+  second. Amount Due on INV/2026/00002 is the one figure that differs from the tenant, which shows it paid at
+  0.00 (06 §1); nothing compensates for it.
 - **An invoice shows its lines through the API.** `record get` on Invoices returns the 子表 control as a **row
   count**, not as rows: SCG-PO-88213 3, INV/2026/00001 3, STL-2026-0042 2, TEST-SEQ-5 1. The rows themselves are
   read from Invoice Lines filtered on Invoice, which is what `lines "<Number>"` does.
@@ -305,7 +392,9 @@ Sequence is the first visible column rather than a handle; it is the same decisi
   (11 Sep), the three SCG lines (9 Sep).
 - **Idempotent** — every step was run at least twice and `all` three times: the later runs created no control,
   rule, view, workflow or record ("nothing saved", "already built; not re-published", "8 in the seed; 0 missing
-  or differing"), re-published no workflow and wrote no amount, and `check` came back OK every time.
+  or differing"), re-published no workflow and wrote no amount, and `check` came back OK every time. Bundle 7's
+  six lines behave the same way: a second `seed` created and updated nothing, wrote no tax, drove **0 invoices
+  through the roll-up**, and reported "14 in the seed; 0 missing or differing".
 - **Nothing else was touched.** Contacts, Units & Packagings, Products, Product Variants and Journals were
   compared control by control before and after every save, and `products.py verify`, `variants.py verify`,
   `units.py verify` and `journals.py verify` / `check` all pass afterwards. Contacts 30 `9f7e59498c3081a1`,
@@ -425,8 +514,10 @@ all, and three things settled.
 
 To run in the Nocoly UI, in Chrome, against `~/.hap-venv/bin/python nocoly/build/invlines.py lines
 "<Number>"` / `order` / `verify` / `check` / `untouched` from the repo root for the stored values. Test records
-are named `TEST …`; the eight tenant lines and the three documents they belong to are real records and must come
-through the test unchanged (`invlines.py verify` **and** `invoices.py verify` at the end).
+are named `TEST …`; the **fourteen** tenant lines and the **five** documents they belong to are real records and
+must come through the test unchanged (`invlines.py verify` **and** `invoices.py verify` at the end). Two of
+those five arrived with bundle 7, and one of them carries the Customer Reference "TEST demo run - delete me" —
+the tenant's own words, not a test record of ours.
 
 **Deleting through the CLI needs `--trigger-workflow`**, or the roll-up is silently suppressed and the invoice
 goes stale (§2). The whole command is
@@ -481,17 +572,22 @@ on the `TEST …` line named in them.
 6. **Picking a product fills nothing in.** Odoo's onchange writes the Label from the product's display name and
    sales description, the Unit Price from the pricelist and the Unit from the product. All of it is
    onchange-time compute; here Label, Unit and Unit Price are typed.
-7. **Two lines point at a variant the tenant does not use.** `[FURN-0001] Ergonomic Office Chair` and
+7. **Four lines point at a variant the tenant does not use.** `[FURN-0001] Ergonomic Office Chair` and
    `[FURN-0002] Height-Adjustable Desk 140cm` are archived original variants on the tenant; Phase 1 holds one
    active variant per product, so those lines point at *Ergonomic Office Chair* and *Height-Adjustable Desk
    140cm* and keep the tenant's Label text. The archived originals come with the Product Variants bundle.
+   Bundle 7's two chair lines are the same case in a different colour: on the tenant they name the variant
+   **Ergonomic Office Chair (Blue)**, which this app does not hold either. They point at the same single
+   *Ergonomic Office Chair* variant and keep the tenant's own label, `Ergonomic Office Chair (Blue)`. **No Blue
+   variant was created** — attribute values belong with the Product Variants bundle.
 8. **The roll-up follows a change, it does not guarantee it.** Moving a line to another invoice leaves the old
    one stale, and two people saving lines of the same invoice in the same second can both read the same sum.
    Odoo recomputes inside the write.
 9. **A line is added with + Record, not with three buttons.** Odoo's *Add a line*, *Add a section* and *Add a
    note* are one row plus the Display Type dropdown here; Odoo's product **Catalog** is the Sales app.
-10. **The lines of the 25 other tenant journal items are not here** — they belong to documents 06 did not seed,
-    or are the tax and payment-term lines Odoo writes itself.
+10. **The lines of the 19 other tenant journal items are not here** — they belong to the documents 06 still does
+    not seed, or are the tax and payment-term lines Odoo writes itself. It was 25 until bundle 7 brought six of
+    them in.
 11. ~~**A posted document's lines are still editable.**~~ **Resolved on 16 Sep 2026.** 06's rule *A posted or
     cancelled document is closed for editing* locked eight fields on the invoice and the subtable was not one of
     them: a HAP interaction rule acts on a control, and the 子表 was not there when the rule was written. The UI
@@ -514,11 +610,18 @@ on the `TEST …` line named in them.
     deletion made from the CLI without that flag removes the line and leaves the invoice stale — which is exactly
     how this looked like a defect for an hour (§2). Odoo recomputes inside the write either way.
 
+13. **Bundle 7's two down payments carry no Unit.** The tenant gives them no product, so this seed gives them
+   no product either, and with no product there is no unit to take from one; the tenant reading did not carry a
+   Unit column. Every other seeded line is in Units. Odoo's own down payment line points at a *Down Payment*
+   service product and would carry that product's UoM; bringing it in means seeding that product, which is the
+   Sales app's, not this worksheet's.
+
 ### Test records left in the worksheet
 
 | Record | On | What it is evidence for |
 |---|---|---|
 | **TEST roll-up line** | MISC/2026/00001 (`TEST-SEQ-5`) | The CLI self-check: a line added and its Quantity changed, with the invoice's Untaxed Amount, Total and Amount Due following each time. Left in place — nothing in this build deletes a record |
+| **TEST section with figures** | MISC/2026/00001 (`TEST-SEQ-5`) | Bundle 7's third self-check case: a **Section** carrying Quantity 3 × Unit Price 100, so its own Subtotal computes to **300.00** while the roll-up — started on that very line — leaves the invoice at 450.00. The proof that the Display Type filter excludes a section, which S00021's own figureless *Down Payments* cannot give |
 
 Tests 8–15 add `TEST UI line`, `TEST UI inline` and `TEST UI section`; the first two are deleted by tests 13 and
 14 as part of the test. Everything still named `TEST …` afterwards is to be removed after sign-off, with the
