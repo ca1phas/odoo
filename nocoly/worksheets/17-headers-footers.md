@@ -131,7 +131,7 @@ From the same cost model as every other bundle (`nocoly/analysis/timeline3.py`):
 
 | Bundle | Worksheets | Hours |
 |---|---|---|
-| `bqtpl` Quotation Templates | 2 | **7.3** |
+| `bqtpl` Quotation Templates | 2 | **7.2** |
 | `bqb` Quote Builder | 1 | **1.1** |
 
 Phase 3 Sales drops from 5 worksheets / 73.1 h to **2 worksheets / 64.8 h**; the optional bundles go from 17

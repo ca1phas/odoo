@@ -408,8 +408,7 @@ figcaption b{color:var(--ink-2);font-weight:500}
     which found five defects in Invoices and Journals and nine controls leaking onto create forms. All are fixed and
     re-tested. In parallel <b>Teh Li Wei built Phase 2 CRM by hand</b>, and two of the nineteen bundles came with it:
     <em>Marketing attribution</em> and <em>Sales Teams</em>, taking the bundles built to <b>seven of the nineteen</b>. The owner has also
-    started Phase 3 Sales by hand — <em>Orders</em>, <em>Headers/Footers</em> and <em>Template</em> — so the first three
-    phases are all now live at once rather than in sequence.</p>
+    started <b>Phase 3 Sales</b> by hand — <em>Orders</em> and <em>Order Lines</em> both now stand, seeded from the tenant — and built <em>Template</em> and <em>Headers/Footers</em>, which on 21 Sep <b>left Phase 3 to become two optional bundles</b> of their own: <em>Quotation Templates</em>, now the eighth bundle standing, and <em>Quote Builder</em>. So the first three phases are all live at once rather than in sequence.</p>
     <p><b>The seven core.</b> Contacts 13/13 · Units &amp; Packagings 18 of 19 · Products 15 of 17 ·
     Product Variants 16/16 · Journals 20 of 21 · Invoices 25/25 · Invoice Lines 19 of 20.</p>
     <p><b>The six bundles, in build order.</b> <b>Product Categories</b> — the tenant's seven categories, 17 of 18 —
@@ -505,8 +504,8 @@ figcaption b{color:var(--ink-2);font-weight:500}
 <section>
   <div class="col">
     <p class="eyebrow">Deferred</p>
-    <h2>Seventeen optional bundles</h2>
-    <p>Each bundle is one feature, switchable on its own. Where Odoo ships a settings toggle, the toggle is named — that is evidence the feature is genuinely optional rather than a judgment call. Build a bundle when you reach the phase in the last column.</p><p><b>Seven of the nineteen now stand</b>, eleven worksheets in all — five pulled forward into Phase 1 by the build loop, and <em>Marketing attribution</em> and <em>Sales Teams</em> built alongside them by Teh Li Wei for Phase 2 CRM. <i>The prose elsewhere on this page says “six bundles” for Phase 1 because it counts Countries and States separately; this table counts them as one, Geography.</i> Twelve remain, and the two the plan calls cheap-now-expensive-later — <em>Product Variants</em> and <em>Pricelists</em> — are both still among them.</p>
+    <h2>Nineteen optional bundles</h2>
+    <p>Each bundle is one feature, switchable on its own. Where Odoo ships a settings toggle, the toggle is named — that is evidence the feature is genuinely optional rather than a judgment call. Build a bundle when you reach the phase in the last column.</p><p><b>Eight of the nineteen now stand</b>, twelve worksheets in all — five pulled forward into Phase 1 by the build loop, and <em>Marketing attribution</em> and <em>Sales Teams</em> built alongside them by Teh Li Wei for Phase 2 CRM. <i>The prose elsewhere on this page says “six bundles” for Phase 1 because it counts Countries and States separately; this table counts them as one, Geography.</i> Eleven remain, and the two the plan calls cheap-now-expensive-later — <em>Product Variants</em> and <em>Pricelists</em> — are both still among them.</p>
   </div>
   <div class="tw"><table>
     <thead><tr><th>Bundle</th><th>Odoo toggle</th><th class="n">WS</th><th>Worksheets</th><th>Needed by</th></tr></thead><tbody>
@@ -527,6 +526,8 @@ figcaption b{color:var(--ink-2);font-weight:500}
     <tr><td class="w"><b>Multi-currency</b></td><td class="m">base.group_multi_currency</td><td class="n">1</td><td class="r">Currencies</td><td class="r">second currency · single-currency lives in the Currency control itself</td></tr>
     <tr><td class="w"><b>Product Combos</b></td><td class="m">—</td><td class="n">2</td><td class="r">Combo Choices · Combo Items</td><td class="r"><b>Phase 4</b> Point of Sale</td></tr>
     <tr><td class="w"><b>Contact Tags</b></td><td class="m">—</td><td class="n">1</td><td class="r">Contact Tags</td><td class="r">first segmented mailing or report. <b>Still unbuilt</b> — the app’s <em>CRM Tags</em> is <code>crm.tag</code>, a different model, and its own remark reads “Do not substitute Contact Tags”</td></tr>
+    <tr><td class="w"><b>Quotation Templates</b> <span class="pill have">built</span></td><td class="m">—</td><td class="n">2</td><td class="r">Quotation Templates · Template Lines</td><td class="r"><b>Phase 3</b> — moved out of the phase and into the bundles on 21 Sep. The worksheet stands, hand-built — Name · Description · Attachment, one record — and Orders’ <em>Template</em> already points at it. <b>Template Lines is not built</b>, and that is the half a template exists for: applying one is supposed to fill the order’s lines</td></tr>
+    <tr><td class="w"><b>Quote Builder</b></td><td class="m">sale_pdf_quote_builder · Enterprise</td><td class="n">1</td><td class="r">Headers / Footers</td><td class="r">branded cover and terms pages on a quotation. <b>It records which PDFs the quotation carries and does not assemble them</b> — HAP generates no quotation PDF, which is why this left Phase 3. The worksheet is started (5 controls, 3 records) but not conformant: its <em>Quotation Templates</em> relation points at Orders, and Print Order is missing</td></tr>
   </tbody></table></div>
   <div class="note">
     <p><b>Two bundles are cheap now and expensive later.</b> <em>Product Variants</em> — order lines, stock moves and invoice lines all point at Product Variants from the start, so turning attributes on later only adds tables; but pointing those lines at Products instead of Variants to "keep it simple" is the one decision in this plan that costs a rebuild. <em>Geography</em> — Fiscal Positions select by country in Odoo, so if you expect any tax exemption at all, build Countries before Contacts rather than after.</p>
@@ -587,15 +588,12 @@ figcaption b{color:var(--ink-2);font-weight:500}
   </div>
 
   <div class="pgroup">
-    <div class="phead"><span class="pn">Phase 3</span><h3>Sales</h3><span class="pc">5 worksheets · new app</span></div>
-    <p class="pintro">Quote to cash. Orders is the widest worksheet in the system — around eighty controls — so build it last in the phase, after everything it points at exists. Note step 3's Opportunity control: built in order it is one control among eighty, not a retrofit onto a live table.</p>
+    <div class="phead"><span class="pn">Phase 3</span><h3>Sales</h3><span class="pc">2 worksheets · new app</span></div>
+    <p class="pintro">Quote to cash. Orders is the widest worksheet in the system — around eighty controls — so build it last in the phase, after everything it points at exists. Note step 1's Opportunity control: built in order it is one control among eighty, not a retrofit onto a live table.</p>
     <div class="tw"><table>
       <thead><tr><th class="s">#</th><th>Worksheet</th><th>Relations to wire</th></tr></thead><tbody>
-      <tr><td class="s">1</td><td class="w"><b>Quotation Templates</b><span>sale.order.template</span></td><td class="r"><i>none</i></td></tr>
-      <tr><td class="s">2</td><td class="w"><b>Template Lines</b><span>sale.order.template.line</span></td><td class="r">Template → Quotation Templates <i>(subtable)</i> · Product → Product Variants · Unit → Units</td></tr>
-      <tr><td class="s">3</td><td class="w"><b>Orders</b><span>sale.order</span></td><td class="r">Customer → Contacts · Invoice Address → Contacts · Delivery Address → Contacts · Pricelist → Pricelists · Payment Terms → Payment Terms · Fiscal Position → Fiscal Positions · Incoterm → Incoterms · Sales Team → Sales Teams · Salesperson → <i>Collaborator</i> · Campaign / Source / Medium → UTM · Template → Quotation Templates · Analytic Account → Analytic Accounts · <em>Opportunity → Leads</em></td></tr>
-      <tr><td class="s">4</td><td class="w"><b>Order Lines</b><span>sale.order.line</span></td><td class="r">Order → Orders <i>(subtable)</i> · Product → <em>Product Variants</em> <i>(the variant, not the template — this is the choice that is expensive to change later)</i> · Unit → Units · Taxes → Taxes <i>(subType 2)</i></td></tr>
-      <tr><td class="s">5</td><td class="w"><b>Headers / Footers</b><span>sale.pdf.form.field</span></td><td class="r"><i>none</i> <em>then append: Orders ▸ Invoices → Invoices · Invoices ▸ Source Order → Orders</em></td></tr>
+      <tr><td class="s">1</td><td class="w"><b>Orders</b><span>sale.order</span></td><td class="r">Customer → Contacts · Invoice Address → Contacts · Delivery Address → Contacts · Pricelist → Pricelists · Payment Terms → Payment Terms · Fiscal Position → Fiscal Positions · Incoterm → Incoterms · Sales Team → Sales Teams · Salesperson → <i>Collaborator</i> · Campaign / Source / Medium → UTM · Template → Quotation Templates · Analytic Account → Analytic Accounts · <em>Opportunity → Leads</em></td></tr>
+      <tr><td class="s">2</td><td class="w"><b>Order Lines</b><span>sale.order.line</span></td><td class="r">Order → Orders <i>(subtable)</i> · Product → <em>Product Variants</em> <i>(the variant, not the template — this is the choice that is expensive to change later)</i> · Unit → Units · Taxes → Taxes <i>(subType 2)</i></td></tr>
     </tbody></table></div>
     <p class="pintro">Then the workflows that make it an app: pricing a line from the pricelist, Confirm, Create Invoice (writing Invoices with Move Type = Customer Invoice), Register Payment, Lock and Cancel — plus the Formula and Rollup chain that turns line Taxes into an order total.</p>
   </div>
@@ -654,7 +652,7 @@ figcaption b{color:var(--ink-2);font-weight:500}
   <div class="note acc">
     <p><b>Phase 1 is done, and it came in near the estimate.</b> The seven core worksheets and seven bundle
     worksheets — 14 of the 37 the phase will eventually hold — are built, seeded and UI-tested. <b>Four more bundle
-    worksheets have since arrived from Phase 2</b>, taking the bundles built to seven of nineteen and eleven
+    worksheets have since arrived from Phase 2</b>, taking the bundles built to eight of nineteen and twelve
     worksheets. The estimate above
     puts the core at 48 h and all thirty-three bundle worksheets at 108 h; what was actually built is the core plus the
     six bundles the core leans on hardest, and the shape of the work matched the model: creating worksheets was
@@ -830,7 +828,7 @@ const PHASES=[
   const wall=$('wall'), chips=$('chips'), detail=$('detail'), stats=$('stats'), ph=$('ph'), phl=$('phl');
   if(!wall) return;
   const PHNAME={1:'Core Foundation'}; PHASES.forEach(p=>PHNAME[p[0]]=p[1]);
-  const on=new Set(['bcat','bcoa','bterm','bgeo','btax','butm','bteam']);
+  const on=new Set(['bcat','bcoa','bterm','bgeo','btax','butm','bteam','bqtpl']);
   const META={}; // id -> {name, sub, deps, kind, count, course}
   CORE.forEach(w=>META[w[0]]={name:w[1],sub:w[2],deps:w[3],kind:'core',count:1,course:1});
   BUNDLES.forEach(b=>b[4].forEach(w=>META[w[0]]={name:w[1],sub:w[2],deps:w[3],kind:'bundle',count:1,course:1,bundle:b[0]}));
