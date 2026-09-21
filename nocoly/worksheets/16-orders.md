@@ -170,21 +170,50 @@ invoice. That is Odoo's own difference, not a slip — do not "fix" it into line
 
 ### Buttons
 
-| Button | Shown when | Does |
-|---|---|---|
-| **Send** | Quotation, or Quotation Sent / Sales Order | Status → Quotation Sent |
-| **Confirm** | Quotation or Quotation Sent | Status → **Sales Order**; assigns the **Number**; fills Quotation/Order Date if empty |
-| **Cancel** | Quotation, Quotation Sent or Sales Order, **and Locked is unticked** | Status → Cancelled |
-| **Set to Quotation** | Cancelled | Status → Quotation |
+Read from `addons/sale/models/sale_order.py` on 21 Sep 2026 — the conditions from the form arch, the
+behaviour from the methods themselves.
 
-Four buttons, the same shape as 06's Confirm / Cancel / Reset to Draft.
+| Button | Enabled when | What Odoo does | State |
+|---|---|---|---|
+| **Send** | Status is Quotation, Quotation Sent **or** Sales Order | opens the mail composer; sending marks the order **Quotation Sent** | **built** — `6ab0aac1e54d2a34fa4e7c1b`, workflow `6ab0aac1789584ded3230fe1`: *Trigger by button → Get Customer → branch → Email quotation → Set Status: Quotation Sent*, and its filter already carries the three statuses |
+| **Confirm** | Status is Quotation or Quotation Sent | **guards first**, then writes Status → **Sales Order** and **Quotation/Order Date → now** | not built |
+| **Cancel** | Status is Quotation, Quotation Sent or Sales Order, **and Locked unticked** | **refuses a locked order**, cancels the order's draft invoices, writes Status → **Cancelled** | not built |
+| **Set to Quotation** | Status is **Cancelled or Quotation Sent** | Status → **Quotation**, and clears the signature fields | not built |
+
+**Confirm's guard is a real validation, not decoration.** `_confirmation_error_message` refuses with *"Some
+order lines are missing a product, you need to correct them before going further."* when any line that is
+**not a section, subsection or note and not a down payment** has no Product. Our Order Lines already carries
+Display Type, so the condition is expressible; down payments are not modelled, so that half of the test drops
+out. Build it as a branch in the button's workflow that ends on Odoo's own wording rather than confirming.
+
+**Cancel's guard likewise** — *"You cannot cancel a locked order. Please unlock it first."* Odoo raises it;
+here Locked is an editable checkbox, so the same condition simply disables the button, which is what the
+table above says. Keep Odoo's message if the branch is built rather than the filter.
+
+**Two corrections to an earlier draft of this table.**
+
+- Confirm does **not** "fill Quotation/Order Date if empty" — `_prepare_confirmation_values` returns
+  `{'state': 'sale', 'date_order': now}`, so it **overwrites it unconditionally**. That is the mechanism
+  behind the field carrying two labels: on a confirmed order the value genuinely is the confirmation date,
+  not the date the quotation was raised.
+- Confirm does **not** assign the Number. In Odoo the sequence fires on creation; in this app Number is an
+  **auto-number control**, which the reseed proved — the twelve seeded orders took S00006–S00017 the moment
+  they were written. No button touches it.
+
+**Set to Quotation** also clears `signature`, `signed_by` and `signed_on`. **None of the three is built** —
+online signature is a checkbox asking for one, not a stored signature — so the button writes Status alone,
+and this is a difference to record rather than a gap to close.
 
 **Not built — owner's decision, 21 Sep 2026: Lock and Unlock.** Odoo gates a confirmed order behind those
 two buttons; here **Locked is an ordinary editable checkbox** a person ticks. The read-only rule it drives
 is unchanged, and Cancel still hides while it is ticked — so the behaviour survives, only the buttons go.
 
-**Deferred, and why** — *Create Invoice* (§4), *Preview* and *Download* (no PDF), *Capture* and *Void
-Transaction* (no payment providers).
+**One still to read:** Odoo's `action_confirm` docstring says it *"also locks the Sale Order"* when a company
+setting is enabled. The setting's value on casimir has not been read, so whether Confirm should also tick
+Locked is **open**.
+
+**Deferred, and why** — *Create Invoice* and *Reopen Invoicing* (§4, no order → invoice link), *Preview* and
+*Download* (HAP generates no quotation PDF), *Capture* and *Void Transaction* (no payment providers).
 
 ### Views
 
