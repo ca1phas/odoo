@@ -1,0 +1,300 @@
+<title>Twenty Buttons</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chivo:wght@600;700;900&family=Public+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --paper:#F4F1EB; --card:#FFFFFF; --sunk:#EAE5DB; --ink:#17150F; --ink2:#5A5445; --ink3:#8B8372;
+  --rule:#E0D9CB; --rule2:#C9BFAC;
+  --go:#1F6F5C; --go-bg:#DFEFE9;
+  --you:#A8521C; --you-bg:#F8E7D8;
+  --halt:#77705F; --halt-bg:#E8E4D9;
+  --shadow:0 1px 2px rgba(23,21,15,.05),0 10px 26px -18px rgba(23,21,15,.35);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#14130F; --card:#1E1C16; --sunk:#27241C; --ink:#F2EEE4; --ink2:#B5AE9C; --ink3:#867F6D;
+  --rule:#2E2B22; --rule2:#443F33;
+  --go:#4FBFA2; --go-bg:#11332C;
+  --you:#E08B4C; --you-bg:#3A2413;
+  --halt:#8E8674; --halt-bg:#2A271F;
+  --shadow:0 1px 2px rgba(0,0,0,.5),0 10px 26px -18px rgba(0,0,0,.8);
+}}
+:root[data-theme="dark"]{
+  --paper:#14130F; --card:#1E1C16; --sunk:#27241C; --ink:#F2EEE4; --ink2:#B5AE9C; --ink3:#867F6D;
+  --rule:#2E2B22; --rule2:#443F33;
+  --go:#4FBFA2; --go-bg:#11332C;
+  --you:#E08B4C; --you-bg:#3A2413;
+  --halt:#8E8674; --halt-bg:#2A271F;
+  --shadow:0 1px 2px rgba(0,0,0,.5),0 10px 26px -18px rgba(0,0,0,.8);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);
+  font-family:"Public Sans",system-ui,sans-serif;font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1040px;margin:0 auto;padding-inline:20px;padding-block:0 80px}
+h1,h2,h3,.eyebrow,.chip,.pn,th{font-family:Chivo,system-ui,sans-serif}
+code,.mono{font-family:"JetBrains Mono",ui-monospace,monospace}
+code{font-size:.84em;background:var(--sunk);border:1px solid var(--rule);padding:.08em .34em;border-radius:3px;white-space:nowrap}
+a{color:var(--go)}
+
+header.mast{padding-block:52px 30px;border-bottom:2px solid var(--ink)}
+.eyebrow{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--you);margin:0 0 16px}
+h1{font-size:clamp(40px,8vw,74px);line-height:.94;letter-spacing:-.035em;font-weight:900;margin:0 0 18px;text-wrap:balance}
+.lede{font-size:clamp(16px,2.1vw,19px);color:var(--ink2);margin:0;max-width:620px}
+.byline{margin-top:24px;font-family:"JetBrains Mono",monospace;font-size:11.5px;color:var(--ink3);display:flex;flex-wrap:wrap;gap:6px 20px}
+
+.tally{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:1px;background:var(--rule);
+  border:1px solid var(--rule);margin-block:32px}
+.tally div{background:var(--card);padding:16px 18px}
+.tally b{display:block;font-family:Chivo,sans-serif;font-weight:900;font-size:32px;line-height:1;letter-spacing:-.03em}
+.tally span{display:block;font-family:"JetBrains Mono",monospace;font-size:10.5px;line-height:1.45;color:var(--ink3);margin-top:8px}
+.tally .g b{color:var(--go)} .tally .y b{color:var(--you)} .tally .h b{color:var(--halt)}
+
+.callout{background:var(--you-bg);border:1px solid var(--rule2);border-left:4px solid var(--you);
+  padding:18px 20px;margin-block:28px}
+.callout p{margin:0;font-size:15px;line-height:1.55;color:var(--ink2)}
+.callout p+p{margin-top:10px}
+.callout b{color:var(--you)}
+
+section.part{margin-block:34px;background:var(--card);border:1px solid var(--rule2);box-shadow:var(--shadow)}
+.ph{display:grid;grid-template-columns:62px 1fr;gap:0;border-bottom:1px solid var(--rule)}
+.pn{background:var(--ink);color:var(--paper);display:flex;align-items:center;justify-content:center;
+  font-weight:900;font-size:21px;letter-spacing:-.02em}
+.part.standing .pn,.part.out .pn{background:var(--halt)}
+.pt{padding:18px 22px}
+.pt h2{font-size:20px;font-weight:700;letter-spacing:-.012em;margin:0 0 5px;text-wrap:balance}
+.pt p{margin:0;font-size:14.5px;color:var(--ink2);line-height:1.5}
+
+.rows{display:flex;flex-direction:column}
+.row{display:grid;grid-template-columns:46px 1fr 132px;gap:16px;padding:16px 22px;border-top:1px solid var(--rule);align-items:start}
+.row:first-child{border-top:0}
+.no{font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--ink3);padding-top:3px;font-variant-numeric:tabular-nums}
+.row h3{font-size:16px;font-weight:700;margin:0 0 5px;letter-spacing:-.005em}
+.row .odoo{font-family:"JetBrains Mono",monospace;font-size:11.5px;color:var(--ink3);line-height:1.6;margin:0 0 7px}
+.row .does{font-size:14.5px;color:var(--ink2);margin:0;line-height:1.5}
+.row .does+.does{margin-top:6px}
+.guard{display:block;margin-top:8px;padding:9px 12px;background:var(--sunk);border-left:2px solid var(--rule2);
+  font-size:13.5px;color:var(--ink2);line-height:1.5}
+.guard b{font-family:Chivo,sans-serif;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);display:block;margin-bottom:3px}
+.chip{font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:5px 9px;
+  border-radius:2px;white-space:nowrap;text-align:center;display:inline-block}
+.c-go{background:var(--go-bg);color:var(--go)}
+.c-you{background:var(--you-bg);color:var(--you)}
+.c-halt{background:var(--halt-bg);color:var(--halt)}
+.cell-s{display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+.sub{font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--ink3);text-align:right;line-height:1.4}
+
+.part.standing,.part.out{box-shadow:none;background:transparent}
+.part.standing .rows .row,.part.out .rows .row{padding-block:12px}
+.part.standing .row h3,.part.out .row h3{font-size:15px;font-weight:600}
+
+footer{margin-top:44px;padding-top:24px;border-top:1px solid var(--rule);
+  font-family:"JetBrains Mono",monospace;font-size:11.5px;color:var(--ink3);line-height:1.8}
+@media (max-width:620px){
+  .row{grid-template-columns:32px 1fr;gap:10px}
+  .cell-s{grid-column:2;align-items:flex-start}
+  .sub{text-align:left}
+  .ph{grid-template-columns:48px 1fr}
+}
+</style>
+
+<div class="wrap">
+<header class="mast">
+  <p class="eyebrow">ERP Master · Orders · sale.order</p>
+  <h1>Twenty&nbsp;Buttons</h1>
+  <p class="lede">Odoo's Orders form carries twenty actions. They live in four different places, which is why counting only the header finds four. Here is every one, what it does, and what it becomes in Nocoly — in the order we build them.</p>
+  <div class="byline"><span>21 Sep 2026</span><span>read from casimir.odoo.com</span><span>worksheet 6ab09897e43d174ab3752d7b</span></div>
+</header>
+
+<div class="tally">
+  <div class="g"><b>6</b><span>ALREADY STANDING<br>native or solved</span></div>
+  <div class="y"><b>11</b><span>TO BUILD<br>across six parts</span></div>
+  <div class="h"><b>3</b><span>OUT OF REACH<br>blocked or later phase</span></div>
+  <div><b>2</b><span>CONTROLS MISSING<br>parts 1 gates the rest</span></div>
+</div>
+
+<div class="callout">
+  <p><b>Where the twenty live.</b> Eleven in <code>&lt;header&gt;</code>. Four as <code>&lt;control&gt;</code> elements inside the lines list — they are not <code>&lt;button&gt;</code> tags at all. One wizard below the lines. Eight as <code>ir.actions.server</code> bound to <code>sale.order</code>, reached from the cog menu. And <b>Sign &amp; Accept is on the customer portal</b>, not in the back office.</p>
+  <p><b>The rule for the right-hand column:</b> prefer a Nocoly native feature over a built workflow. Six of the twenty need nothing built at all because the platform already does them.</p>
+</div>
+
+<section class="part">
+  <div class="ph"><div class="pn">1</div><div class="pt">
+    <h2>The two controls everything else waits on</h2>
+    <p>Neither is a button. Four buttons are unbuildable until these exist, so this is one small version-pinned save and it goes first.</p>
+  </div></div>
+  <div class="rows">
+    <div class="row"><div class="no">—</div><div>
+      <h3>Invoicing Closed</h3>
+      <p class="odoo">invoicing_closed · boolean · stored · “Manually Closed For Invoicing”</p>
+      <p class="does">A checkbox on Orders. Without it, <b>neither Close Invoicing nor Reopen Invoicing means anything</b> — they are the only two things that read or write it.</p>
+    </div><div class="cell-s"><span class="chip c-you">build</span><span class="sub">gates 12, 20</span></div></div>
+    <div class="row"><div class="no">—</div><div>
+      <h3>Signature · Signed By · Signed On</h3>
+      <p class="odoo">signature binary · signed_by char · signed_on datetime · all stored</p>
+      <p class="does">What the customer's acceptance writes. Online Signature already on Orders is a checkbox <em>asking</em> for one — it stores nothing.</p>
+    </div><div class="cell-s"><span class="chip c-you">build</span><span class="sub">gates 8, and 7's clear</span></div></div>
+  </div>
+</section>
+
+<section class="part">
+  <div class="ph"><div class="pn">2</div><div class="pt">
+    <h2>Six status buttons</h2>
+    <p>All the same shape — a custom action filtered on the record's state, writing one or two fields. Two of them carry a guard that is a real validation, not decoration.</p>
+  </div></div>
+  <div class="rows">
+    <div class="row"><div class="no">03</div><div>
+      <h3>Confirm</h3>
+      <p class="odoo">action_confirm · enabled on Quotation, Quotation Sent</p>
+      <p class="does">Status → <b>Sales Order</b>, and <b>Quotation/Order Date → now</b>. Not “fill if empty” — <code>_prepare_confirmation_values</code> overwrites it unconditionally, which is the mechanism behind the field carrying two labels.</p>
+      <span class="guard"><b>Guard</b>“Some order lines are missing a product, you need to correct them before going further.” — when any line that is not a Section, Subsection or Note has no Product.</span>
+    </div><div class="cell-s"><span class="chip c-you">build</span><span class="sub">button + workflow</span></div></div>
+    <div class="row"><div class="no">05</div><div>
+      <h3>Cancel</h3>
+      <p class="odoo">action_cancel · Quotation, Quotation Sent, Sales Order · and Locked unticked</p>
+      <p class="does">Status → <b>Cancelled</b>. Odoo also cancels the order's draft invoices; there is no invoice link here yet, so that half waits.</p>
+      <span class="guard"><b>Guard</b>“You cannot cancel a locked order. Please unlock it first.”</span>
+    </div><div class="cell-s"><span class="chip c-you">build</span><span class="sub">button</span></div></div>
+    <div class="row"><div class="no">07</div><div>
+      <h3>Set to Quotation</h3>
+      <p class="odoo">action_draft · enabled on Cancelled <em>or Quotation Sent</em></p>
+      <p class="does">Status → <b>Quotation</b>, and clears the three signature fields — which is why it waits on part 1.</p>
+    </div><div class="cell-s"><span class="chip c-you">build</span><span class="sub">button · needs part 1</span></div></div>
+    <div class="row"><div class="no">10</div><div>
+      <h3>Mark as Sent</h3>
+      <p class="odoo">server action 501 · action_quotation_sent · form, list, kanban</p>
+      <p class="does">Status → <b>Quotation Sent</b> without sending anything. The manual counterpart to Send.</p>
+      <span class="guard"><b>Guard</b>“Only draft orders can be marked as sent directly.”</span>
+    </div><div class="cell-s"><span class="chip c-you">build</span><span class="sub">button</span></div></div>
+    <div class="row"><div class="no">20</div><div>
+      <h3>Close Invoicing</h3>
+      <p class="odoo">server action 506 · action_close_invoicing · form, list</p>
+      <p class="does">Ticks <b>Invoicing Closed</b>. Says “stop asking me to invoice this”, without cancelling the order.</p>
+    </div><div class="cell-s"><span class="chip c-you">build</span><span class="sub">needs part 1</span></div></div>
+    <div class="row"><div class="no">12</div><div>
+      <h3>Reopen Invoicing</h3>
+      <p class="odoo">action_reopen_order · hidden unless closed and Status is Sales Order</p>
+      <p class="does">Clears it again. The exact inverse, and the reason the control has to be a stored field rather than a rule.</p>
+    </div><div class="cell-s"><span class="chip c-you">build</span><span class="sub">needs part 1</span></div></div>
+  </div>
+</section>
+
+<section class="part">
+  <div class="ph"><div class="pn">3</div><div class="pt">
+    <h2>Two that walk the lines</h2>
+    <p>Both iterate the Order Lines subtable and write every row. Same machinery, different sum — worth building together.</p>
+  </div></div>
+  <div class="rows">
+    <div class="row"><div class="no">09</div><div>
+      <h3>Discount</h3>
+      <p class="odoo">action_open_discount_wizard · below the lines · hidden when Locked or Cancelled</p>
+      <p class="does">Odoo opens a wizard and applies a percentage across every line. Here: a button that writes Discount on each row.</p>
+    </div><div class="cell-s"><span class="chip c-you">build</span><span class="sub">workflow over lines</span></div></div>
+    <div class="row"><div class="no">11</div><div>
+      <h3>Deliver</h3>
+      <p class="odoo">server action 504 · deliver_sold_quantity · form, list</p>
+      <p class="does">Sets each line's <b>Delivered = Quantity</b>. <code>qty_delivered</code> is writable, so this is the shortcut for orders that never touch Inventory.</p>
+    </div><div class="cell-s"><span class="chip c-you">build</span><span class="sub">workflow over lines</span></div></div>
+  </div>
+</section>
+
+<section class="part">
+  <div class="ph"><div class="pn">4</div><div class="pt">
+    <h2>Send</h2>
+    <p>The one that leaves the building. Treated as unbuilt — an earlier version exists but does not work materially yet.</p>
+  </div></div>
+  <div class="rows">
+    <div class="row"><div class="no">01</div><div>
+      <h3>Send</h3>
+      <p class="odoo">action_quotation_send · Quotation, Quotation Sent, Sales Order</p>
+      <p class="does">Odoo opens a mail composer with the quotation attached; sending marks the order Quotation Sent. Here: a workflow with an email node, then the status write.</p>
+      <p class="does">Its batch twin, <b>Send an email</b> (server action 505), comes free — a Nocoly custom action already runs over a selection.</p>
+    </div><div class="cell-s"><span class="chip c-you">rebuild</span><span class="sub">workflow</span></div></div>
+  </div>
+</section>
+
+<section class="part">
+  <div class="ph"><div class="pn">5</div><div class="pt">
+    <h2>Download</h2>
+    <p>Nearly done, and the furthest along of anything here — the templates exist and have been re-pointed.</p>
+  </div></div>
+  <div class="rows">
+    <div class="row"><div class="no">02</div><div>
+      <h3>Download</h3>
+      <p class="odoo">sale.action_report_saleorder · hidden once Status is Sales Order</p>
+      <p class="does">Nocoly's <b>System Print</b> with a Word template — native, no workflow. Three templates are ready: a Quotation variant, an Order variant, and a generic one that prints the Status value before the number.</p>
+      <span class="guard"><b>Still needed</b>A rich-text <b>Terms &amp; Conditions</b> control — Odoo's <code>sale.order.note</code>, the one placeholder with no target here. Then upload and wire System Print, which is a UI step.</span>
+    </div><div class="cell-s"><span class="chip c-you">finish</span><span class="sub">templates done</span></div></div>
+  </div>
+</section>
+
+<section class="part">
+  <div class="ph"><div class="pn">6</div><div class="pt">
+    <h2>Sign &amp; Accept</h2>
+    <p>Last, and alone. Every other item here is a button on a form; this one is a page a customer opens. Different mechanism, so it gets proved on its own.</p>
+  </div></div>
+  <div class="rows">
+    <div class="row"><div class="no">08</div><div>
+      <h3>Sign &amp; Accept</h3>
+      <p class="odoo">the customer portal, not the back office</p>
+      <p class="does">The customer signs on a public page; Odoo writes <code>signature</code>, <code>signed_by</code>, <code>signed_on</code> and confirms the order.</p>
+      <p class="does">Nocoly Public Sharing gives the page. The catch: <b>a share link is read-only by default</b>, so accepting a signature needs a form that writes back — not sharing alone.</p>
+    </div><div class="cell-s"><span class="chip c-you">build</span><span class="sub">needs part 1</span></div></div>
+  </div>
+</section>
+
+<section class="part standing">
+  <div class="ph"><div class="pn">✓</div><div class="pt">
+    <h2>Six that already stand</h2>
+    <p>Nothing to build. The platform does these, or an earlier decision already covered them.</p>
+  </div></div>
+  <div class="rows">
+    <div class="row"><div class="no">04</div><div><h3>Preview</h3>
+      <p class="does"><code>action_preview_sale_order</code> returns <code>get_portal_url()</code> — literally a public link. That is <b>Public Sharing</b>.</p>
+    </div><div class="cell-s"><span class="chip c-go">native</span></div></div>
+    <div class="row"><div class="no">17</div><div><h3>Duplicate</h3>
+      <p class="does"><b>Recreate</b>, and it must be Recreate: Copy duplicates the header and leaves the order lines behind. Proved on the app, 21 Sep.</p>
+    </div><div class="cell-s"><span class="chip c-go">native</span></div></div>
+    <div class="row"><div class="no">13</div><div><h3>Save as template</h3>
+      <p class="does">Recreate plus the <b>Is Template</b> flag. Odoo needs a template table because it has no duplication primitive; Nocoly has one.</p>
+    </div><div class="cell-s"><span class="chip c-go">solved</span></div></div>
+    <div class="row"><div class="no">15</div><div><h3>Add Section</h3>
+      <p class="does">The subtable's own Add a row, with Display Type. Not a button in Odoo either — a <code>&lt;control&gt;</code>.</p>
+    </div><div class="cell-s"><span class="chip c-go">built</span></div></div>
+    <div class="row"><div class="no">16</div><div><h3>Add Note</h3>
+      <p class="does">The same control, different Display Type.</p>
+    </div><div class="cell-s"><span class="chip c-go">built</span></div></div>
+    <div class="row"><div class="no">18</div><div><h3>Add Subsection</h3>
+      <p class="does">Display Type already carries Subsection. Worth noting Odoo's lines list offers <b>three</b> controls, not four — there is no Add Subsection in the arch.</p>
+    </div><div class="cell-s"><span class="chip c-go">built</span></div></div>
+  </div>
+</section>
+
+<section class="part out">
+  <div class="ph"><div class="pn">✕</div><div class="pt">
+    <h2>Three out of reach, and two set aside</h2>
+    <p>Not oversights. Each is blocked on something that does not exist yet, or on a decision already taken.</p>
+  </div></div>
+  <div class="rows">
+    <div class="row"><div class="no">06</div><div><h3>Create Invoice</h3>
+      <p class="does">Needs the <b>order → invoice relation</b>, which is the single biggest missing link in the model. Until then nothing can write an invoice from an order.</p>
+    </div><div class="cell-s"><span class="chip c-halt">blocked</span></div></div>
+    <div class="row"><div class="no">14</div><div><h3>Create Project</h3>
+      <p class="does">Needs a Projects worksheet — Phase 6, Services.</p>
+    </div><div class="cell-s"><span class="chip c-halt">later phase</span></div></div>
+    <div class="row"><div class="no">19</div><div><h3>Catalog</h3>
+      <p class="does">A product-picker grid. No equivalent surface, and building one is a project rather than a button.</p>
+    </div><div class="cell-s"><span class="chip c-halt">not buildable</span></div></div>
+    <div class="row"><div class="no">—</div><div><h3>Lock · Unlock</h3>
+      <p class="does">Owner's decision, 21 Sep. <b>Locked is an ordinary editable checkbox</b>, so the read-only rule it drives is unchanged and Cancel still hides while it is ticked. The behaviour survives; only the buttons go.</p>
+    </div><div class="cell-s"><span class="chip c-halt">set aside</span></div></div>
+    <div class="row"><div class="no">—</div><div><h3>Update Prices · Capture · Void</h3>
+      <p class="does">Pricelists and payment providers, neither built. Not on the list of twenty, but on Odoo's form.</p>
+    </div><div class="cell-s"><span class="chip c-halt">not built</span></div></div>
+  </div>
+</section>
+
+<footer>
+  <p>Conditions read from the <code>sale.order</code> form and list arch on casimir.odoo.com; behaviour read from the model's own methods in <code>addons/sale/models/sale_order.py</code>. Server actions read from <code>ir.actions.server</code> bound to the model. Twenty items: 6 standing · 11 to build · 3 out of reach.</p>
+  <p>Confirm Orders (502) and Send an email (505) are the batch forms of Confirm and Send. A Nocoly custom action already runs over a selection, so they arrive with their singular twins rather than as work of their own.</p>
+</footer>
+</div>
