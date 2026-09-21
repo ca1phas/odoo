@@ -48,7 +48,7 @@ built** (owner's decision, 21 Sep 2026).
 | 18 | Online payment | `require_payment` | Checkbox | — | **unticked** | from a company setting — see below |
 | 19 | Prepayment % | `prepayment_percent` | Number | — | **100 %** | from a company setting — see below |
 | 20 | Invoicing status | `invoice_status` | Single Select, read-only | — | computed | **Upselling Opportunity · Fully Invoiced · To Invoice · Nothing to Invoice** |
-| 21 | Delivery status | `delivery_status` | Single Select, read-only | — | computed | **Not Delivered · Started · Partially Delivered · Fully Delivered** — needs Inventory; see §4 |
+| 21 | Delivery status | `delivery_status` | **Single Select, editable** | — | empty | **Owner's decision, 21 Sep 2026: a flag a person sets, not a computed figure** — Odoo computes it from stock pickings, which do not exist here. See *How Odoo computes it* below |
 | 22 | Untaxed Amount · Tax · Total | `amount_untaxed`, `amount_tax`, `amount_total` | roll-ups over the lines | — | — | the pattern 06 uses: Σ Subtotal, and Σ Total − Σ Subtotal for the tax |
 | 23 | **Locked** | `locked` | **Checkbox, editable** | — | unticked | **Owner's decision, 21 Sep 2026: a plain editable checkbox, and Odoo's Lock / Unlock buttons are not built.** Odoo's help: "Locked orders cannot be modified." It still drives a read-only rule — see below |
 
@@ -71,6 +71,39 @@ dated 2026-09-21 and expires **2026-10-21**. Both are exactly thirty days.
 defaults and record that they came from a setting, or build a one-row Settings worksheet. Hard-coding is
 cheaper and is what every other ERP Master worksheet has done with a company default; the cost is that
 changing the validity from 30 days becomes a build change rather than a setting.
+
+### Delivery status — why it is a flag here
+
+Odoo's `delivery_status` is **not a `sale` field at all**. It lives in **`sale_stock`**
+(`addons/sale_stock/models/sale_order.py`), is `store=True` and computed from
+`picking_ids.state`:
+
+| Odoo's test | Value |
+|---|---|
+| no pickings, or every picking cancelled | **`False` — empty** |
+| every picking done or cancelled | `full` **Fully Delivered** |
+| any picking done **and** some line carries a delivered quantity | `partial` **Partially Delivered** |
+| any picking done, but no line carries a delivered quantity | `started` **Started** |
+| pickings exist, none done | `pending` **Not Delivered** |
+
+Every branch reads a stock picking. **There are no pickings in ERP Master and there will not be until
+Inventory is built** (Phase 5), so nothing here could compute this field honestly. The owner's call is
+therefore to carry it as an **editable Single Select a person sets by hand** — the same shape as *Locked*,
+where Odoo's mechanism was replaced by a control someone drives.
+
+**Two things to know about the option set as built:**
+
+- It carries **Nothing to Deliver**, which Odoo does not have as an option — Odoo uses the **empty** value for
+  "no pickings". Naming the null is the same modelling choice Invoice Lines made when it gave Display Type an
+  explicit *Product* option, so it is consistent with the house pattern and worth keeping.
+- It **omits `started` — Started**. In Odoo that is a real state, and a distinct one: a picking has been
+  completed but no line yet shows a delivered quantity. Add it if the four are meant to mirror Odoo; leave it
+  out deliberately if a hand-set flag does not need the distinction. **Not decided.**
+
+Because the value is now typed rather than derived, **it can disagree with reality** — nothing keeps it in
+step, and nothing will until Inventory lands and the field can go back to being computed. The rule that hides
+it unless Status is *Sales Order* (see below) carries more weight for that reason: it keeps a meaningless
+flag off an unconfirmed quotation.
 
 ### Lines — `sale.order.line`
 
@@ -169,7 +202,7 @@ amount_total · invoice_status · expected_date`, with a dozen more available an
 | What | Why |
 |---|---|
 | **Create Invoice** and the order → invoice link (`invoice_lines`, `invoice_count`, `invoice_status` as a live figure) | This is the one piece worth arguing about. Invoices and Invoice Lines are built, so the link is reachable — but it needs a button that creates a document and its lines from another document's lines, which nothing in Phase 1 does. Treat it as its own bundle |
-| **Delivery** — `qty_delivered`, `delivery_status`, `commitment_date` honouring stock | Inventory is not in scope at all |
+| **Delivery** — `qty_delivered` and `commitment_date` honouring stock, and `delivery_status` as a **computed** figure | Inventory is not in scope at all. Delivery status is built as an editable flag instead (§2); the computation waits for Phase 5 |
 | **Pricelists** (`pricelist_id`) and the price-recompute it drives | A worksheet of its own, not built |
 | **Quotation Templates** (`sale_order_template_id`) | Not built; zero records on the tenant |
 | **Quote Builder** tab (`quotation_document_ids`, `customizable_pdf_form_fields`) | See worksheet 17 — it configures a PDF assembler HAP does not have |
