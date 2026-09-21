@@ -5,8 +5,8 @@
 | Odoo model | `sale.order` (+ `sale.order.line`) |
 | Odoo menus | Sales › Orders › **Quotations** (action 497) and **Orders** (action 496) — two filtered views of one table |
 | Reference | `nocoly/reference/odoo-19.4/sale.order.md` |
-| Status | **§1 only — requirements.** The owner is building this worksheet by hand; nothing here has been built by a builder |
-| Date | 21 Sep 2026, read from casimir before the trial expires |
+| Status | **Requirements, plus §6 — the three interaction rules are built.** The owner is building the rest of this worksheet by hand; `build/orders.py` owns the rules and nothing else |
+| Date | 21 Sep 2026, read from casimir before the trial expires; rules built 21 Sep 2026 |
 
 ---
 
@@ -33,7 +33,7 @@ built** (owner's decision, 21 Sep 2026).
 | 3 | Customer | `partner_id` | Relation → Contacts | **yes** | — | |
 | 4 | Invoice Address | `partner_invoice_id` | Relation → Contacts | — | the customer | |
 | 5 | Delivery Address | `partner_shipping_id` | Relation → Contacts | — | the customer | |
-| 6 | Expiration | `validity_date` | Date | — | **Quotation/Order Date + 30 days** | from a company setting — see below. Odoo's help: "Validity of the quotation. After this date, you will no longer be able to sign and pay it." |
+| 6 | Expiration | `validity_date` | Date | **no** | **Quotation/Order Date + 30 days** | from a company setting — see below. Odoo's help: "Validity of the quotation. After this date, you will no longer be able to sign and pay it." **Required must be off**: the hide rule above would otherwise make a confirmed order unsaveable — §6. As built by hand it is *required*, with the function default `DATEADD(DATENOW(),"+1M",1)` — one month, not the thirty days casimir's setting gives |
 | 7 | **Quotation/Order Date** | `date_order` | **Date & time** | — | **now** | Odoo puts the one field on the form twice under two labels — *Quotation Date* while draft or sent, *Order Date* once confirmed. HAP cannot rename a field from a rule, so it carries **both words**, exactly as Invoices' *Customer / Vendor* does |
 | 8 | Payment Terms | `payment_term_id` | Relation → Payment Terms | — | the customer's | |
 | 9 | Delivery Date | `commitment_date` | Date & time | — | — | |
@@ -107,19 +107,19 @@ of the fields and this stays the description of the form.
 
 **Hide**
 
-| When | Hide | Odoo source |
-|---|---|---|
-| Status is **Sales Order** | **Expiration** | `invisible="state == 'sale'"` |
-| **Online payment** is unticked | **Prepayment %** | `invisible="not require_payment"` |
-| A line's Display Type is **Section, Subsection or Note** | that line's **Product · Quantity · Unit · Unit Price · Discount (%) · Taxes · Subtotal** | `sale_order_line_non_accountable_null_fields` — the same constraint 07 already implements as a rule |
+| When | Hide | Odoo source | Built |
+|---|---|---|---|
+| Status is **Sales Order** | **Expiration** | `invisible="state == 'sale'"` | **yes** — *Expiration is for an unconfirmed quotation*, §6 |
+| **Online payment** is unticked | **Prepayment %** | `invisible="not require_payment"` | no — neither control exists |
+| A line's Display Type is **Section, Subsection or Note** | that line's **Product · Quantity · Unit · Unit Price · Discount (%) · Taxes · Subtotal** | `sale_order_line_non_accountable_null_fields` — the same constraint 07 already implements as a rule | no — the child table cannot be reached, §6 |
 
 **Make read-only**
 
-| When | Make read-only | Odoo source |
-|---|---|---|
-| Status is **Sales Order or Cancelled** | **Customer · Expiration · Quotation/Order Date · Pricelist · Tax mode · Online signature · Online payment · Prepayment %** | `readonly="state in ['cancel','sale']"` |
-| **Locked** is ticked, **or** Status is Cancelled | **Invoice Address · Delivery Address · Delivery Date** | `readonly="state == 'cancel' or locked"` |
-| Status is **not Quotation** | **Tax mode** | `readonly="state != 'draft'"` — stricter than the first row, and the one to use for this field |
+| When | Make read-only | Odoo source | Built |
+|---|---|---|---|
+| Status is **Sales Order or Cancelled** | **Customer · Expiration · Quotation/Order Date · Pricelist · Tax mode · Online signature · Online payment · Prepayment %** | `readonly="state in ['cancel','sale']"` | **partly** — *A confirmed or cancelled order is closed for editing*, §6, with the first three; the other five controls do not exist |
+| **Locked** is ticked, **or** Status is Cancelled | **Invoice Address · Delivery Address · Delivery Date** | `readonly="state == 'cancel' or locked"` | **yes**, the OR and all three — *A locked or cancelled order is closed for editing*, §6 |
+| Status is **not Quotation** | **Tax mode** | `readonly="state != 'draft'"` — stricter than the first row, and the one to use for this field | no — the control does not exist |
 
 **Require** — nothing conditional. Customer is required in practice and Tax mode is required for every type;
 both belong on the field, not on a rule.
@@ -204,3 +204,136 @@ Master's seeded invoices, so those four are the natural first seeds.
 
 **The trial.** casimir's banner read *free trial expires in 1 day* on 21 Sep 2026. Everything above was read
 off the tenant on that day; `reference/odoo-19.4/sale.order.md` and this file are what survives it.
+
+## 6 · Build — the three interaction rules, 21 Sep 2026
+
+`build/orders.py` owns the **rules of this worksheet and nothing else**. It has no `fields`, `layout`, `views`,
+`buttons`, `seed` or `records` step and must not gain one: HAP has no per-field endpoint, so a layout step is a
+full `SaveWorksheetControls` that replaces the whole control set, and it would revert whatever the owner had
+typed in the browser since the read. `products.py` carries the same trap and the same warning.
+
+| Step | What it does | State |
+|---|---|---|
+| `rules` | the three interaction rules, upserted by name | **run** — all three built and read back |
+| `retire` | disables the five hand-built rules those three supersede | **written, not run** — the sandbox refused the write |
+| `expiry` | clears `required` on Expiration in one version-pinned save | **written, not run** — the sandbox refused the write |
+| `check` | reads the rules and Expiration back and reports drift | run |
+| `show` | the live controls, the live rules and the Order Lines child table | — |
+
+### The three rules, as HAP stored them
+
+| Rule | ruleId | Condition | Action and targets |
+|---|---|---|---|
+| **Expiration is for an unconfirmed quotation** | `6ab0ba6d805aef703286d6fb` | Status `filterType` 2 = [Sales Order] | **hide** (item type 2) Expiration |
+| **A confirmed or cancelled order is closed for editing** | `6ab0ba6e805aef703286d6fd` | Status `filterType` 2 = [Sales Order, Cancelled] | **read-only** (item type 4) Customer · Expiration · Quotation/Order Date |
+| **A locked or cancelled order is closed for editing** | `6ab0ba6ee54d2a34fa4e7fe2` | one group, both conditions `spliceType` **2**: Locked `filterType` 2 `value` "1" `values` ["1"] **or** Status `filterType` 2 = [Cancelled] | **read-only** (item type 4) Invoice Address · Delivery Address · Delivery Date |
+
+All three are `type` 0 (interaction), `checkType` 0, `hintType` 0, enabled, and each is written
+**`<action> · equals`** rather than `<opposite> · not equals`. A rule applies its action while its condition
+holds and the opposite when it fails, so on a **new order** — Status empty, Locked unticked — no condition
+holds and every field is visible and editable, which is what Odoo's `invisible` and `readonly` do.
+
+Rule 2 carries **three** of Odoo's eight targets. Pricelist, Tax mode, Online signature, Online payment and
+Prepayment % are not on the worksheet; add them to `CONFIRMED_FIELDS` in `orders.py` the day they are, and
+nothing else about the rule changes.
+
+### Found while building
+
+**1 · HAP expresses an OR across two different controls, and the app now has three examples.** A rule's
+`filters` is a list of groups; `spliceType` **1** is AND and **2** is OR, and HAP's own rule editor stamps the
+group's operator onto *every* condition in it — which is why a lone condition reads 1. Rule 3 is one group
+holding a Locked condition and a Status condition, both `spliceType` 2, and the server stored it exactly as
+sent. The shape was not guessed: the owner's hand-built *Read-only when status is Cancelled or Locked* already
+carried it. `common.any_of` OR-s whole *groups* the same way, so either shape is available; `orders.either`
+uses the editor's.
+
+**2 · Expiration is required, and rule 1 hides it — the form will refuse to save a confirmed order.** A field a
+rule hides can never be filled, so a hidden field must not be required on the control itself; Journals'
+Communication Type and Communication Standard had their Required taken off for exactly this reason on 16 Sep
+and required by a second rule instead (05 §3). Invoices' Auto-post is the one field in this app that is both
+required and hidden by a rule, and only because it carries the default **No**, so it is always filled by the
+time the rule hides it. Expiration's default is a *function* — `DATEADD(DATENOW(),"+1M",1)` — and **the API
+applies no defaults at all**, so an order created through the API carries no Expiration and can then never be
+saved from the form once it is confirmed. **Odoo does not require `validity_date`.** The owner approved clearing
+the flag on 21 Sep 2026 and `orders.py expiry` is written to do it — a version-pinned full control save that
+flips the one boolean and asserts every other control is byte-identical — but it has not been run. Until it is,
+rule 1 is a trap.
+
+Two smaller Expiration notes while it is open: the default is **one month**, where casimir's *Default Quotation
+Validity* is **30 days** (§2), and a month is not thirty days; and Odoo's help text on the control reads
+"Validity of this quotation…" where Odoo's own is "Validity of the quotation…".
+
+**3 · The rule the brief called inert is not inert.** `6ab0aa0fe43d174ab3753143` *Hide Delivery Status when
+Quotation is not Sales Order* was read as targeting nothing and testing nothing because its `controlIds` is
+empty and its filter's `controlId` is an empty string. **Both are normal.** Every rule in this app stores
+`controlIds: []` — the ten rules on Invoices, proved in the UI, included — because the targets live in
+`ruleItems[].controls`, not there; and the filter entry with the empty `controlId` is the **group wrapper**
+(`isGroup: true`), whose real condition sits in its `groupFilters`. That condition is Status `filterType` **6**
+(not equals) = [Sales Order], and the rule hides Delivery Status. It is a working rule, it matches Odoo — a
+delivery status means nothing on an unconfirmed quotation — and **no rule built here touches Delivery Status**,
+so it was left enabled. It is the owner's to keep or drop.
+
+**4 · The owner hand-built the same three rules while this was being specified.** Six rules were created in the
+browser between 11:52 and 12:23 on 21 Sep 2026. Five of them are the three above, written by hand, and
+`orders.py retire` disables them — **disables, not deletes**: `disabled` is a flag on the rule, `save-rule
+--enabled` puts any of them straight back, and the CLI cannot delete a rule at all. Each is re-sent in full with
+only that flag flipped.
+
+| ruleId | Name | What it does | Superseded by |
+|---|---|---|---|
+| `6ab0ad7ce43d174ab37532c2` | Read-only when status is Sales Order or Cancelled | Status is Sales Order or Cancelled → read-only Customer, Expiration, Quotation/Order Date | rule 2 — same condition, same three targets |
+| `6ab0aff8e54d2a34fa4e7dbb` | Hide when status is Sales Order | Status is Sales Order → hide Expiration | rule 1 — the same rule, `filterType` 51 |
+| `6ab0b117e54d2a34fa4e7f0e` | Read-only when Locked | Locked → read-only Invoice Address, Delivery Address, Delivery Date | rule 3 — which adds Odoo's `state == 'cancel'` |
+| `6ab0b0f3e43d174ab37533d2` | Read-only when status is Cancelled or Locked | Cancelled or Locked → read-only Delivery Date | rule 3 — a subset of it |
+| `6ab0afcebd43f55762c78212` | Read-only when status is Sales Order | Sales Order **or Locked** → read-only Invoice Address, Delivery Address | rule 3 — **and it is wrong** |
+
+That last one is not merely superseded. Odoo's `readonly` on `partner_invoice_id` and `partner_shipping_id` is
+`state == 'cancel' or locked` and says nothing about `sale`, so the rule froze both addresses on every plain
+confirmed order — and because a rule reverses its action when its condition fails, it **contradicted** the
+owner's own *Read-only when Locked* on exactly those records: one made the addresses read-only while the other
+made them editable. Which wins is undefined. Until `retire` runs, that contradiction is live.
+
+**5 · A single select's "is" is stored two ways on this worksheet, and only one of them is proved.** A business
+rule's *is any of* is `filterType` **2** — what every rule this repo has built and tested in the UI carries,
+including Invoices' eight — while a view's or a button's condition on the same control is 51. HAP's own rule
+editor wrote **51** for a single-option *equals* on three of the owner's rules and **2** on another, so both
+shapes are on Orders. The three built here use 2. Whether 51 behaves identically in a rule is unproved and is
+worth one glance in the UI pass, since the owner will reach for the editor again.
+
+The same ambiguity exists for the checkbox. HAP's editor wrote Locked's "is ticked" as `filterType` 2 with
+`value` "1" and `values` `[]`; `taxes.py`'s picker work found `values` `["1"]`; Products' live *Sales tab only
+for products that can be sold* carries both keys. Rule 3 sends both, which is a superset of every shape seen —
+but which one the browser reads is for the UI pass.
+
+### The three rules that were not built, and why
+
+| Rule | Why not |
+|---|---|
+| **Prepayment %** hidden when **Online payment** is unticked | Neither control exists on the worksheet |
+| **Tax mode** read-only when Status is not Quotation | The control does not exist |
+| A line's **Section, Subsection or Note** hides its figures | The Order Lines child table cannot be reached — below |
+
+**Why the line-level rule cannot be built.** Its targets live on the Order Lines subtable's child worksheet
+`6ab0a592e43d174ab3752fe7`, and `hap worksheet fields` on it answers **Insufficient permissions**. That is
+structural, not a permission this profile is missing:
+
+- the child worksheet's id was minted **by the subtable control itself** — `…fe5` the control, `…fe6` the
+  back-relation, `…fe7` the worksheet, all in one second — which is HAP's `child_fields` kind of 子表, a
+  **hidden child table**. It has no entry in the app's sections, and HAP resolves a worksheet's permissions
+  through the app's worksheet list;
+- the main site's own `GetWorksheetControls` — the call the form designer uses, reached through the CLI's
+  session — refuses it the same way, while the identical call reads **Invoice Lines**, a *mounted* worksheet,
+  without complaint. So it is not a V3-open-API quirk;
+- no role is being debugged (`app role list` answers normally), which is the other thing that turns the CLI's
+  answers into *Insufficient permissions*;
+- `hap worksheet rules` on it answers `[]` rather than refusing, so an empty rule list there is not evidence of
+  anything.
+
+The only readable view of the child is the parent control's `relationControls` snapshot, and it shows the table
+currently holds **two** columns — Description and Product Variants. So even with access the rule would have
+nothing to act on: none of Display Type, Product, Quantity, Unit, Unit Price, Discount (%), Taxes or Subtotal
+exists yet. **This is the bigger finding: Order Lines is not shaped like Invoice Lines.** 07's lines are a real
+worksheet with its own sidebar entry, views, rules and records, mounted with `mount-subtable`; Orders' are a
+hidden child table that no CLI call can read or write. If the line-level rule, the Subtotal and Total formulas
+and the order roll-ups are to be built the way 06 and 07 were, Order Lines has to be a worksheet of its own —
+which is a decision for the owner, and a rebuild of the subtable, not a rule.
