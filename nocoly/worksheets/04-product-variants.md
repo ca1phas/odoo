@@ -86,12 +86,22 @@ finished shape: Reference Unit and Related UoMs each hold the other's id.
 
 | | On Products | |
 |---|---|---|
-| **Variants** | Relation → Product Variants, multiple, **read-only** (`fieldPermission` "101"), `showtype` "2" so it draws as a tab at the foot of the record | `6aa90c7d4a22ad87b728e9f1` — the id HAP had reserved, not a new one |
+| **Variants** | Relation → Product Variants, multiple, **read-only** (`fieldPermission` "101"), `showtype` "2" so it draws as a tab at the foot of the record. Columns **Display Name · Sales Price · Cost · Barcode · Unit** | `6aa90c7d4a22ad87b728e9f1` — the id HAP had reserved, not a new one |
 | **# Variants** | 汇总 (type 37), **count** over Variants, read-only, row 3 beside Active — where Odoo puts its stat button | `6ab07f06805aef703286c9a9`, alias `product_variant_count` |
 
 Both are placed so **no existing row moves**: the count takes the empty column beside Active, the list sits last.
 Read back on 21 Sep: the pair cross-references correctly, and the count reads **2** on *TEST Auto Variant
 Product* and **1** on the other eighteen — 19 products, 20 variants.
+
+**The list's columns — corrected 21 Sep 2026.** The tab first went in with no `showControls`, and a `showtype` "2"
+list with none shows its row count over the words *No visible fields* (`BUILDING.md`); the planner's UI check caught
+it reading "Total 1 row(s)" over those words. The columns are named by controlId **from Product Variants**, the way
+Product Categories' own *Products* list names Products' Name and Internal Reference. The five are Odoo's: the
+*Variants* smart button opens the `product.product` list, whose default-visible columns are image · Name ·
+Attributes · Sales Price · Cost · Barcode · On Hand · Free To Use · Unit — Attributes waiting for the Product
+Variants bundle and On Hand / Free To Use for Inventory, which leaves exactly the five the *Product Variants* view
+below already shows, Display Name standing for Odoo's Name as it does there. **Internal Reference is not among
+them**: Odoo's list carries it `optional="hide"`, and Display Name already reads "[Internal Reference] Name".
 
 ### Form layout
 

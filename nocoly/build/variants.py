@@ -960,9 +960,70 @@ REVERSE_DESC = ('The variants of this product. Odoo product_variant_ids — read
                 'variant says which product it belongs to.')
 COUNT_DESC = "The number on Odoo's Variants smart button (product_variant_count)."
 
+# The columns the Variants list shows. A `showtype` "2" Relation draws as a **tab at the foot of the record**, and
+# a list with no `showControls` shows its row count over the words *No visible fields* (BUILDING.md) — which is
+# what this tab did until 21 Sep 2026. The columns are named by controlId **from the target worksheet**, the way
+# Product Categories' own Products list names Products' Name and Internal Reference (prodcat.LIST_COLUMNS).
+#
+# These five are Odoo's, not a choice: the Variants smart button opens the product.product list
+# (`product.product.md` › Menu), whose default-visible columns are image · Name · Attributes · Sales Price · Cost ·
+# Barcode · On Hand · Free To Use · Unit (› List). Attributes waits for the Product Variants bundle and On Hand /
+# Free To Use for Inventory, which leaves exactly the five this worksheet's own Product Variants view already shows
+# (`04-product-variants.md` › Views), Display Name standing for Odoo's Name as it does there. **Internal Reference
+# is deliberately not among them**: Odoo's list carries it `optional="hide"`, and Display Name already reads
+# "[Internal Reference] Name".
+REVERSE_COLUMNS = ('Display Name', 'Sales Price', 'Cost', 'Barcode', 'Unit')
+
 
 def products_ws():
     return hap.ids()['worksheets'][PRODUCTS]
+
+
+def reverse_columns():
+    """REVERSE_COLUMNS as controlIds on Product Variants — the target worksheet, whose ids the list names."""
+    f = C.fields(ws())
+    missing = [n for n in REVERSE_COLUMNS if n not in f]
+    if missing:
+        sys.exit(f'{REVERSE}: {missing} are not on {WORKSHEET} — run the earlier steps first')
+    return [f[n]['controlId'] for n in REVERSE_COLUMNS]
+
+
+def products_signature(ctrls=None):
+    """Products' controls by id, for proving a save of that worksheet changed only what it meant to."""
+    return {c['controlId']: json.dumps([c.get(k) for k in SIGNATURE], sort_keys=True, ensure_ascii=False)
+            for c in (hap.controls(products_ws()) if ctrls is None else ctrls)}
+
+
+def set_reverse_columns(reserved):
+    """Give the Variants list its columns, in one version-pinned save of Products. Idempotent: when they already
+    read back as REVERSE_COLUMNS nothing is written. Only that one control may change."""
+    columns = reverse_columns()
+    pw = products_ws()
+    live = next((c for c in hap.controls(pw) if c['controlId'] == reserved), None)
+    if (live or {}).get('showControls') == columns:
+        print(f'  {REVERSE}: columns already {" · ".join(REVERSE_COLUMNS)}; nothing saved')
+        return False
+    ctrls, version = C.controls_with_version(pw)
+    hap.backup('products_controls_pre_variant_columns', ctrls)
+    before = products_signature(ctrls)
+    target = next((c for c in ctrls if c['controlId'] == reserved), None)
+    if not target:
+        sys.exit(f'the reverse {reserved} is not in the control set just read from {PRODUCTS}')
+    was = target.get('showControls') or []
+    target['showControls'] = columns
+    # The `version` pins HAP's optimistic lock: a control save anyone made between the read above and this one is
+    # refused (code 10, 数据过时) rather than overwritten. Through the CLI's session, as products.py layout does:
+    # the Relations' snapshots of their targets put the control list past the kernel's argument limit.
+    C.save_controls(pw, ctrls, version=version)
+    after = products_signature()
+    changed = sorted(k for k in set(before) | set(after) if before.get(k) != after.get(k))
+    if changed != [reserved]:
+        sys.exit(f'{PRODUCTS}: the save changed {changed}, wanted only {reserved}')
+    back = next((c for c in hap.controls(pw) if c['controlId'] == reserved), None)
+    if (back or {}).get('showControls') != columns:
+        sys.exit(f'{REVERSE}: showControls read back {(back or {}).get("showControls")}, wanted {columns}')
+    print(f'  {REVERSE}: columns {was} -> {columns} ({" · ".join(REVERSE_COLUMNS)})')
+    return True
 
 
 def step_reverse():
@@ -1008,11 +1069,16 @@ def step_reverse():
         C.add_fields(pw, [count])
         print(f'  {VARIANT_COUNT} added (count over {REVERSE})')
 
+    set_reverse_columns(reserved)
+
+    names = {c['controlId']: c['controlName'] for c in hap.controls(ws())}
     for c in hap.controls(pw):
         if c['controlName'] in (REVERSE, VARIANT_COUNT):
             C.remember('controls', KEY + c['controlName'], c['controlId'])
             print(f"  {c['controlName']:14} {c['controlId']} r{c.get('row')} c{c.get('col')} "
                   f"type={c['type']} perm={c.get('fieldPermission')}")
+            if c['controlName'] == REVERSE:
+                print(f"  {'':14} columns {[names.get(x, x) for x in (c.get('showControls') or [])]}")
     return 0
 
 
