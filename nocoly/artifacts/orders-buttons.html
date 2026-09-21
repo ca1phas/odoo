@@ -109,7 +109,7 @@ footer{margin-top:44px;padding-top:24px;border-top:1px solid var(--rule);
   <div class="g"><b>6</b><span>ALREADY STANDING<br>native or solved</span></div>
   <div class="y"><b>11</b><span>TO BUILD<br>across six parts</span></div>
   <div class="h"><b>3</b><span>OUT OF REACH<br>blocked or later phase</span></div>
-  <div><b>2</b><span>CONTROLS MISSING<br>parts 1 gates the rest</span></div>
+  <div class="g"><b>4</b><span>CONTROLS BUILT<br>part 1 · 21 Sep</span></div>
 </div>
 
 <div class="callout">
@@ -120,26 +120,34 @@ footer{margin-top:44px;padding-top:24px;border-top:1px solid var(--rule);
 <section class="part">
   <div class="ph"><div class="pn">1</div><div class="pt">
     <h2>The two controls everything else waits on</h2>
-    <p>Neither is a button. Four buttons are unbuildable until these exist, so this is one small version-pinned save and it goes first.</p>
+    <p><b>Done, 21 Sep.</b> Neither is a button. Four buttons were unbuildable until these existed, so they went first — and the whole run turned out to be a single append, with no full control save at all.</p>
   </div></div>
   <div class="rows">
     <div class="row"><div class="no">—</div><div>
       <h3>Invoicing Closed</h3>
       <p class="odoo">invoicing_closed · boolean · stored · “Manually Closed For Invoicing”</p>
       <p class="does">A checkbox on Orders. Without it, <b>neither Close Invoicing nor Reopen Invoicing means anything</b> — they are the only two things that read or write it.</p>
-    </div><div class="cell-s"><span class="chip c-you">build</span><span class="sub">gates 12, 20</span></div></div>
+      <p class="odoo">6ab10089e54d2a34fa4e88c4 · switch 36 · perm 100</p>
+    </div><div class="cell-s"><span class="chip c-go">built</span><span class="sub">unblocks 12, 20</span></div></div>
     <div class="row"><div class="no">—</div><div>
       <h3>Signature · Signed By · Signed On</h3>
       <p class="odoo">signature binary · signed_by char · signed_on datetime · all stored</p>
       <p class="does">What the customer's acceptance writes. Online Signature already on Orders is a checkbox <em>asking</em> for one — it stores nothing.</p>
-    </div><div class="cell-s"><span class="chip c-you">build</span><span class="sub">gates 8, and 7's clear</span></div></div>
+      <p class="odoo">…88c5 signature <b>type 42</b> · …88c6 text · …88c7 date-time · all perm 100</p>
+      <p class="does"><b>HAP has a real signature control</b>, so this stores a signature rather than an attachment standing in for one — which is what Part 6 will need.</p>
+    </div><div class="cell-s"><span class="chip c-go">built</span><span class="sub">unblocks 8, and 7's clear</span></div></div>
   </div>
+  <div class="rows"><div class="row" style="border-top:1px solid var(--rule)"><div class="no">!</div><div>
+    <h3>Two things part 1 leaves for you</h3>
+    <p class="does"><b>Placement.</b> All four landed at row 9999 — <code>add-fields</code> parks a control there and only a full layout save places one, which these builders must never make. Intended: Invoicing Closed (24,0), Signature (25,0), Signed By and Signed On (26,0 and 26,1). Worth deciding whether the signature trio belongs inside <em>Other Info › Confirmation</em> beside Online Signature instead.</p>
+    <p class="does"><b>Sign &amp; Acccept.</b> A type-49 search button you added at row 6 — note the three c's. It is a <em>query</em> button, not the custom action Part 6 needs, and it was left untouched.</p>
+  </div><div class="cell-s"><span class="chip c-you">yours</span></div></div></div>
 </section>
 
 <section class="part">
   <div class="ph"><div class="pn">2</div><div class="pt">
     <h2>Six status buttons</h2>
-    <p>All the same shape — a custom action filtered on the record's state, writing one or two fields. Two of them carry a guard that is a real validation, not decoration.</p>
+    <p><b>Next.</b> All the same shape — a custom action filtered on the record's state, writing one or two fields. Two of them carry a guard that is a real validation, not decoration.</p>
   </div></div>
   <div class="rows">
     <div class="row"><div class="no">03</div><div>
