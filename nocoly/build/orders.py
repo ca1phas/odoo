@@ -3254,9 +3254,9 @@ def step_discountfields():
 #       → Is there a discount to apply?   No: Discount Value empty, or 0, or Discount Type empty (nothing more)
 #         Yes ↓
 #           This order's product lines    get-multiple (fetched once): Orders is this order, Display Type Product
-#           Their subtotal                worksheet total (107): Σ Subtotal of those lines, after the removal
+#           Their total, tax included     worksheet total (107): Σ Total of those lines, after the removal
 #           The discount's label          "Discount 10.00%" (Global) / "Discount" (Fixed) — see below
-#           What the discount is taken over   "100" (Global) / Their subtotal (Fixed), as text
+#           What the discount is taken over   "100" (Global) / Their total, tax included (Fixed), as text
 #           Add each product line to its tax group's discount line   sub-process, one line at a time, passing
 #             └ child A "Apply Discount: one product line"            the label as a parameter
 #                 The Discount product · The line's taxes (its own Taxes, in the taxes' Sequence order)
@@ -3274,9 +3274,12 @@ def step_discountfields():
 #                 Set its Unit Price
 #
 # So a group's line first accumulates −(the group's subtotal), then is priced once: round(group × Value ÷ 100) for
-# Global Discount, round(Value × group ÷ Σ product lines) for Fixed Amount — Odoo's rounding per group, not per
-# line. The Fixed denominator is summed **inside the run, after the removal**, never read off the order's Untaxed
-# Amount roll-up.
+# Global Discount, round(Value × group ÷ Σ product lines' Total) for Fixed Amount — Odoo's rounding per group, not
+# per line. That is Odoo 19's `account.tax._reduce_base_lines_to_target_amount`: `percentage = amount ÷
+# total_amount`, where total_amount is Σ(total_excluded + tax_amount) — the **tax-included** total — and each tax
+# group's discount base is its untaxed subtotal × percentage. Its tax is then the group's rate on that base, so the
+# discount lines' Totals sum to −Value and **the order's Total drops by the amount**, as in Odoo. The Fixed
+# denominator is summed **inside the run, after the removal**, never read off the order's Total roll-up.
 #
 # Divergences from Odoo, each deliberate:
 #   * the button is **Apply Discount**, not Odoo's *Discount*, so it is not mistaken for the lines' Discount %;
@@ -3284,11 +3287,10 @@ def step_discountfields():
 #     Odoo's wizard stacks a second discount when pressed twice; the owner chose replace, and Value 0 removes;
 #   * the wizard is two fields on the order (§14b), not a dialog; Odoo's third mode, On All Order Lines, is the
 #     subtable's Batch Operation on Discount %;
-#   * Odoo's **Fixed Amount is tax-included** (`_reduce_base_lines_to_target_amount` spreads the amount over
-#     `total_excluded + tax_amount`, so the order's *Total* drops by the amount); here, as briefed, the amount is
-#     spread over the **untaxed** subtotals and the discount lines' **Subtotals** sum to it;
-#   * Odoo nudges the last line so a Fixed Amount reconciles to the cent; nothing here adjusts cents — a
-#     non-reconciling split would show, and `selfdiscount` reports it;
+#   * Odoo nudges the discount lines so a Fixed Amount reconciles to the cent (`_reduce_base_lines_to_target_amount`
+#     spreads the rounding delta; the lines also carry `extra_tax_data`); nothing here adjusts cents — the order's
+#     Total can miss the amount by a cent or so, and `selfdiscount` reports the residual exactly. Until 22 Sep 2026
+#     the amount was spread over the **untaxed** subtotals, so RM 1,000 off took ~RM 1,099 off the Total;
 #   * Odoo refuses a percentage above 100 (`_check_discount_amount`); nothing here does;
 #   * the wizard's lines carry `extra_tax_data` so their tax is the exact complement of the order's; here each
 #     discount line's tax is its own Subtotal × rate, like every other line.
@@ -3354,7 +3356,8 @@ PARAM_NODE = '6038a1cbf18158039fb40e68'         # the fixed 本流程参数 node
 STRING_FX = 'string_fx_id'
 NUMBER_FORMULA, FUNCTION_FORMULA, OBJECT_TOTAL = '100', '106', '105'
 FORMULA_NODE = 9
-A_TOTAL = 'Their subtotal'
+A_TOTAL = 'Their total, tax included'
+A_TOTAL_WAS = 'Their subtotal'                  # its name while it summed Subtotal; `sync_apply` renames it
 A_DIVISOR = 'What the discount is taken over'
 # child A
 A_A_VARIANT = 'The Discount product'
@@ -3475,7 +3478,7 @@ def apply_nodes(f, params):
                  'config': {'worksheet': LINES_WS, 'filter': lines_of_order}},
                 {'nodeAlias': 'total', 'nodeType': 'rollup', 'name': A_TOTAL,
                  'config': {'mode': 'worksheet', 'worksheet': LINES_WS, 'aggregate': 'sum',
-                            'field': CHILD['Subtotal'], 'filter': lines_of_order}},
+                            'field': CHILD['Total'], 'filter': lines_of_order}},
                 {'nodeAlias': 'label', 'nodeType': 'compute', 'name': A_LABEL,
                  'config': {'mode': 'function', 'output_type': 'text',
                             'formula': discount_label_formula(t(typ), t(val))}},
@@ -3889,7 +3892,7 @@ def apply_wanted(f, pid):
         (pid, A_LINES, 'search', dict(worksheet=LINES_WS, kind=GET_MANY, action=FROM_WORKSHEET, execute=True,
                                       filters=filters_of(order_is(n(by, A_LINES), GET_MANY, FROM_WORKSHEET, trigger),
                                                          is_product_line(n(by, A_LINES), GET_MANY, FROM_WORKSHEET)))),
-        (pid, A_TOTAL, 'total', dict(field=CHILD['Subtotal'], filters=filters_of(
+        (pid, A_TOTAL, 'total', dict(field=CHILD['Total'], filters=filters_of(
             order_is(n(by, A_TOTAL), 18, WORKSHEET_TOTAL_NODE, trigger),
             is_product_line(n(by, A_TOTAL), 18, WORKSHEET_TOTAL_NODE)))),
         (pid, A_LABEL, 'formula', dict(action=FUNCTION_FORMULA, number=2, null_zero=False, out_type=TEXT,
@@ -3920,11 +3923,26 @@ def apply_wanted(f, pid):
     ]
 
 
+def rename_total(pid):
+    """The denominator step was *Their subtotal* while Fixed Amount was spread over the untaxed subtotals; it sums
+    the product lines' tax-included **Total** now (Odoo's `_reduce_base_lines_to_target_amount`), so its name says
+    so. True when it renamed; under `check`, a pending rename is recorded as drift instead."""
+    by = nodes_by_name(pid)[1]
+    if A_TOTAL in by or A_TOTAL_WAS not in by:
+        return False
+    if not drifted(f'{A_TOTAL_WAS!r} is still named so; wanted {A_TOTAL!r}'):
+        hap.run('workflow', 'node', 'rename', pid, by[A_TOTAL_WAS]['id'], '-n', A_TOTAL)
+        if A_TOTAL not in nodes_by_name(pid)[1]:
+            sys.exit(f'{A_TOTAL_WAS!r}: renamed to {A_TOTAL!r}, but it does not read back so')
+    return True
+
+
 def sync_apply(f, pid):
     """Bring every step of Apply Discount and its two children to what `apply_wanted` says; True if written."""
+    renamed = rename_total(pid)
     proc, by = nodes_by_name(pid)
     kids = apply_children(pid, by)
-    changed = {pid: False, kids[A_INNER]: False, kids[A_PRICE_INNER]: False}
+    changed = {pid: renamed, kids[A_INNER]: False, kids[A_PRICE_INNER]: False}
     a_proc, a_by = nodes_by_name(kids[A_INNER])
     changed[kids[A_INNER]] |= sync_related(kids[A_INNER], a_by[A_TAXES], a_proc['startEventId'], CHILD['Taxes'],
                                            [{'controlId': TAX_SEQUENCE, 'controlType': NUMBER, 'isAsc': True}])
@@ -4086,7 +4104,7 @@ def apply_problems(f):
               f'        then remove the Discount lines → if Discount Value is set, per product line ({A_INNER} '
               f'{kids[A_INNER]}) add its Subtotal to its tax group\'s Discount line, creating it the first time → '
               f'one tax group: its line named plainly ("Discount 10.00%" / "Discount") → per group ({A_PRICE_INNER} {kids[A_PRICE_INNER]}) '
-              f'Unit Price × Value ÷ (100 | the product lines\' subtotal)')
+              f'Unit Price × Value ÷ (100 | the product lines\' Total, tax included)')
     return problems
 
 
@@ -4148,13 +4166,15 @@ def set_discount(f, order, label, value):
 
 
 def expected_discount(before, taxes, label_kind, value):
-    """Odoo's discount lines for these product lines: {sorted tax ids: (description, unit price)}."""
-    groups = {}
+    """Odoo's discount lines for these product lines: {sorted tax ids: (description, unit price)}, and what a Fixed
+    Amount is taken over — Σ of the product lines' **Total**, tax included (`_reduce_base_lines_to_target_amount`).
+    Each group's untaxed discount is its Subtotal × Value ÷ that sum."""
+    groups, total = {}, 0
     for cells in before.values():
         if cells['Display Type'] != [PRODUCT_LINE]:
             continue
         groups.setdefault(tuple(sorted(cells['Taxes'])), []).append(cells['Subtotal'] or 0)
-    total = sum(sum(v) for v in groups.values())
+        total += cells['Total'] or 0
     label = f'Discount {Decimal(str(value)).quantize(Decimal("0.01"))}%' if label_kind == GLOBAL_DISCOUNT \
         else 'Discount'
     out = {}
@@ -4286,12 +4306,14 @@ def step_selfdiscount():
         if title == 'Global Discount 10%' and drop['Untaxed Amount'] != -24722.50:
             problems.append(f'Global 10%: the untaxed total dropped by {drop["Untaxed Amount"]}, wanted -24722.50')
         if label == FIXED_AMOUNT and value:
-            if drop['Untaxed Amount'] != -float(value):
-                print(f"    NOTE  the discount lines sum to {drop['Untaxed Amount']}, not {-float(value)} — the cents "
-                      'do not reconcile, and nothing here adjusts them')
-                problems.append(f'Fixed {value}: lines sum to {drop["Untaxed Amount"]}')
-            else:
-                print(f'    OK    the discount lines sum to exactly {-float(value):.2f}')
+            # Odoo: the order's Total drops by exactly the amount. Odoo gets there by nudging cents; nothing here
+            # does, so a residual is reported to the cent — and more than a cent per tax group is a wrong split.
+            residual = cents(drop['Total'] + float(value))
+            print(f"    {'OK  ' if not residual else 'NOTE'}  the order's Total dropped by {-drop['Total']:.2f} for a "
+                  f'Fixed Amount of {float(value):.2f} — residual {residual:+.2f} (Odoo corrects cents; this does '
+                  f"not); untaxed {drop['Untaxed Amount']:+.2f}, tax {drop['Tax']:+.2f}")
+            if abs(residual) > 0.01 * len(disc):
+                problems.append(f'Fixed {value}: the Total dropped by {-drop["Total"]}, a residual of {residual}')
         if not value and disc:
             problems.append(f'Value 0 left {len(disc)} discount line(s)')
 

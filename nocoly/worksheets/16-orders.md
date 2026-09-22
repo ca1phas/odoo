@@ -121,17 +121,25 @@ The three-way split is **the same as Invoice Lines**: `display_type` is **`line_
 | 3 | Display Type | `display_type` | Single Select | Section · Subsection · Note (+ Product, ours) |
 | 4 | Product | `product_id` | Relation → Product Variants | |
 | 5 | Description | `name` | Text | Odoo fills it from the product; we do not — the same gap 07 records |
-| 6 | Quantity | `product_uom_qty` | Number, 2 dp | |
+| 6 | Quantity | `product_uom_qty` | Number, 2 dp | default **1** (Odoo's), as 07 does |
 | 7 | Delivered | `qty_delivered` | Number, read-only | needs Inventory; see §4 |
 | 8 | Invoiced | `qty_invoiced` | Number, read-only | computable once an order → invoice link exists |
 | 9 | Unit | `product_uom_id` | Relation → Units & Packagings | |
 | 10 | Unit Price | `price_unit` | Currency | |
 | 11 | Taxes | `tax_ids` | Relation → Taxes, multiple | the Taxes bundle is built; automation B's pattern fills it from the product |
-| 12 | Discount (%) | `discount` | Number | |
+| 12 | Discount (%) | `discount` | Number | default **0** (Odoo's), as 07 does |
 | 13 | Lead Time | `customer_lead` | Number, integer | "Number of days between the order confirmation and the shipping of the products" |
 | 14 | Optional Line | `is_optional` | Checkbox | |
 | 15 | Subtotal | `price_subtotal` | **Formula**, read-only | `Quantity × Unit Price × (1 − Discount ÷ 100)` — 07's formula exactly |
 | 16 | Total | `price_total` | Formula, read-only | subtotal plus its taxes, as 07's Total is |
+
+**A blank operand counts as 0** in Subtotal, Tax Amount and Total (`advancedSetting.nullzero "1"`, `orderlines.py
+defaults`, 22 Sep 2026). With 07's `"0"` a type 31 Formula computes **nothing** when any operand is blank: probed
+through the API on S00017's line, Discount written blank stored Subtotal, Tax Amount and Total empty (both read
+paths), and the order's totals with them. With `"1"` the same write stored 68.00 / 6.80 / 74.80, and Quantity 2 with
+Discount blank stored 136.00 / 13.60 / 149.60. The static defaults only fill a new line in the form; `nullzero`
+covers a cleared Discount and an API write. A blank Quantity or Unit Price now stores Subtotal 0.00 rather than
+nothing, which is Odoo's figure. **Invoice Lines still carries `"0"`** and has the same defect.
 
 ### Interaction rules — grouped by action
 
@@ -544,9 +552,16 @@ one-per-product-line fallback. Line names follow `_prepare_global_discount_so_li
 The percentage prints with two decimals because Odoo formats it with `float_repr(…, Discount precision = 2)`.
 
 Divergences from Odoo (also in `orders.py` §14c and the button's description): named *Apply Discount*, not
-*Discount*; **replaces** instead of stacking; Fixed Amount is spread over the **untaxed** subtotals (Odoo's
-targets the tax-included total); no cent adjustment on a Fixed split; no >100% refusal; the wizard is two fields
-on the order.
+*Discount*; **replaces** instead of stacking; no cent adjustment on a Fixed split; no >100% refusal; the wizard is
+two fields on the order.
+
+**Fixed Amount matches Odoo since 22 Sep 2026.** Odoo 19's `_reduce_base_lines_to_target_amount` takes
+`percentage = amount ÷ Σ(total_excluded + tax_amount)` — the product lines' **tax-included** total — and gives
+each tax group's discount line an untaxed amount of the group's Subtotal × percentage, so **the order's Total drops
+by exactly the amount**. The workflow's denominator step, now *Their total, tax included*, sums the product lines'
+**Total** (it summed Subtotal before, which took about RM 1,099 off the Total for RM 1,000 promised). The only
+remaining difference is **Odoo's cent correction**: it nudges the lines so the Total reconciles to the cent, and
+this does not — `selfdiscount` reports the residual exactly.
 
 **Proved** (`selfdiscount`, both read paths, 22 Sep 2026) on S00006 — lines 128,250 + 89,775 + 19,000 at 10% G
 and 10,200 at 8% S, untaxed 247,225.00:
@@ -555,7 +570,7 @@ and 10,200 at 8% S, untaxed 247,225.00:
 |---|---|---|
 | Global 10% | 10% G −23,702.50 (tax −2,370.25) · 8% S −1,020.00 (tax −81.60) | 222,502.50 / 22,066.65 / 244,569.15 — untaxed −24,722.50 exactly |
 | Global 10% again | the same two, new ids — still one set | the same |
-| Fixed 1,000 | 10% G −958.74 · 8% S −41.26 = **−1,000.00** | 246,225.00 / 24,419.33 / 270,644.33 |
+| Fixed 1,000 (22 Sep, Odoo's way) | 10% G −872.24 (tax −87.22, total −959.46) · 8% S −37.54 (tax −3.00, total −40.54) | 246,315.22 / 24,428.28 / **270,743.50 — Total −1,000.00, residual 0.00** |
 | Value 0 | none | 247,225.00 / 24,518.50 / 271,743.50 |
 
 S00006 ended with no Discount line and Discount Type / Value empty. The one-combination name was proved on S00007

@@ -9,6 +9,9 @@
                                                                  #    Currency controls carrying a function
                                                                  #    default and become type 31 Formulas — one
                                                                  #    pinned save
+    ~/.hap-venv/bin/python nocoly/build/orderlines.py defaults   # 3b. Quantity 1 and Discount 0 as static
+                                                                 #    defaults, and a blank operand counting as 0
+                                                                 #    in the three Formulas — one pinned save
     ~/.hap-venv/bin/python nocoly/build/orderlines.py rules      # 4. a section or a note carries no figures
     ~/.hap-venv/bin/python nocoly/build/orderlines.py alias      # 5. the Odoo field names into `alias`, one
                                                                  #    pinned save
@@ -524,6 +527,7 @@ def formula_spec(f, shape, setting, templates):
     ops = operands(f)
     expression = {'Subtotal': fill(templates['Subtotal'], ops), 'Tax Amount': fill(TAX_TEMPLATE, ops),
                   'Total': fill(templates['Total'], ops)}
+    setting = {**setting, **BLANK_IS_ZERO}         # the one key Order Lines does not copy from 07 — see `defaults`
     return {n: {**shape, 'dataSource': expression[n],
                 **{f'advancedSetting.{k}': v for k, v in setting.items()}} for n in CONVERT}
 
@@ -616,6 +620,63 @@ def check_subtotal(f):
                  'still be written by the form and not by the API; run `formulas`')
     print(f'  OK  {list(CONVERT)} carry no default of any kind — every figure is computed, in the form and on an '
           'API write alike')
+
+
+# ── 3b · a blank Quantity or Discount no longer blanks a line ───────────────
+#
+# Subtotal is `Quantity × Unit Price × (1 − Discount ÷ 100)`, and a type 31 Formula carrying
+# `advancedSetting.nullzero "0"` — Invoice Lines' shape, copied by `formulas` — **computes nothing when an operand is
+# blank**: probed on 22 Sep 2026 through the API on S00017's one line, Discount written '' stored Subtotal, Tax
+# Amount and Total **all empty** (both read paths), and the order's roll-ups with them. `nullzero "1"` is HAP's
+# "treat a blank operand as 0" — the form's 空值视为0 — and the same probe with it set stores 68.00 / 6.80 / 74.80.
+# (The same flag on a workflow formula node is `nullZero: true`, BUILDING.md.)
+#
+# Two parts, both owned here:
+#   * **static defaults** Quantity 1 and Discount 0 — Invoice Lines' own (`invlines.py` DEFAULTS), and Odoo's
+#     `product_uom_qty` default 1.0 and `discount` default 0.0 — so a line typed in the form starts filled;
+#   * **nullzero "1"** on Subtotal, Tax Amount and Total, because a default covers only a new line in the form:
+#     someone can still clear Discount later, and the API applies no defaults at all (BUILDING.md). With it, a blank
+#     Discount is no discount, as in Odoo, and a blank Tax rate (no percentage tax) is no tax.
+# A blank **Quantity** or **Unit Price** now also reads as 0 and stores Subtotal 0.00 rather than nothing — Odoo's
+# own figure for a line with no quantity. That is not a divergence from Odoo, so no `desc` carries it; it is one
+# from Invoice Lines, which still carries "0" and has the same defect (16-orders.md §2).
+DEFAULTS = {'Quantity': 1, 'Discount': 0}
+BLANK_IS_ZERO = {'nullzero': '1'}
+
+
+def defaults_spec():
+    """{control name: {key: value}} — everything the `defaults` step owns."""
+    spec = {n: {'advancedSetting.defsource': C.static_default(v)} for n, v in DEFAULTS.items()}
+    spec.update({n: {f'advancedSetting.{k}': v for k, v in BLANK_IS_ZERO.items()} for n in CONVERT})
+    return spec
+
+
+def step_defaults():
+    """Quantity 1 and Discount 0 as static defaults, and `nullzero "1"` on the three Formulas — one version-pinned
+    save that changes those five controls and nothing else (`products.py step_perms`)."""
+    f = guard()
+    spec = defaults_spec()
+    stale = {n: drift(f[n], spec[n]) for n in spec if drift(f[n], spec[n])}
+    for n, diff in stale.items():
+        for k, (got, want) in diff.items():
+            print(f'  {n}.{k}: {got!r} -> {want!r}')
+
+    def apply(ctrls):
+        ids = []
+        for c in ctrls:
+            if c['controlName'] in stale:
+                for k in stale[c['controlName']]:
+                    set_value(c, k, spec[c['controlName']][k])
+                ids.append(c['controlId'])
+        return ids
+    changed = pinned_save('defaults', f'{sorted(stale)} written', apply, 'orderlines_controls_pre_defaults')
+    f = C.fields(ws())
+    left = {n: drift(f[n], spec[n]) for n in spec if drift(f[n], spec[n])}
+    if left:
+        sys.exit(f'defaults read back with differences: {json.dumps(left, ensure_ascii=False)}')
+    for n in spec:
+        print(f"  OK  {n}: {json.dumps({k: O.value_of(f[n], k) for k in spec[n]}, ensure_ascii=False)}")
+    return bool(changed)
 
 
 # ── 4 · the line-level rule ─────────────────────────────────────────────────
@@ -1062,6 +1123,12 @@ def step_check():
                 print(f'  OK  {n} t{FORMULA} = {f[n]["dataSource"]} (perm {f[n]["fieldPermission"]}, '
                       f'dot {f[n]["dot"]})')
         check_subtotal(f)
+        for n, want in defaults_spec().items():
+            diff = drift(f[n], want)
+            if diff:
+                problems.append(f'{n}: {json.dumps(diff, ensure_ascii=False)} — run `defaults`')
+            else:
+                print(f"  OK  {n} {json.dumps({k: O.value_of(f[n], k) for k in want}, ensure_ascii=False)}")
         for n in REQUIRED:
             if not f[n].get('required'):
                 problems.append(f'{n} is not required — run `computed`')
@@ -1196,7 +1263,8 @@ def step_show():
         print(f"  {'disabled' if r['disabled'] else 'enabled ':<9} {r['ruleId']} {r['name']}")
 
 
-STEPS = {'fields': step_fields, 'computed': step_computed, 'formulas': step_formulas, 'rules': step_rules,
+STEPS = {'fields': step_fields, 'computed': step_computed, 'formulas': step_formulas, 'defaults': step_defaults,
+         'rules': step_rules,
          'alias': step_alias, 'wipe': step_wipe, 'seed': step_seed, 'figures': step_figures,
          'check': step_check, 'show': step_show}
 
