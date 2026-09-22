@@ -65,9 +65,7 @@
   "Orders: Confirm": "6ab10707886e6e7c8b386eb3",
   "Orders: Cancel": "6ab1070a94093ab76bcc899e",
   "Orders: Set to Quotation": "6ab1070d789584ded32f15e7",
-  "Orders: Mark as Sent": "6ab10711a2c872a5c1305bae",
-  "Orders: Close Invoicing": "6ab10714789584ded32f164d",
-  "Orders: Reopen Invoicing": "6ab10717886e6e7c8b38701c"
+  "Orders: Mark as Sent": "6ab10711a2c872a5c1305bae"
  },
  "buttons": {
   "Archive": "6aa8a5654720c515252bda3d",
@@ -93,9 +91,7 @@
   "Orders: Confirm": "6ab10707e43d174ab3753de1",
   "Orders: Cancel": "6ab1070abd43f55762c78d2d",
   "Orders: Set to Quotation": "6ab1070dbd43f55762c78d2f",
-  "Orders: Mark as Sent": "6ab10711e54d2a34fa4e89ab",
-  "Orders: Close Invoicing": "6ab10714805aef703286e022",
-  "Orders: Reopen Invoicing": "6ab10717805aef703286e024"
+  "Orders: Mark as Sent": "6ab10711e54d2a34fa4e89ab"
  },
  "views": {
   "Units & Packagings: Units & Packagings": "6aa8d14d4a73a3142152d3fa",

@@ -24,14 +24,14 @@ owner approved — deliberately nothing else.
     ~/.hap-venv/bin/python nocoly/build/orders.py seed     # 11. the tenant's twelve orders
     ~/.hap-venv/bin/python nocoly/build/orders.py figures  # 12. the three roll-ups beside the tenant's amounts
     ~/.hap-venv/bin/python nocoly/build/orders.py buttons  # 13. Part 2 of the button build: Confirm · Cancel ·
-                                                           #     Set to Quotation · Mark as Sent · Close
-                                                           #     Invoicing · Reopen Invoicing, their workflows,
-                                                           #     and Odoo's missing-product guard on Confirm
-    ~/.hap-venv/bin/python nocoly/build/orders.py selfcheck# 13b. press all six through the CLI on one tenant
+                                                           #     Set to Quotation · Mark as Sent, their
+                                                           #     workflows, and Odoo's missing-product guard
+                                                           #     on Confirm
+    ~/.hap-venv/bin/python nocoly/build/orders.py selfcheck# 13b. press all four through the CLI on one tenant
                                                            #     order and put it back, and prove the guard
                                                            #     refuses the order whose lines have no Product
     ~/.hap-venv/bin/python nocoly/build/orders.py check    # read rules, Expiration, the roll-ups, the two new
-                                                           #    controls, the views, the six buttons with their
+                                                           #    controls, the views, the four buttons with their
                                                            #    workflows and the seed back, and report drift
     ~/.hap-venv/bin/python nocoly/build/orders.py show     # the live controls and rules
 
@@ -128,7 +128,14 @@ STATUS_KEYS = {
 # is still empty and whose Locked is unticked, no condition holds, so every field is visible and editable — which
 # is what Odoo's `invisible` and `readonly` do.
 
-RULE_EXPIRATION = 'Expiration is for an unconfirmed quotation'
+# **The owner renamed and extended this rule on 22 Sep 2026** — same ruleId 6ab0ba6d805aef703286d6fb, same
+# condition (Status is Sales Order), and a second item beside HIDE Expiration: SHOW Invoicing Closed, so the
+# checkbox only appears on a confirmed order (Odoo's Close / Reopen Invoicing are header buttons of a `sale`
+# order only). The builder adopts both the name and the item; `upsert_rules` matches by name, so the old name
+# here would have created a duplicate without the second item. The ids.json key keeps the **original** name
+# (`RULE_IDS_KEY`), because an ids.json key is never renamed.
+RULE_EXPIRATION = 'Expiration is for an unconfirmed quotation, only show Invoicing Closed for Sales Orders'
+RULE_IDS_KEY = {RULE_EXPIRATION: 'Expiration is for an unconfirmed quotation'}
 RULE_CONFIRMED = 'A confirmed or cancelled order is closed for editing'
 RULE_LOCKED = 'A locked or cancelled order is closed for editing'
 RULE_TAX_MODE = 'Tax Mode is fixed once the quotation is confirmed'
@@ -203,8 +210,11 @@ def rule_specs(f):
         # <field name="validity_date" invisible="state == 'sale'"/>. `hide · equals`, so Expiration is visible on
         # a new quotation whose Status is still empty. It is also read-only from RULE_CONFIRMED while Status is
         # Cancelled, which Odoo does too — the two rules act on the same field and do not contradict each other.
+        # The owner's second item (22 Sep 2026): SHOW Invoicing Closed under the same condition, so it is off the
+        # form on a quotation and on a cancelled order. Only once §6b has appended the control.
         (RULE_EXPIRATION, C.INTERACTION, C.any_of([is_any_of(f, 'Status', ['Sales Order'])]),
-         [C.item(C.HIDE, *ctrl([EXPIRATION]))], {}),
+         [C.item(C.HIDE, *ctrl([EXPIRATION]))]
+         + ([C.item(C.SHOW, f[INVOICING_CLOSED])] if INVOICING_CLOSED in f else []), {}),
         # readonly="state in ['cancel','sale']" — Odoo's `sale.order` form, on eight fields; three exist here.
         (RULE_CONFIRMED, C.INTERACTION, C.any_of([is_any_of(f, 'Status', ['Sales Order', 'Cancelled'])]),
          [C.item(C.READONLY, *ctrl(CONFIRMED_FIELDS))], {}),
@@ -269,7 +279,7 @@ def step_rules():
     for name in wanted:
         if name not in live:
             sys.exit(f'rule {name!r} did not come back from the worksheet')
-        C.remember('rules', KEY + name, live[name]['ruleId'])
+        C.remember('rules', KEY + RULE_IDS_KEY.get(name, name), live[name]['ruleId'])
     if not all(n in f for n in NEW):
         print(f'  note: {list(NEW)} are not on the worksheet, so {RULE_CUSTOMER!r} and {RULE_TEMPLATE_NAME!r} '
               'were not built — run `controls` first')
@@ -882,6 +892,12 @@ def step_controls():
 # ignores field permission** (Prepayment Percentage is "011", hidden, and seeded fine on 21 Sep), and a
 # workflow's write is not the form's either.
 #
+# **Invoicing Closed is the exception since 22 Sep 2026: "110"** — editable, off the create form, the same as
+# Locked. The owner deleted the Close Invoicing and Reopen Invoicing buttons (§13) and made the checkbox itself
+# the control, shown only on a Sales Order by RULE_EXPIRATION's second item. So `part1_spec` expects "110" for it
+# and "100" for the other three, and neither `part1` nor `check` treats the owner's "110" as drift. The owner
+# also shortened its `desc` the same day; `PART1_DESC` carries their text.
+#
 # Appended with `common.append_controls`, as §6 is and for the same reason — `AddWorksheetControls` with no
 # client-side id, so the server mints real ids and not one of the owner's controls is re-sent. `C.add_fields`
 # would follow the append with an **unpinned full re-save**, the clobber this builder exists to avoid.
@@ -905,6 +921,8 @@ ODOO_INVOICING_CLOSED_LABEL = 'Manually Closed For Invoicing'
 PART1_TYPE = {INVOICING_CLOSED: CHECKBOX, SIGNATURE_FIELD: SIGN_PAD, SIGNED_BY: TEXT, SIGNED_ON: DATE_TIME}
 PART1_ALIAS = {INVOICING_CLOSED: 'invoicing_closed', SIGNATURE_FIELD: 'signature',
                SIGNED_BY: 'signed_by', SIGNED_ON: 'signed_on'}
+# fieldPermission per control. Invoicing Closed is the owner's "110" (see above); the other three stay "100".
+PART1_PERMISSION = {INVOICING_CLOSED: '110', SIGNATURE_FIELD: '100', SIGNED_BY: '100', SIGNED_ON: '100'}
 PART1_PLACE = {INVOICING_CLOSED: (24, 0, 6),   # (row, col, size) — only `size` survives the append
                SIGNATURE_FIELD: (25, 0, 12),   # a signature pad wants the full width
                SIGNED_BY: (26, 0, 6), SIGNED_ON: (26, 1, 6)}
@@ -914,11 +932,9 @@ PART1_PLACE = {INVOICING_CLOSED: (24, 0, 6),   # (row, col, size) — only `size
 # not, so a server-side normalisation cannot put the step into a repair loop.
 PART1_HINT = {INVOICING_CLOSED: '', SIGNATURE_FIELD: '', SIGNED_BY: '', SIGNED_ON: 'Please select date'}
 PART1_DESC = {
-    INVOICING_CLOSED: 'Stop asking for this order to be invoiced, without cancelling it. Written by the Close '
-                      'Invoicing button and cleared by Reopen Invoicing — never typed, which is why it is '
-                      'read-only and hidden on create. Odoo calls the same field "'
-                      + ODOO_INVOICING_CLOSED_LABEL + '"; the shorter name here matches the two buttons that '
-                      'drive it.',
+    # The owner's own text, 22 Sep 2026. It no longer names Odoo's label (ODOO_INVOICING_CLOSED_LABEL), so the
+    # name divergence is traceable from here and from 16-orders.md, not from the app.
+    INVOICING_CLOSED: 'Stop asking for this order to be invoiced, without cancelling it',
     SIGNATURE_FIELD: 'The signature the customer drew when they accepted this quotation on a shared page. '
                      'Written by Sign & Accept and cleared by Set to Quotation — never typed, which is why it '
                      'is read-only and hidden on create. The Online Signature checkbox is only a request for a '
@@ -941,7 +957,7 @@ def part1_controls():
     own template default and is what Quotation/Order Date and Delivery Date both read."""
     def built(name, kind, **kw):
         return C.control(kind, name, PART1_PLACE[name], alias=PART1_ALIAS[name], hint=PART1_HINT[name],
-                         desc=PART1_DESC[name], extra={'fieldPermission': READ_ONLY_PERMISSION}, **kw)
+                         desc=PART1_DESC[name], extra={'fieldPermission': PART1_PERMISSION[name]}, **kw)
     return {
         INVOICING_CLOSED: built(INVOICING_CLOSED, 'SWITCH',
                                 advanced_setting={'showtype': '1', 'itemnames': '', 'sorttype': 'zh'}),
@@ -963,7 +979,7 @@ def part1_spec():
     The server fills `allowtime`, `showformat`, `sorttype`, `analysislink`, `max` and `min` in on its own, so
     none of them is asserted; nor is `hint` (see `PART1_HINT`)."""
     spec = {n: {'type': PART1_TYPE[n], 'alias': PART1_ALIAS[n], 'desc': PART1_DESC[n], 'required': False,
-                'fieldPermission': READ_ONLY_PERMISSION} for n in PART1}
+                'fieldPermission': PART1_PERMISSION[n]} for n in PART1}
     spec[INVOICING_CLOSED]['advancedSetting.defsource'] = C.static_default(0)   # a new order is not closed
     spec[INVOICING_CLOSED]['advancedSetting.showtype'] = '1'
     spec[SIGNED_BY]['enumDefault'] = 2                                         # a single-line text
@@ -983,7 +999,8 @@ def step_part1():
     if status_perm != READ_ONLY_PERMISSION:
         sys.exit(f'Status carries fieldPermission {status_perm!r}, not {READ_ONLY_PERMISSION!r} — it is the '
                  f'permission these four copy, and the reason for copying it; re-read the worksheet')
-    print(f'  Status reads fieldPermission {status_perm!r}; all four copy it')
+    print(f'  Status reads fieldPermission {status_perm!r}; {SIGNATURE_FIELD}, {SIGNED_BY} and {SIGNED_ON} copy '
+          f'it, {INVOICING_CLOSED} carries the owner\'s {PART1_PERMISSION[INVOICING_CLOSED]!r}')
     missing = [n for n in PART1 if n not in f]
     if missing:
         hap.backup('orders_controls_pre_part1', hap.controls(ws()))
@@ -1020,9 +1037,14 @@ def step_part1():
         print(f"  {n:<17} {c['controlId']} t{c['type']:<3} alias={c.get('alias') or '-':<17} "
               f"perm={c.get('fieldPermission') or '-':<4} r{c.get('row')}c{c.get('col')} s{c.get('size'):<3} "
               f"hint={c.get('hint')!r} desc={len(c.get('desc') or '')} chars")
-    print(f'  Odoo\'s own label for {INVOICING_CLOSED} is {ODOO_INVOICING_CLOSED_LABEL!r}, recorded in its desc')
-    print('  placement outstanding — the owner places all four in the designer; intended (row, col, size): '
-          + ', '.join(f'{n} {PART1_PLACE[n]}' for n in PART1))
+    print(f'  Odoo\'s own label for {INVOICING_CLOSED} is {ODOO_INVOICING_CLOSED_LABEL!r} — the owner\'s desc '
+          'no longer carries it (22 Sep 2026)')
+    parked = [n for n in PART1 if f[n].get('row') == 9999]
+    if parked:
+        print('  placement outstanding — the owner places these in the designer; intended (row, col, size): '
+              + ', '.join(f'{n} {PART1_PLACE[n]}' for n in parked))
+    else:
+        print('  placement: all four placed by the owner')
     return True
 
 
@@ -1107,10 +1129,12 @@ UNTOUCHED_VIEWS = ('All',)                             # the system default: nev
 # Odoo `state` -> Status, per view. The labels are looked up in the live option table, never assumed.
 VIEW_STATES = {VIEW_QUOTATIONS: ('Quotation', 'Quotation Sent'),     # Odoo's `draft` filter
                VIEW_ORDERS: ('Sales Order',)}                        # Odoo's `sales` filter
-# What each view must return once it is filtered, from the twelve seeded orders: Sales Order 4 · Quotation Sent 3
-# · Quotation 3 · Cancelled 2, and no record with Is Template ticked. A count that does not match is a defect in
-# the filter, so `views` and `check` both assert it.
-VIEW_ROWS = {VIEW_QUOTATIONS: 6, VIEW_ORDERS: 4, VIEW_TEMPLATES: 0}
+# What each view must return is **derived from the live records**, not fixed: exactly the orders whose Status is
+# one of the view's and whose Is Template is not ticked (Templates: exactly those ticked). It used to be the seed's
+# counts — Quotations 6 · Orders 4 · Templates 0 — and that broke on 22 Sep 2026, when the owner's Confirm on app
+# S00017 legitimately moved one order from Quotations to Orders. A view that returns other rows than these is a
+# defect in its filter, so `views` and `check` both assert it, row for row.
+VIEW_ROWS = (VIEW_QUOTATIONS, VIEW_ORDERS, VIEW_TEMPLATES)
 
 # ── Orders' quick filter ────────────────────────────────────────────────────
 #
@@ -1218,9 +1242,17 @@ def step_views():
         sys.exit(f"{missing} are not on {WORKSHEET} — they are the owner's views and this step does not "
                  'create them')
     hap.backup('orders_views_pre_views', [C.view_info(ws(), APP, v) for v in live.values()])
-    for name, vid in C.upsert_views(ws(), APP, views, 'orders_views_pre_templates').items():
-        C.remember('views', KEY + name, vid)
     wrote = False
+    # `C.upsert_views` re-sends the whole view unconditionally (three saves in the app log on 22 Sep 2026, all
+    # identical), so it is called only when Templates is missing or differs from what `check` compares.
+    if VIEW_TEMPLATES in live and templates_state(f, C.view_info(ws(), APP, live[VIEW_TEMPLATES])) == \
+            templates_wanted(f, columns):
+        print(f'  {VIEW_TEMPLATES}: already as specified; nothing saved')
+        C.remember('views', KEY + VIEW_TEMPLATES, live[VIEW_TEMPLATES])
+    else:
+        for name, vid in C.upsert_views(ws(), APP, views, 'orders_views_pre_templates').items():
+            C.remember('views', KEY + name, vid)
+        wrote = True
     for name in FILTERED_VIEWS:
         vid, want = live[name], view_filter(f, VIEW_STATES[name])
         info = C.view_info(ws(), APP, vid)
@@ -1257,17 +1289,50 @@ def step_views():
     return wrote
 
 
+def expected_rows():
+    """{view name: the set of rowids it must return}, from every live order read with `record get` (Status and
+    Is Template both come back on that path — CLAUDE.md, *Reading records*)."""
+    f = C.fields(ws())
+    label = {v: k for k, v in STATUS_KEYS.items()}
+    want = {name: set() for name in VIEW_ROWS}
+    for r in C.records(ws(), APP):
+        d = read_record(ws(), r['rowid'])
+        status = {label.get(k, k) for k in read_cell(f['Status'], d) or []}
+        if read_cell(f[IS_TEMPLATE], d) == '1':
+            want[VIEW_TEMPLATES].add(r['rowid'])
+            continue
+        for name in FILTERED_VIEWS:
+            if status & set(VIEW_STATES[name]):
+                want[name].add(r['rowid'])
+    return want
+
+
+def templates_state(f, info):
+    """The Templates view as `views` writes it: name, filter, sort and columns."""
+    return (info.get('name'),
+            [(c['controlId'], c['filterType'], c.get('values')) for c in info.get('filters') or []],
+            [(s['controlId'], s.get('isAsc')) for s in info.get('moreSort') or []],
+            list(info.get('showControls') or []))
+
+
+def templates_wanted(f, columns):
+    return (VIEW_TEMPLATES, [(f[IS_TEMPLATE]['controlId'], C.EQ, ['1'])],
+            [(f[TEMPLATE_NAME]['controlId'], True)], list(columns))
+
+
 def report_view_rows():
-    """Each view's row count beside what the twelve seeded orders say it must be."""
-    live, bad = view_ids(), []
-    for name, want in VIEW_ROWS.items():
+    """Each view's rows beside the live orders whose Status (and Is Template) say it must return them."""
+    live, bad, want = view_ids(), [], expected_rows()
+    for name in VIEW_ROWS:
         if name not in live:
             bad.append(f'{name} is missing')
             continue
-        got = len(view_rows(live[name]))
-        print(f"  {'OK  ' if got == want else 'DIFF'} {name} returns {got} row(s), expected {want}")
-        if got != want:
-            bad.append(f'{name} returns {got} row(s), expected {want}')
+        got = {r['rowid'] for r in view_rows(live[name])}
+        ok = got == want[name]
+        print(f"  {'OK  ' if ok else 'DIFF'} {name} returns {len(got)} row(s), expected {len(want[name])} "
+              f"(the live orders its filter names{'' if ok else f'; extra {sorted(got - want[name])}, missing {sorted(want[name] - got)}'})")
+        if not ok:
+            bad.append(f'{name} returns {len(got)} row(s), expected {len(want[name])}')
     return bad
 
 
@@ -1358,11 +1423,22 @@ def step_wipe():
 # thirty lines. The file is the source — nothing here re-derives it — and its `_note` explains the Sequence
 # renumbering, which matters because Odoo's own `sequence` is 10 on nearly every line.
 #
-# **The match key is (Customer, Quotation/Order Date)**, unique across all twelve, because Orders' Number is an
-# **auto-number control (type 33)**: a seeded order gets whatever the app's counter issues next and can never
-# carry the tenant's S00010–S00022. `seeded_orders` is that index, and the tenant name → assigned Number
-# mapping goes into ids.json under `numbers` so the seed stays traceable. Whether Number should become a plain
-# text control that carries Odoo's own numbers is the owner's decision; nothing here changes the control.
+# **The match key is the app's Number, through ids.json `numbers`.** Orders' Number is an **auto-number control
+# (type 33)**: a seeded order gets whatever the app's counter issues next and can never carry the tenant's
+# S00010–S00022, so the first seed records the tenant name → assigned Number mapping under `numbers` — and from
+# then on that Number is the key, because an auto-number is issued once and never changes. Whether Number should
+# become a plain text control that carries Odoo's own numbers is the owner's decision; nothing here changes it.
+#
+# **It used to be (Customer, Quotation/Order Date), and that key broke on 22 Sep 2026.** Confirm writes
+# `date_order = now` by design (`_prepare_confirmation_values`), so the owner's Confirm on app S00017 (tenant
+# S00022) at 10:58 moved the order off its key: `check` called it "not on the worksheet" and `seed` would have
+# created a duplicate. Any confirmed order does this. (Customer, Date) survives only as the fallback for a tenant
+# order with no Number recorded yet — i.e. the very first seed, or a reseed after the owner cleared the records.
+#
+# **The fields a button owns are never compared on an order that exists** — Status, Quotation/Order Date and
+# §6b's four (`BUTTON_OWNED`). The seed writes Status and the date when it *creates* an order; after that Confirm,
+# Cancel, Set to Quotation and Mark as Sent own them, and a pressed button legitimately leaves them different from
+# the seed. Comparing them would make `check` fail and `seed` revert the button's work on every confirmed order.
 SEED_PATH = os.path.join(hap.HERE, os.pardir, 'data', 'sale-orders-casimir.json')
 
 # {worksheet id: the control whose value is a record's title}, for resolving a Relation by display name at run
@@ -1518,28 +1594,56 @@ def option_key(c, label):
     return keys[0]
 
 
+# Written by a button, not by the seed, once an order exists — see the section head.
+BUTTON_OWNED = ('Status', 'Quotation/Order Date') + PART1
+
+
 def order_key(customer_rowid, date):
-    """What matches a live order with a seeded one: (Customer, Quotation/Order Date). Not the Number — that is
-    an auto-number control and the app's own counter owns it."""
+    """The fallback match for a tenant order with no Number in ids.json yet: (Customer, Quotation/Order Date).
+    Only sound before any button has run on the order — Confirm overwrites the date."""
     return (customer_rowid or '', date or '')
 
 
-def seeded_orders():
-    """{tenant name: (rowid, Number)} for every seeded order that is live, matched on (Customer, Date)."""
-    f = C.fields(ws())
-    data, _lines = seed_data()
-    live = {}
+def live_orders(f):
+    """({Number: (rowid, record)}, {(Customer, Date): (rowid, record)}) over every live order, each read with
+    `record get` — `record list` drops what a control hides (CLAUDE.md, *Reading records*)."""
+    by_number, by_key = {}, {}
     for r in C.records(ws(), APP):
         d = read_record(ws(), r['rowid'])
-        live[order_key((read_cell(f[CUSTOMER], d) or [None])[0], read_cell(f['Quotation/Order Date'], d))] = \
-            (r['rowid'], read_cell(f['Number'], d))
+        by_number[read_cell(f['Number'], d)] = (r['rowid'], d)
+        by_key[order_key((read_cell(f[CUSTOMER], d) or [None])[0], read_cell(f['Quotation/Order Date'], d))] = \
+            (r['rowid'], d)
+    return by_number, by_key
+
+
+def match_order(o, customer_rowid, by_number, by_key):
+    """(rowid, record) of the live order seeded from tenant order `o`, or (None, {}).
+
+    The recorded Number first; (Customer, Date) only when ids.json has no Number for it, **or** its Number is
+    not live (the owner cleared the records for a reseed and the Number is stale)."""
+    number = hap.ids().get('numbers', {}).get(KEY + o['name'])
+    if number and number in by_number:
+        return by_number[number]
+    return by_key.get(order_key(customer_rowid, o['date_order']), (None, {}))
+
+
+def seed_compared(want):
+    """`want` without the fields a button owns, for comparing against an order that already exists."""
+    return {k: v for k, v in want.items() if k not in BUTTON_OWNED}
+
+
+def seeded_orders():
+    """{tenant name: (rowid, Number)} for every seeded order that is live, matched as `match_order` does."""
+    f = C.fields(ws())
+    data, _lines = seed_data()
+    by_number, by_key = live_orders(f)
     contacts = titles(*CONTACTS)
-    out, gaps = {}, {}
+    out = {}
     for o in data['orders']:
         rows = contacts.get(o['partner']) or []
-        key = order_key(rows[0] if len(rows) == 1 else None, o['date_order'])
-        if key in live:
-            out[o['name']] = live[key]
+        rowid, d = match_order(o, rows[0] if len(rows) == 1 else None, by_number, by_key)
+        if rowid:
+            out[o['name']] = (rowid, read_cell(f['Number'], d))
     return out
 
 
@@ -1620,7 +1724,12 @@ def write_record(worksheet, rowid, values):
 
 
 def step_seed():
-    """The tenant's twelve orders, matched by (Customer, Quotation/Order Date) and re-running to nothing.
+    """The tenant's twelve orders, matched by their app Number (ids.json `numbers`) and re-running to nothing.
+
+    On an order that already exists, the fields a button owns (`BUTTON_OWNED`: Status, Quotation/Order Date and
+    §6b's four) are **neither compared nor written** — Confirm overwrites the date and every button moves Status,
+    so after a button has run those legitimately differ from the seed, and writing them back would undo it. They
+    are written only when the seed creates the order.
 
     Nothing is written to any other worksheet: a Customer, an Invoice or Delivery Address, a Payment Term or a
     Sales Team whose record this app does not hold is left empty and reported, because creating it would mean
@@ -1639,17 +1748,18 @@ def step_seed():
                  'seeded — run `customer` first')
     data, lines = seed_data()
     index = seed_index(data)
-    live = {}
-    for r in C.records(ws(), APP):
-        d = read_record(ws(), r['rowid'])
-        live[order_key((read_cell(f[CUSTOMER], d) or [None])[0],
-                       read_cell(f['Quotation/Order Date'], d))] = (r['rowid'], d)
-    hap.backup('orders_records_pre_seed', {rowid: d for rowid, d in live.values()})
-    gaps, numbers, problems = {}, {}, []
+    by_number, by_key = live_orders(f)
+    gaps, numbers, problems, planned = {}, {}, [], []
     for o in data['orders']:
         want = order_want(f, o, index, gaps)
-        key = order_key((want.get(CUSTOMER) or [None])[0], want['Quotation/Order Date'])
-        rowid, record = live.get(key, (None, {}))
+        rowid, record = match_order(o, (want.get(CUSTOMER) or [None])[0], by_number, by_key)
+        if rowid:
+            want = seed_compared(want)
+        planned.append((o, want, rowid, record))
+    if any(not rowid or differences(f, record, want) for _o, want, rowid, record in planned):
+        hap.backup('orders_records_pre_seed', {rowid: d for rowid, d in by_number.values()})
+    for o, want, rowid, record in planned:
+        existed = bool(rowid)
         diff = differences(f, record, want) if rowid else want
         if rowid and not diff:
             numbers[o['name']] = read_cell(f['Number'], record)
@@ -1661,7 +1771,7 @@ def step_seed():
             rowid = write_record(ws(), rowid, values)
             record = read_record(ws(), rowid)
             numbers[o['name']] = read_cell(f['Number'], record)
-            print(f"  {o['name']}: {'updated' if key in live else 'created'} as {numbers[o['name']]} ({rowid})")
+            print(f"  {o['name']}: {'updated' if existed else 'created'} as {numbers[o['name']]} ({rowid})")
         left = differences(f, record, want)
         if left:
             problems.append(f"{o['name']} ({numbers[o['name']]}): {json.dumps(left, ensure_ascii=False, default=str)}")
@@ -1715,11 +1825,16 @@ def step_figures():
     return diffs
 
 
-# ── 13 · the six state buttons, and Confirm's guard ─────────────────────────
+# ── 13 · the four state buttons, and Confirm's guard ────────────────────────
 #
 # **Part 2 of the Orders button build** — 16-orders.md §3's twenty actions. Part 1 (§6b) appended the four
-# controls two of these six write; these are the six that are **nothing but a state change**, plus the one guard
+# controls these buttons write; these are the ones that are **nothing but a state change**, plus the one guard
 # Odoo puts in front of a state change.
+#
+# **Four, not six, since 22 Sep 2026.** The owner deleted *Close Invoicing* and *Reopen Invoicing* and their
+# workflows (6ab10714789584ded32f164d and 6ab10717886e6e7c8b38701c read back `deleted: True`), and made the
+# Invoicing Closed checkbox itself editable ("110") and shown only on a Sales Order (RULE_EXPIRATION). This builder
+# owns neither button any more and must never recreate them; their ids.json entries were removed.
 #
 # **Why buttons at all.** Status carries `fieldPermission` "100" — read-only and hidden on create — so nobody can
 # type an order from a Quotation into a Sales Order. Before this step nothing in the app could move an order's
@@ -1733,12 +1848,10 @@ def step_figures():
 # | Cancel             | Status is Quotation, Quotation Sent or Sales Order, **and Locked is not ticked** | Status → Cancelled | no |
 # | Set to Quotation   | Status is Cancelled or Quotation Sent          | Status → Quotation, **and Signature, Signed By and Signed On cleared** | no |
 # | Mark as Sent       | Status is Quotation                            | Status → Quotation Sent | yes |
-# | Close Invoicing    | Status is Sales Order, **and Invoicing Closed is not ticked** | Invoicing Closed → ticked | yes |
-# | Reopen Invoicing   | Status is Sales Order, **and Invoicing Closed is ticked**     | Invoicing Closed → unticked | no |
 #
-# `isBatch` mirrors each Odoo action's own `binding_view_types`: *Confirm Orders* (502), *Mark as Sent* (501) and
-# *Close Invoicing* (506) are bound to the **list**, so their singular twins here carry batch and HAP gives us
-# the batch form for free. The other three are header buttons on one record in Odoo and stay single here.
+# `isBatch` mirrors each Odoo action's own `binding_view_types`: *Confirm Orders* (502) and *Mark as Sent* (501)
+# are bound to the **list**, so their singular twins here carry batch and HAP gives us the batch form for free.
+# The other two are header buttons on one record in Odoo and stay single here.
 #
 # **Cancel's `enableWhen` is the whole of Odoo's lock check.** `action_cancel` raises *"You cannot cancel a
 # locked order. Please unlock it first."*; here the button is simply not offered while Locked is ticked, which is
@@ -1801,8 +1914,8 @@ MSG_NO_PRODUCT = 'Some order lines are missing a product, you need to correct th
 
 CONFIRM, CANCEL = 'Confirm', 'Cancel'
 SET_TO_QUOTATION, MARK_AS_SENT = 'Set to Quotation', 'Mark as Sent'
-CLOSE_INVOICING, REOPEN_INVOICING = 'Close Invoicing', 'Reopen Invoicing'
-BUTTONS = (CONFIRM, CANCEL, SET_TO_QUOTATION, MARK_AS_SENT, CLOSE_INVOICING, REOPEN_INVOICING)
+# Close Invoicing and Reopen Invoicing were deleted by the owner on 22 Sep 2026 — see the section head.
+BUTTONS = (CONFIRM, CANCEL, SET_TO_QUOTATION, MARK_AS_SENT)
 
 # The owner's, and never this builder's: their *Send Quotation* button with its own workflow, and their
 # *Sign & Acccept* SEARCH_BTN control (three c's — their spelling, kept). `step_buttons` compares both, byte for
@@ -1817,9 +1930,7 @@ SEARCH_BTN = 49
 STEP = {CONFIRM: 'Confirm the order',
         CANCEL: 'Cancel the order',
         SET_TO_QUOTATION: 'Set the order back to a quotation',
-        MARK_AS_SENT: 'Mark the quotation as sent',
-        CLOSE_INVOICING: 'Close invoicing on this order',
-        REOPEN_INVOICING: 'Reopen invoicing on this order'}
+        MARK_AS_SENT: 'Mark the quotation as sent'}
 
 # Confirm's guard, in order. The 站内通知's **name is part of what the user reads** — HAP renders the
 # notification as 【<node name>】<message> — so it is named as the heading Odoo's dialog does not have.
@@ -1873,22 +1984,19 @@ BUTTON_DESC = {
     SET_TO_QUOTATION: 'Put a cancelled or already-sent order back to a plain quotation, clearing the '
                       'signature the customer left.',
     MARK_AS_SENT: 'Mark this quotation as sent without emailing it — for a quotation sent some other way.',
-    CLOSE_INVOICING: 'Stop asking for this order to be invoiced, without cancelling it.',
-    REOPEN_INVOICING: 'Ask for this order to be invoiced again.',
 }
 
 
 def button_specs(f):
-    """The six buttons as `C.upsert_buttons` takes them: (action spec, the workflow's field writes, step name).
+    """The four buttons as `C.upsert_buttons` takes them: (action spec, the workflow's field writes, step name).
 
     The field writes here are only what `batch-add` puts on the new update step; `set_writes` rewrites every one
     of them afterwards in the shape the server actually stores, and is what the step verifies."""
-    status, closed = f['Status']['controlId'], f[INVOICING_CLOSED]['controlId']
+    status = f['Status']['controlId']
     # A workflow update step stores a dropdown as the **bare option key** in `fieldValue`: a list is refused
     # with an HTTP 500 from flowNode/saveNode, and a JSON array string is accepted and stored empty
     # (BUILDING.md, found while building Invoices).
     to_status = lambda label: {'fieldId': status, 'type': DROPDOWN, 'value': STATUS_KEYS[label]}
-    to_closed = lambda on: {'fieldId': closed, 'type': CHECKBOX, 'value': '1' if on else '0'}
     spec = lambda name, **kw: dict({'name': name, 'type': 'triggerWorkflow', 'desc': BUTTON_DESC[name]}, **kw)
     return [
         (spec(CONFIRM, isBatch=True,
@@ -1905,12 +2013,6 @@ def button_specs(f):
         (spec(MARK_AS_SENT, isBatch=True,
               enableWhen=status_when(f, ['Quotation'])),
          [to_status('Quotation Sent')], STEP[MARK_AS_SENT]),
-        (spec(CLOSE_INVOICING, isBatch=True,
-              enableWhen=status_when(f, ['Sales Order'], switch_when(f, INVOICING_CLOSED, False))),
-         [to_closed(True)], STEP[CLOSE_INVOICING]),
-        (spec(REOPEN_INVOICING, isBatch=False,
-              enableWhen=status_when(f, ['Sales Order'], switch_when(f, INVOICING_CLOSED, True))),
-         [to_closed(False)], STEP[REOPEN_INVOICING]),
     ]
 
 
@@ -1944,7 +2046,7 @@ def writes_wanted(f):
     **Confirm's date is "now"**, taken from the 系统 node's `nowTime` the way `invoices.step_numbering` fills an
     empty Invoice Date — but with no branch in front of it, because `_prepare_confirmation_values` overwrites
     `date_order` unconditionally, and with type **16** (DATE_TIME) where Invoices' date is a 15."""
-    status, closed = f['Status']['controlId'], f[INVOICING_CLOSED]['controlId']
+    status = f['Status']['controlId']
     date = f['Quotation/Order Date']['controlId']
     return {
         CONFIRM: [patch(status, DROPDOWN, value=STATUS_KEYS['Sales Order']),
@@ -1955,12 +2057,10 @@ def writes_wanted(f):
                            patch(f[SIGNED_BY]['controlId'], TEXT, clear=True),
                            patch(f[SIGNED_ON]['controlId'], DATE_TIME, clear=True)],
         MARK_AS_SENT: [patch(status, DROPDOWN, value=STATUS_KEYS['Quotation Sent'])],
-        CLOSE_INVOICING: [patch(closed, CHECKBOX, value='1')],
-        REOPEN_INVOICING: [patch(closed, CHECKBOX, value='0')],
     }
 
 
-# ── the workflow calls these six share with journals.py and invoices.py ─────
+# ── the workflow calls these four share with journals.py and invoices.py ─────
 
 def nodes_by_name(pid):
     proc = hap.run('workflow', 'node', 'list', pid)
@@ -2223,7 +2323,7 @@ def button_wanted(spec):
 
 
 def step_buttons():
-    """Odoo's six state buttons, their one-step workflows, and the product guard in front of Confirm.
+    """Odoo's four state buttons, their one-step workflows, and the product guard in front of Confirm.
 
     Writes **no control, no rule and no view**, and nothing at all on Order Lines: the whole of it is custom
     actions and their own workflows. The owner's *Send Quotation* button, its workflow and their
@@ -2271,7 +2371,7 @@ def step_buttons():
     return True
 
 
-# ── 13b · driving all six from the CLI ──────────────────────────────────────
+# ── 13b · driving all four from the CLI ─────────────────────────────────────
 #
 # `hap workflow trigger <processId> -s <rowid>` runs a button's workflow on one record, which is the only check
 # of a button this repo can make without a browser (BUILDING.md). It runs the **workflow**, so it does not test
@@ -2281,13 +2381,16 @@ def step_buttons():
 # **It runs on the tenant's own orders, because nothing may be created or deleted here.** Two of the twelve
 # happen to be exactly the two cases needed, which is why no TEST order was made:
 #
-#   * **S00009** (a Quotation Sent whose two lines both carry a Product) is driven through all six buttons and
+#   * **S00009** (a Quotation Sent whose two lines both carry a Product) is driven through all four buttons and
 #     then put back to the Quotation Sent it started as, with its seeded date;
 #   * **S00016** (a Quotation Sent with **two product lines that have no Product**) is the guard's own case: it
 #     is confirmed and must come back **unchanged**.
 #
-# `check` is the proof the restore worked: it matches a seeded order on (Customer, Quotation/Order Date) and
-# compares every cell the seed writes, so a Status or a date left behind fails it.
+# **This step is the proof the restore worked**, not `check`: it reads the five cells back against what it
+# started from. `check` no longer compares the fields a button owns (Status, Quotation/Order Date and §6b's four)
+# against the seed, because after a real Confirm they legitimately differ from it — see `step_seed`.
+#
+# It is the one step here that writes records by design; it is not part of a "saves nothing" re-run.
 CLEAN_ORDER, GUARDED_ORDER = 'S00009', 'S00016'
 SIGNER, SIGNED_AT = 'TEST signer', '2026-09-20 10:11:12'
 
@@ -2299,7 +2402,7 @@ def by_number():
 
 
 def order_state(f, rowid):
-    """The five cells these six buttons write, read back."""
+    """The five cells these buttons (and the owner's Invoicing Closed checkbox) write, read back."""
     d = read_record(ws(), rowid)
     return {n: read_cell(f[n], d) for n in ('Status', 'Quotation/Order Date', INVOICING_CLOSED,
                                             SIGNED_BY, SIGNED_ON)}
@@ -2331,7 +2434,7 @@ def write_cells(rowid, values):
 
 
 def step_selfcheck():
-    """Press all six buttons through the CLI on S00009 and put it back, then press Confirm on S00016 — the order
+    """Press all four buttons through the CLI on S00009 and put it back, then press Confirm on S00016 — the order
     whose two product lines have no Product — and prove it does not move."""
     f = guard()
     rows = by_number()
@@ -2357,27 +2460,22 @@ def step_selfcheck():
     # ── the happy path: every button in turn, then back where it started ──
     start = order_state(f, clean)
     if status_label(start['Status']) != 'Quotation Sent':
-        sys.exit(f'{CLEAN_ORDER} is {status_label(start["Status"])}, expected Quotation Sent — restore it '
-                 f'with `seed` before running this')
+        sys.exit(f'{CLEAN_ORDER} is {status_label(start["Status"])}, expected Quotation Sent — put it back '
+                 f'first (`seed` does not: Status is a button\'s field, not the seed\'s, once an order exists)')
     print(f'  {CLEAN_ORDER} before: {status_label(start["Status"])}, date {start["Quotation/Order Date"]!r}')
     now = time.strftime('%Y-%m-%d %H:%M:%S')
     got = {}
-    for name, wanted in ((CONFIRM, 'Sales Order'), (CLOSE_INVOICING, None), (REOPEN_INVOICING, None),
-                         (CANCEL, 'Cancelled'), (SET_TO_QUOTATION, 'Quotation'),
+    for name, wanted in ((CONFIRM, 'Sales Order'), (CANCEL, 'Cancelled'), (SET_TO_QUOTATION, 'Quotation'),
                          (MARK_AS_SENT, 'Quotation Sent')):
         if name == CANCEL:
             # Give Set to Quotation something to clear. Signature itself is control type 42 and is not written
             # here — a signature pad's value is not something `record update` can put in honestly — so the
-            # clear of Signature is the one write of the six this step cannot prove; the UI test signs and
+            # clear of Signature is the one write of the four this step cannot prove; the UI test signs and
             # then presses Set to Quotation.
             write_cells(clean, [{'id': cid(SIGNED_BY), 'value': SIGNER},
                                 {'id': cid(SIGNED_ON), 'value': SIGNED_AT}])
         press(name, clean)
-        if wanted:
-            state = wait_until(f, clean, lambda s, w=wanted: status_label(s['Status']) == w)
-        else:
-            on = '1' if name == CLOSE_INVOICING else '0'
-            state = wait_until(f, clean, lambda s, o=on: s[INVOICING_CLOSED] == o)
+        state = wait_until(f, clean, lambda s, w=wanted: status_label(s['Status']) == w)
         got[name] = state
         print(f"  {name:<17} -> {status_label(state['Status']):<14} date={state['Quotation/Order Date']!r} "
               f"{INVOICING_CLOSED}={state[INVOICING_CLOSED]!r} {SIGNED_BY}={state[SIGNED_BY]!r} "
@@ -2393,12 +2491,6 @@ def step_selfcheck():
     else:
         print(f'  OK    {CONFIRM} moved Quotation/Order Date {start["Quotation/Order Date"]!r} -> '
               f'{confirmed!r} (the run was at {now})')
-    if got[CLOSE_INVOICING][INVOICING_CLOSED] != '1':
-        problems.append(f'{CLOSE_INVOICING} left {INVOICING_CLOSED} '
-                        f'{got[CLOSE_INVOICING][INVOICING_CLOSED]!r}')
-    if got[REOPEN_INVOICING][INVOICING_CLOSED] != '0':
-        problems.append(f'{REOPEN_INVOICING} left {INVOICING_CLOSED} '
-                        f'{got[REOPEN_INVOICING][INVOICING_CLOSED]!r}')
     if status_label(got[CANCEL]['Status']) != 'Cancelled':
         problems.append(f'{CANCEL}: Status {status_label(got[CANCEL]["Status"])}')
     requoted = got[SET_TO_QUOTATION]
@@ -2428,14 +2520,14 @@ def step_selfcheck():
     if problems:
         print('  selfcheck: ' + '\n             '.join(problems))
         sys.exit(1)
-    print(f'  selfcheck: OK — all six buttons drive {CLEAN_ORDER} and the guard refuses {GUARDED_ORDER}')
+    print(f'  selfcheck: OK — all four buttons drive {CLEAN_ORDER} and the guard refuses {GUARDED_ORDER}')
     return True
 
 
-# ── 13c · reading the six buttons and the guard back ────────────────────────
+# ── 13c · reading the four buttons and the guard back ───────────────────────
 
 def button_problems():
-    """Every difference between the six buttons — their conditions, batch flags, confirmations, workflows and
+    """Every difference between the four buttons — their conditions, batch flags, confirmations, workflows and
     Confirm's guard — and §13's spec, plus the owner's button and control read back. Printed by `check`."""
     ctrls = hap.controls(ws())
     f, problems = hap.by_name(c for c in ctrls if c['type'] != C.TAB), []
@@ -2775,7 +2867,8 @@ def step_check():
         index, gaps = seed_index(data), {}
         for o in data['orders']:
             rowid, number = seeded[o['name']]
-            left = differences(f, read_record(ws(), rowid), order_want(f, o, index, gaps))
+            # Not BUTTON_OWNED: a button that has run leaves those different from the seed by design.
+            left = differences(f, read_record(ws(), rowid), seed_compared(order_want(f, o, index, gaps)))
             if left:
                 problems.append(f"{o['name']} ({number}): {json.dumps(left, ensure_ascii=False, default=str)} "
                                 '— run `seed`')
@@ -2785,8 +2878,9 @@ def step_check():
         sys.exit(1)
     print(f'  check: OK — {len(RULES)} rules, the retired five, Expiration, three roll-ups at {MONEY_DOT} '
           f'decimals, the {len(SUBTABLE_COLUMNS)} subtable columns, {INVOICING_STATUS} at '
-          f'{READ_ONLY_PERMISSION}, the {len(PART1)} controls of §6b at {READ_ONLY_PERMISSION}, '
-          f'{len(VIEW_ROWS)} views returning {list(VIEW_ROWS.values())} rows and the {len(BUTTONS)} buttons of '
+          f'{READ_ONLY_PERMISSION}, the {len(PART1)} controls of §6b at '
+          f'{[PART1_PERMISSION[n] for n in PART1]}, '
+          f'{len(VIEW_ROWS)} views returning exactly the orders their filters name and the {len(BUTTONS)} buttons of '
           f"§13 with their workflows (the owner's {OWNERS_BUTTON!r} and {OWNERS_CONTROL!r} untouched)")
 
 
