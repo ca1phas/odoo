@@ -7,7 +7,7 @@
 | Odoo models | CRM-scoped equivalent of `mail.activity`, `mail.activity.type` and `mail.activity.plan` |
 | Built by | **Teh Li Wei**, 21 Sep 2026, through `hap --profile fbmy-nocoly` |
 | Reference | Odoo CRM rendered UI, with ERP Master's existing Leads worksheet preserved |
-| Status | **Built and UI-tested.** The workflow-backed Lead `Schedule Activity` action creates a real Activity; creation notification has rendered evidence; reassignment and due-time delivery still need runtime testing |
+| Status | **Built and UI-tested for single activities and Meeting intake.** `Schedule Activity` and `Schedule Meeting` are delivered; Activity Plan execution and Calendar Event creation remain deferred |
 
 This is a bounded CRM activity implementation, not a claim to reproduce Odoo's global polymorphic
 `mail.activity` engine. It adds useful assignment and reminder behaviour without extending the same model to
@@ -17,11 +17,13 @@ Contacts, Orders, Invoices or every future ERP worksheet.
 
 - `My Activities` is the user-facing worksheet. Its views are My Activities, Overdue, Today, Upcoming, Done
   and Calendar.
-- `Activity Types` is seeded with To-Do, Email, Call, Meeting and Document.
+- `Activity Types` is seeded with To-Do, Email, Call, Meeting and Document. It now stores default duration,
+  default reminder and whether the type should create a Calendar Event; Meeting is 60 minutes / 15 minutes / yes.
 - `Activity Plans` and `Activity Plan Steps` model repeatable plan headers and their ordered lines. Automatic
   application of a plan is not built.
 - An Activity relates to one Lead and one Activity Type, has Summary, Due Date, Assigned To, Status, Notes,
-  completion/cancellation metadata and Active.
+  completion/cancellation metadata and Active. Meeting Activities additionally store start/end, all-day,
+  attendees, location, reminder, video-call URL, Calendar Event state/id and source Plan/Step.
 - Reschedule, Mark Done and Cancel actions exist on Activities. The Mark Done workflow has passed an end-to-end
   CLI/Web test on `TEST - CRM Activity follow-up`.
 - The mounted Activities subtable on Leads is retained as the technical relation bridge but hidden from the
@@ -78,6 +80,24 @@ The final repeatability fixture is `TEST - Schedule Activity final reset`
 Scheduled, Active and its test note. After creation, the Lead read back with To-Do, 21 September, Teh Li Wei and
 empty Summary/Note; the Web dialog showed the same clean defaults and was cancelled without saving.
 
+## 4.1 · Schedule Meeting on the Lead
+
+`Schedule Meeting` is a separate Lead Fill action because rendered validation proved that Business Rules do not
+dynamically reveal Meeting fields inside the generic custom-action dialog. The action displays Summary, Meeting
+Start, Meeting End, Assigned To, All Day, Attendees, Location, Reminder, Videocall URL and Note. Its enabled
+workflow (`6ab215e9a2c872a5c138aabb`) creates a Scheduled Activity with the existing Meeting Activity Type and then
+resets the Lead's technical inputs. Read-only Web validation confirmed all ten controls and required markers; the
+dialog was cancelled, so the Activities count remained seven.
+
+This does not yet create a HAP Calendar Event. hap-cli 0.8.31 does not expose Workflow UI's Collaboration
+`Create Event` node. Videocall URL is therefore an optional stored value for the planned API phase, not an
+automatically generated link.
+
+Activity Plan headers and steps are present, but Launch Plan is not delivered. The current CLI does not expose a
+safe Loop Process DSL and this app has no existing type-29 workflow to copy as a validated wire. A minimal Loop
+template must first be created in Workflow UI, then read back and parameterized through CLI before plan execution
+can be claimed.
+
 ## 5 · Review checklist
 
 - Create a clearly named `TEST …` Activity in My Activities and confirm Assigned To receives the notification.
@@ -90,8 +110,10 @@ empty Summary/Note; the Web dialog showed the same clean defaults and was cancel
 - Confirm My Activities' six views and English labels remain usable for a non-administrator.
 - Decide whether Activity Plan Steps should be hidden manually from the sidebar; hiding its only view did not
   hide the worksheet entry.
-- Do not report activity-plan execution, Meetings/Calendar bridge, Odoo chatter, top-bar counter or Opportunity
-  × Activity Type matrix as delivered. The Lead top button is delivered through Fill + workflow, not direct relation.
+- Open `Schedule Meeting`; verify its ten fields, then cancel unless a new TEST Activity is intentionally wanted.
+- Do not report activity-plan execution, Calendar Event creation, meeting-link generation, Odoo chatter, top-bar
+  counter or Opportunity × Activity Type matrix as delivered. Both Lead buttons use Fill + workflow, not direct
+  relation.
 
 ## 6 · Tool and evidence boundary
 
