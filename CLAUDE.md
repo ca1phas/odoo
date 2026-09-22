@@ -1,8 +1,13 @@
 # CLAUDE.md
 
 This is an Odoo 19.0 fork. **Everything Claude works on lives in `nocoly/`** — building the Nocoly HAP app
-**ERP Master** as a replica of Odoo, read from the live tenant **casimir.odoo.com**. Nothing here asks you to
-change Odoo itself; `addons/` is read as the reference for Odoo's own behaviour.
+**ERP Master** as a replica of Odoo. Nothing here asks you to change Odoo itself; `addons/` is read as the
+reference for Odoo's own behaviour.
+
+**The reference tenant casimir.odoo.com is gone** — its trial expired on 22 Sep 2026 and it answers only with a
+"database blocked" page. Odoo's facts now come from `nocoly/reference/odoo-19.4/` (extracted from it while it
+lived) and from the 19.0 source under `addons/`, which is behind the saas~19.4 tenant in places. Say which one a
+fact came from. Never click Subscribe.
 
 This file exists so an agent does not have to read 400 KB of reference material to start. Read the sections
 below, then read **only** the specific functions the index points at.
