@@ -107,8 +107,8 @@ footer{margin-top:44px;padding-top:24px;border-top:1px solid var(--rule);
 
 <div class="tally">
   <div class="g"><b>6</b><span>ALREADY STANDING<br>native or solved</span></div>
-  <div class="g"><b>7</b><span>BUILT &amp; VERIFIED<br>parts 2, 3, 5 · discount</span></div>
-  <div class="y"><b>2</b><span>TO FINISH<br>Send needs credits · Sign &amp; Accept</span></div>
+  <div class="g"><b>8</b><span>BUILT &amp; VERIFIED<br>parts 2, 3, 5, 6 · discount</span></div>
+  <div class="y"><b>1</b><span>TO FINISH<br>Send · needs credits to test</span></div>
   <div class="h"><b>2</b><span>SET ASIDE<br>close · reopen invoicing</span></div>
   <div class="h"><b>3</b><span>OUT OF REACH<br>blocked or later phase</span></div>
   <div class="g"><b>4</b><span>CONTROLS BUILT<br>part 1 · 21 Sep</span></div>
@@ -249,7 +249,7 @@ footer{margin-top:44px;padding-top:24px;border-top:1px solid var(--rule);
 <section class="part">
   <div class="ph"><div class="pn">6</div><div class="pt">
     <h2>Sign &amp; Accept</h2>
-    <p>Last, and alone. Every other item here is a button on a form; this one is a page a customer opens. Different mechanism, so it gets proved on its own.</p>
+    <p><b>Done, 22 Sep</b> — signed as a customer in a browser with no login. A one-time signing link the salesperson copies into WhatsApp or their own email; no credits.</p>
   </div></div>
   <div class="rows">
     <div class="row"><div class="no">08</div><div>
@@ -257,7 +257,10 @@ footer{margin-top:44px;padding-top:24px;border-top:1px solid var(--rule);
       <p class="odoo">the customer portal, not the back office</p>
       <p class="does">The customer signs on a public page; Odoo writes <code>signature</code>, <code>signed_by</code>, <code>signed_on</code> and confirms the order.</p>
       <p class="does">Nocoly Public Sharing gives the page. The catch: <b>a share link is read-only by default</b>, so accepting a signature needs a form that writes back — not sharing alone.</p>
-    </div><div class="cell-s"><span class="chip c-you">build</span><span class="sub">needs part 1</span></div></div>
+      <p class="does"><b>Built 22 Sep as a workflow signing link.</b> <b>Share for Signature</b> (Quotation or Quotation Sent, Online Signature ticked, not yet signed) makes a single-use no-login link for that one order, ending on its Expiration, and saves it in <b>Signing Link</b>. The customer sees the quotation read-only, draws a signature, types a name and presses <b>Accept &amp; Sign</b>. A second workflow then sets Signed On, runs Confirm's product check, confirms the order unless Online Payment is ticked, and notifies the salesperson.</p>
+      <p class="does">Tested: S00018 became a Sales Order with the date set to now; S00019 (online payment) stayed a Quotation with its signature; an empty submit is refused; a used link shows only “Submitted”; an expired one says so.</p>
+      <span class="guard"><b>Yours</b>Place Signing Link under Signature, Signed By and Signed On. Your type-49 placeholder is deleted and the builder no longer expects it. With credits: the link can ride in Send's email, and a confirmation email or signed PDF can follow signing.</span>
+    </div><div class="cell-s"><span class="chip c-go">verified</span><span class="sub">signing link + workflow</span></div></div>
   </div>
 </section>
 

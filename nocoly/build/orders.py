@@ -57,11 +57,22 @@ owner approved — deliberately nothing else.
                                                            #     Odoo's email with it attached, Quotation → Quotation
                                                            #     Sent. Publishes; **never presses it** (real email)
     ~/.hap-venv/bin/python nocoly/build/orders.py sendreach# 16b. read-only: whose inbox each order's Send reaches
+    ~/.hap-venv/bin/python nocoly/build/orders.py signlink # 17a. Signing Link, appended (read-only, "100")
+    ~/.hap-venv/bin/python nocoly/build/orders.py sign     # 17b/c. Sign & Accept: the Share for Signature button
+                                                           #     and its Get Link workflow (a single-use, no-login
+                                                           #     fill-in link into Signing Link), and the workflow
+                                                           #     'Signed: confirm the order'. Publishes; presses
+                                                           #     nothing
+    ~/.hap-venv/bin/python nocoly/build/orders.py signtest # 17d. the TEST quotations for the browser test, each
+                                                           #     pressed once through the button API; prints links
+    ~/.hap-venv/bin/python nocoly/build/orders.py selfsign # 17e. sign a third TEST quotation through the API four
+                                                           #     ways and read every run and cell back
     ~/.hap-venv/bin/python nocoly/build/orders.py check    # read rules, Expiration, the roll-ups, the two new
                                                            #    controls, the views, the five buttons with their
                                                            #    workflows and the seed back, and report drift;
                                                            #    since §14 also the Discount product, the two
-                                                           #    discount fields and Apply Discount; since §16 Send
+                                                           #    discount fields and Apply Discount; since §16 Send;
+                                                           #    since §17 Sign & Accept
     ~/.hap-venv/bin/python nocoly/build/orders.py show     # the live controls and rules
 
 **There is no `fields` or `layout` step, and there must not be one** — `views` writes one view of its own,
@@ -1941,15 +1952,18 @@ SET_TO_QUOTATION, MARK_AS_SENT = 'Set to Quotation', 'Mark as Sent'
 # Close Invoicing and Reopen Invoicing were deleted by the owner on 22 Sep 2026 — see the section head.
 BUTTONS = (CONFIRM, CANCEL, SET_TO_QUOTATION, MARK_AS_SENT)
 
-# The owner's: their *Send Quotation* button with its own workflow, and their *Sign & Accept* SEARCH_BTN control.
-# `step_buttons` compares both, byte for byte, before and after everything it writes — `buttons` writes neither.
-# *Send Quotation* is rewired by its own step, `send` (§16), at the owner's request of 22 Sep 2026: same button,
-# same workflow, their nodes kept. The control was named *Sign & Acccept*, three c's, until the owner had the typo fixed on 22 Sep 2026 —
-# a one-attribute version-pinned save of its `controlName` (16-orders.md, foot); no ids.json key carries it.
+# The owner's: their *Send Quotation* button with its own workflow. `step_buttons` compares it, byte for byte,
+# before and after everything it writes — `buttons` never writes it. It is rewired by its own step, `send` (§16), at
+# the owner's request of 22 Sep 2026: same button, same workflow, their nodes kept.
+#
+# **Their *Sign & Accept* SEARCH_BTN placeholder (type 49) is gone: the owner deleted it on 22 Sep 2026**, once §17
+# was to build Sign & Accept as a Get Link workflow instead. Until then every step here compared it byte for byte and
+# `check` failed without it; now nothing expects it, and `check` only notes it if that id ever comes back. It had been
+# renamed from *Sign & Acccept* (three c's) the same day; no ids.json key ever carried it.
 OWNERS_BUTTON = 'Send Quotation'
 OWNERS_BUTTON_ID = '6ab0aac1e54d2a34fa4e7c1b'
 OWNERS_WORKFLOW = '6ab0aac1789584ded3230fe1'
-OWNERS_CONTROL, OWNERS_CONTROL_ID = 'Sign & Accept', '6ab0f80f7d58b0f449317238'
+OWNERS_CONTROL, OWNERS_CONTROL_ID = 'Sign & Accept', '6ab0f80f7d58b0f449317238'     # deleted by the owner, 22 Sep
 SEARCH_BTN = 49
 
 # Each button's one update step. The name is what the workflow editor and `workflow structure` show.
@@ -2558,19 +2572,10 @@ def owners_button_state():
     return json.dumps({'button': live[0], 'workflow': proc}, ensure_ascii=False, sort_keys=True, default=str)
 
 
-def owners_control_state():
-    """The owner's *Sign & Accept* SEARCH_BTN, in `control_state`'s comparable form."""
-    c = next((x for x in hap.controls(ws()) if x['controlId'] == OWNERS_CONTROL_ID), None)
-    if c is None or c['controlName'] != OWNERS_CONTROL or c['type'] != SEARCH_BTN:
-        sys.exit(f'{OWNERS_CONTROL!r} {OWNERS_CONTROL_ID} is not on the worksheet as a t{SEARCH_BTN} any more')
-    return json.dumps(control_state(c), ensure_ascii=False, sort_keys=True, default=str)
-
-
 def untouched_state():
-    """Everything this step must not change: the owner's button and its workflow, their SEARCH_BTN control, and
-    the whole control set's signature — `step_buttons` writes no control at all, so *nothing* here may move."""
+    """Everything this step must not change: the owner's button and its workflow, and the whole control set's
+    signature — `step_buttons` writes no control at all, so *nothing* here may move."""
     return {'the owner\'s ' + OWNERS_BUTTON: owners_button_state(),
-            'the owner\'s ' + OWNERS_CONTROL: owners_control_state(),
             'the control set': json.dumps(signature(hap.controls(ws())), ensure_ascii=False, sort_keys=True,
                                           default=str)}
 
@@ -2610,8 +2615,8 @@ def step_buttons():
     Deliver (Part 3) with its get-multiple, its per-line sub-process and the child workflow — `ensure_deliver`.
 
     Writes **no control, no rule and no view**, and nothing at all on Order Lines: the whole of it is custom
-    actions and their own workflows. The owner's *Send Quotation* button, its workflow and their
-    *Sign & Accept* control are compared byte for byte before and after.
+    actions and their own workflows. The owner's *Send Quotation* button and its workflow are compared byte for
+    byte before and after.
 
     Re-runnable: a button that exists by name is never re-created (`create-custom-action --action-spec` ignores
     `--btn-id` and would add a duplicate), every workflow node is matched by name and read back before it is
@@ -5036,7 +5041,7 @@ def send_graph(pid):
     return g
 
 
-def add_step(pid, prev_id, name, type_id, action='', app_type=None):
+def add_step(pid, prev_id, name, type_id, action='', app_type=None, app_id=''):
     """The step `name` directly after `prev_id`, inserted there when it is not (the path's next step then follows
     it). Returns (its id, True when added). A step of that name anywhere else stops the run."""
     from hap_cli.core import flow_node
@@ -5053,7 +5058,7 @@ def add_step(pid, prev_id, name, type_id, action='', app_type=None):
                  ' — read it before writing')
     if drifted(f'{name!r} is missing after {fm[prev_id].get("name") or prev_id!r}'):
         return None, True
-    flow_node.add_node(Session.load(None), pid, type_id, prev_id, name=name, action_id=action,
+    flow_node.add_node(Session.load(None), pid, type_id, prev_id, name=name, action_id=action, app_id=app_id,
                        extra={'appType': app_type} if app_type is not None else None)
     fm = hap.run('workflow', 'node', 'list', pid)['flowNodeMap']
     new = fm[prev_id].get('nextId') or ''
@@ -5303,18 +5308,20 @@ def sync_email(pid, node_id, name, subject, body, account, attach):
     return True
 
 
-def sync_notice(pid, node_id, name, content):
-    """A 站内通知 to the person who pressed the button — Confirm's guard (`save_notice`), compared first."""
+def sync_notice(pid, node_id, name, content, account=None):
+    """A 站内通知 to the person who pressed the button — Confirm's guard (`save_notice`), compared first — or to
+    `account` when one is given (§17 tells the order's Salesperson)."""
+    account = account or TRIGGER_USER
     got = read_node(pid, node_id)
     key = lambda a: (a.get('type'), a.get('entityId'), a.get('roleId'))
     channel = got.get('flowNodeMap') or {}
     named = '106' not in channel or (channel['106'] or {}).get('name') == name
     if got.get('sendContent') == content and named and \
-            [key(a) for a in got.get('accounts') or []] == [key(TRIGGER_USER)]:
+            [key(a) for a in got.get('accounts') or []] == [key(account)]:
         return False
     if drifted(f'{name}: message {got.get("sendContent")!r} to {[key(a) for a in got.get("accounts") or []]}'):
         return True
-    return save_notice(pid, {'id': node_id, 'name': name}, content, dict(TRIGGER_USER))
+    return save_notice(pid, {'id': node_id, 'name': name}, content, dict(account))
 
 
 def status_write_problems(pid, node_id, trigger):
@@ -5488,11 +5495,10 @@ def send_problems(f):
 
 
 def send_untouched():
-    """What `send` must not move: every other button, the whole control set, the owner's Sign & Accept."""
+    """What `send` must not move: every other button and the whole control set."""
     others = sorted((b for b in hap.listing('worksheet', 'custom-actions', ws()) if b['btnId'] != OWNERS_BUTTON_ID),
                     key=lambda b: b['btnId'])
     return {'the other buttons': json.dumps(others, ensure_ascii=False, sort_keys=True, default=str),
-            "the owner's " + OWNERS_CONTROL: owners_control_state(),
             'the control set': json.dumps(signature(hap.controls(ws())), ensure_ascii=False, sort_keys=True,
                                           default=str)}
 
@@ -5568,6 +5574,1214 @@ def step_sendreach():
     print('  contacts with an email: ' + ', '.join(sorted(n for n, e in emails.values() if e)))
 
 
+# ── 17 · Sign & Accept: the customer signs and accepts online ───────────────
+#
+# Odoo's *Accept & Sign* is a **portal** action, not a back-end button (16-orders.md §3 row 8): the customer opens the
+# quotation's portal page and signs, and `portal_quote_accept` (addons/sale/controllers/portal.py:318, 19.0 source)
+# refuses unless `_has_to_be_signed()` (sale_order.py:1896) — Status Quotation or Quotation Sent, not expired
+# (`validity_date < today`, so the Expiration day itself still counts), Online Signature ticked, no signature yet —
+# then writes `signed_by`, `signed_on = now` and `signature`, and, **unless online payment is required**
+# (`_has_to_be_paid`), confirms through `_validate_order` → `action_confirm`: the same missing-product check as the
+# Confirm button, then Status → Sales Order and the date → now. It also posts the signed PDF on the chatter and emails
+# the confirmation; neither is built here (credits — see 16-orders.md §11).
+#
+# **The owner chose the platform's own no-login form for it: the workflow Get Link node (获取链接, flowNodeType 15),
+# fill-in type (填写链接, `linkType` 2).** pd-openweb `WorkflowSettings/Detail/Link/index.jsx` is the node's editor and
+# what `sync_link` sends: `selectNodeId` (the record), `linkType`, `linkName`, `formProperties` (one entry per control,
+# `property` 1 view · 2 edit · 3 edit and required · 4 hidden), `time` (the link's validity: `enable`, `type` 1 a
+# duration · 2 a date, `executeTime` the date's source, `dayTime` the hour on a Date field — "08:00" unless set),
+# `password`, `submitButtonName`, `submitType` (0: after submitting, neither view nor modify), `modifyTime`,
+# `addNotAllowView` (a control added later is hidden by default) and `viewId`. The editor adds the node with
+# `typeId 15, appType 13` and no action (CreateNodeDialog.jsx).
+#
+#     Share for Signature (button, one order; offered while Status is Quotation or Quotation Sent, Online Signature
+#     is ticked and Signature is empty)
+#       Trigger by button
+#         → Does the quotation expire?                        branch on Expiration
+#              Expiration is set  → Signing link until the expiration date     Get Link, ends at 23:59 that day
+#                                 → Save the link (until the expiration date)  Signing Link ← the link
+#              No expiration date → Signing link with no end date             Get Link, no end
+#                                 → Save the link (no end date)                Signing Link ← the link
+#
+#     Signed: confirm the order (worksheet event: an order updated, Signature among the fields written, and only
+#     while Signature is filled, Status is Quotation or Quotation Sent and Online Signature is ticked)
+#       → Set Signed On                                        Signed On ← now
+#       → Product lines with no product                        Confirm's own count
+#       → Is a product line missing its product?
+#            Yes → Quotation signed, not confirmed             站内通知 to the Salesperson — the path ends
+#            No  → Is online payment required?
+#                    Yes → Quotation signed, payment due       站内通知 — it stays a quotation, as Odoo's does
+#                    No  → Confirm the order                   Confirm's own writes: Status, Quotation/Order Date
+#                        → Quotation signed                    站内通知: "S000xx was signed by <Signed By>."
+#
+# **Set to Quotation clears Signature**, which is a write of Signature, so the second workflow is narrowed by a
+# trigger condition rather than a first branch: a cleared Signature fails it and **no run starts at all**.
+#
+# **Divergences** (DECISIONS.md, *Orders · Sign & Accept*): the customer types their name — Odoo pre-fills it with the
+# portal partner's; no signed PDF and no confirmation email yet (credits); a signature whose order fails the product
+# check **stays** (Odoo rolls the whole request back, signature included) and the salesperson is told; "online
+# payment required" is the Online Payment checkbox alone — Odoo also needs a positive total and no payment done.
+SIGNING_LINK = 'Signing Link'
+# Odoo has no field for the link itself; `portal.mixin`'s `access_url` is the nearest — the customer-facing URL of the
+# document, which `get_portal_url()` completes with the access token. The alias follows the convention (Odoo names).
+SIGNING_LINK_ALIAS = 'access_url'
+# Intent, for the owner: its own full-width row directly under Signature, Signed By and Signed On (row 6 when this was
+# written). `add-fields` parks it at row 9999 and only a full save places it — the owner's to do in the designer.
+SIGNING_LINK_PLACE = (7, 0, 12)
+SIGNING_LINK_PERMISSION = READ_ONLY_PERMISSION    # "100": read-only and off the create form; a workflow writes it
+SIGNING_LINK_DESC = 'Copy this link and send it to the customer so they can sign and accept the quotation online.'
+
+
+def signing_link_control():
+    """A single-line Text: HAP has no URL control, and a Text's `analysislink` "1" — every Text on Orders carries it
+    — draws a URL in it as a link the salesperson can open or copy."""
+    return C.control('TEXT', SIGNING_LINK, SIGNING_LINK_PLACE, alias=SIGNING_LINK_ALIAS, hint='',
+                     desc=SIGNING_LINK_DESC, extra={'fieldPermission': SIGNING_LINK_PERMISSION},
+                     advanced_setting={'analysislink': '1'})
+
+
+def signing_link_spec():
+    """What it must read back as. Row, column and tab are placement — the owner's — so not asserted."""
+    return {'type': TEXT, 'alias': SIGNING_LINK_ALIAS, 'desc': SIGNING_LINK_DESC, 'required': False,
+            'fieldPermission': SIGNING_LINK_PERMISSION, 'enumDefault': 2, 'advancedSetting.analysislink': '1'}
+
+
+def signing_link_problems(f):
+    c = f.get(SIGNING_LINK)
+    if c is None:
+        return [f'{SIGNING_LINK} is not on {WORKSHEET} — run `signlink`']
+    problems = []
+    diff = drift(c, signing_link_spec())
+    if diff:
+        problems.append(f'{SIGNING_LINK}: {json.dumps(diff, ensure_ascii=False, default=str)} — run `signlink`')
+    if hap.ids().get('controls', {}).get(KEY + SIGNING_LINK) != c['controlId']:
+        problems.append(f'{SIGNING_LINK}: ids.json does not hold {c["controlId"]} — run `signlink`')
+    return problems
+
+
+def step_signlink():
+    """Append Signing Link if it is missing, repair what the append did not store in one version-pinned save limited
+    to that control (`step_part1`'s pattern), and read it back. Re-running saves nothing."""
+    f = guard()
+    for name in PART1[1:]:
+        if name not in f:
+            sys.exit(f'{name} is not on {WORKSHEET} — run `part1` first')
+    if SIGNING_LINK in f:
+        print(f'  {SIGNING_LINK} is already on {WORKSHEET}; nothing appended')
+    else:
+        hap.backup('orders_controls_pre_signlink', hap.controls(ws()))
+        C.append_controls(ws(), [signing_link_control()])
+        f = C.fields(ws())
+        if SIGNING_LINK not in f:
+            sys.exit(f'{SIGNING_LINK} did not come back from the worksheet — the append did not store')
+        print(f"  added {SIGNING_LINK}: {f[SIGNING_LINK]['controlId']} (t{f[SIGNING_LINK]['type']}, row "
+              f"{f[SIGNING_LINK].get('row')} col {f[SIGNING_LINK].get('col')} size {f[SIGNING_LINK].get('size')})")
+    c = f[SIGNING_LINK]
+    spec = signing_link_spec()
+    stale = drift(c, spec)
+    if stale:
+        print('  the append did not store everything; repairing in one version-pinned save:')
+        for k, (got, want) in stale.items():
+            print(f'    {SIGNING_LINK}.{k}: {got!r} -> {want!r}')
+        if not pinned_write('signlink', {c['controlId']: {k: spec[k] for k in stale}},
+                            'orders_controls_pre_signlink_repair'):
+            sys.exit('the repair found nothing to write, which contradicts the drift above')
+        f = C.fields(ws())
+        c = f[SIGNING_LINK]
+    C.remember('controls', KEY + SIGNING_LINK, c['controlId'])
+    problems = signing_link_problems(f)
+    if problems:
+        sys.exit('\n'.join(problems))
+    print(f"  OK  {SIGNING_LINK:<13} {c['controlId']} t{c['type']} alias={c.get('alias')} "
+          f"perm={c.get('fieldPermission')} analysislink={(c.get('advancedSetting') or {}).get('analysislink')} "
+          f"r{c.get('row')}c{c.get('col')}s{c.get('size')} desc={c.get('desc')!r}")
+    if c.get('row') == 9999:
+        print(f'  placement outstanding — the owner places it in the designer; intended (row, col, size) '
+              f'{SIGNING_LINK_PLACE}: its own row under {SIGNATURE_FIELD}, {SIGNED_BY} and {SIGNED_ON}')
+    return True
+
+
+# ── 17b · Share for Signature: the button and its Get Link workflow ─────────
+SIGN = 'Share for Signature'
+SIGN_DESC = ('Create the link the customer opens to sign and accept this quotation online, and put it in Signing Link. '
+             'The link works once, and not after the Expiration date.')
+SIGN_STATES = ('Quotation', 'Quotation Sent')
+L_BRANCH = 'Does the quotation expire?'
+L_DATED_PATH, L_OPEN_PATH = 'Expiration is set', 'No expiration date'
+L_DATED, L_OPEN = 'Signing link until the expiration date', 'Signing link with no end date'
+L_SAVE_DATED, L_SAVE_OPEN = 'Save the link (until the expiration date)', 'Save the link (no end date)'
+SIGN_STEPS = (L_BRANCH, L_DATED, L_SAVE_DATED, L_OPEN, L_SAVE_OPEN)
+LINK_NODE, LINK_APP = 15, 13                    # flowNodeType 获取链接 · the appType the editor adds it with
+FILL_IN = 2                                     # linkType: 1 share (view only) · 2 fill-in · 5 internal
+SUBMIT_TEXT = 'Accept & Sign'                   # Odoo's portal button (sale_portal_templates.xml:385)
+NO_REVISIT = 0                                  # submitType: 0 neither view nor modify once submitted
+AT_A_DATE = 2                                   # time.type: 1 a duration · 2 a date
+LAST_MINUTE = '23:59'                           # dayTime on a Date: the link lasts the whole Expiration day
+VIEW, EDIT, REQUIRED, HIDDEN = 1, 2, 3, 4       # a formProperties entry's `property`
+DATE = 15
+NOT_EMPTY_WF = '7'                              # a workflow condition's 不为空 (a Date's; a Signature's is 31)
+# What the customer sees on the link, read-only — Odoo's portal page shows the same: the header, the customer and
+# its two addresses, the dates, the payment terms, the lines, the totals and the terms (sale_portal_templates.xml).
+# The *Order Lines* here is the subtable; its tab (TERMS_TAB) is shown with it.
+SIGN_VIEW = ('Number', 'Status', 'Customer', 'Invoice Address', 'Delivery Address', 'Expiration',
+             'Quotation/Order Date', 'Delivery Date', 'Payment Terms', ORDER_LINES, 'Untaxed Amount', 'Tax', 'Total',
+             TERMS)
+SIGN_EDIT = (SIGNATURE_FIELD, SIGNED_BY)        # the two the customer fills in, both required
+# Everything else — Signing Link, Locked, Is Template, Discount Type and Value, Invoicing Closed, Signed On, the
+# Other Info tab and all it holds — is hidden, and a control added later is hidden too (`addNotAllowView`).
+
+
+def sign_spec(f):
+    """Offered while Status is Quotation or Quotation Sent, Online Signature is ticked and Signature is empty —
+    `_has_to_be_signed` without its expiry, which the link itself carries."""
+    return {'name': SIGN, 'type': 'triggerWorkflow', 'desc': SIGN_DESC, 'isBatch': False,
+            'enableWhen': {'type': 'group', 'logic': 'AND', 'children': [
+                status_is(f, list(SIGN_STATES)),
+                switch_when(f, 'Online Signature', True),
+                {'field': f[SIGNATURE_FIELD]['controlId'], 'dataType': SIGN_PAD, 'operator': 'isempty'}]}}
+
+
+def btn_conditions(filters):
+    """A button's stored condition in comparable form: (control, filterType, sorted values) per condition. Not
+    `filter_state`, which is §14's workflow-filter reader by the time anything runs (a later `def` of the same name
+    replaces §9's) and reads a button's filters as []."""
+    return [(c.get('controlId'), c.get('filterType'), sorted(c.get('values') or [])) for c in filters or []]
+
+
+def sign_button_problems(f, b):
+    from hap_cli.core.action_spec_adapter import build_button_payload
+    want = build_button_payload(sign_spec(f))
+    problems = []
+    if btn_conditions(b.get('filters')) != btn_conditions(want['filters']):
+        problems.append(f'{SIGN}: offered when {btn_conditions(b.get("filters"))}, wanted '
+                        f'{btn_conditions(want["filters"])}')
+    if bool(b.get('isBatch')) or b.get('workflowType') != 1 or (b.get('desc') or '') != SIGN_DESC:
+        problems.append(f"{SIGN}: isBatch={b.get('isBatch')} workflowType={b.get('workflowType')} "
+                        f"desc={b.get('desc')!r}")
+    return problems
+
+
+def ensure_sign_button(f):
+    """The button, created once by name (`create-custom-action` ignores `--btn-id`). Returns its workflow id."""
+    live = {b['name']: b for b in hap.listing('worksheet', 'custom-actions', ws())}
+    key = KEY + SIGN
+    if SIGN in live:
+        pid = hap.ids().get('workflows', {}).get(key)
+        if not pid:
+            sys.exit(f'{SIGN} exists ({live[SIGN]["btnId"]}) but ids.json has no workflow for it')
+        C.remember('buttons', key, live[SIGN]['btnId'])
+        return pid
+    if drifted(f'the {SIGN!r} button is missing'):
+        return None
+    hap.backup('orders_buttons_pre_share_for_signature', list(live.values()))
+    out = hap.run('worksheet', 'create-custom-action', ws(), '-a', APP, '--action-spec',
+                  json.dumps(sign_spec(f), ensure_ascii=False))
+    data = out.get('data', out) if isinstance(out, dict) else {}
+    pid = data.get('processId')
+    if not pid:
+        sys.exit(f'{SIGN}: no processId in create-custom-action output: {out}')
+    C.remember('workflows', key, pid)
+    btn = next((b for b in hap.listing('worksheet', 'custom-actions', ws()) if b['name'] == SIGN), None)
+    if not btn:
+        sys.exit(f'{SIGN}: created, but it does not come back from custom-actions')
+    C.remember('buttons', key, btn['btnId'])
+    print(f"  {SIGN}: created, btnId {btn['btnId']}, workflow {pid}")
+    return pid
+
+
+def expires_conditions(trigger):
+    """The *Expiration is set* path: Expiration is not empty. The other path has no condition — the else."""
+    return [[cond(trigger, 0, 8, '', CONTROLS['Expiration'], 'Expiration', DATE, NOT_EMPTY_WF)]]
+
+
+def sign_graph(pid):
+    """{name: node id} for the workflow's steps, the gateway's two paths by position (the order `batch-add` gave
+    them: dated first), and the trigger."""
+    proc = hap.run('workflow', 'node', 'list', pid)
+    fm = proc['flowNodeMap']
+    g = {'fm': fm, 'trigger': proc['startEventId']}
+    gw = fm.get(fm[g['trigger']].get('nextId')) or {}
+    if gw.get('typeId') != GATEWAY or gw.get('name') != L_BRANCH:
+        return g
+    g['gateway'] = gw['id']
+    paths = [p for p in gw.get('flowIds') or [] if p in fm]
+    g['paths'] = dict(zip((L_DATED_PATH, L_OPEN_PATH), paths))
+    g['extra_paths'] = paths[2:]
+    return g
+
+
+def add_sign_branch(pid, trigger):
+    """The gateway and its two empty paths, in one `batch-add` right after the trigger."""
+    if drifted(f'{L_BRANCH!r} is missing after the trigger'):
+        return
+    nodes = [{'nodeAlias': 'expires', 'nodeType': 'branch', 'name': L_BRANCH, 'config': {'paths': [
+        {'alias': 'dated', 'name': L_DATED_PATH, 'condition': {'logic': 'and', 'items': [
+            {'left': {'node': {'nodeAlias': 'trigger'}, 'fieldId': CONTROLS['Expiration'], '_filedTypeId': DATE,
+                      '_filedValue': 'Expiration'}, 'op': 'not_empty'}]}},
+        {'alias': 'open', 'name': L_OPEN_PATH}]}}]
+    hap.run('workflow', 'node', 'batch-add', pid, '--nodes', json.dumps(nodes, ensure_ascii=False),
+            '--trigger-node-id', trigger, '--trigger-alias', 'trigger')
+    print(f'  {L_BRANCH!r}: added with its two paths')
+
+
+# The subtable's columns the customer sees on the link, read-only: Odoo's portal lines show the product, description,
+# quantity and unit, unit price, discount, taxes and amounts. Sequence, Display Type, the delivered and invoiced
+# quantities and the hidden helpers are not shown.
+LINK_COLUMNS = ('Product', 'Description', 'Quantity', 'Unit', 'Unit Price', 'Discount', 'Taxes', 'Tax Amount',
+                'Subtotal', 'Total')
+SUBTABLE_LOCKED = {'workflow': True, 'allowAdd': '0', 'allowEdit': '0', 'allowCancel': '0', 'allowExport': '0'}
+
+
+def link_detail(pid, node_id, trigger):
+    """The Get Link node as the editor reads it once the record is picked: `getNodeDetail` with `selectNodeId` set is
+    what fills `formProperties` with the worksheet's controls (Link/index.jsx `getNodeDetail(props, sId)`)."""
+    from hap_cli.core import flow_node
+    from hap_cli.core.session import Session
+    d = flow_node.get_node_detail(Session.load(None), pid, node_id, LINK_NODE, select_node_id=trigger)
+    return d.get('data', d) if isinstance(d, dict) else {}
+
+
+def wanted_property(item, f):
+    """1 view · 3 edit and required · 4 hidden, for one top-level control of the link's form."""
+    if item.get('id') in {f[n]['controlId'] for n in SIGN_EDIT}:
+        return REQUIRED
+    if item.get('id') in {f[n]['controlId'] for n in SIGN_VIEW} | {TERMS_TAB}:
+        return VIEW
+    return HIDDEN
+
+
+def link_properties(items, f):
+    """The whole `formProperties` list with each entry's `property` set, and the Order Lines subtable's own column
+    permissions switched on (`workflow`) with no add, edit, delete or export and only LINK_COLUMNS shown."""
+    columns = {CHILD[n] for n in LINK_COLUMNS}
+    out = []
+    for item in items:
+        item = dict(item, property=wanted_property(item, f))
+        if item.get('id') == f[ORDER_LINES]['controlId']:
+            item.update(SUBTABLE_LOCKED)
+            item['subFormProperties'] = [dict(s, property=VIEW if s.get('id') in columns else HIDDEN)
+                                         for s in item.get('subFormProperties') or []]
+        out.append(item)
+    return out
+
+
+def properties_state(items):
+    """{control id: property}, and for the subtable its switches and {column id: property}."""
+    out = {}
+    for item in items or []:
+        out[item.get('id')] = item.get('property')
+        if item.get('detailTable'):
+            out[item.get('id') + ':columns'] = (
+                tuple(str(item.get(k)) for k in SUBTABLE_LOCKED),
+                tuple(sorted((s.get('id'), s.get('property')) for s in item.get('subFormProperties') or [])))
+    return out
+
+
+def link_time(trigger, dated):
+    """`time` for the dated link: at a date (type 2) taken from the trigger order's Expiration, at 23:59 — a Date
+    field's `dayTime`, which the editor defaults to 08:00 (Deadline/index.jsx). Odoo's `is_expired` is
+    `validity_date < today`, so the Expiration day itself is still signable. None for the open link."""
+    if not dated:
+        return {'enable': False, 'actions': []}
+    return {'enable': True, 'type': AT_A_DATE, 'actions': [], 'dayTime': LAST_MINUTE, 'executeTime': {
+        'fieldActionId': '', 'fieldAppType': 8, 'fieldNodeType': 0, 'fieldNodeId': trigger,
+        'fieldNodeName': 'Trigger by button', 'fieldControlId': CONTROLS['Expiration'],
+        'fieldControlName': 'Expiration', 'fieldControlType': DATE, 'fieldValue': '', 'sourceType': 0}}
+
+
+def time_state(t):
+    t = t or {}
+    e = t.get('executeTime') or {}
+    if not t.get('enable'):
+        return (False,)
+    return (True, t.get('type'), e.get('fieldNodeId'), e.get('fieldControlId'), t.get('dayTime'))
+
+
+def link_state(d):
+    return {'record': d.get('selectNodeId'), 'linkType': d.get('linkType'), 'submit': d.get('submitButtonName'),
+            'submitType': d.get('submitType'), 'password': d.get('password') or '',
+            'addNotAllowView': bool(d.get('addNotAllowView')), 'time': time_state(d.get('time')),
+            'properties': properties_state(d.get('formProperties'))}
+
+
+def link_wanted(d, f, trigger, dated):
+    return {'record': trigger, 'linkType': FILL_IN, 'submit': SUBMIT_TEXT, 'submitType': NO_REVISIT, 'password': '',
+            'addNotAllowView': True, 'time': time_state(link_time(trigger, dated)),
+            'properties': properties_state(link_properties(d.get('formProperties') or [], f))}
+
+
+def sync_link(pid, node_id, name, trigger, f, dated):
+    """One Get Link step: this order, fill-in, Signature and Signed By editable and required, SIGN_VIEW read-only,
+    everything else hidden, "Accept & Sign", no view or change once submitted, and — on the dated path — the end of
+    the Expiration day. Compared first; saved as the editor saves it; read back."""
+    from hap_cli.core import flow_node
+    from hap_cli.core.session import Session
+    d = link_detail(pid, node_id, trigger)
+    want = link_wanted(d, f, trigger, dated)
+    if link_state(d) == want:
+        return False
+    if drifted(f'{name}: {link_state(d)}, wanted {want}'):
+        return True
+    missing = [n for n in SIGN_VIEW + SIGN_EDIT if f[n]['controlId'] not in {x.get('id') for x in d['formProperties']}]
+    if missing:
+        sys.exit(f'{name}: the node offers no {missing} — read it before writing')
+    flow_node.save_node(Session.load(None), pid, node_id, LINK_NODE, {
+        'actionId': d.get('actionId') or '', 'selectNodeId': trigger, 'linkType': FILL_IN,
+        'linkName': d.get('linkName') or '', 'formProperties': link_properties(d['formProperties'], f),
+        'time': link_time(trigger, dated), 'password': '', 'submitButtonName': SUBMIT_TEXT,
+        'submitType': NO_REVISIT, 'modifyTime': -1, 'addNotAllowView': True, 'viewId': ''}, name=name)
+    back = link_detail(pid, node_id, trigger)
+    if link_state(back) != want:
+        got = link_state(back)
+        sys.exit(f'{name}: reads back differently — ' + '; '.join(
+            f'{k}: {got[k]} (wanted {want[k]})' for k in want if got[k] != want[k]))
+    return True
+
+
+LINK_OUT = 'link'                               # the Get Link step's one output: the URL, a Text
+
+
+def sign_share_steps(pid, g):
+    """{step name: id} along each path, adding what is missing in place (`add_step`). None when `check` found a
+    step missing."""
+    steps = {}
+    for name, prev, type_id, action, app_type, app_id in (
+            (L_DATED, g['paths'][L_DATED_PATH], LINK_NODE, '', LINK_APP, ''),
+            (L_SAVE_DATED, L_DATED, UPDATE_NODE, '2', 1, ws()),
+            (L_OPEN, g['paths'][L_OPEN_PATH], LINK_NODE, '', LINK_APP, ''),
+            (L_SAVE_OPEN, L_OPEN, UPDATE_NODE, '2', 1, ws())):
+        steps[name], _ = add_step(pid, steps.get(prev, prev), name, type_id, action=action, app_type=app_type,
+                                  app_id=app_id)
+        if steps[name] is None:
+            return None
+    return steps
+
+
+def save_link_writes(f, link_id):
+    """Signing Link ← the Get Link step's URL, a text template `$<link step>-link$`."""
+    return [patch(f[SIGNING_LINK]['controlId'], TEXT, node=link_id, source=LINK_OUT)]
+
+
+def sync_sign_share(f, pid):
+    """Bring Share for Signature's workflow to §17's shape; True when something was written. Under DRIFT (`check`)
+    it writes nothing and records each difference."""
+    changed = False
+    g = sign_graph(pid)
+    if 'gateway' not in g:
+        if drifted(f'{L_BRANCH!r} is missing after the trigger'):
+            return True
+        fm = g['fm']
+        if fm[g['trigger']].get('nextId') not in (None, '', '99'):
+            sys.exit(f"{SIGN}: the trigger runs into {fm.get(fm[g['trigger']]['nextId'], {}).get('name')!r}, not "
+                     f'{L_BRANCH!r} — read workflow {pid} before writing')
+        add_sign_branch(pid, g['trigger'])
+        changed = True
+        g = sign_graph(pid)
+    if len(g.get('paths') or {}) != 2 or g['extra_paths']:
+        sys.exit(f'{L_BRANCH}: paths {g.get("paths")} + {g.get("extra_paths")} — this builder knows two')
+    for name, groups in ((L_DATED_PATH, expires_conditions(g['trigger'])), (L_OPEN_PATH, [])):
+        changed |= sync_path(pid, g['paths'][name], name, groups)
+    steps = sign_share_steps(pid, g)
+    if steps is None:
+        return True
+    for link, save, dated in ((L_DATED, L_SAVE_DATED, True), (L_OPEN, L_SAVE_OPEN, False)):
+        changed |= sync_link(pid, steps[link], link, g['trigger'], f, dated)
+        wanted = save_link_writes(f, steps[link])
+        live = writes_live(pid, steps[save])
+        node = read_node(pid, steps[save])
+        if live != [write_state(x) for x in wanted] or node.get('selectNodeId') != g['trigger'] or \
+                node.get('isException'):
+            if drifted(f'{save}: writes {live} on {node.get("selectNodeId")}'):
+                continue
+            set_writes(pid, {'id': steps[save], 'name': save}, wanted, g['trigger'])
+            changed = True
+            if writes_live(pid, steps[save]) != [write_state(x) for x in wanted]:
+                sys.exit(f'{save}: reads back {writes_live(pid, steps[save])} — `hap workflow rollback {pid} -y` '
+                         f'restores the published version')
+    return changed
+
+
+def sign_share_structure(pid):
+    """Every path's chain exactly, nothing after the gateway, no step this builder does not know."""
+    g = sign_graph(pid)
+    if 'gateway' not in g:
+        return [f'{SIGN}: {L_BRANCH!r} is not the step after the trigger — run `sign`'], g
+    fm, problems = g['fm'], []
+    names = lambda start: [fm[n].get('name') for n in chain(fm, start)]
+    for path, want in ((L_DATED_PATH, [L_DATED, L_SAVE_DATED]), (L_OPEN_PATH, [L_OPEN, L_SAVE_OPEN])):
+        pid_ = (g.get('paths') or {}).get(path)
+        got = names(pid_) if pid_ else None
+        if got != want or (pid_ and fm[pid_].get('name') != path):
+            problems.append(f'{SIGN}: path {fm.get(pid_, {}).get("name")!r} runs {got}, wanted {path!r}: {want}')
+    if fm[g['gateway']].get('nextId') not in (None, '', '99'):
+        problems.append(f'{SIGN}: {L_BRANCH!r} runs into {fm[fm[g["gateway"]]["nextId"]].get("name")!r}')
+    extra = sorted(n.get('name') for n in fm.values() if n.get('typeId') not in (None, 0, 100, BRANCH_PATH)
+                   and n.get('prveId') and n.get('name') not in SIGN_STEPS)
+    if extra:
+        problems.append(f'{SIGN}: steps this builder does not know: {extra}')
+    return problems, g
+
+
+def workflow_published(pid, label):
+    got = hap.run('workflow', 'get', pid)
+    got = got.get('data', got) if isinstance(got, dict) else {}
+    if not got.get('enabled') or got.get('publishStatus') != 2:
+        return [f'{label} {pid}: enabled={got.get("enabled")} publishStatus={got.get("publishStatus")} — '
+                'unpublished changes; run `sign`']
+    return []
+
+
+def sign_offered():
+    """{order number: (offered?, Status, Online Signature ticked?, signed?)}, the button as the server evaluates it on
+    each order (`buttons_offered`), and the three cells its condition reads through **both** read paths."""
+    f = C.fields(ws())
+    out = {}
+    for r in C.records(ws(), APP):
+        d = read_record(ws(), r['rowid'])
+        ticked = '1' in (READERS[CHECKBOX](r.get(f['Online Signature']['controlId'])),
+                         read_cell(f['Online Signature'], d))
+        signed = bool(r.get(f[SIGNATURE_FIELD]['controlId']) or read_cell(f[SIGNATURE_FIELD], d))
+        out[r.get(f['Number']['controlId'])] = (buttons_offered(r['rowid']).get(SIGN),
+                                                status_label(json_keys(r.get(f['Status']['controlId']))),
+                                                ticked, signed)
+    return out
+
+
+def sign_share_problems(f):
+    """The button, its workflow read back without writing, published, and offered exactly where it should be."""
+    global DRIFT
+    live = {b['name']: b for b in hap.listing('worksheet', 'custom-actions', ws())}
+    b = live.get(SIGN)
+    if b is None:
+        return [f'the {SIGN!r} button is missing — run `sign`']
+    problems = sign_button_problems(f, b)
+    pid = hap.ids().get('workflows', {}).get(KEY + SIGN)
+    if not pid:
+        return problems + [f'{SIGN}: no workflow id in ids.json — run `sign`']
+    found, g = sign_share_structure(pid)
+    problems += found
+    if found:
+        return problems
+    DRIFT = []
+    try:
+        sync_sign_share(f, pid)
+        problems += [f'{SIGN}: {d}' for d in DRIFT]
+    finally:
+        DRIFT = None
+    problems += workflow_published(pid, SIGN)
+    offered = sign_offered()
+    wrong = {n: v for n, v in offered.items() if bool(v[0]) != (v[1] in SIGN_STATES and v[2] and not v[3])}
+    if wrong:
+        problems.append(f'{SIGN}: offered wrongly on {wrong} — (offered, Status, Online Signature, signed)')
+    if not problems:
+        print(f"  OK  {SIGN:<19} btnId={b['btnId']} isBatch=False when Status is Quotation or Quotation Sent, "
+              f'Online Signature is ticked and Signature is empty (server: offered on '
+              f"{sorted(n for n, v in offered.items() if v[0])})\n"
+              f'        then {L_BRANCH} [{L_DATED_PATH}: {L_DATED} (ends {LAST_MINUTE} on Expiration) → '
+              f'{L_SAVE_DATED} | {L_OPEN_PATH}: {L_OPEN} → {L_SAVE_OPEN}] — fill-in, "{SUBMIT_TEXT}", '
+              f'{", ".join(SIGN_EDIT)} required, single use; published')
+    return problems
+
+
+# ── 17c · Signed: confirm the order — the worksheet-event workflow ──────────
+SIGNED_WF = 'Signed: confirm the order'
+SIGNED_WF_DESC = ('When the customer signs a quotation through its signing link: record when, confirm it unless it asks '
+                  'for online payment, and tell the salesperson.')
+W_TRIGGER = 'The customer signed'
+W_SIGNED_ON = 'Set Signed On'
+W_PAY = 'Is online payment required?'
+W_PAY_YES, W_PAY_NO = 'Online payment', 'No online payment'
+# A 站内通知 reads 【<node name>】<content>, so these three names are headings the salesperson reads.
+N_MISSING = 'Quotation signed, not confirmed'
+N_PAYMENT = 'Quotation signed, payment due'
+N_SIGNED = 'Quotation signed'
+SIGNED_STEPS = (W_SIGNED_ON, COUNT_STEP, PRODUCT_BRANCH, N_MISSING, W_PAY, N_PAYMENT, STEP[CONFIRM], N_SIGNED)
+MSG_SIGNED = '{number} was signed by {who}.'
+MSG_PAYMENT = '{number} was signed by {who}. It stays a quotation because it asks for online payment.'
+MSG_MISSING = ('{number} was signed by {who}, but it was not confirmed: some order lines are missing a product. '
+               'Correct them, then confirm it.')
+UPDATED = '4'                                   # a worksheet trigger's triggerId: 1 created · 2 either · 4 updated
+SIG_NOT_EMPTY, TICKED = '31', '29'              # workflow conditionIds: a Signature's 不为空 · a checkbox's 选中
+SALESPERSON_ID = '6ab0bff27d58b0f449316ae1'     # Orders › Salesperson, the owner's Member control
+
+
+def salesperson(trigger):
+    """The order's Salesperson (a Member control) as a notice's recipient — the shape `email_account` gives a
+    field of a step, with a Member's control type."""
+    return {'type': 6, 'entityId': trigger, 'entityName': W_TRIGGER, 'roleId': SALESPERSON_ID,
+            'roleTypeId': 0, 'roleName': 'Salesperson', 'controlType': MEMBER, 'flowNodeType': 0, 'appType': 1,
+            'avatar': '', 'count': 0, 'actionId': ''}
+
+
+def signed_trigger_conditions(trigger, f):
+    """Signature is not empty, Status is Quotation or Quotation Sent, Online Signature is ticked — one AND group."""
+    status = cond(trigger, 0, 1, '', CONTROLS['Status'], 'Status', DROPDOWN, IS_ANY_OF, [
+        {'value': {'key': STATUS_KEYS[x], 'value': x, 'isDeleted': False, 'score': None, 'index': None}}
+        for x in SIGN_STATES])
+    return [[cond(trigger, 0, 1, '', f[SIGNATURE_FIELD]['controlId'], SIGNATURE_FIELD, SIGN_PAD, SIG_NOT_EMPTY),
+             status,
+             cond(trigger, 0, 1, '', CONTROLS['Online Signature'], 'Online Signature', CHECKBOX, TICKED)]]
+
+
+def signed_texts(trigger, f):
+    number = f"${trigger}-{f['Number']['controlId']}$"
+    who = f"${trigger}-{f[SIGNED_BY]['controlId']}$"
+    return {N_MISSING: MSG_MISSING.format(number=number, who=who),
+            N_PAYMENT: MSG_PAYMENT.format(number=number, who=who),
+            N_SIGNED: MSG_SIGNED.format(number=number, who=who)}
+
+
+def signed_nodes(f, trigger):
+    """Every step for one `batch-add` on the new workflow. The field writes and messages here are only what
+    `batch-add` needs to make each step; `sync_signed` rewrites every one in the shape the server stores."""
+    t = {'nodeAlias': 'trigger'}
+    now = lambda name: {'fieldId': f[name]['controlId'], 'type': DATE_TIME,
+                        'valueRef': {'kind': 'system', 'field': 'nowTime'}}
+    tell = lambda alias, name: {'nodeAlias': alias, 'nodeType': 'send_internal_notice', 'name': name,
+                                'config': {'content': name, 'accounts': [salesperson(trigger)]}}
+    return [
+        {'nodeAlias': 'signed_on', 'nodeType': 'update_record', 'name': W_SIGNED_ON,
+         'config': {'target': {'node': t}, 'fields': [now(SIGNED_ON)]}},
+        guard_nodes()[0],
+        {'nodeAlias': 'product_branch', 'nodeType': 'branch', 'name': PRODUCT_BRANCH, 'config': {'paths': [
+            {'alias': 'missing', 'name': 'Yes', 'nodes': [tell('tell_missing', N_MISSING)]},
+            {'alias': 'clean', 'name': 'No', 'nodes': [
+                {'nodeAlias': 'pay_branch', 'nodeType': 'branch', 'name': W_PAY, 'config': {'paths': [
+                    {'alias': 'pay', 'name': W_PAY_YES, 'nodes': [tell('tell_payment', N_PAYMENT)]},
+                    {'alias': 'no_pay', 'name': W_PAY_NO, 'nodes': [
+                        {'nodeAlias': 'confirm', 'nodeType': 'update_record', 'name': STEP[CONFIRM],
+                         'config': {'target': {'node': t}, 'fields': [
+                             {'fieldId': f['Status']['controlId'], 'type': DROPDOWN,
+                              'value': STATUS_KEYS['Sales Order']}, now('Quotation/Order Date')]}},
+                        tell('tell_signed', N_SIGNED)]}]}}]}]}},
+    ]
+
+
+def signed_workflow_id():
+    pid = hap.ids().get('workflows', {}).get(KEY + SIGNED_WF)
+    if pid:
+        return pid
+    return {w['name']: w.get('id') or w.get('processId') for w in hap.listing('workflow', 'list', APP)}.get(SIGNED_WF)
+
+
+def trigger_state(pid, trigger):
+    t = read_node(pid, trigger)
+    return (t.get('appId'), str(t.get('triggerId')), sorted(t.get('assignFieldIds') or []),
+            cond_state(t.get('operateCondition') or t.get('conditions')))
+
+
+def sync_signed_trigger(pid, trigger, f):
+    want = signed_trigger_conditions(trigger, f)
+    target = (ws(), UPDATED, [f[SIGNATURE_FIELD]['controlId']], cond_state(want))
+    changed = False
+    if trigger_state(pid, trigger) != target:
+        if drifted(f'{W_TRIGGER}: {trigger_state(pid, trigger)}, wanted {target}'):
+            return True
+        hap.run('workflow', 'node', 'save', pid, trigger, '--type', '0', '-n', W_TRIGGER, '-c', json.dumps(
+            {'appId': ws(), 'appType': 1, 'triggerId': UPDATED, 'assignFieldIds': [f[SIGNATURE_FIELD]['controlId']],
+             'operateCondition': want, 'returns': []}, ensure_ascii=False))
+        if trigger_state(pid, trigger) != target:
+            sys.exit(f'{W_TRIGGER}: reads back {trigger_state(pid, trigger)}, wanted {target} — '
+                     f'`hap workflow rollback {pid} -y` restores the published version')
+        changed = True
+    changed |= sync_name(pid, trigger, W_TRIGGER)
+    return changed
+
+
+def signed_graph(pid):
+    proc, byname = nodes_by_name(pid)
+    return proc, byname, proc['startEventId']
+
+
+def pay_paths(proc, gateway_id, yes_next):
+    paths = [n for n in proc['flowNodeMap'].values() if n.get('typeId') == BRANCH_PATH and n.get('prveId') == gateway_id]
+    yes = next((p for p in paths if p.get('nextId') == yes_next), None)
+    if len(paths) != 2 or yes is None:
+        sys.exit(f'{W_PAY}: paths {[(p.get("name"), p.get("nextId")) for p in paths]} — expected two, one running '
+                 f'into {N_PAYMENT!r}')
+    return yes, next(p for p in paths if p['id'] != yes['id'])
+
+
+def sync_signed(f, pid):
+    """Bring the workflow to §17c's shape; True when something was written. Under DRIFT (`check`) it records."""
+    changed = False
+    proc, byname, trigger = signed_graph(pid)
+    if W_SIGNED_ON not in byname:
+        if drifted(f'{SIGNED_WF}: its steps are missing'):
+            return True
+        if proc['flowNodeMap'][trigger].get('nextId') not in (None, '', '99'):
+            sys.exit(f'{SIGNED_WF}: the trigger runs into a step this builder did not make — read {pid}')
+        hap.run('workflow', 'node', 'batch-add', pid, '--nodes', json.dumps(signed_nodes(f, trigger), ensure_ascii=False),
+                '--trigger-worksheet', ws(), '--trigger-event', 'update', '--trigger-fields',
+                f[SIGNATURE_FIELD]['controlId'], '--trigger-alias', 'trigger')
+        proc, byname, trigger = signed_graph(pid)
+        missing = [n for n in SIGNED_STEPS if n not in byname]
+        if missing:
+            sys.exit(f'{SIGNED_WF}: {missing} are not in the workflow after batch-add: {sorted(byname)}')
+        changed = True
+        print(f'  {SIGNED_WF}: steps added')
+    changed |= sync_signed_trigger(pid, trigger, f)
+    wanted = writes_wanted(f)[CONFIRM]
+    for name, writes in ((W_SIGNED_ON, [patch(f[SIGNED_ON]['controlId'], DATE_TIME, source='nowTime', system=True)]),
+                         (STEP[CONFIRM], wanted)):
+        node = read_node(pid, byname[name]['id'])
+        if writes_live(pid, byname[name]['id']) != [write_state(x) for x in writes] or \
+                node.get('selectNodeId') != trigger or node.get('isException'):
+            if drifted(f'{name}: writes {writes_live(pid, byname[name]["id"])} on {node.get("selectNodeId")}'):
+                continue
+            set_writes(pid, byname[name], writes, trigger)
+            changed = True
+            if writes_live(pid, byname[name]['id']) != [write_state(x) for x in writes]:
+                sys.exit(f'{name}: reads back {writes_live(pid, byname[name]["id"])}')
+    count = read_node(pid, byname[COUNT_STEP]['id'])
+    if count_problems(count, trigger):
+        sys.exit(f'{COUNT_STEP}: {count_problems(count, trigger)} — batch-add wrote it this way; read {pid}')
+    yes, no = branch_paths(proc, byname[PRODUCT_BRANCH]['id'], byname[N_MISSING]['id'])
+    if DRIFT is None:
+        changed |= save_path(pid, yes, 'Yes', at_least_one(byname[COUNT_STEP]['id']))
+        changed |= save_path(pid, no, 'No', [])
+    else:
+        for path, name, groups in ((yes, 'Yes', at_least_one(byname[COUNT_STEP]['id'])), (no, 'No', [])):
+            got = read_node(pid, path['id'])
+            key = lambda c: (c.get('nodeId'), c.get('filedId'), str(c.get('conditionId')))
+            if [[key(c) for c in g] for g in got.get('conditions') or []] != [[key(c) for c in g] for g in groups] \
+                    or path.get('name') != name:
+                drifted(f'{PRODUCT_BRANCH} path {path.get("name")!r}: {got.get("conditions")}')
+    pay_yes, pay_no = pay_paths(proc, byname[W_PAY]['id'], byname[N_PAYMENT]['id'])
+    changed |= sync_path(pid, pay_yes['id'], W_PAY_YES, [[cond(trigger, 0, 1, '', CONTROLS['Online Payment'],
+                                                               'Online Payment', CHECKBOX, TICKED)]])
+    changed |= sync_path(pid, pay_no['id'], W_PAY_NO, [])
+    texts = signed_texts(trigger, f)
+    for name in (N_MISSING, N_PAYMENT, N_SIGNED):
+        changed |= sync_notice(pid, byname[name]['id'], name, texts[name], salesperson(trigger))
+    info = hap.run('workflow', 'get', pid)
+    info = info.get('data', info) if isinstance(info, dict) else {}
+    if (info.get('name'), info.get('explain') or '') != (SIGNED_WF, SIGNED_WF_DESC):
+        if not drifted(f'{SIGNED_WF}: name / description {info.get("name")!r} / {info.get("explain")!r}'):
+            hap.run('workflow', 'update', pid, '-n', SIGNED_WF, '-d', SIGNED_WF_DESC)
+        changed = True
+    return changed
+
+
+def count_problems(count, trigger):
+    """Confirm's count, read off another workflow: Order Lines where Orders is this order, Display Type is Product and
+    Product is empty (`guard_problems`' own comparison)."""
+    conds = [c for flt in count.get('filters') or [] for group in flt.get('conditions') or [] for c in group]
+    got = [(c['filedId'], c['conditionId'],
+            [v.get('controlId') or (v.get('value') or {}).get('value') for v in c['conditionValues']]) for c in conds]
+    want = [(LINES_ORDERS, RELATION_EQ, ['rowid']), (CHILD['Display Type'], IS_ANY_OF, ['Product']),
+            (CHILD['Product'], EMPTY, [])]
+    problems = []
+    if (count.get('actionId'), count.get('appId'), count.get('reportControlId'), count.get('reportType')) != \
+            (WORKSHEET_TOTAL, LINES_WS, '', 0):
+        problems.append(f"actionId={count.get('actionId')} appId={count.get('appId')}")
+    if got != want:
+        problems.append(f'filter {got}, wanted {want}')
+    elif [v.get('nodeId') for c in conds for v in c['conditionValues']][:1] != [trigger]:
+        problems.append('the Orders relation is not compared with the triggering order')
+    return problems
+
+
+def signed_structure(pid):
+    proc, byname, trigger = signed_graph(pid)
+    fm, problems = proc['flowNodeMap'], []
+    missing = [n for n in SIGNED_STEPS if n not in byname]
+    if missing:
+        return [f'{SIGNED_WF}: {missing} missing — run `sign`']
+    names = lambda start: [fm[n].get('name') for n in chain(fm, start)]
+    yes, no = branch_paths(proc, byname[PRODUCT_BRANCH]['id'], byname[N_MISSING]['id'])
+    pay_yes, pay_no = pay_paths(proc, byname[W_PAY]['id'], byname[N_PAYMENT]['id'])
+    for label, start, want in (('the trigger', trigger, [W_SIGNED_ON, COUNT_STEP, PRODUCT_BRANCH]),
+                               ('Yes', yes['id'], [N_MISSING]), ('No', no['id'], [W_PAY]),
+                               (W_PAY_YES, pay_yes['id'], [N_PAYMENT]),
+                               (W_PAY_NO, pay_no['id'], [STEP[CONFIRM], N_SIGNED])):
+        if names(start) != want:
+            problems.append(f'{SIGNED_WF}: {label} runs {names(start)}, wanted {want}')
+    for name in (PRODUCT_BRANCH, W_PAY):
+        if fm[byname[name]['id']].get('nextId') not in (None, '', '99'):
+            problems.append(f'{SIGNED_WF}: {name!r} runs into {fm[fm[byname[name]["id"]]["nextId"]].get("name")!r}')
+    aborts = [n.get('name') for n in fm.values() if n.get('typeId') == ABORT]
+    extra = sorted(n.get('name') for n in fm.values() if n.get('typeId') not in (None, 0, 100, BRANCH_PATH)
+                   and n.get('prveId') and n.get('name') not in SIGNED_STEPS)
+    if aborts or extra:
+        problems.append(f'{SIGNED_WF}: abort nodes {aborts}, unknown steps {extra}')
+    return problems
+
+
+def signed_problems(f):
+    global DRIFT
+    pid = signed_workflow_id()
+    if not pid:
+        return [f'{SIGNED_WF}: not built — run `sign`']
+    problems = signed_structure(pid)
+    if problems:
+        return problems
+    DRIFT = []
+    try:
+        sync_signed(f, pid)
+        problems += [f'{SIGNED_WF}: {d}' for d in DRIFT]
+    finally:
+        DRIFT = None
+    problems += workflow_published(pid, SIGNED_WF)
+    if not problems:
+        print(f'  OK  {SIGNED_WF!r} {pid}: when an order is updated with {SIGNATURE_FIELD} written, and only while '
+              f'it is filled, Status is Quotation or Quotation Sent and Online Signature is ticked\n'
+              f'        → {W_SIGNED_ON} = now → {COUNT_STEP} → {PRODUCT_BRANCH} [Yes: 【{N_MISSING}】 | No: {W_PAY} '
+              f'[{W_PAY_YES}: 【{N_PAYMENT}】 | {W_PAY_NO}: {STEP[CONFIRM]} (Status, Quotation/Order Date = now) → '
+              f'【{N_SIGNED}】]] — to the Salesperson; published')
+    return problems
+
+
+def ensure_signed_workflow(f):
+    pid = signed_workflow_id()
+    if not pid:
+        if drifted(f'{SIGNED_WF} does not exist'):
+            return None, True
+        out = hap.run('workflow', 'create', '-c', hap.ids()['org'], '-a', APP, '-n', SIGNED_WF, '--type', 'worksheet',
+                      '-d', SIGNED_WF_DESC)
+        data = out.get('data', out) if isinstance(out, dict) else out
+        pid = data if isinstance(data, str) else (data.get('processId') or data.get('id'))
+        if not pid:
+            sys.exit(f'{SIGNED_WF}: no process id in `workflow create` output: {out}')
+        print(f'  created {SIGNED_WF!r}: {pid}')
+    C.remember('workflows', KEY + SIGNED_WF, pid)
+    proc = hap.run('workflow', 'node', 'list', pid)
+    hap.backup('orders_signed_workflow_pre_sign', proc)
+    return pid, sync_signed(f, pid)
+
+
+def sign_untouched():
+    """What `sign` must not move: every other button, and the whole control set."""
+    others = sorted((b for b in hap.listing('worksheet', 'custom-actions', ws()) if b['name'] != SIGN),
+                    key=lambda b: b['btnId'])
+    return {'the other buttons': json.dumps(others, ensure_ascii=False, sort_keys=True, default=str),
+            'the control set': json.dumps(signature(hap.controls(ws())), ensure_ascii=False, sort_keys=True,
+                                          default=str)}
+
+
+def step_sign():
+    """§17: Share for Signature and its Get Link workflow, and *Signed: confirm the order*. Publishes each workflow
+    only when something changed or it has unpublished changes; presses nothing and sends nothing. Re-runnable."""
+    f = guard()
+    for name in PART1[1:] + (SIGNING_LINK, 'Online Signature', 'Online Payment', 'Expiration', 'Number'):
+        if name not in f:
+            sys.exit(f'{name} is not on {WORKSHEET} — run `part1` / `signlink` first')
+    before = sign_untouched()
+    pid = ensure_sign_button(f)
+    C.remember('workflows', KEY + SIGN, pid)
+    print('  backup:', hap.backup('orders_sign_share_pre_sign', hap.run('workflow', 'node', 'list', pid)))
+    wrote = sync_sign_share(f, pid)
+    problems, _ = sign_share_structure(pid)
+    if problems:
+        sys.exit('  not published:\n  ' + '\n  '.join(problems))
+    if wrote or workflow_published(pid, SIGN):
+        res = C.publish(pid)
+        print(f'  {SIGN}: {res}')
+        if not res.get('isPublish') or res.get('processWarnings') or res.get('errorNodeIds'):
+            sys.exit(f'{SIGN}: publish answered {res} — the draft stays unpublished')
+    else:
+        print(f'  {SIGN}: already built; not re-published')
+    spid, swrote = ensure_signed_workflow(f)
+    problems = signed_structure(spid)
+    if problems:
+        sys.exit('  not published:\n  ' + '\n  '.join(problems))
+    if swrote or workflow_published(spid, SIGNED_WF):
+        res = C.publish(spid)
+        print(f'  {SIGNED_WF}: {res}')
+        if not res.get('isPublish') or res.get('processWarnings') or res.get('errorNodeIds'):
+            sys.exit(f'{SIGNED_WF}: publish answered {res}')
+    else:
+        print(f'  {SIGNED_WF}: already built; not re-published')
+    after = sign_untouched()
+    moved = sorted(k for k in before if before[k] != after[k])
+    if moved:
+        sys.exit(f'{WORKSHEET}: {moved} changed while §17 was built — `sign` writes none of them')
+    print(f'  untouched, byte for byte: {sorted(before)}')
+    problems = sign_share_problems(f) + signed_problems(f)
+    if problems:
+        sys.exit('  ' + '\n  '.join(problems))
+    print(C.structure(pid))
+    print(C.structure(spid))
+    return True
+
+
+# ── 17d · the two TEST quotations for the browser test ─────────────────────
+#
+# `signtest` makes (once) TEST quotations for TEST Person One — one product line, Online Signature ticked — and
+# presses Share for Signature on each through the button API (`process/startProcess`, what the record page's button
+# sends), which spends no credits and sends nothing. It then reads Signing Link back through both read paths and
+# prints it. The first two are the brief's: Expiration a week out, without and with Online Payment. The other three
+# are for the expiry: Expiration today (the link must work until 23:59 tonight), yesterday (born expired), and none
+# (the no-end path). An order is found again by its Customer Reference; one whose link is already there is not
+# pressed again, so a re-run writes nothing.
+SIGN_TESTS = {                                   # Customer Reference: (Online Payment, Expiration in days from today)
+    'TEST Sign & Accept': ('0', 7),
+    'TEST Sign & Accept, online payment': ('1', 7),
+    'TEST Sign & Accept, expires today': ('0', 0),
+    'TEST Sign & Accept, expired yesterday': ('0', -1),
+    'TEST Sign & Accept, no expiration': ('0', None),
+}
+TEST_CUSTOMER = 'TEST QA Trading Sdn Bhd, TEST Person One'
+TEST_SALESPERSON = 'Casimir'                    # resolved through the directory, as the seed does
+TEST_DAYS = 7
+
+
+def sign_test_orders(f):
+    """{Customer Reference: rowid} for the TEST orders that exist, through both read paths."""
+    ref = f['Customer Reference']
+    out = {}
+    for r in C.records(ws(), APP):
+        value = r.get(ref['controlId']) or read_cell(ref, read_record(ws(), r['rowid']))
+        if value in SIGN_TESTS:
+            if value in out:
+                sys.exit(f'two orders carry the Customer Reference {value!r} — read them before writing')
+            out[value] = r['rowid']
+    return out
+
+
+def template_line():
+    """The Order Line a TEST line copies: the first product line of the seeded orders that has a Product, a Unit and
+    Taxes, by order Number and Sequence — a real product, priced and taxed as the seed has it."""
+    f_lines = hap.by_name(c for c in hap.controls(LINES_WS) if c['type'] != C.TAB)
+    numbers = {rowid: number for number, rowid in by_number().items()}
+    found = []
+    for r in C.records(LINES_WS, APP):
+        d = read_record(LINES_WS, r['rowid'])
+        cell = lambda n: read_cell(f_lines[n], d)
+        order = (cell('Orders') or [None])[0]
+        if cell('Display Type') == [PRODUCT_LINE] and cell('Product') and cell('Unit') and cell('Taxes') and \
+                numbers.get(order, '').startswith('S000') and cell('Product') != [discount_variant()]:
+            found.append((numbers[order], cell('Sequence') or 0, r['rowid'], {n: cell(n) for n in (
+                'Product', 'Description', 'Unit', 'Unit Price', 'Taxes')}))
+    if not found:
+        sys.exit('no seeded product line with a Product, a Unit and Taxes to copy')
+    return sorted(found, key=lambda x: (x[0], x[1]))[0]
+
+
+def create_sign_test(f, ref, online_payment, line, days=TEST_DAYS):
+    index = titles(*CONTACTS).get(TEST_CUSTOMER) or []
+    if len(index) != 1:
+        sys.exit(f'{TEST_CUSTOMER!r} matches {len(index)} contacts — nothing created')
+    people = members({TEST_SALESPERSON})
+    if TEST_SALESPERSON not in people:
+        sys.exit(f'{TEST_SALESPERSON!r} does not resolve to one member — nothing created')
+    today = time.strftime('%Y-%m-%d')
+    expires = '' if days is None else time.strftime('%Y-%m-%d', time.localtime(time.time() + days * 86400))
+    cid = lambda n: f[n]['controlId']
+    values = [{'id': cid('Status'), 'value': [STATUS_KEYS['Quotation']]},
+              {'id': cid(CUSTOMER), 'value': index},
+              {'id': cid('Invoice Address'), 'value': index},
+              {'id': cid('Delivery Address'), 'value': index},
+              {'id': cid('Quotation/Order Date'), 'value': time.strftime('%Y-%m-%d %H:%M:%S')},
+              {'id': cid('Expiration'), 'value': expires},
+              {'id': cid('Tax Mode'), 'value': [option_key(f['Tax Mode'], 'Tax Excluded')]},
+              {'id': cid('Invoice Status'), 'value': [option_key(f['Invoice Status'], 'Nothing to Invoice')]},
+              {'id': cid('Online Signature'), 'value': '1'},
+              {'id': cid('Online Payment'), 'value': online_payment},
+              {'id': cid('Prepayment Percentage'), 'value': '100'},
+              {'id': cid('Locked'), 'value': '0'},
+              {'id': cid(IS_TEMPLATE), 'value': '0'},
+              {'id': cid('Salesperson'), 'value': [people[TEST_SALESPERSON]]},
+              {'id': cid('Customer Reference'), 'value': ref}]
+    rowid = write_record(ws(), None, values)
+    src = line[3]
+    write_record(LINES_WS, None, [
+        {'id': CHILD['Orders'], 'value': [rowid]}, {'id': CHILD['Display Type'], 'value': [PRODUCT_LINE]},
+        {'id': CHILD['Product'], 'value': src['Product']}, {'id': CHILD['Description'], 'value': src['Description']},
+        {'id': CHILD['Quantity'], 'value': '1'}, {'id': CHILD['Unit'], 'value': src['Unit']},
+        {'id': CHILD['Unit Price'], 'value': str(src['Unit Price'])}, {'id': CHILD['Discount'], 'value': '0'},
+        {'id': CHILD['Taxes'], 'value': src['Taxes']}, {'id': CHILD['Sequence'], 'value': '10'}])
+    print(f'  created {ref!r}: {rowid} — {TEST_CUSTOMER}, Expiration {expires} (made {today}), Online Payment '
+          f'{online_payment}, one line copied from {line[0]} ({src["Description"]!r}, {src["Unit Price"]})')
+    return rowid
+
+
+def signing_link_cells(f, rowid):
+    """Signing Link through `record get` and through the listing."""
+    c = f[SIGNING_LINK]
+    got = read_cell(c, read_record(ws(), rowid))
+    row = next((r for r in C.records(ws(), APP) if r['rowid'] == rowid), {})
+    return got, row.get(c['controlId']) or ''
+
+
+LINK_EXPIRED = 17                               # GetLinkDetail's resultCode for 链接已失效 (ShareState/index.jsx)
+
+
+def link_answer(url):
+    """(resultCode, linkState, submit button, rowId) — what the public page's first call, `Worksheet/GetLinkDetail
+    {id}`, answers for a link. Read-only: it is what opening the link does before the form loads; it submits
+    nothing. linkState 0 is open, 1 already submitted."""
+    from hap_cli.core.session import Session
+    got = Session.load(None).api_call('Worksheet', 'GetLinkDetail', {'id': url.rstrip('/').rsplit('/', 1)[-1]})
+    got = got.get('data', got) if isinstance(got, dict) else {}
+    return got.get('resultCode'), got.get('linkState'), got.get('submitBtnName'), got.get('rowId')
+
+
+def press_sign(rowid):
+    """Share for Signature through the button API — `process/startProcess {appId: <worksheet>, triggerId: <btnId>,
+    sources: [rowid]}`, what pd-openweb sends when the button is clicked on a record."""
+    from hap_cli.core import workflow as wf
+    from hap_cli.core.session import Session
+    btn = hap.ids()['buttons'][KEY + SIGN]
+    return wf.start_process(Session.load(None), ws(), btn, sources=[rowid])
+
+
+def order_cells(f, rowid, names):
+    d = read_record(ws(), rowid)
+    return {n: read_cell(f[n], d) for n in names}
+
+
+def step_signtest():
+    """The two TEST quotations and their signing links. Creates what is missing, presses only where no link is
+    stored yet, and prints each link for the browser test."""
+    f = guard()
+    if not hap.ids().get('buttons', {}).get(KEY + SIGN) or signed_workflow_id() is None:
+        sys.exit(f'{SIGN} or {SIGNED_WF!r} is not built — run `sign` first')
+    orders = sign_test_orders(f)
+    share = hap.ids()['workflows'][KEY + SIGN]
+    missing = [ref for ref in SIGN_TESTS if ref not in orders]
+    if missing:
+        line = template_line()
+        for ref in missing:
+            orders[ref] = create_sign_test(f, ref, SIGN_TESTS[ref][0], line, SIGN_TESTS[ref][1])
+        time.sleep(3)
+    numbers = {rowid: number for number, rowid in by_number().items()}
+    problems = []
+    for ref in SIGN_TESTS:
+        rowid = orders[ref]
+        C.remember('records', KEY + ref, rowid)
+        state = order_cells(f, rowid, ('Status', 'Online Signature', 'Online Payment', 'Expiration', SIGNED_BY))
+        links = signing_link_cells(f, rowid)
+        offered = buttons_offered(rowid).get(SIGN)
+        print(f"  {numbers.get(rowid)} {ref!r} ({rowid}): {status_label(state['Status'])}, Online Signature "
+              f"{state['Online Signature']}, Online Payment {state['Online Payment']}, Expiration "
+              f"{state['Expiration']!r}; {SIGN} {'offered' if offered else 'NOT offered'}")
+        if not any(links):
+            if not offered:
+                problems.append(f'{ref}: no link, and {SIGN} is not offered on it')
+                continue
+            before = {r['id'] for r in all_runs_of(share)}
+            print(f'  pressing {SIGN} on {numbers.get(rowid)}: {press_sign(rowid)}')
+            for _ in range(60):
+                links = signing_link_cells(f, rowid)
+                if all(links):
+                    break
+                time.sleep(1)
+            runs = new_runs(share, before, 1, seconds=30)
+            steps = run_steps(runs[0]['id'])[0] if len(runs) == 1 else []
+            want = [L_DATED, L_SAVE_DATED] if state['Expiration'] else [L_OPEN, L_SAVE_OPEN]
+            print(f"        run {[(r['id'], r.get('status')) for r in runs]} through {steps}")
+            if len(runs) != 1 or runs[0].get('status') != 2 or steps[-2:] != want:
+                problems.append(f'{ref}: the run went {steps}, wanted it to end {want}')
+        if not all(links) or links[0] != links[1]:
+            problems.append(f'{ref}: Signing Link reads {links[0]!r} (record get) / {links[1]!r} (listing)')
+            continue
+        print(f'  OK  {numbers.get(rowid)} Signing Link (both read paths): {links[0]}')
+        answer = link_answer(links[0])
+        expired = bool(state['Expiration']) and state['Expiration'] < time.strftime('%Y-%m-%d')
+        if state[SIGNED_BY]:
+            print(f'        signed by {state[SIGNED_BY]!r}; the link answers {answer} (linkState 1: submitted)')
+        elif expired:
+            ok = answer[0] == LINK_EXPIRED
+            print(f"  {'OK  ' if ok else 'FAIL'}      Expiration {state['Expiration']} is past: the link answers {answer}, "
+                  f'wanted resultCode {LINK_EXPIRED} (link expired)')
+            if not ok:
+                problems.append(f'{ref}: an expired link answers {answer}')
+        else:
+            ok = answer == (1, 0, SUBMIT_TEXT, rowid)
+            print(f"  {'OK  ' if ok else 'FAIL'}      the link is open: {answer}")
+            if not ok:
+                problems.append(f'{ref}: the link answers {answer}, wanted (1, 0, {SUBMIT_TEXT!r}, {rowid})')
+    if problems:
+        sys.exit('  ' + '\n  '.join(problems))
+    return True
+
+
+# ── 17e · driving *Signed: confirm the order* from the CLI ──────────────────
+#
+# `selfsign` proves everything downstream of the link without a browser, on a third TEST quotation of its own (never
+# on the two `signtest` makes for the browser test, which it would confirm). A `record update` that writes Signature
+# and Signed By is the same worksheet event the link's submission is expected to be — the one thing it cannot show is
+# that the link's submission *is* such an event, which is the browser test's first check. Four cases, each read back
+# through the workflow's run list (a new run told apart by instance id) and the order's cells:
+#
+#   A  signed, lines complete, no online payment → one run: Set Signed On → count → No → No online payment → Confirm
+#      the order → 【Quotation signed】; Status Sales Order, Quotation/Order Date and Signed On now
+#   B  Set to Quotation on it                    → **no run** (Signature cleared fails the trigger condition)
+#   C  a product line with no product, signed    → one run ending 【Quotation signed, not confirmed】; still a Quotation,
+#                                                  Signed On set, the signature kept
+#   D  that line made a Note, Online Payment ticked, signed → one run ending 【Quotation signed, payment due】; still a
+#      Quotation
+#
+# The clear before C and D writes Signature empty, which must start no run either. Like `selfcheck` this step
+# writes records by design (TEST ones only) and is not part of a "saves nothing" re-run; each run starts by putting
+# the order back to a clean quotation. The three notices go to the order's Salesperson (the owner) in the app.
+SIGN_CLI = 'TEST Sign & Accept, CLI run'
+SIGN_CLI_LINE = 'TEST line with no product'
+
+
+def upload_signature():
+    """A small PNG scribble uploaded to the file store, as a Signature's value: the stored file's URL without the
+    temporary token (`hap guide record`: a Signature is an image URL, uploaded first)."""
+    import math, struct, tempfile, zlib
+    w, h = 240, 80
+    ink = {(x, int(40 + 18 * math.sin(x / 14.0) * math.cos(x / 37.0)) + dy) for x in range(20, 220) for dy in (-1, 0, 1)}
+    raw = b''.join(b'\x00' + b''.join(b'\x00\x00\x00' if (x, y) in ink else b'\xff\xff\xff' for x in range(w))
+                   for y in range(h))
+    chunk = lambda t, d: struct.pack('>I', len(d)) + t + d + struct.pack('>I', zlib.crc32(t + d) & 0xffffffff)
+    png = (b'\x89PNG\r\n\x1a\n' + chunk(b'IHDR', struct.pack('>IIBBBBB', w, h, 8, 2, 0, 0, 0)) +
+           chunk(b'IDAT', zlib.compress(raw)) + chunk(b'IEND', b''))
+    with tempfile.NamedTemporaryFile(suffix='.png', prefix='test-signature-', delete=False) as fh:
+        fh.write(png)
+    try:
+        got = hap.run('upload', fh.name, '--worksheet-id', ws(), '-a', APP)
+    finally:
+        os.unlink(fh.name)
+    got = got[0] if isinstance(got, list) else (got.get('data') or [got])[0]
+    return got['serverName'] + got['key']
+
+
+def all_runs_of(pid):
+    rows, page = [], 1
+    while True:
+        got = hap.run('approval', 'history', '--process-id', pid, '-n', '50', '-p', str(page))
+        data = (got.get('data', got) if isinstance(got, dict) else got) or []
+        rows += data
+        if len(data) < 50:
+            return rows
+        page += 1
+
+
+def new_runs(pid, before, n, seconds=90):
+    """The runs started since `before` (a set of instance ids) once `n` of them have finished; with n 0 it waits
+    `seconds` and returns whatever appeared."""
+    deadline = time.time() + seconds
+    while True:
+        new = [r for r in all_runs_of(pid) if r['id'] not in before]
+        done = n > 0 and len(new) >= n and all(r.get('status') != 1 for r in new)
+        if done or time.time() > deadline:
+            if done:
+                time.sleep(4)
+                new = [r for r in all_runs_of(pid) if r['id'] not in before]
+            return new
+        time.sleep(3)
+
+
+def run_steps(instance_id):
+    """(the steps one run passed through, in order; [(notice text as sent, its recipient)] of its 站内通知 steps)."""
+    d = hap.run('approval', 'history-detail', instance_id)
+    d = d.get('data', d) if isinstance(d, dict) else {}
+    works = d.get('works') or []
+    notices = [(i.get('opinion'), (i.get('workItemAccount') or {}).get('fullName'))
+               for w in works if (w.get('flowNode') or {}).get('type') == NOTICE for i in w.get('workItems') or []]
+    return [(w.get('flowNode') or {}).get('name') for w in works], notices
+
+
+def sign_cells(f, rowid):
+    """Status, the date, the signature trio and Online Payment — `record get`, with Signature also through the
+    listing (neither read path is complete)."""
+    got = order_cells(f, rowid, ('Status', 'Quotation/Order Date', SIGNED_BY, SIGNED_ON, 'Online Payment'))
+    d = read_record(ws(), rowid)
+    row = next((r for r in C.records(ws(), APP) if r['rowid'] == rowid), {})
+    got['Signature'] = bool(d.get(f[SIGNATURE_FIELD].get('alias') or '') or d.get(f[SIGNATURE_FIELD]['controlId'])
+                            or row.get(f[SIGNATURE_FIELD]['controlId']))
+    got['Status'] = status_label(got['Status'])
+    return got
+
+
+def step_selfsign():
+    f = guard()
+    spid = signed_workflow_id()
+    if not spid:
+        sys.exit(f'{SIGNED_WF!r} is not built — run `sign` first')
+    f_lines = hap.by_name(c for c in hap.controls(LINES_WS) if c['type'] != C.TAB)
+    display = {o['value']: o['key'] for o in f_lines['Display Type'].get('options') or [] if not o.get('isDeleted')}
+    ref = f['Customer Reference']
+    found = [r['rowid'] for r in C.records(ws(), APP)
+             if (r.get(ref['controlId']) or read_cell(ref, read_record(ws(), r['rowid']))) == SIGN_CLI]
+    if len(found) > 1:
+        sys.exit(f'{len(found)} orders carry {SIGN_CLI!r}')
+    rowid = found[0] if found else create_sign_test(f, SIGN_CLI, '0', template_line())
+    C.remember('records', KEY + SIGN_CLI, rowid)
+    number = {r: n for n, r in by_number().items()}.get(rowid)
+    cid = lambda n: f[n]['controlId']
+    problems = []
+    since = lambda t: time.strftime('%Y-%m-%d %H:%M', time.localtime(t))
+
+    def clean(label, extra=()):
+        """Signature, Signed By and Signed On emptied (a write of Signature that must start no run), plus `extra`."""
+        before = {r['id'] for r in all_runs_of(spid)}
+        write_cells(rowid, [{'id': cid(SIGNATURE_FIELD), 'value': ''}, {'id': cid(SIGNED_BY), 'value': ''},
+                            {'id': cid(SIGNED_ON), 'value': ''}] + list(extra))
+        runs = new_runs(spid, before, 0, seconds=20)
+        state = sign_cells(f, rowid)
+        ok = not runs and not state['Signature'] and state[SIGNED_BY] == '' and state[SIGNED_ON] == ''
+        print(f"  {'OK  ' if ok else 'FAIL'}  {label}: {state} — runs started: {[r['id'] for r in runs]}")
+        if not ok:
+            problems.append(f'{label}: {state}, runs {runs}')
+
+    def sign(label, want_status, want_last):
+        before = {r['id'] for r in all_runs_of(spid)}
+        t0 = time.time()
+        write_cells(rowid, [{'id': cid(SIGNED_BY), 'value': SIGNER}, {'id': cid(SIGNATURE_FIELD),
+                                                                      'value': upload_signature()}])
+        runs = new_runs(spid, before, 1)
+        state = sign_cells(f, rowid)
+        steps, notices = run_steps(runs[0]['id']) if len(runs) == 1 else ([], [])
+        text = {N_SIGNED: MSG_SIGNED, N_MISSING: MSG_MISSING, N_PAYMENT: MSG_PAYMENT}[want_last].format(
+            number=number, who=SIGNER)
+        ok = len(runs) == 1 and runs[0].get('status') == 2 and steps[-1:] == [want_last] and \
+            state['Status'] == want_status and state['Signature'] and state[SIGNED_BY] == SIGNER and \
+            (state[SIGNED_ON] or '')[:16] >= since(t0 - 60) and [n[0] for n in notices] == [text] and \
+            all(n[1] for n in notices)
+        if want_status == 'Sales Order':
+            ok &= (state['Quotation/Order Date'] or '')[:16] >= since(t0 - 60)
+        print(f"  {'OK  ' if ok else 'FAIL'}  {label}: run {[(r['id'], r.get('status')) for r in runs]} through "
+              f'{steps}\n        notice {notices}\n        order now {state}')
+        if not ok:
+            problems.append(f'{label}: runs {runs}, steps {steps}, notices {notices}, state {state}')
+
+    print(f'  {number} {SIGN_CLI!r} ({rowid})')
+    clean('reset to a clean quotation', [{'id': cid('Status'), 'value': [STATUS_KEYS['Quotation']]},
+                                         {'id': cid('Online Payment'), 'value': '0'}])
+    lines = [r for r in C.records(LINES_WS, APP)
+             if (read_cell(f_lines['Orders'], read_record(LINES_WS, r['rowid'])) or [None])[0] == rowid]
+    orphan = next((r['rowid'] for r in lines
+                   if read_cell(f_lines['Description'], read_record(LINES_WS, r['rowid'])) == SIGN_CLI_LINE), None)
+    if orphan:                                      # a re-run: the line is a Note since case D; case A needs it so
+        write_record(LINES_WS, orphan, [{'id': CHILD['Display Type'], 'value': [display['Note']]}])
+    sign('A  signed, lines complete, no online payment', 'Sales Order', N_SIGNED)
+    before = {r['id'] for r in all_runs_of(spid)}
+    press(SET_TO_QUOTATION, rowid)
+    wait_until(f, rowid, lambda s: status_label(s['Status']) == 'Quotation')
+    runs = new_runs(spid, before, 0, seconds=20)
+    state = sign_cells(f, rowid)
+    ok = not runs and state['Status'] == 'Quotation' and not state['Signature'] and not state[SIGNED_BY]
+    print(f"  {'OK  ' if ok else 'FAIL'}  B  Set to Quotation: {state} — runs of {SIGNED_WF!r} started: "
+          f"{[r['id'] for r in runs]}")
+    if not ok:
+        problems.append(f'B Set to Quotation: {state}, runs {runs}')
+    if orphan:
+        write_record(LINES_WS, orphan, [{'id': CHILD['Display Type'], 'value': [PRODUCT_LINE]}])
+    else:
+        orphan = write_record(LINES_WS, None, [
+            {'id': CHILD['Orders'], 'value': [rowid]}, {'id': CHILD['Display Type'], 'value': [PRODUCT_LINE]},
+            {'id': CHILD['Description'], 'value': SIGN_CLI_LINE}, {'id': CHILD['Quantity'], 'value': '1'},
+            {'id': CHILD['Unit Price'], 'value': '0'}, {'id': CHILD['Discount'], 'value': '0'},
+            {'id': CHILD['Sequence'], 'value': '20'}])
+    sign('C  a product line with no product', 'Quotation', N_MISSING)
+    write_record(LINES_WS, orphan, [{'id': CHILD['Display Type'], 'value': [display['Note']]}])
+    clean('cleared before D (Signature written empty)', [{'id': cid('Online Payment'), 'value': '1'}])
+    sign('D  online payment required', 'Quotation', N_PAYMENT)
+    if problems:
+        print('  selfsign: ' + '\n            '.join(problems))
+        sys.exit(1)
+    print(f'  selfsign: OK — {SIGNED_WF!r} confirms a signed quotation, refuses one with a product line that has no '
+          f'product, leaves one that asks for online payment, and starts no run when Signature is cleared. '
+          f'{number} is left signed, a Quotation with Online Payment ticked.')
+    return True
+
+
 # ── 13c · reading the four buttons and the guard back ───────────────────────
 
 def button_problems():
@@ -5622,18 +6836,19 @@ def button_problems():
     problems += deliver_problems()
     problems += apply_problems(f)
     # The owner's: their Send Quotation is rewired by `send` (§16) and read back in full by `send_problems`; here
-    # only that it is still there. Their Sign & Accept is never touched by this builder.
+    # only that it is still there. Their Sign & Accept placeholder was deleted by the owner on 22 Sep 2026 (§17
+    # builds Sign & Accept); it is only noted if that id ever comes back.
     b = live.get(OWNERS_BUTTON)
     if not b or b['btnId'] != OWNERS_BUTTON_ID:
         problems.append(f"the owner's {OWNERS_BUTTON!r} button {OWNERS_BUTTON_ID} is gone — this builder must "
                         f'never delete it')
     c = next((x for x in hap.controls(ws()) if x['controlId'] == OWNERS_CONTROL_ID), None)
-    if c is None or c['controlName'] != OWNERS_CONTROL or c['type'] != SEARCH_BTN:
-        problems.append(f"the owner's {OWNERS_CONTROL!r} {OWNERS_CONTROL_ID} (t{SEARCH_BTN}) is gone — this "
-                        f'builder must never delete it')
+    if c is None:
+        print(f"  the owner's {OWNERS_CONTROL!r} placeholder {OWNERS_CONTROL_ID} (t{SEARCH_BTN}) — deleted by the "
+              f'owner on 22 Sep 2026; §17 builds {SIGN!r} instead')
     else:
-        print(f"  the owner's {OWNERS_CONTROL!r} {OWNERS_CONTROL_ID} t{c['type']} at r{c.get('row')}"
-              f"c{c.get('col')}s{c.get('size')} — untouched")
+        print(f"  NOTE the owner's {OWNERS_CONTROL!r} {OWNERS_CONTROL_ID} t{c['type']} is back at r{c.get('row')}"
+              f"c{c.get('col')}s{c.get('size')} — the owner's; this builder does not touch it")
     for name in BUTTONS + (DELIVER, APPLY):
         if live.get(name):
             C.remember('buttons', KEY + name, live[name]['btnId'])
@@ -5734,7 +6949,7 @@ def guard():
                 for name, cid in CONTROLS.items() if (f.get(name) or {}).get('controlId') != cid]
     if problems:
         sys.exit(f'{WORKSHEET}: ' + '; '.join(problems) + ' — re-read the worksheet before writing a rule')
-    unknown = sorted(set(f) - set(CONTROLS) - set(NEW) - set(PART1) - set(DISCOUNT_FIELDS) - {TERMS})
+    unknown = sorted(set(f) - set(CONTROLS) - set(NEW) - set(PART1) - set(DISCOUNT_FIELDS) - {TERMS, SIGNING_LINK})
     if unknown:
         print(f'  note: {WORKSHEET} also carries {unknown} — added by the owner, and no rule here names them')
     for name in CONTROLS:
@@ -5922,6 +7137,16 @@ def step_check():
     problems += button_problems()
     # §16: the owner's Send Quotation, rewired
     problems += send_problems(f)
+    # §17: Sign & Accept — Signing Link, Share for Signature and its Get Link workflow, Signed: confirm the order
+    found = signing_link_problems(f)
+    problems += found
+    if not found:
+        c = f[SIGNING_LINK]
+        print(f"  OK  {SIGNING_LINK} {c['controlId']} (text, alias {SIGNING_LINK_ALIAS}, permission "
+              f'{SIGNING_LINK_PERMISSION})' + (' — still parked at row 9999, for the owner to place'
+                                               if c.get('row') == 9999 else ''))
+    problems += sign_share_problems(f)
+    problems += signed_problems(f)
     # §15: Terms and conditions, the three templates on disk, and the System Print template on Orders
     found = terms_problems(f)
     problems += found
@@ -5964,10 +7189,11 @@ def step_check():
           f'{READ_ONLY_PERMISSION}, the {len(PART1)} controls of §6b at '
           f'{[PART1_PERMISSION[n] for n in PART1]}, '
           f'{len(VIEW_ROWS)} views returning exactly the orders their filters name, the {len(BUTTONS) + 2} buttons of '
-          f"§13 and §14 with their workflows ({OWNERS_CONTROL!r} untouched), the owner's {OWNERS_BUTTON!r} rewired "
+          f"§13 and §14 with their workflows, the owner's {OWNERS_BUTTON!r} rewired "
           f'(§16, published, never pressed), '
           f'the {DISCOUNT_PRODUCT} product and variant, the {len(DISCOUNT_FIELDS)} discount fields, {TERMS}, the '
-          f'{len(TEMPLATE_FILES)} templates and System Print {PRINT_NAME!r}')
+          f'{len(TEMPLATE_FILES)} templates and System Print {PRINT_NAME!r}, and §17: {SIGNING_LINK}, {SIGN!r} and '
+          f'{SIGNED_WF!r}')
 
 
 def step_show():
@@ -6000,7 +7226,9 @@ STEPS = {'rules': step_rules, 'retire': step_retire, 'expiry': step_expiry, 'tot
          'discountproduct': step_discountproduct, 'discountline': step_discountline,
          'discountfields': step_discountfields, 'selfdiscount': step_selfdiscount,
          'terms': step_terms, 'templates': step_templates, 'print': step_print, 'selfprint': step_selfprint,
-         'send': step_send, 'sendreach': step_sendreach, 'check': step_check, 'show': step_show}
+         'send': step_send, 'sendreach': step_sendreach, 'signlink': step_signlink, 'sign': step_sign,
+         'signtest': step_signtest, 'selfsign': step_selfsign,
+         'check': step_check, 'show': step_show}
 
 if __name__ == '__main__':
     if len(sys.argv) < 2 or sys.argv[1] not in STEPS:

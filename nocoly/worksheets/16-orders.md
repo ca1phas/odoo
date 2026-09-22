@@ -207,7 +207,7 @@ The rule for the last column: **prefer a Nocoly native feature over a built work
 | 5 | **Cancel** | refuses a locked order; Status → Cancelled | **button**, disabled while Locked is ticked |
 | 6 | **Create Invoice** | action 495 → a wizard that writes `account.move` | **workflow** — **blocked**, no order → invoice link (§4) |
 | 7 | **Set to Quotation** | from Cancelled **or Quotation Sent** → Quotation; clears the signature fields | **button** — one field to write |
-| 8 | **Sign & Accept** | on the **portal**: the customer signs, writing `signature` · `signed_by` · `signed_on`, and confirms | **Public Sharing + a shared form.** A share link is read-only by default, so accepting a signature needs a form that writes back. **Three controls missing** |
+| 8 | **Sign & Accept** | on the **portal**: the customer signs, writing `signature` · `signed_by` · `signed_on`, and confirms | **button + two workflows** — *Share for Signature* makes a single-use, no-login fill-in link (the workflow Get Link node) into **Signing Link**; the customer signs on it; *Signed: confirm the order* stamps Signed On, runs Confirm's product check and confirms unless Online Payment is ticked. **Built 22 Sep 2026, §11 — the link's own submission awaits the browser test** |
 | 9 | **Discount** | wizard applying a percentage across every line | **button + workflow** over the subtable |
 | 10 | **Mark as Sent** | refuses unless Quotation; Status → Quotation Sent | **button** |
 | 11 | **Deliver** | `deliver_sold_quantity` — sets each line's **Delivered = Quantity** (`qty_delivered` is writable) | **button + workflow** over the subtable |
@@ -273,7 +273,7 @@ amount_total · invoice_status · expected_date`, with a dozen more available an
 | **Quotation Templates** (`sale_order_template_id`) | Not built; zero records on the tenant |
 | **Quote Builder** tab (`quotation_document_ids`, `customizable_pdf_form_fields`) | See worksheet 17 — it configures a PDF assembler HAP does not have |
 | Down payments (`is_downpayment`), optional lines' ordering, combos (`combo_item_id`, `linked_line_id`), product custom attributes | Each is its own machinery; the fields are on the line but nothing in Phase 1 drives them |
-| Online signature and payment (`require_signature`, `require_payment`, `prepayment_percent` as behaviour) | The checkboxes can be stored with their company-setting defaults; the customer portal cannot |
+| Online payment (`require_payment`, `prepayment_percent` as behaviour) | The checkboxes are stored; there is no payment. **Online signature is built since 22 Sep 2026** (§11, a no-login fill-in link), and Online Payment only keeps a signed order a quotation |
 | Preview · Send as behaviour | No mail. **Download is built** as System Print, §9 |
 | `fiscal_position_id`, `incoterm`, `project_id`, `preferred_payment_method_line_id` | Each needs a table that is not built |
 | Smart buttons (Invoices, Projects, Tasks, Transactions) | Counts over tables that do not exist yet |
@@ -767,6 +767,141 @@ customer's reply goes to the platform's sender, not to the salesperson.
 
 Keep clear of S00007, S00010, S00012 and S00017 — they email the three company addresses above.
 
+## 11 · Sign & Accept — built 22 Sep 2026 (`orders.py` §17)
+
+Odoo's *Accept & Sign* is on the customer portal, not the back end. `portal_quote_accept`
+(`addons/sale/controllers/portal.py:318`, 19.0 source) refuses unless `_has_to_be_signed()` (`sale_order.py:1896`):
+Status is Quotation or Quotation Sent, the quotation hasn't expired (`validity_date < today`, so the Expiration day
+itself can still be signed), Online Signature is ticked, and it isn't signed yet. It then writes `signed_by`,
+`signed_on = now` and `signature`. Unless `_has_to_be_paid()`, it confirms through `_validate_order` →
+`action_confirm`, which runs the same missing-product check as Confirm and then sets Status to Sales Order and the
+date to now. It also posts the signed PDF on the chatter and emails the confirmation.
+
+**The owner chose the platform's no-login form for this: the workflow Get Link node (获取链接), fill-in type
+(填写链接).** The node's shape comes from pd-openweb `WorkflowSettings/Detail/Link/index.jsx`, and every setting
+below was read back.
+
+| | |
+|---|---|
+| Control | **Signing Link** `6ab27eaae54d2a34faaa9765` — Text, alias `access_url` (Odoo has no field for the link; `portal.mixin`'s `access_url` is the nearest), permission `100`, draws the URL as a link (`analysislink`). Description: *Copy this link and send it to the customer so they can sign and accept the quotation online.* **Parked at row 9999 for the owner to place**; intended (7, 0, 12), its own row under Signature, Signed By and Signed On |
+| Button | **Share for Signature** `6ab27f107d58b0f4498fcb8e` — not batch, no confirmation. Offered while **Status is Quotation or Quotation Sent, Online Signature is ticked and Signature is empty**. Description: *Create the link the customer opens to sign and accept this quotation online, and put it in Signing Link. The link works once, and not after the Expiration date.* |
+| Its workflow | `6ab27f10789584ded342675d` (ids.json › `Orders: Share for Signature`) |
+| Second workflow | **Signed: confirm the order** `6ab28144e606b26d2601895f` (ids.json › `Orders: Signed: confirm the order`) |
+
+```
+Share for Signature
+  Trigger by button
+    → Does the quotation expire?
+        Expiration is set   (Expiration is not empty)
+            → Signing link until the expiration date      Get Link: fill-in, ends at 23:59 on Expiration
+            → Save the link (until the expiration date)   Signing Link ← the link
+        No expiration date  (else)
+            → Signing link with no end date               Get Link: fill-in, no end
+            → Save the link (no end date)                 Signing Link ← the link
+
+Signed: confirm the order
+  The customer signed   Orders updated, Signature among the fields written; runs only while Signature is filled,
+                        Status is Quotation or Quotation Sent and Online Signature is ticked
+    → Set Signed On                           Signed On ← now
+    → Product lines with no product           Confirm's own count over Order Lines
+    → Is a product line missing its product?
+        Yes → Quotation signed, not confirmed        notice to the Salesperson; the order stays a quotation
+        No  → Is online payment required?
+                Online payment    → Quotation signed, payment due    notice; stays a quotation, as in Odoo
+                No online payment → Confirm the order                Status ← Sales Order, Quotation/Order Date ← now
+                                  → Quotation signed                 notice: "S000xx was signed by <Signed By>."
+```
+
+**What the customer sees on the link:** Number, Status, Customer, Invoice Address, Delivery Address, Expiration,
+Quotation/Order Date, Delivery Date and Payment Terms; the Order Lines tab with the lines (Product, Description,
+Quantity, Unit, Unit Price, Discount, Taxes, Tax Amount, Subtotal, Total — no adding, editing, deleting or
+exporting); Untaxed Amount, Tax, Total and Terms and conditions. All of these are view only. **Signature and
+Signed By** are editable and required. Everything else is hidden: Signing Link, Locked, Is Template, Template Name,
+Discount Type and Value, Invoicing Closed, the two statuses, Signed On, Tax Mode, and the whole Other Info tab. A
+control added later is hidden by default. The submit button reads **Accept & Sign**. After submitting, the link
+can be neither viewed nor changed, so it works once. No password.
+
+**Confirm's writes, not new ones.** *Confirm the order* carries exactly the two writes of Confirm's own step.
+*Product lines with no product* is Confirm's own count (Orders is this order, Display Type is Product, Product is
+empty). The three notices go to the order's **Salesperson** in the app. *Set to Quotation* clears Signature, which
+fails the trigger's condition, so no run starts at all.
+
+**Proved without a browser** (`sign`, `signtest`, `selfsign`, `check`, 22 Sep 2026):
+
+- Every node read back as built. For both links that means the record, fill-in, "Accept & Sign", no revisiting, no
+  password, new controls hidden, the property of every control, the subtable's column switches and columns, and
+  the dated link's end (Expiration, 23:59). Both write steps store `$<link step>-link$` into Signing Link. The
+  path and trigger conditions and the three notices' text and recipient read back too. Both workflows published
+  with no warnings, and a second `sign` saved and published nothing.
+- **Signature takes "edit and required" on the link although it is read-only on the form.** The node saved and
+  read back property 3 for it. Whether the public page honours that is the browser test's first check.
+- **The expiry works, and it is not the start of the day.** `Worksheet/GetLinkDetail`, the public page's first
+  call, answers **17, "link expired"**, for S00022, whose Expiration was yesterday. It answers "open" for S00021,
+  whose Expiration is **today**, at 21:45 on that day. That rules out the start of the day and the editor's 08:00
+  default. That S00021 dies at 23:59 is for tomorrow.
+- **The server offers the button exactly where it should** (`GetWorksheetBtns` per order): on the Quotations and
+  Quotation Sents with Online Signature ticked and no signature, and on nothing else.
+- **Downstream of the link, all of it runs** (`selfsign`, on S00020, its own TEST order). An API write of Signature
+  and Signed By is the worksheet event the link is expected to cause:
+
+  | Case | Run | Order afterwards | Notice (as sent, to Casimir Chiong Ming Yuan) |
+  |---|---|---|---|
+  | lines complete, no online payment | Set Signed On → count → No → No online payment → Confirm the order → Quotation signed | **Sales Order**; Quotation/Order Date and Signed On = the signing minute | *S00020 was signed by TEST signer.* |
+  | Set to Quotation on it | **no run** | Quotation; Signature, Signed By, Signed On empty | — |
+  | a product line with no product | … → Yes → Quotation signed, not confirmed | still **Quotation**; signature kept; Signed On set | *S00020 was signed by TEST signer, but it was not confirmed: some order lines are missing a product. Correct them, then confirm it.* |
+  | Signature cleared by the API | **no run** | — | — |
+  | Online Payment ticked | … → Online payment → Quotation signed, payment due | still **Quotation**; Signed On set | *S00020 was signed by TEST signer. It stays a quotation because it asks for online payment.* |
+
+**Not proved: whether the link's submission starts *Signed: confirm the order*.** The public page saves through the
+ordinary record editor (pd-openweb `WorksheetRowEdit`), so it should count as an update. That is the browser test's
+second check. If no run appears, the trigger becomes a **scheduled workflow**: every few minutes it looks for
+orders with Online Signature ticked, a Signature, no Signed On and Status Quotation or Quotation Sent, and runs the
+same steps on each. Signed On empty is the "not handled yet" mark.
+
+**TEST orders**, all for *TEST QA Trading Sdn Bhd, TEST Person One*, Salesperson Casimir, Online Signature ticked,
+one line copied from S00006 (*Business Laptop 14" i7*, 1 × 5,400.00 at its taxes). Each is found by its Customer
+Reference and recorded in `ids.json` › records. None has been sent anywhere.
+
+| Order | Customer Reference | Online Payment | Expiration | Signing Link |
+|---|---|---|---|---|
+| **S00018** | TEST Sign & Accept | no | 29 Sep | https://www.nocoly.com/public/workflow/6ab2829a480ec07369259f1e |
+| **S00019** | TEST Sign & Accept, online payment | yes | 29 Sep | https://www.nocoly.com/public/workflow/6ab2829edd767e035b70194a |
+| S00021 | TEST Sign & Accept, expires today | no | 22 Sep | https://www.nocoly.com/public/workflow/6ab28657863f2dc2a7a7e397 |
+| S00022 | TEST Sign & Accept, expired yesterday | no | 21 Sep | https://www.nocoly.com/public/workflow/6ab28662480ec07369259f21 — answers "link expired" |
+| S00023 | TEST Sign & Accept, no expiration | no | — | https://www.nocoly.com/public/workflow/6ab2866d863f2dc2a7a7e398 |
+| S00020 | TEST Sign & Accept, CLI run | yes (left so) | 29 Sep | none — `selfsign`'s; left signed, a Quotation |
+
+**Left for the browser — the live test.** Open each link in a private window, not signed in.
+
+1. **S00018's link.** The page should show only the fields listed above: the ten line columns, and no Signing
+   Link, Locked, discount fields or Other Info. Signature and Signed By should be marked required, and the button
+   should read *Accept & Sign*. Pressing it empty must be refused.
+2. **Sign and press *Accept & Sign*.** The page should report that it was submitted.
+3. **In the app, S00018** should have Signature and Signed By filled (this proves the link can write a field that
+   is read-only on the form), Signed On at the signing time, **Status Sales Order**, and Quotation/Order Date moved
+   to now. 【Quotation signed】 *S00018 was signed by <name>.* should be in your notifications, and *Share for
+   Signature* should be gone from the order. If Status is still Quotation, run
+   `hap approval history --process-id 6ab28144e606b26d2601895f`. A run for S00018 means a step is wrong; tell me.
+   **No run means the link's submission starts no workflow**, and the trigger becomes the scheduled scan above.
+4. **Reopen S00018's link.** It should show only "submitted", with no form (single use).
+5. **S00019's link:** the same, but the order **stays a Quotation**, with 【Quotation signed, payment due】.
+6. **S00023's link** (no Expiration) opens like the others. You may leave it unsigned.
+7. **S00022's link** should say the link has expired. **S00021's link** should open today and say "expired" after
+   midnight. That is where the cutoff is.
+8. Optional: on a signed test order, *Set to Quotation* should clear the three signature fields and start no run
+   of *Signed: confirm the order*.
+
+**Credits — not built, and nothing here spends any** (prices from help.nocoly.com/purchase/billing-items, where
+$1 = 1 credit):
+
+| Option | What it adds | Per use | How it fits |
+|---|---|---|---|
+| (a) The quotation email carries the link | Odoo's *View Quotation* button | nothing on top of Send's own 0.002 per recipient (and 0.03 per PDF) | In Send's *Quotation* path, put the link into *Email quotation*'s body. Either read Signing Link (`$trigger-Signing Link$`, blank until Share for Signature has been pressed), or copy the dated/open Get Link pair and its write in front of *Quotation file*, so every send makes a fresh link. The node's link name (e.g. *View Quotation*) makes it a hyperlink in the email |
+| (b) Confirmation email after signing | Odoo's `_validate_order` mail | 0.002 per recipient; +0.03 with the PDF | On *No online payment*, after *Confirm the order*: Get Customer → Order file (PDF) → *Email order confirmation*, the three steps Send's *Order* path already has |
+| (c) The signed PDF kept on the order | Odoo's chatter post of the signed quotation | 0.03 per signing (a Word file is free) | Add Signature, Signed By and Signed On to the Word template. Add an Attachment control (e.g. *Signed Quotation*). In *Signed: confirm the order*, after *Set Signed On*: a print file step (PDF) → write it to that control |
+| (d) A customer portal with verification codes | Odoo's `/my/orders` | each login code by SMS 0.34 as the page states (international), or by email 0.002 | The platform's external portal. Customers are portal users tied to their contact and see their own orders, and sign in a view instead of a link. A larger build that would replace the link, not add to it |
+
+
 ## Descriptions rewritten for the app's users (22 Sep 2026)
 
 The owner's rule of 22 Sep 2026: a description in the app says only what the field or button does, for the people using it — no Odoo, no field or model names, no divergences, no build notes. The texts below were rewritten or emptied on the live app and in the builder's constants. The old text is kept here, word for word, because it carried the Odoo references and build reasoning that are no longer in the app.
@@ -801,3 +936,8 @@ The owner's rule of 22 Sep 2026: a description in the app says only what the fie
 A typo, three c's, fixed at the owner's request in one version-pinned save of that one attribute; its button text
 (`hint` "Query") and everything else are as the owner left them. `orders.py` OWNERS_CONTROL follows, so `buttons`
 and `check` recognise it. No custom button carries the name, and no `ids.json` key records this control.
+
+**The owner deleted this placeholder later on 22 Sep 2026**, once Sign & Accept was to be built as a Get Link workflow
+(§11). `orders.py` no longer expects it — `buttons`, `send` and `check` used to compare it byte for byte and stop
+without it — and `check` only notes it should that id come back. No `ids.json` key ever carried it, so none was
+removed.

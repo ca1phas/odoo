@@ -71,7 +71,9 @@
   "Orders: Apply Discount": "6ab235f0a2c872a5c13a8b06",
   "Orders: Apply Discount: one product line": "6ab23689e606b26d26fe5ebb",
   "Orders: Apply Discount: one tax group": "6ab23692e606b26d26fe5f0c",
-  "Orders: Send Quotation": "6ab0aac1789584ded3230fe1"
+  "Orders: Send Quotation": "6ab0aac1789584ded3230fe1",
+  "Orders: Share for Signature": "6ab27f10789584ded342675d",
+  "Orders: Signed: confirm the order": "6ab28144e606b26d2601895f"
  },
  "buttons": {
   "Archive": "6aa8a5654720c515252bda3d",
@@ -99,7 +101,8 @@
   "Orders: Set to Quotation": "6ab1070dbd43f55762c78d2f",
   "Orders: Mark as Sent": "6ab10711e54d2a34fa4e89ab",
   "Orders: Deliver": "6ab218bee43d174ab3754894",
-  "Orders: Apply Discount": "6ab235f07d58b0f44939500c"
+  "Orders: Apply Discount": "6ab235f07d58b0f44939500c",
+  "Orders: Share for Signature": "6ab27f107d58b0f4498fcb8e"
  },
  "views": {
   "Units & Packagings: Units & Packagings": "6aa8d14d4a73a3142152d3fa",
@@ -347,7 +350,8 @@
   "Orders: Discount Value": "6ab23575e54d2a34fa4f7b8c",
   "Journals: About Journal Entries": "6aa9e869e54d2a34fa4dfe42",
   "Journals: About Advanced Settings": "6aa9e869e54d2a34fa4dfe43",
-  "Orders: Terms and conditions": "6ab2587bbd43f5576223fb06"
+  "Orders: Terms and conditions": "6ab2587bbd43f5576223fb06",
+  "Orders: Signing Link": "6ab27eaae54d2a34faaa9765"
  },
  "rules": {
   "Journals: Payment Communications only for Sales": "6aa9dae5e54d2a34fa4dfde2",
@@ -950,7 +954,13 @@
   "Order Lines: S00021 line 50": "fc24f112-ab4c-4f2a-b73e-5644d034802f",
   "Order Lines: S00022 line 10": "4e923a86-3de2-43c8-b6a1-fbbb439787e0",
   "Products: Discount": "4464529e-94ab-4597-a5cc-25714cd251c2",
-  "Product Variants: Discount": "dd0780ce-bf32-4e02-9d41-d3d6b5f6bb9f"
+  "Product Variants: Discount": "dd0780ce-bf32-4e02-9d41-d3d6b5f6bb9f",
+  "Orders: TEST Sign & Accept": "ff80cd2a-0fce-4d63-a142-922a841d5d6b",
+  "Orders: TEST Sign & Accept, online payment": "459ded9f-bdf0-4082-a2ba-04c2b0ab754a",
+  "Orders: TEST Sign & Accept, expires today": "7bafa36e-b886-4251-be5d-70a9be64c376",
+  "Orders: TEST Sign & Accept, expired yesterday": "fc695e91-2964-49df-96ec-5d80f9d06045",
+  "Orders: TEST Sign & Accept, no expiration": "9af2c0ae-5ee3-4e0f-8ed4-802c9ef08d93",
+  "Orders: TEST Sign & Accept, CLI run": "8aa92a30-1a0c-4ee5-973d-1a141d81d849"
  },
  "roles": {
   "Administrator": "25ef76ef-5538-4779-a5e6-ab1fbce9dcfe",

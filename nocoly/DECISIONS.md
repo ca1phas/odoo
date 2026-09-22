@@ -222,3 +222,16 @@ the build is `build/roles.py` and the ids are in `build/ids.json` under `roles`.
 | 22 Sep 2026 | **The status write runs on the Quotation path, which carries Quotation Sent too** | Writing Quotation Sent over Quotation Sent changes nothing, so only a Quotation moves, as in Odoo; no workflow listens to Orders' Status | Builder |
 | 22 Sep 2026 | **Not carried**: Odoo's *(with reference: <Source Document>)* line, its product-document list, and the chatter entry Odoo posts for the sent mail | Optional parts of the template, and HAP has no chatter to post to | Builder |
 
+
+## Orders · Sign & Accept (22 Sep 2026)
+
+| Date | Decision | Why | By |
+|---|---|---|---|
+| 22 Sep 2026 | **Sign & Accept is the workflow Get Link node's fill-in link**, not a portal: *Share for Signature* makes a single-use, no-login link to the order and stores it in **Signing Link** for the salesperson to send; *Signed: confirm the order* reacts to the signature | HAP has no customer portal page of its own for a record; a fill-in link is the platform's no-login form, and it spends no credits | Owner |
+| 22 Sep 2026 | **The owner deleted their *Sign & Accept* placeholder search button** (`6ab0f80f7d58b0f449317238`); the builder and `check` no longer expect it. No ids.json key ever carried it | The Get Link design replaces it | Owner |
+| 22 Sep 2026 | **The customer types their name**; Odoo pre-fills *Signed By* with the portal partner's name | A no-login link has no identity to pre-fill from | Builder — flagged for the owner |
+| 22 Sep 2026 | **No signed PDF on the order and no confirmation email yet** | Odoo posts the signed PDF on the chatter and emails the order confirmation (`_validate_order` with `send_email`); PDFs and email spend the organisation's credits, which are not yet available (16-orders.md §11, *Credits*) | Owner |
+| 22 Sep 2026 | **The signature stays when the product check fails**, and the salesperson is told (*Quotation signed, not confirmed*) | Odoo's `portal_quote_accept` raises inside the request and rolls the signature back with it; here the link has already stored it before any workflow runs. Set to Quotation clears it | Builder — flagged for the owner |
+| 22 Sep 2026 | **"Online payment required" is the Online Payment checkbox alone** | Odoo's `_has_to_be_paid` also needs a positive total, no completed payment and the prepayment not yet reached; there is no payment in this app | Builder |
+| 22 Sep 2026 | **The link lasts to 23:59 on the Expiration date, and has no end when Expiration is empty** | Odoo's `is_expired` is `validity_date < today`, so the Expiration day is still signable; a Date field's link expiry defaults to 08:00 that day | Builder |
+| 22 Sep 2026 | **The customer sees** the Number, Status, Customer and its two addresses, the two dates, Delivery Date, Payment Terms, the lines (product, description, quantity, unit, price, discount, taxes and amounts) and the totals and terms, read-only; **fills in** Signature and Signed By; **nothing else**, and a control added later is hidden too | What Odoo's portal quotation shows; the salesperson, reference and the Other Info tab are left out as internal | Builder — within the owner's list |

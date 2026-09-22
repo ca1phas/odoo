@@ -1230,3 +1230,41 @@ line's Subtotal; not found → create it. A second sub-process then prices each 
 - **A `get related record` step (6 / actionId 20) from a button's trigger does publish and run** — the owner's *Get
   Customer* on Orders ran on 21 Sep and published again on 22 Sep with no warning — so the Buttons note above about
   warningType 103 / 200 is not general.
+
+### Get Link (获取链接) in a workflow (22 Sep 2026, Orders' Sign & Accept)
+
+- **获取链接 is flowNodeType 15**, added with `flowNode/add {typeId: 15, appType: 13, prveId}` and no action
+  (pd-openweb `EditFlow/components/CreateNodeDialog.jsx`). The editor checks the organisation's certification before
+  adding one; the API added it without complaint. Editor: `WorkflowSettings/Detail/Link/index.jsx`.
+- **Its field list exists only once the record is picked**: `flowNode/getNodeDetail {processId, nodeId, flowNodeType: 15,
+  selectNodeId: <the trigger>}` (GET) fills `formProperties`, one entry per control, `property` **1 view · 2 edit ·
+  3 edit and required · 4 hidden**. A tab (52) is an entry of its own and its controls carry its `sectionId`. **A
+  subtable appears as type 29 with `detailTable: true`** and its columns in `subFormProperties`; `workflow: true`
+  with `allowAdd` / `allowEdit` / `allowCancel` / `allowExport` "0" switches its own column permissions on.
+- `saveNode` takes `selectNodeId`, `linkType` (**1 share, view only · 2 fill-in · 5 internal**), `linkName` (only an
+  email shows it), `formProperties`, `time`, `password`, `submitButtonName`, `submitType` (**0: neither view nor
+  modify once submitted** · 1 view · 2 modify, with `modifyTime` hours or -1), `addNotAllowView` (true: a control
+  added later is hidden) and `viewId`. Everything read back as sent.
+- **A control that is read-only on the form ("100") takes `property` 3 on the link** — saved and read back. Whether
+  the public page then lets the customer write it is the browser test's (Orders' Signature and Signed By).
+- **Expiry at a date field**: `time {enable: true, type: 2, executeTime: {fieldNodeId, fieldControlId,
+  fieldControlType, fieldNodeType, fieldAppType, …}, dayTime}`. On a **Date** (15) the editor sets `dayTime`
+  **"08:00"** — the link would die at 8 am on that day; Orders sends "23:59". A duration is `type 1` with
+  `executeTime.fieldValue` and `unit` (1 minute · 2 hour · 3 day).
+- **The step's one output is `link`, a Text**: `$<link step>-link$` in a text field write stores
+  `https://www.nocoly.com/public/workflow/<id>`. Each run makes a new link.
+- `Worksheet/GetLinkDetail {id}` is what the public page loads first: `rowId`, `submitBtnName`, `linkState`
+  (0 open, 1 already submitted — the page then shows only "submitted"), `addAllowView`. It is read-only; the form and
+  its values are fetched after it.
+- **A custom button can be pressed through the API** the record page uses: `process/startProcess {appId:
+  <worksheet id>, triggerId: <btnId>, sources: [rowid]}` (hap-cli `workflow.start_process`) answered `true` and ran
+  the button's workflow; `hap workflow trigger` bypasses the button altogether.
+- **Workflow conditions by control type** (pd-openweb `WorkflowSettings/utils.js` `getConditionList`): a Signature
+  (42) is **31 not empty / 32 empty**, not the 7 / 8 of a text or date; a checkbox is **29 ticked / 30 not**.
+- **A Signature is written by the API as an uploaded image's URL** (`hap upload`, then `serverName` + `key`); it
+  reads back non-empty and starts a worksheet-event workflow narrowed to it. **Writing it empty starts nothing when
+  the trigger's condition needs it filled** — the condition is checked on the record after the write, so Set to
+  Quotation's clear and an API clear left no run (Orders' `selfsign`).
+- **A notice to a Member control of the record** is the account `{type: 6, entityId: <the node holding the record>,
+  roleId: <the Member control>, controlType: 26}`. A run's detail (`approval history-detail`) carries each notice as
+  sent, templates filled, in its work item's `opinion`, with the recipient — a check of the text without the inbox.
