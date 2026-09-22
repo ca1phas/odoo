@@ -661,6 +661,31 @@ Quotation-only and Order-only templates as well if you want them (the worksheet'
 new Word template), and if the general one should not be offered in some state, give it a filter there.
 
 
+### 9.1 · All three templates, and the company rename (23 Sep 2026, done in the browser)
+
+The Form Settings → **Print Template** screen answers two questions the CLI could not.
+
+| Found | What it means |
+|---|---|
+| Each template row offers **Filter** — *"Set filters to show print templates only if conditions are met. And it will always be displayed if not set."* | A template can be limited to the records it suits. This is what makes the Quotation-only and Order-only files worth having: Odoo prints one report that renames itself, and here the right template simply appears. |
+| The filter's operator list is `is · is any of · not any of · is empty · is not empty` | `is` takes **one** option only; a multi-option condition needs **is any of**. |
+| **Online Editing** opens the .docx in a WPS editor in the browser | The file can be edited in place, without re-uploading. Beware: a triple-click selects the whole paragraph and typing over it **merges the next line and drops the heading style** — double-click the word instead, or set the size back afterwards. |
+| The worksheet's `···` menu has **Reset Auto-number** — *"Specify the number of the next record; subsequent numbers will increment based on this. Previous record numbers remain unchanged."* | A wiped worksheet can start again at 1. Existing records keep their numbers, so it is only useful straight after a wipe. |
+
+**Now live on Orders** (`ids.json` → `prints`):
+
+| Template | id | Shown when |
+|---|---|---|
+| Quotation | `6ab2badf7903a53029f5b5be` | Status **is any of** Quotation · Quotation Sent |
+| Sales Order | `6ab2bb577903a53029f5b5c0` | Status **is** Sales Order |
+| Quotation / Order | `6ab258cd7903a53029f5ade7` | no filter — the fallback, offered on every order |
+
+Proved on the records themselves: S00006 (Sales Order) offers *Sales Order* and *Quotation / Order* and **not** *Quotation*; S00013 (Quotation) offers *Quotation* and *Quotation / Order* and **not** *Sales Order*.
+
+**The company name** is now **MyTech Products & Services** in the heading and the page footer of all three. The live *Quotation / Order* was changed through Online Editing and proved by printing S00006; the other two were renamed in the repo's `.docx` files first and uploaded already correct. The three files in `nocoly/print-templates/` match what is live, backed up in `nocoly/build/backups/print-templates_pre_mytech_*`. One trace is left: `docProps/core.xml` still names *casimir* as the document's author, which prints nowhere.
+
+**Open, for the owner:** every order still offers the unfiltered *Quotation / Order* beside its specific template, so a quotation shows two choices. Filter or retire it if one is preferred.
+
 ## 10 · Send — built 22 Sep 2026 (`orders.py` §16)
 
 Odoo's *Send* is `action_quotation_send` (19.0 source, `addons/sale/models/sale_order.py:1069`): it opens the mail

@@ -1235,6 +1235,16 @@ line's Subtotal; not found → create it. A second sub-process then prices each 
   `attachments`, text fields taking `$node-field$`; the recipient is an `accounts` entry `{type: 6, entityId: <a step
   holding the record>, roleId: <its Email control>, controlType: 5}`. Pressing a button that runs one **sends real
   email** — build and read back; never trigger it to test.
+- **The screen knows things the API does not** (23 Sep 2026, found by clicking). Form Settings → **Print Template**
+  gives each template a **Filter** — *"Set filters to show print templates only if conditions are met. And it will
+  always be displayed if not set."* — so a template can be limited to the records it suits; `Worksheet/GetPrintList`
+  returns that as the template's `filters`. The operator list is `is · is any of · not any of · is empty · is not
+  empty`, and **`is` accepts one option only** — a multi-option condition needs *is any of*. Each row also offers
+  **Online Editing**, a WPS editor that edits the stored .docx in place, so text can be changed without re-uploading;
+  there a **triple-click selects the paragraph and typing over it merges the next line and drops the heading style**,
+  so double-click the word instead. Separately, the worksheet's `···` menu has **Reset Auto-number** — *"Specify the
+  number of the next record; subsequent numbers will increment based on this. Previous record numbers remain
+  unchanged."* — which is how a wiped worksheet starts again at 1.
 - **A new path on an existing gateway** is `flowNode/add {typeId: 2, prveId: <the gateway>}` (the editor's + on a
   branch); it is appended to the gateway's `flowIds`. A **found / not-found branch** on a search or get-related step
   has paths with `resultTypeId` 3 and 4 and no conditions, and no path can be added to it.
