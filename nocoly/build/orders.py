@@ -80,6 +80,19 @@ owner approved — deliberately nothing else.
                                                            #    since §17 Sign & Accept; since §18 Incoterm
     ~/.hap-venv/bin/python nocoly/build/orders.py show     # the live controls and rules
 
+**Field names (aliases), 23 Sep 2026.** Orders was built before the app-wide convention that a control's alias is
+its **Odoo field name**, so all 45 carried `alias=''` while every other worksheet had them (16-orders.md §7.2
+item 7). Twenty-six were filled in from the §2 table in **one version-pinned save**, done by hand rather than by a
+step: `state locked name partner_id partner_invoice_id partner_shipping_id validity_date date_order
+commitment_date invoice_status payment_term_id delivery_status document_tax_mode order_line amount_untaxed
+amount_tax amount_total require_payment require_signature prepayment_percent user_id team_id tag_ids
+client_order_ref journal_id origin`. They join the nine this build had set (`invoicing_closed is_template
+template_name signature signed_by signed_on access_url discount_type discount_value`), Terms and conditions'
+`note`, and §18's `incoterm` / `incoterm_location`; sections (t52) and dividers (t22) take none. The read-back
+showed no control's place or size moved. Five of them are **ours, not Odoo's** — `sale.order` has no
+`is_template`, `template_name`, `discount_type`, `discount_value` or `access_url`.
+
+
 **There is no `fields` or `layout` step, and there must not be one** — `views` writes one view of its own,
 `seed` writes records and `buttons` writes custom actions and their workflows; none of them replaces a control.
 The owner is building Orders **by hand in the browser** — on 21 Sep 2026 they added Delivery Date, Delivery
