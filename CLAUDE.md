@@ -114,8 +114,8 @@ these notes.
 
 ## Reading records
 
-**`common.records` drops fields a control hides.** Use `hap worksheet record get` before concluding a hidden
-field is empty — this has caused two wrong conclusions already.
+Neither path is complete — see the table above. `common.records` drops hidden fields; `record get` dropped
+controls added after the record existed. **Read both before concluding a field is empty.**
 
 ## Working with the owner
 
