@@ -26,7 +26,9 @@ Two things:
      **Incoterms** joined like Payment Terms (Accounting Administrator full, the other three view —
      account.group_account_manager alone writes account.incoterms) and **Contact Tags** like Countries (view for
      all four; only the app Administrator edits), both through `plan` then `create` (19-incoterms.md,
-     20-contact-tags.md).
+     20-contact-tags.md). The same day the owner moved **Contact Tags onto States' row**: Odoo's
+     `ir.model.access.csv` writes res.partner.category from `base.group_partner_manager`, as it does
+     res.country.state, and reads it to `base.group_user` — so whoever edits Contacts edits its tags.
 
 Run from the repo root with the CLI's interpreter:
 
@@ -87,11 +89,11 @@ ORDER = ['Contacts', 'Contact Tags', 'Countries', 'States', 'Units & Packagings'
 # everybody else reads it). **States is deliberately not here**: Odoo writes res.country.state from
 # base.group_partner_manager, a contact manager, so each role has the same cell on States that it has on
 # Contacts (owner, 18 Sep 2026; 12-states.md §1 › Roles).
-# **Contact Tags** joined on 22 Sep 2026 as the brief asked — "an administrator configuration table, like Countries":
-# Odoo's menu Contacts › Configuration is behind base.group_system. Odoo's *access list* is wider — it writes
-# res.partner.category from base.group_partner_manager, as it does res.country.state — so the States precedent
-# would give each role its Contacts cell instead; recorded in 20-contact-tags.md for the owner to settle.
-VIEW_ONLY = {'Countries', 'Contact Tags'}
+# **Contact Tags is not here either.** It joined on 22 Sep 2026 like Countries, and the owner moved it the same day
+# to follow Odoo's access list rather than its menu: ir.model.access.csv reads res.partner.category to
+# base.group_user and writes it from base.group_partner_manager (rows 79-80), exactly as res.country.state — so
+# each role has the same cell on Contact Tags that it has on Contacts and States (20-contact-tags.md §6 › Roles).
+VIEW_ONLY = {'Countries'}
 
 ROLES = {
     'Accounting Administrator': (
@@ -105,7 +107,7 @@ ROLES = {
     'Accountant': (
         'Odoo group account.group_account_user — "Show Full Accounting Features". The accountant: can do '
         'everything except advanced configuration.',
-        {'Contacts': EDIT, 'Contact Tags': VIEW, 'Countries': VIEW, 'States': EDIT, 'Units & Packagings': VIEW,
+        {'Contacts': EDIT, 'Contact Tags': EDIT, 'Countries': VIEW, 'States': EDIT, 'Units & Packagings': VIEW,
          'Products': VIEW, 'Product Variants': VIEW,
          'Product Categories': VIEW, 'Chart of Accounts': VIEW, 'Taxes': VIEW, 'Journals': EDIT,
          'Payment Terms': VIEW,
@@ -114,7 +116,7 @@ ROLES = {
     'Invoicing': (
         'Odoo group account.group_account_invoice — "Invoicing". Invoices, payments and basic invoice '
         'reporting; cannot see accounting configuration, so Journals is read-only.',
-        {'Contacts': EDIT, 'Contact Tags': VIEW, 'Countries': VIEW, 'States': EDIT, 'Units & Packagings': VIEW,
+        {'Contacts': EDIT, 'Contact Tags': EDIT, 'Countries': VIEW, 'States': EDIT, 'Units & Packagings': VIEW,
          'Products': VIEW, 'Product Variants': VIEW,
          'Product Categories': VIEW, 'Chart of Accounts': VIEW, 'Taxes': VIEW, 'Journals': VIEW,
          'Payment Terms': VIEW,

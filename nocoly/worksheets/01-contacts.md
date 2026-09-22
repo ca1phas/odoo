@@ -7,7 +7,7 @@
 | Odoo model | `res.partner` |
 | Reference | **casimir.odoo.com — Odoo saas~19.4+e** (form, list, kanban and search views read from the live tenant). Behaviour the tenant cannot show — constraints, sync rules — is read from the Odoo 19.0 source in this repo: `odoo/addons/base/models/res_partner.py` |
 | Phase | 1 — core worksheet 1 of 7 |
-| Status | Built with the hap CLI and matched to 19.4 on 15 Sep 2026 · **UI-tested: 13 of 13 pass** · "Company, Person" display name added the same day, and the six tests it touches rerun and passing after one fix · 4 differences from Odoo noted · ready for review |
+| Status | Built with the hap CLI and matched to 19.4 on 15 Sep 2026 · **UI-tested: 13 of 13 pass** · "Company, Person" display name added the same day, and the six tests it touches rerun and passing after one fix · 4 differences from Odoo noted · ready for review · **Tags** appended 22 Sep 2026 (*Tags*, below), parked at row 9999 for the owner to place |
 
 One worksheet holds companies, the people who work at them, and their extra addresses (invoice, delivery,
 other) — as Odoo keeps all three in `res.partner`, linked by **Company**.
@@ -107,7 +107,7 @@ The company form's **Contacts** tab keeps its own columns: Name, Address Type, E
 | Odoo 19.4 field / feature | Why not now |
 |---|---|
 | SST and TTx registration numbers; Malaysian e-invoicing identity (Identification Type and Number, Industrial Classification, Malaysian TIN) | Malaysian e-invoicing localisation — on the tenant, SST and TTx come from `l10n_my_ubl_pint` and the TIN from `l10n_my_edi`, both built on Invoicing. They arrive with the Taxes bundle and e-invoicing. **Tax ID itself stays here:** `vat` is a base field |
-| Tags (`category_id`) | Contact Tags bundle — excluded for now |
+| ~~Tags (`category_id`)~~ | **Built on 22 Sep 2026** with the Contact Tags worksheet (`worksheets/20-contact-tags.md`) — *Tags*, below |
 | ~~Country and State as dropdowns~~ | **Both were built on 18 Sep 2026** — Country by the Countries bundle (`worksheets/11-countries.md`), a one-way relation carrying all 251 of Odoo's countries, and **State by the States bundle** (`worksheets/12-states.md`), a one-way relation carrying all 2 102 of Odoo's states, each in its text control's cell and each text control deleted. Odoo's *State Required* on a country is stored (bundle 4) and still enforces nothing here |
 | Pricelist, ~~Payment Terms~~, Payment Method, Incoterm, Fiscal Position (tab Sales & Purchase) | Pricelists, Payments, Incoterms and Fiscal Positions bundles. **Customer and Vendor Payment Terms were built on 17 Sep 2026 by the Payment Terms bundle** (`worksheets/10-payment-terms.md`) |
 | Industry (`industry_id`) | Its own table (`res.partner.industry`), not in Phase 1 |
@@ -225,6 +225,31 @@ rerun's, with the first run's in brackets. Test records are named `TEST …`.
 TEST QA Trading Sdn Bhd · TEST Person One · TEST Person Two · TEST Person Three · a nameless Delivery and a nameless
 Invoice address under the company · TEST Solo Trading. Left for the reviewer to inspect; remove them after sign-off.
 
+
+## Tags — added 22 Sep 2026 (`contacts.py tags`)
+
+Odoo's `category_id` — Many2many `res.partner.category`, labelled *Tags* — ends the right-hand group of the contact
+form as `widget="many2many_tags"` (base/views/res_partner_views.xml:191, 19.0 source), and is an optional column
+hidden by default in the list.
+
+| Control | Id | Type | Alias | Permission | Notes |
+|---|---|---|---|---|---|
+| **Tags** | `6ab2a0927d58b0f4498fcd5e` | Relation → Contact Tags, **multiple**, **one-way**, dropdown (chips) | `category_id` | `111` | picker filter *Active is on*; placeholder Odoo's `e.g. "B2B", "VIP", "Consulting", ...`; no description (Odoo gives none); the chips read the tag's Complete Name |
+
+- **Appended** at row 9999 — placement is the owner's. `TAGS_PLACE` is the intent: **the right half of row 5, beside
+  DUNS**, where Odoo's right-hand group ends. `layout` does not know it and **must not be run**: its `PLACE` predates
+  the owner's hand layout (it has no cell for *Quotation Templates*, the reverse of Orders' Customer).
+- **One-way**: Odoo's reverse, `partner_ids`, is on no view, so Contact Tags got no control; the append proved its
+  seven controls unchanged.
+- **Not a column** of Contacts or Archived (Odoo hides it); both use custom columns and did not change.
+- **No rule**: Odoo gives the field no `readonly` or `invisible`.
+- **Roles**: since 22 Sep 2026 every role that edits Contacts also adds and edits tags (20 §6 › Roles).
+- `contacts.py` had no `check`; it now has one, for Tags only. `selftags` put TEST Parent Tag and TEST Child Tag on
+  TEST Solo Trading (`74cbd3a8-e00f-48cd-b93e-0486a0518e83`), read both back through `record get` and the listing,
+  and put the contact back to no tags. **The TEST contacts `ids.json` records for this worksheet (TEST PT …, TEST State
+  Contact) no longer exist** — deleted since; their keys were left as they are.
+- **Not built**: finding contacts by a tag *and its children* (Odoo's `child_of`), and chip colours from the tag's
+  Color (20 §5).
 
 ## Descriptions rewritten for the app's users (22 Sep 2026)
 

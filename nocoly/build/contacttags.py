@@ -543,10 +543,11 @@ def step_views():
 # ── 3 · roles ───────────────────────────────────────────────────────────────
 
 def step_roles():
-    """roles.py owns the app's roles; its ORDER and matrices carry Contact Tags — **view for all four business
-    roles**, as Countries: Odoo's ir.model.access.csv writes res.partner.category from base.group_system alone, and
-    Contacts › Configuration is behind the same group, so only the app Administrator edits it. `roles.step_plan`
-    lists what `create` would write; `create` runs only when every change is on this worksheet or on Incoterms."""
+    """roles.py owns the app's roles; its ORDER and matrices carry Contact Tags — **the cell each role has on
+    Contacts and States** (Accounting Administrator full; Accountant and Invoicing view · add · edit; Accounting
+    Read-only view). Odoo's ir.model.access.csv reads res.partner.category to base.group_user and writes it from
+    base.group_partner_manager, as it does res.country.state (owner, 22 Sep 2026). `roles.step_plan` lists what
+    `create` would write; `create` runs only when every change is on this worksheet or on Incoterms."""
     import roles
     plan = roles.step_plan()
     foreign = sorted({w for changes in plan.values() for w in changes} - {WORKSHEET, 'Incoterms'})

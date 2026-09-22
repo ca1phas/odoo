@@ -374,7 +374,12 @@
   "Contact Tags: Active": "6ab29240805aef7032e3285a",
   "Contact Tags: Complete Name": "6ab29240805aef7032e3285b",
   "Contact Tags: Child Tags": "6ab29240805aef7032e32859",
-  "Contact Tags: Parent Complete Name": "6ab29241e54d2a34faaa98c5"
+  "Contact Tags: Parent Complete Name": "6ab29241e54d2a34faaa98c5",
+  "Orders: Incoterm": "6ab29e24e43d174ab3cd7675",
+  "Orders: Incoterm Location": "6ab0c528e54d2a34fa4e8124",
+  "Invoices: Incoterm": "6ab29feae54d2a34faaa991a",
+  "Invoices: Incoterm Location": "6ab29feae54d2a34faaa991c",
+  "Contacts: Tags": "6ab2a0927d58b0f4498fcd5e"
  },
  "rules": {
   "Journals: Payment Communications only for Sales": "6aa9dae5e54d2a34fa4dfde2",
@@ -423,7 +428,8 @@
   "Orders: Tax Mode is fixed once the quotation is confirmed": "6ab0d518e54d2a34fa4e8326",
   "Orders: A quotation needs a customer, a template does not": "6ab0e7fe7d58b0f449317067",
   "Orders: Template Name is for templates": "6ab0e7fe805aef703286dcd5",
-  "Incoterms: Code has at most three characters": "6ab28f04bd43f55762240042"
+  "Incoterms: Code has at most three characters": "6ab28f04bd43f55762240042",
+  "Invoices: Incoterm is not offered on a receipt": "6ab29fefbd43f557622400f7"
  },
  "records": {
   "Invoices: customer Sunway Construction Group": "a4935a3f-0262-4d68-9b3b-6049d32e390b",

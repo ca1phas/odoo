@@ -5,7 +5,7 @@
 | Odoo model | `sale.order` (+ `sale.order.line`) |
 | Odoo menus | Sales › Orders › **Quotations** (action 497) and **Orders** (action 496) — two filtered views of one table |
 | Reference | `nocoly/reference/odoo-19.4/sale.order.md` |
-| Status | **Requirements, plus §6 — the three interaction rules are built.** The owner is building the rest of this worksheet by hand; `build/orders.py` owns the rules and nothing else |
+| Status | **Requirements, plus §6 — the three interaction rules are built.** The owner is building the rest of this worksheet by hand; `build/orders.py` owns the rules and nothing else. Since then §8–§11 (22 Sep 2026) and **§12 Incoterm** (22 Sep 2026) |
 | Date | 21 Sep 2026, read from casimir before the trial expires; rules built 21 Sep 2026 |
 
 ---
@@ -275,7 +275,7 @@ amount_total · invoice_status · expected_date`, with a dozen more available an
 | Down payments (`is_downpayment`), optional lines' ordering, combos (`combo_item_id`, `linked_line_id`), product custom attributes | Each is its own machinery; the fields are on the line but nothing in Phase 1 drives them |
 | Online payment (`require_payment`, `prepayment_percent` as behaviour) | The checkboxes are stored; there is no payment. **Online signature is built since 22 Sep 2026** (§11, a no-login fill-in link), and Online Payment only keeps a signed order a quotation |
 | Preview · Send as behaviour | No mail. **Download is built** as System Print, §9 |
-| `fiscal_position_id`, `incoterm`, `project_id`, `preferred_payment_method_line_id` | Each needs a table that is not built |
+| `fiscal_position_id`, ~~`incoterm`~~, `project_id`, `preferred_payment_method_line_id` | Each needs a table that is not built. **Incoterm was built on 22 Sep 2026** once Incoterms existed (§12) |
 | Smart buttons (Invoices, Projects, Tasks, Transactions) | Counts over tables that do not exist yet |
 
 ## 5 · Dependencies, and the one that will bite
@@ -464,7 +464,7 @@ Template, Journal, Incoterm Location, Invoicing Status and three roll-up control
 | 2 | **The subtable shows one column** | `6ab0c740e43d174ab37535b0` carries `showControls` — and `advancedSetting.controlssorts` — of `["6ab0c740e43d174ab37535b6", "<Sequence>"]`, and **`…35b6` is a dead id**: no such control is on Order Lines any more. So the grid on the Orders form offers *Sequence* and nothing else — no Product, no Quantity, no price. Mounting minted the list from the controls that existed that minute and never grew with the worksheet. Invoices' *Lines* `6aaa2baae43d174ab3749de9` is the reference: it names all twelve of its child's columns |
 | 3 | **Widen the closed-for-editing rule** | `A confirmed or cancelled order is closed for editing` (`6ab0ba6e805aef703286d6fd`) names three controls. **Online Signature, Online Payment and Prepayment Percentage** now exist and belong in it. **Tax Mode does not** — item 4 puts it under a stricter condition, and two rules disagreeing about one control is a fight with no defined winner |
 | 4 | **Tax Mode read-only when Status is not Quotation** | Was blocked in §6; buildable now. `readonly="state != 'draft'"` — stricter than the rule above and the one to use for this field |
-| 5 | Pricelist · Fiscal Position · Incoterm | Still absent, all correctly deferred to their bundles. **Incoterm Location is present without Incoterm** — half a pair |
+| 5 | Pricelist · Fiscal Position · Incoterm | Still absent, all correctly deferred to their bundles. **Incoterm Location is present without Incoterm** — half a pair. **Incoterm built 22 Sep 2026 (§12)** |
 | 6 | Invoicing Status | The control and its four options exist, but nothing can compute it until the order → invoice link does. See §4. Correctly left hidden and read-only (`001`) until then |
 
 ### 7.2 Order Lines
@@ -946,6 +946,43 @@ $1 = 1 credit):
 | (c) The signed PDF kept on the order | Odoo's chatter post of the signed quotation | 0.03 per signing (a Word file is free) | Add Signature, Signed By and Signed On to the Word template. Add an Attachment control (e.g. *Signed Quotation*). In *Signed: confirm the order*, after *Set Signed On*: a print file step (PDF) → write it to that control |
 | (d) A customer portal with verification codes | Odoo's `/my/orders` | each login code by SMS 0.34 as the page states (international), or by email 0.002 | The platform's external portal. Customers are portal users tied to their contact and see their own orders, and sign in a view instead of a link. A larger build that would replace the link, not add to it |
 
+
+## 12 · Incoterm — built 22 Sep 2026 (`orders.py` §18)
+
+Odoo's `sale_stock` adds `incoterm` (Many2one `account.incoterms`, `options="{'no_open': True, 'no_create': True}"`)
+and `incoterm_location` (Char) to the order and shows them together under *Other Info › Shipping*
+(sale_stock/views/sale_order_views.xml:27-28, 19.0 source; the tenant extract lists the same pair under Shipping).
+The owner had built **Incoterm Location** by hand on 21 Sep 2026; this completes the pair once the Incoterms worksheet
+existed (19-incoterms.md).
+
+| Control | Id | Type | Alias | Permission | Notes |
+|---|---|---|---|---|---|
+| **Incoterm** | `6ab29e24e43d174ab3cd7675` | Relation → Incoterms, single, **one-way**, dropdown | `incoterm` | `111` | **appended**; picker filter *Active is ticked*; shows the Display Name "[FOB] FREE ON BOARD"; description Odoo's help. Stored in the **Other Info** tab at **row 9999** — the owner places it |
+| Incoterm Location | `6ab0c528e54d2a34fa4e8124` | Text | `incoterm_location` | `""`, as the owner left it | **the owner's control**; only its alias was written, in one version-pinned save whose signature diff named that control alone (of 45) |
+
+`INCOTERM_PLACE` is the intent: **a full-width row of its own directly under the *Shipping* divider** (row 22), so the
+tab reads Shipping › Incoterm › Incoterm Location, Odoo's order; Incoterm Location and everything under it move down
+one row.
+
+**No read-only rule.** Odoo leaves both editable in every state: the view gives neither a `readonly`, and
+`sale.order.write` refuses only a pricelist change on a confirmed order. So *A confirmed or cancelled order is closed
+for editing* and *A locked or cancelled order is closed for editing* were **not** extended. Odoo's `no_create` on the
+picker is the Roles' job — every business role only views Incoterms.
+
+**Views.** The owner's **All** view has no custom columns, so it shows every field and Incoterm joined it as a column;
+Quotations, Orders and Templates use custom columns and did not change. Odoo's list has no Incoterm column.
+
+**Self-check** (`selfincoterm`): on *TEST Sign & Accept, CLI run* (`8aa92a30-1a0c-4ee5-973d-1a141d81d849`), Incoterm set
+to FOB and Incoterm Location to "TEST Port Klang" through `record update`; `record get` and the listing both read back
+`[FOB] FREE ON BOARD` with its rowid and the text; both put back empty and read back empty both ways. No Orders
+workflow fires on them (*Signed: confirm the order* is narrowed to Signature).
+
+`check` now reads both back — exactly one control of each name, the owner's id for Incoterm Location, type, alias,
+permission, one-way, the picker filter, ids.json, and Incoterms' title — and notes while Incoterm is still parked.
+
+**Not built**: the order's Incoterm and location carried onto its invoice (`_prepare_invoice` writes
+`invoice_incoterm_id`; `account.move._compute_incoterm_location` joins the orders' locations) — it waits for the
+order → invoice link (§4).
 
 ## Descriptions rewritten for the app's users (22 Sep 2026)
 

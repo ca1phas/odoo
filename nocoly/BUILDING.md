@@ -1294,3 +1294,19 @@ line's Subtotal; not found → create it. A second sub-process then prices each 
   `groupopen` "" and `groupfilters` "[]" — the shape the view editor stored on the Sales app (13 Sep); written with
   `--edit-attrs advancedSetting --edit-ad-keys …` it reads back as sent (Contact Tags' *By Category*). hap-cli's
   view-spec `group` key writes `viewControl` instead, which is the kanban's. Both still for the browser.
+
+### Three from the Incoterm and Tags wiring (22 Sep 2026)
+
+- **An append stores a Relation's picker filter, `fieldPermission` and `sectionId` as sent.** Orders' and Invoices'
+  Incoterm and Contacts' Tags were appended (`AddWorksheetControls`, no controlId) carrying `advancedSetting.filters`
+  (*Active is ticked*), `bidirectional` "0", `fieldPermission` "111" and — on Orders and Invoices — the Other Info tab's
+  `sectionId`; all read back as sent and no repair save was needed. The control lands at row 9999 **inside that tab**.
+- **A Relation to its own worksheet lists an appended control at once.** Contacts' Company (and its reverse) carry a
+  `relationControls` snapshot of Contacts itself, and it gained Tags the moment Tags was appended, with no save of
+  Company. A before/after signature of an append must leave the new ids out of that snapshot
+  (`common.append_checked`), or it reports a change nobody made.
+- **Controls appended after the records existed read back through both paths once written.** Incoterm (Orders,
+  Invoices) and Tags (Contacts), permission `111`, were written by `record update` on records older than the control,
+  and `record get` and the listing both returned the value. Before the write `record get` gave nothing for them —
+  empty and absent look the same there — so this does not settle the table in CLAUDE.md, only adds a case where both
+  paths agree.

@@ -6,7 +6,7 @@
 | Odoo menu | Contacts › Configuration › **Contact Tags** (`base.action_partner_category_form`) — administrators (`base.group_system`) |
 | Bundle | **Contact Tags**, `btag`, 1 worksheet, 1.1 h — ground-up build page |
 | Source | the 19.0 source only. casimir.odoo.com expired on 22 Sep 2026, and no extract of this model was taken |
-| Status | **Built and self-checked 22 Sep 2026** (`build/contacttags.py`), not yet UI-tested. Wiring (§4) not started |
+| Status | **Built and self-checked 22 Sep 2026** (`build/contacttags.py`), not yet UI-tested. **Roles moved to Odoo's access list** and **Tags wired onto Contacts** the same day (§6 › Roles, §7) — Tags parked at row 9999 for the owner to place |
 | Date | 22 Sep 2026 |
 
 ---
@@ -112,16 +112,27 @@ None, as §3 says: Name is required on the field itself, and the Active switch i
 
 ### Roles
 
-`roles.py` `plan` listed only this worksheet and Incoterms, so `create` was run. Contact Tags joined like
-**Countries** — **view for all four business roles**; only the app Administrator adds, edits or deletes a tag — as the
-brief asked ("an administrator configuration table"). `roles.py check` passes.
+**Contact Tags follows Odoo's access list** (owner, 22 Sep 2026). `odoo/addons/base/security/ir.model.access.csv`
+(19.0 source) reads `res.partner.category` to `base.group_user` (row 79) and gives read, write, create and delete to
+`base.group_partner_manager` (row 80) — exactly the rows it carries for `res.country.state`. States already follows
+that rule, so Contact Tags now has, role by role, **the cell each role has on Contacts and States**:
 
-**For the owner:** Odoo's *menu* is behind `base.group_system`, but its *access list* is wider —
-`ir.model.access.csv` writes `res.partner.category` from **`base.group_partner_manager`** (a contact manager), exactly
-as it writes `res.country.state`. States followed that and gave every role its Contacts cell (18 Sep 2026); Contact
-Tags, as built, follows Countries instead. It matters once Tags is wired onto Contacts: in Odoo a person who can edit
-contacts can create a tag from the Tags field; here only the Administrator can. Switching is one line in `roles.py`
-(`VIEW_ONLY`) and a `create` run.
+| Role | Contact Tags |
+|---|---|
+| Accounting Administrator | full |
+| Accountant | view · add · edit |
+| Invoicing | view · add · edit |
+| Accounting Read-only | view |
+
+So whoever edits contacts can also create and edit a tag, as in Odoo. Delete stays with Accounting Administrator (and
+the app Administrator), the app-wide rule for every worksheet — Odoo's contact manager may also delete a tag.
+
+It was first built like Countries (view for all four), as the first brief asked; `roles.py` now keeps it out of
+`VIEW_ONLY` and gives Accountant and Invoicing `EDIT`. `roles.py plan` read **nothing to write** before the edit, and
+after it listed Contact Tags alone — Accounting Administrator `canAdd`, `editLevel`, `removeLevel`,
+`worksheetAddRecord`; Accountant and Invoicing `canAdd`, `editLevel`, `worksheetAddRecord`; Accounting Read-only
+nothing — so `create` was run (the three role models backed up first). A second `plan` read nothing to write, and
+`roles.py check` and `contacttags.py check` pass.
 
 ### Self-check — three TEST tags, left archived
 
@@ -144,17 +155,29 @@ contacts can create a tag from the Tags field; here only the Administrator can. 
 | Group by Color | not built | above |
 | Name is translatable | one language | as everywhere in this app |
 
-## 7 · Wiring — what the later step needs
+## 7 · Wiring — built 22 Sep 2026
 
-Not built; no control was added to Contacts. Its own **version-pinned** step on a Phase 1 worksheet with hand-set
-layout, added with `C.append_controls` (row 9999) — **placement is the owner's**.
+`contacts.py tags`, then `selftags` and `check` (01-contacts.md, *Tags*). One appended control; nothing else on
+Contacts was saved, and a second run saved nothing.
 
-| Worksheet | Control | Type | Alias | Intended place | Notes |
-|---|---|---|---|---|---|
-| **Contacts** | Tags | Relation → Contact Tags `6ab29232e54d2a34faaa98bb`, **multiple**, **one-way** (`bidirectional` "0"), shown as tags | `category_id` | the right half of row 5, beside DUNS — after Website and Tax ID, where Odoo's right-hand group ends (function, vat, website, lang, **category_id**) | Placeholder `e.g. "B2B", "VIP", "Consulting", ...` (Odoo's). Picker filter Active is on. **Not a column** in Contacts' views: Odoo's list carries it `optional="hide"`. A quick filter on Tags is worth adding; note it matches the tag itself, not its children (§5) |
+| Worksheet | Control | Type | Alias | Permission | Picker filter | Intended place |
+|---|---|---|---|---|---|---|
+| **Contacts** | **Tags** `6ab2a0927d58b0f4498fcd5e` | Relation → Contact Tags, **multiple** (`enumDefault` 2), **one-way** (`bidirectional` "0"), dropdown (`showtype` "3" — chips) | `category_id` | `111` | Active is on | the right half of row 5, beside DUNS — **parked at row 9999** for the owner to place |
 
-Once Tags is on Contacts, decide the roles question above: with Contact Tags view-only, a business role can pick
-existing tags on a contact but not create one from the picker.
+- Placeholder Odoo's: `e.g. "B2B", "VIP", "Consulting", ...`. No description: Odoo's field has no help.
+- The chips read the tag's **Complete Name**, the Contact Tags title — "Parent / Child".
+- **One-way**: Odoo's reverse, `partner_ids`, is on no view, so Contact Tags got no control. The append proved Contact
+  Tags' seven controls unchanged, and `check` confirms nothing on it points back at Contacts.
+- **Not a column** in Contacts' views, as Odoo's list hides it (`optional="hide"`). Both table views use custom
+  columns, so the new control did not join them; `check` confirms it.
+- **No rule**: Odoo gives `category_id` no `readonly` and no `invisible` on the contact form.
+- **Not built**: a quick filter on Tags (it would match the tag itself, not its children — §5), and chip colours from
+  the tag's Color (§5).
+
+**Self-check** (`contacts.py selftags`): TEST Solo Trading `74cbd3a8-e00f-48cd-b93e-0486a0518e83` was given TEST Parent
+Tag and TEST Child Tag through `record update`; `record get` and the listing both read back the two tags, titled
+"TEST Parent Tag" and "TEST Parent Tag / TEST Child Tag"; the contact was then put back to no tags and read back
+empty both ways. The API accepts archived tags: the picker filter is the browser's alone.
 
 ## 8 · For the browser
 
@@ -172,7 +195,12 @@ Nothing here was seen in a browser.
    There are no Archive / Unarchive buttons.
 6. **By Category**: the table is grouped under each parent's name (and a group for tags with no Category). If it is
    not grouped, the grouping key is wrong — set it once in the view editor and read `advancedSetting` back.
-7. **As Invoicing** (Select Role): view only — no + Record, the form read-only, the switch cannot be changed. **As
-   Administrator**: full.
+7. **As Invoicing** (Select Role): **+ Record works and a tag can be edited, but not deleted**; the same as
+   Accountant. **As Accounting Read-only**: view only — no + Record, the form read-only, the switch cannot be
+   changed. **As Accounting Administrator**: full, delete included.
 8. Clean-up: the three TEST tags sit in Archived.
-
+9. **Tags on Contacts**: Tags sits at the foot of the contact form (row 9999) until placed — beside DUNS is the
+   intent. Its picker offers **active tags only** (the three archived TEST tags must not appear; create one tag
+   first), shows each as "Parent / Child", takes several, and shows them as chips. Tags is not a column in Contacts or
+   Archived. **As Invoicing**, typing a new tag name in the picker should offer to create it (the role can now add to
+   Contact Tags) — record what the page does.

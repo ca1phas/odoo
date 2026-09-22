@@ -33,6 +33,11 @@ the CLI's interpreter:
     ~/.hap-venv/bin/python nocoly/build/invoices.py order       # each view's records, in the view's own order
     ~/.hap-venv/bin/python nocoly/build/invoices.py document "INV/2026/00001"   # one document's stored values
     ~/.hap-venv/bin/python nocoly/build/invoices.py untouched   # the other five worksheets: control count and digest
+    ~/.hap-venv/bin/python nocoly/build/invoices.py incoterm    # Incoterm (Relation → Incoterms, active only) and
+                                                                #    Incoterm Location, appended; the rule hiding both
+                                                                #    on a receipt (22 Sep 2026)
+    ~/.hap-venv/bin/python nocoly/build/invoices.py selfincoterm # set both on a TEST invoice, read them back through
+                                                                #    both read paths, put them back
     ~/.hap-venv/bin/python nocoly/build/invoices.py show        # the live control list
 
 Every step reads the live worksheet first and is safe to re-run; a second run writes nothing.
@@ -437,7 +442,8 @@ def guard():
         if not c or c['type'] != kind or c['controlName'] not in (name, want):
             problems.append(f"skeleton control {cid} ({name}) is {c and (c['controlName'], c['type'])}")
     problems += [f"unknown control {c['controlName']!r} ({c['controlId']})" for c in ctrls
-                 if c['controlName'] not in PLACE and c['controlId'] not in FIRST_BUILD]
+                 if c['controlName'] not in PLACE and c['controlId'] not in FIRST_BUILD
+                 and c['controlName'] not in INCOTERM_FIELDS]
     for name, opts in OPTIONS.items():
         c = next((c for c in ctrls if c['controlName'] == name), None)
         if c:
@@ -445,7 +451,7 @@ def guard():
             if live != [(o['key'], o['value']) for o in opts]:
                 problems.append(f'{name} options changed: {live}')
     rules = {r['name'] for r in hap.listing('worksheet', 'rules', WORKSHEET)}
-    problems += [f'unknown rule {n!r}' for n in rules - set(RULES) - set(JOURNAL_CHECKS)]
+    problems += [f'unknown rule {n!r}' for n in rules - set(RULES) - set(JOURNAL_CHECKS) - set(INCOTERM_RULES)]
     buttons = {b['name'] for b in hap.listing('worksheet', 'custom-actions', WORKSHEET)}
     problems += [f'unknown button {n!r}' for n in buttons - set(BUTTONS)]
     views = {v['name'] for v in hap.listing('worksheet', 'view', 'list', WORKSHEET, '-a', APP)}
@@ -645,6 +651,243 @@ def step_rules():
     C.upsert_rules(WORKSHEET, rules, 'invoices_rules_pre_rules')
     for r in hap.listing('worksheet', 'rules', WORKSHEET):
         C.remember('rules', KEY + r['name'], r['ruleId'])
+
+
+# ── 2b · Incoterm (22 Sep 2026) ─────────────────────────────────────────────
+#
+# `account.move.invoice_incoterm_id` (Many2one account.incoterms, labelled *Incoterm*) and `incoterm_location` (Char),
+# the second and third fields of Odoo's *Accounting* group on the Other Info page, after the company. Odoo hides both
+# on a receipt — `invisible="move_type in ('out_receipt', 'in_receipt')"` (account_move_views.xml:1541-1542, 19.0
+# source) — which RULE_INCOTERM_RECEIPT builds, in the form RULE_NO_AUTO_POST_ON_RECEIPT already takes.
+#
+# **Neither is closed on a posted document.** Odoo's view gives neither a `readonly`, and `account.move.write`'s list of
+# fields a posted move refuses (`unmodifiable_fields`: lines, dates, partner, payment terms, currency, fiscal position,
+# cash rounding) does not name them — so RULE_CLOSED leaves them editable, as Odoo does.
+#
+# Appended with `C.append_controls` — the Incoterm Relation is one-way, so Incoterms is untouched — with the Other
+# Info tab's `sectionId`, so both land at the foot of that tab at row 9999: **placement is the owner's**. Not in PLACE,
+# so `layout` neither places nor judges them; `guard` and `check` know them from here.
+INCOTERM, INCOTERM_LOCATION = 'Incoterm', 'Incoterm Location'
+INCOTERM_FIELDS = (INCOTERM, INCOTERM_LOCATION)
+INCOTERMS = hap.ids()['worksheets']['Incoterms']
+INCOTERM_ALIAS = {INCOTERM: 'invoice_incoterm_id', INCOTERM_LOCATION: 'incoterm_location'}   # Odoo's names
+# Intent, for the owner: the first row under the *Accounting* divider (row 18), Incoterm | Incoterm Location — Odoo's
+# group reads company, incoterm, incoterm location — with Source Document · Auto-post and the row under them moving
+# down one.
+INCOTERM_PLACE = {INCOTERM: (19, 0, 6, OTHER_INFO), INCOTERM_LOCATION: (19, 1, 6, OTHER_INFO)}
+INCOTERM_DESC = {INCOTERM: 'International Commercial Terms are a series of predefined commercial terms used in '
+                           'international transactions.',          # Odoo's help on the field
+                 INCOTERM_LOCATION: ''}                            # Odoo's field has no help
+RULE_INCOTERM_RECEIPT = 'Incoterm is not offered on a receipt'
+INCOTERM_RULES = {RULE_INCOTERM_RECEIPT: ('Type', ['Sales Receipt', 'Purchase Receipt'], list(INCOTERM_FIELDS),
+                                          C.HIDE)}
+
+
+def incoterms_active():
+    active = C.fields(INCOTERMS).get('Active')
+    if not active or active['type'] != 36:
+        sys.exit('Incoterms has no Active checkbox — run incoterms.py first')
+    return active['controlId']
+
+
+def other_info_tab():
+    """Teh Li Wei's Other Info tab, whose id the skeleton check already pins."""
+    return next(cid for cid, (name, kind) in FIRST_BUILD.items() if name == OTHER_INFO and kind == C.TAB)
+
+
+def incoterm_controls():
+    tab = other_info_tab()
+    return {
+        INCOTERM: C.control('RELATE_SHEET', INCOTERM, INCOTERM_PLACE[INCOTERM][:3], alias=INCOTERM_ALIAS[INCOTERM],
+                            hint='', desc=INCOTERM_DESC[INCOTERM], data_source=INCOTERMS, multi=False,
+                            advanced_setting={'bidirectional': '0', 'showtype': '3',
+                                              'filters': C.active_picker(incoterms_active())},
+                            extra={'fieldPermission': '111', 'sectionId': tab}),
+        INCOTERM_LOCATION: C.control('TEXT', INCOTERM_LOCATION, INCOTERM_PLACE[INCOTERM_LOCATION][:3],
+                                     alias=INCOTERM_ALIAS[INCOTERM_LOCATION], hint='',
+                                     desc=INCOTERM_DESC[INCOTERM_LOCATION],
+                                     extra={'fieldPermission': '111', 'sectionId': tab}),
+    }
+
+
+def incoterm_spec():
+    """What the two must read back as, the picker filter aside. Row and column are placement — the owner's."""
+    tab = other_info_tab()
+    return {
+        INCOTERM: {'type': RELATION, 'alias': INCOTERM_ALIAS[INCOTERM], 'desc': INCOTERM_DESC[INCOTERM], 'hint': '',
+                   'required': False, 'fieldPermission': '111', 'dataSource': INCOTERMS, 'enumDefault': 1,
+                   'sectionId': tab, 'advancedSetting.bidirectional': '0', 'advancedSetting.showtype': '3'},
+        INCOTERM_LOCATION: {'type': 2, 'alias': INCOTERM_ALIAS[INCOTERM_LOCATION], 'hint': '',
+                            'desc': INCOTERM_DESC[INCOTERM_LOCATION], 'required': False, 'fieldPermission': '111',
+                            'sectionId': tab, 'enumDefault': 2},
+    }
+
+
+def interaction_rule_state(r, names):
+    """An interaction rule as (type, disabled, item types, [(driver, filterType)], option labels, targets) — what
+    `check` compares for every rule in RULES and INCOTERM_RULES."""
+    conds = [g for group in r['filters'] for g in group.get('groupFilters', [])]
+    driver = names.get(conds[0]['controlId']) if conds else None
+    return (r['type'], r['disabled'], {i['type'] for i in r['ruleItems']},
+            [(names.get(c['controlId']), c['filterType']) for c in conds],
+            sorted(LABEL.get(driver, {}).get(v) for c in conds for v in c.get('values', [])),
+            [names.get(c['controlId']) for i in r['ruleItems'] for c in i['controls']])
+
+
+def interaction_rule_want(driver, labels, targets, kind):
+    return (C.INTERACTION, False, {kind}, [(driver, C.NOT_EMPTY if labels is None else C.EQ)], sorted(labels or []),
+            list(targets))
+
+
+def incoterm_problems(f):
+    problems = []
+    counts = {}
+    for c in hap.controls(WORKSHEET):
+        counts[c['controlName']] = counts.get(c['controlName'], 0) + 1
+    spec = incoterm_spec()
+    for n in INCOTERM_FIELDS:
+        if counts.get(n, 0) != 1:
+            problems.append(f'Invoices carries {counts.get(n, 0)} controls named {n!r}, wanted exactly one')
+        c = f.get(n)
+        if c is None:
+            continue
+        diff = C.drift(c, spec[n])
+        if diff:
+            problems.append(f'{n}: {json.dumps(diff, ensure_ascii=False, default=str)} — run `incoterm`')
+        if hap.ids().get('controls', {}).get(KEY + n) != c['controlId']:
+            problems.append(f'{n}: ids.json does not hold {c["controlId"]} — run `incoterm`')
+    c = f.get(INCOTERM)
+    if c:
+        got = C.picker_state((c.get('advancedSetting') or {}).get('filters'))
+        want = C.picker_state(C.active_picker(incoterms_active()))
+        if got != want:
+            problems.append(f'{INCOTERM} picker filter {got}, wanted {want} (Active is ticked) — run `incoterm`')
+    inc = hap.controls(INCOTERMS)
+    if [x['controlName'] for x in inc if x.get('attribute') == 1] != ['Display Name']:
+        problems.append("Incoterms' title is not Display Name — the picker would not show \"[FOB] FREE ON BOARD\"")
+    back = [x['controlName'] for x in inc if x.get('dataSource') == WORKSHEET]
+    if back:
+        problems.append(f'Incoterms carries {back} pointing back at Invoices — {INCOTERM} must be one-way')
+    return problems
+
+
+def step_incoterm():
+    """Append Incoterm and Incoterm Location if they are missing, repair anything the append did not store in one
+    version-pinned save limited to them, and write the receipt rule if it differs. Re-running saves nothing."""
+    guard()
+    f = hap.by_name(c for c in hap.controls(WORKSHEET) if c['type'] != C.TAB)
+    missing = [n for n in INCOTERM_FIELDS if n not in f]
+    if missing:
+        built = incoterm_controls()
+        f = C.append_checked(WORKSHEET, [built[n] for n in missing], 'invoices_controls_pre_incoterm', 'incoterm',
+                             untouched=(INCOTERMS,))
+    else:
+        print(f'  {list(INCOTERM_FIELDS)} are already on Invoices; nothing appended')
+    spec = {}
+    for n, want in incoterm_spec().items():
+        stale = C.drift(f[n], want)
+        if stale:
+            spec[f[n]['controlId']] = {k: want[k] for k in stale}
+    picker = C.active_picker(incoterms_active())
+    if C.picker_state((f[INCOTERM].get('advancedSetting') or {}).get('filters')) != C.picker_state(picker):
+        spec.setdefault(f[INCOTERM]['controlId'], {})['advancedSetting.filters'] = picker
+    if spec:
+        C.pinned_write(WORKSHEET, spec, 'invoices_controls_pre_incoterm_repair', 'incoterm')
+        f = hap.by_name(c for c in hap.controls(WORKSHEET) if c['type'] != C.TAB)
+    else:
+        print(f'  {list(INCOTERM_FIELDS)} already as specified; nothing saved')
+    for n in INCOTERM_FIELDS:
+        C.remember('controls', KEY + n, f[n]['controlId'])
+    # the receipt rule — written only when the live one differs
+    names = {c['controlId']: c['controlName'] for c in hap.controls(WORKSHEET)}
+    live = {r['name']: r for r in hap.listing('worksheet', 'rules', WORKSHEET)}
+    specs = []
+    for name, (driver, labels, targets, kind) in INCOTERM_RULES.items():
+        r = live.get(name)
+        if r is None or interaction_rule_state(r, names) != interaction_rule_want(driver, labels, targets, kind):
+            specs.append((name, C.INTERACTION, C.any_of([is_any_of(f, driver, labels)]),
+                          [C.item(kind, *[f[t] for t in targets])], {}))
+    if specs:
+        C.upsert_rules(WORKSHEET, specs, 'invoices_rules_pre_incoterm')
+        live = {r['name']: r for r in hap.listing('worksheet', 'rules', WORKSHEET)}
+    else:
+        print(f'  {list(INCOTERM_RULES)} already as specified; nothing saved')
+    for name, (driver, labels, targets, kind) in INCOTERM_RULES.items():
+        r = live.get(name)
+        if r is None or interaction_rule_state(r, names) != interaction_rule_want(driver, labels, targets, kind):
+            sys.exit(f'rule {name!r} read back as {r and interaction_rule_state(r, names)}')
+        C.remember('rules', KEY + name, r['ruleId'])
+        print(f"  OK  rule {name!r} {r['ruleId']}: hide {targets} while Type is any of {labels}")
+    problems = incoterm_problems(f)
+    if problems:
+        sys.exit('\n'.join(problems))
+    for n in INCOTERM_FIELDS:
+        c = f[n]
+        print(f"  OK  {n:<18} {c['controlId']} t{c['type']} alias={c.get('alias')} perm={c.get('fieldPermission')} "
+              f"r{c.get('row')}c{c.get('col')}s{c.get('size')} tab={OTHER_INFO if c.get('sectionId') == other_info_tab() else c.get('sectionId')!r}")
+    parked = [n for n in INCOTERM_FIELDS if f[n].get('row') == 9999]
+    if parked:
+        print('  placement outstanding — the owner places these in the designer; intended (row, col, size, tab): '
+              + ', '.join(f'{n} {INCOTERM_PLACE[n]}' for n in parked)
+              + ' — the first row under the Accounting divider')
+
+
+INCOTERM_TEST = 'TEST-SEQ-1'                      # a TEST customer invoice `selfcheck` keeps (ids.json records)
+
+
+def incoterm_cell(value):
+    if isinstance(value, str):
+        try:
+            value = json.loads(value) if value.startswith('[') else []
+        except ValueError:
+            return value
+    return [(v.get('sid') or v.get('rowid'), v.get('name')) for v in value or [] if isinstance(v, dict)]
+
+
+def read_incoterm(rowid, f):
+    got = hap.run('worksheet', 'record', 'get', WORKSHEET, rowid, '-a', APP)['data']
+    listed = next((r for r in C.records(WORKSHEET, APP) if r['rowid'] == rowid), {})
+    return {'get': (incoterm_cell(got.get(INCOTERM_ALIAS[INCOTERM])), got.get(INCOTERM_ALIAS[INCOTERM_LOCATION])),
+            'list': (incoterm_cell(listed.get(f[INCOTERM]['controlId'])),
+                     listed.get(f[INCOTERM_LOCATION]['controlId']))}
+
+
+def step_selfincoterm():
+    """On a TEST invoice: set Incoterm to CIF and Incoterm Location to a TEST place through `record update`, read both
+    back through `record get` **and** the listing, then put both back as they were and read that back too."""
+    guard()
+    f = hap.by_name(c for c in hap.controls(WORKSHEET) if c['type'] != C.TAB)
+    problems = incoterm_problems(f)
+    if problems:
+        sys.exit('\n'.join(problems))
+    rowid = hap.ids()['records'][KEY + INCOTERM_TEST]
+    code = C.fields(INCOTERMS)['Code']['controlId']
+    cif = next((r['rowid'] for r in C.records(INCOTERMS, APP) if r.get(code) == 'CIF'), None)
+    if not cif:
+        sys.exit('no Incoterm CIF — run incoterms.py seed')
+    before = read_incoterm(rowid, f)
+    print(f'  {INCOTERM_TEST} ({rowid}) before: {before}')
+    was_rows, was_text = [r for r, _ in before['get'][0]], before['get'][1] or ''
+    write = lambda rows, text: hap.run('worksheet', 'record', 'update', WORKSHEET, rowid, '-a', APP, '--fields-json',
+                                       json.dumps([{'id': f[INCOTERM]['controlId'], 'value': rows},
+                                                   {'id': f[INCOTERM_LOCATION]['controlId'], 'value': text}]))
+    write([cif], 'TEST Port of Singapore')
+    time.sleep(3)
+    during = read_incoterm(rowid, f)
+    print(f'  set:   {during}')
+    want = ([(cif, '[CIF] COST, INSURANCE AND FREIGHT')], 'TEST Port of Singapore')
+    for path in ('get', 'list'):
+        if during[path] != want:
+            problems.append(f'{path}: {during[path]}, wanted {want}')
+    write(was_rows, was_text)
+    time.sleep(3)
+    after = read_incoterm(rowid, f)
+    print(f'  back:  {after}')
+    if after != before:
+        problems.append(f'not put back: {after}, was {before}')
+    print('  selfincoterm: ' + ('OK — Incoterm and Incoterm Location stored and read back through both paths, and put '
+                                'back' if not problems else 'DIFFERENCES\n    ' + '\n    '.join(problems)))
+    return len(problems)
 
 
 # ── 3 · views ───────────────────────────────────────────────────────────────
@@ -1567,8 +1810,8 @@ def step_check():
     f = hap.by_name(ctrls)
     names = {c['controlId']: c['controlName'] for c in ctrls}
     problems = []
-    if set(f) != set(PLACE):
-        problems.append(f'controls {sorted(set(f) ^ set(PLACE))}')
+    if set(f) != set(PLACE) | set(INCOTERM_FIELDS):
+        problems.append(f'controls {sorted(set(f) ^ (set(PLACE) | set(INCOTERM_FIELDS)))}')
     problems += [f'{n}: {d}' for n, d in layout_differences(ctrls).items()]
     for cid, (name, _) in FIRST_BUILD.items():
         want = RENAME.get(cid, name)
@@ -1601,20 +1844,15 @@ def step_check():
         if f.get(name, {}).get('dataSource') != target:
             problems.append(f"{name} points at {f.get(name, {}).get('dataSource')}, want {target}")
     rules = {r['name']: r for r in hap.listing('worksheet', 'rules', WORKSHEET)}
-    for name, (driver, labels, targets, kind) in RULES.items():
+    for name, (driver, labels, targets, kind) in {**RULES, **INCOTERM_RULES}.items():
         r = rules.get(name)
         if not r:
             problems.append(f'rule {name!r} missing')
             continue
-        conds = [g for group in r['filters'] for g in group.get('groupFilters', [])]
-        got = (r['type'], r['disabled'], {i['type'] for i in r['ruleItems']},
-               [(names.get(c['controlId']), c['filterType']) for c in conds],
-               sorted(LABEL.get(driver, {}).get(v) for c in conds for v in c.get('values', [])),
-               [names.get(c['controlId']) for i in r['ruleItems'] for c in i['controls']])
-        want = (C.INTERACTION, False, {kind}, [(driver, C.NOT_EMPTY if labels is None else C.EQ)],
-                sorted(labels or []), targets)
-        if got != want:
+        got = interaction_rule_state(r, names)
+        if got != interaction_rule_want(driver, labels, targets, kind):
             problems.append(f'rule {name!r}: {got}')
+    problems += incoterm_problems(f)
     if JOURNAL_TYPE in f:
         keys = journal_type_keys()
         label_of = {k: v for v, k in keys.items()}
@@ -1678,8 +1916,12 @@ def step_check():
     for tab in TABS:
         print(f"  tab {tab}: {[c['controlName'] for c in order if c.get('sectionId') == tab_ids.get(tab)]}")
     print(f"  no tab: {[c['controlName'] for c in order if not c.get('sectionId') and c['type'] != C.TAB]}")
+    parked = [n for n in INCOTERM_FIELDS if f.get(n, {}).get('row') == 9999]
+    if parked:
+        print(f'  NOTE {parked} still parked at row 9999 of Other Info, for the owner to place: '
+              + ', '.join(f'{n} {INCOTERM_PLACE[n]}' for n in parked))
     print('  check: ' + ('OK — controls, tabs, options, defaults, rules, views, buttons and the numbering '
-                         'workflow as specified' if not problems
+                         'workflow as specified, and Incoterm with its receipt rule' if not problems
                          else 'DIFFERENCES\n    ' + '\n    '.join(problems)))
     return len(problems)
 
@@ -1711,6 +1953,8 @@ STEPS = {
     'order': step_order,
     'document': step_document,
     'untouched': step_untouched,
+    'incoterm': step_incoterm,
+    'selfincoterm': step_selfincoterm,
     'show': show,
 }
 
@@ -1719,5 +1963,5 @@ if __name__ == '__main__':
     if step not in STEPS:
         raise SystemExit(f"Unknown step {step!r}; choose from {', '.join(STEPS)}")
     result = STEPS[step](*sys.argv[2:])
-    if step in ('verify', 'check', 'all', 'selfcheck') and result:
+    if step in ('verify', 'check', 'all', 'selfcheck', 'selfincoterm') and result:
         sys.exit(1)

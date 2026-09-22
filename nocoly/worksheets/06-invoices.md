@@ -7,7 +7,7 @@
 | Odoo model | `account.move` |
 | Reference | **casimir.odoo.com — Odoo saas~19.4+e**: fields, form, list, kanban, search, the seven window actions, defaults, `_order`, the SQL constraint and all 8 records, extracted read-only to `nocoly/reference/odoo-19.4/account.move.md`. Numbering, which the tenant cannot show from the outside, is read from the Odoo 19.0 source in this repo — `addons/account/models/account_move.py` and `sequence.mixin`. The three seeded documents and their customers were re-read from the tenant on 16 Sep 2026 into `nocoly/data/casimir-invoice-seed.json` |
 | Phase | 1 — core worksheet 6 of 7 |
-| Status | Skeleton first built by **Teh Li Wei** on 15 Sep 2026 (15 controls, 3 tabs, no rules, buttons or records). Completed against the casimir reference, seeded and self-checked with the hap CLI on 16 Sep 2026 — 32 controls, 5 rules, 3 buttons, 3 views, 3 documents and their 3 customers. **UI-tested the same day: 25 of 25 pass.** The test found one defect (Accounting Date had no default) and one detail to tighten (Confirm dated a Journal Entry); both were fixed and re-checked, and the numbering was then changed to take one past the **highest** number rather than one past a count, which retires a difference (§2). At the end of Phase 1 the same day, 07's **difference 11** was resolved: the Invoice Lines subtable joined the read-only rule, and **test 25** showed a posted document's lines locked — no *Add a row*, no *Batch Operation* (§1). **Bundle 15, 21 Sep 2026** — the four defects the screen-by-screen pass raised (`15-ui-conformance.md` §1) were closed: four more controls joined the read-only rule, *Auto-post until* now follows the tenant's arch rather than the 19.0 repo's, Auto-post is hidden on a receipt, and Odoo's `_check_journal_move_type` arrived as two validation rules over a new **Journal Type** lookup — Odoo's *picker* narrowing could not be built and is recorded as a gap (§2). Tests 12, 13 and the new 26 need a re-run in the browser. **Ready for review** |
+| Status | Skeleton first built by **Teh Li Wei** on 15 Sep 2026 (15 controls, 3 tabs, no rules, buttons or records). Completed against the casimir reference, seeded and self-checked with the hap CLI on 16 Sep 2026 — 32 controls, 5 rules, 3 buttons, 3 views, 3 documents and their 3 customers. **UI-tested the same day: 25 of 25 pass.** The test found one defect (Accounting Date had no default) and one detail to tighten (Confirm dated a Journal Entry); both were fixed and re-checked, and the numbering was then changed to take one past the **highest** number rather than one past a count, which retires a difference (§2). At the end of Phase 1 the same day, 07's **difference 11** was resolved: the Invoice Lines subtable joined the read-only rule, and **test 25** showed a posted document's lines locked — no *Add a row*, no *Batch Operation* (§1). **Bundle 15, 21 Sep 2026** — the four defects the screen-by-screen pass raised (`15-ui-conformance.md` §1) were closed: four more controls joined the read-only rule, *Auto-post until* now follows the tenant's arch rather than the 19.0 repo's, Auto-post is hidden on a receipt, and Odoo's `_check_journal_move_type` arrived as two validation rules over a new **Journal Type** lookup — Odoo's *picker* narrowing could not be built and is recorded as a gap (§2). Tests 12, 13 and the new 26 need a re-run in the browser. **Ready for review**. **22 Sep 2026** — **Incoterm** and **Incoterm Location** appended to Other Info, with a rule hiding both on a receipt (*Incoterm*, below); parked at row 9999 for the owner to place |
 
 `account.move` is one model behind seven menus. A customer invoice, a vendor bill, either kind of credit note, a
 receipt and a plain journal entry are all the same record; **Type** decides which, and the menus in Odoo are just
@@ -201,7 +201,7 @@ graph and activity views are not reproduced.
 | *Send*, *Print*, *Preview*, Sent (`is_move_sent`, `move_sent_values`), the invoice PDF (`invoice_pdf_report_*`), UBL/CII (`ubl_cii_xml_*`) | Reports and outgoing mail; nothing here renders a PDF |
 | Currency (`currency_id`) | Currencies bundle; one currency (MYR) per app copy, and Odoo hides the field on a single-currency database |
 | Commercial Entity (`commercial_partner_id`) | Odoo computes it from the partner's parent; a lookup could do it, but nothing in Phase 1 reads it |
-| Fiscal Position, Incoterm and its location, Cash Rounding, Payment Method, Ledger | Each is its own table and its own bundle |
+| Fiscal Position, ~~Incoterm and its location~~, Cash Rounding, Payment Method, Ledger | Each is its own table and its own bundle. **Incoterm and Incoterm Location were built on 22 Sep 2026** with the Incoterms worksheet (*Incoterm* below) |
 | Sales Team (`team_id`), the UTM fields, Source Document being written | The **Sales** app — out of Phase 1 by the owner's direction. Source Document is kept read-only so the seeded S00011 stays visible |
 | MyInvois state, Tax Exemption Reason, Customs Form Reference (`l10n_my_edi_*`) and the three MyInvois buttons | The **e-invoicing** bundle; the tab and its remark block mark the place |
 | Auto-Complete (`invoice_vendor_bill_id`), quick edit (`quick_edit_mode`, `quick_edit_total_amount`), OCR (`extract_*`), To Review (`review_state`), Last Reminder (`account_followup`), deferred entries and the signature (`account_accountant`) | Each needs a module or a flow that is not in Phase 1 |
@@ -756,6 +756,41 @@ S00021) and the **four** customers in Contacts are real records and stay; `verif
 after the test. **INV/2026/00002 is one of the five, not a test record** — the words "TEST demo run - delete me"
 are the tenant's own Customer Reference on it, copied as read.
 
+
+## Incoterm — added 22 Sep 2026 (`invoices.py incoterm`)
+
+`account.move.invoice_incoterm_id` (Many2one `account.incoterms`, labelled *Incoterm*) and `incoterm_location` (Char)
+come second and third in Odoo's *Accounting* group on the Other Info page, after the company
+(account_move_views.xml:1541-1542, 19.0 source; the tenant extract lists both). Built once the Incoterms worksheet
+existed (19-incoterms.md).
+
+| Control | Id | Type | Alias | Permission | Notes |
+|---|---|---|---|---|---|
+| **Incoterm** | `6ab29feae54d2a34faaa991a` | Relation → Incoterms, single, **one-way**, dropdown | `invoice_incoterm_id` | `111` | picker filter *Active is ticked*; shows the Display Name; description Odoo's help |
+| **Incoterm Location** | `6ab29feae54d2a34faaa991c` | Text | `incoterm_location` | `111` | no description or placeholder — Odoo gives it none |
+
+Both were **appended** with the Other Info tab's `sectionId`, so they sit at the foot of that tab at **row 9999**;
+placement is the owner's. `INCOTERM_PLACE` is the intent: **Incoterm | Incoterm Location as the first row under the
+*Accounting* divider** (19, 0, 6 and 19, 1, 6), with Source Document · Auto-post and the row under them moving down
+one. They are not in `PLACE`, so `layout` neither places nor judges them; `guard` and `check` know them.
+
+**Rule** — *Incoterm is not offered on a receipt* (`6ab29fefbd43f557622400f7`): hide Incoterm and Incoterm Location
+while Type is Sales Receipt or Purchase Receipt, Odoo's `invisible="move_type in ('out_receipt', 'in_receipt')"` on
+both. `hide · equals`, as *Auto-post is not offered on a receipt*, so both show on a new document; its own rule rather
+than two more targets on Auto-post's, whose name says what it hides.
+
+**Not added to *A posted or cancelled document is closed for editing*.** Odoo leaves both editable on a posted move:
+the view gives neither a `readonly`, and `account.move.write` refuses on a posted move only the fields in
+`unmodifiable_fields` (lines, dates, partner, payment terms, currency, fiscal position, cash rounding).
+
+**Self-check** (`selfincoterm`): on TEST-SEQ-1 (`65469834-43c5-49f5-a6e0-1f9aa8013174`), Incoterm set to CIF and
+Incoterm Location to "TEST Port of Singapore" through `record update`; `record get` and the listing both read back
+`[CIF] COST, INSURANCE AND FREIGHT` with its rowid and the text; both put back empty and read back empty both ways. No
+Invoices workflow fires on them (each worksheet-event trigger is narrowed to other fields).
+
+**Not built**: the company default (`_compute_incoterm` fills a customer document's Incoterm from
+`res.company.incoterm_id`) and Odoo's placeholder naming it — there is no company table; and the Incoterm carried from
+a sales order — it waits for the order → invoice link.
 
 ## Descriptions rewritten for the app's users (22 Sep 2026)
 

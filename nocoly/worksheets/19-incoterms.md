@@ -6,7 +6,7 @@
 | Odoo menu | Invoicing › Configuration › Invoicing › **Incoterms** (action `action_incoterms_tree`) — **developer mode only** (`groups="base.group_no_one"`) |
 | Bundle | **Incoterms**, `binc`, 1 worksheet, 1.1 h — ground-up build page |
 | Source | the 19.0 source only. casimir.odoo.com expired on 22 Sep 2026, and no extract of this model was taken |
-| Status | **Built and self-checked 22 Sep 2026** (`build/incoterms.py`), not yet UI-tested. Wiring (§5) not started |
+| Status | **Built and self-checked 22 Sep 2026** (`build/incoterms.py`), not yet UI-tested. **Wiring (§5) built the same day** (§8): Incoterm on Orders and Invoices, Incoterm Location on Invoices, the alias on Orders' own Incoterm Location — the new controls parked at row 9999 for the owner to place |
 | Date | 22 Sep 2026 |
 
 ---
@@ -194,20 +194,44 @@ it shows only in Archived. Nothing was deleted.
 | Developer-mode-only menu | visible to everyone the roles let in | HAP has no developer mode (§6) |
 | Name is translatable | one language | as everywhere in this app |
 
-## 8 · Wiring — what the later step needs
+## 8 · Wiring — built 22 Sep 2026
 
-None of this is built; no control was added to Orders or Invoices. Each is its **own version-pinned step**, added
-with `C.append_controls` (the server mints the id; it lands at row 9999) — **placement is the owner's**.
+`orders.py incoterm` and `invoices.py incoterm`, each with a `selfincoterm` and an extended `check` (16-orders.md §12,
+06-invoices.md *Incoterm*). Every new control was **appended** (`C.append_controls`, the server minting the id), and
+the append proved every existing control unchanged and **Incoterms untouched** — the Relations are one-way. A second
+run of each step saved nothing.
 
-| Worksheet | Control | Type | Alias | Intended place | Notes |
-|---|---|---|---|---|---|
-| **Orders** | Incoterm | Relation → Incoterms `6ab28ec1e43d174ab3cd760a`, single, **one-way** (`bidirectional` "0"), dropdown (`showtype` "3") | `incoterm` (Odoo's name on `sale.order`, not `incoterm_id`) | *Other Info* tab, the *Shipping* divider, **just above Incoterm Location** (`6ab0c528e54d2a34fa4e8124`, row 23) — Odoo's order is incoterm, then incoterm_location | Picker filter **Active is ticked** (Odoo's active_test). Odoo's form sets `no_create`, so Roles are what stop a salesperson inventing one (they only view Incoterms). Description: "International Commercial Terms are a series of predefined commercial terms used in international transactions." **Incoterm Location there has no alias** — the same step should give it `incoterm_location` |
-| **Invoices** | Incoterm | as above | `invoice_incoterm_id` | *Other Info* tab, the *Accounting* divider, first in the group (above Source Document, row 19) — Odoo's *Accounting* group starts company, incoterm, incoterm location | Hidden on receipts in Odoo (`move_type in ('out_receipt', 'in_receipt')`): an interaction rule on Type |
-| **Invoices** | Incoterm Location | Text | `incoterm_location` | beside Incoterm | same receipt rule |
+| Worksheet | Control | Type | Alias | Permission | Picker filter | Intended place |
+|---|---|---|---|---|---|---|
+| **Orders** | **Incoterm** `6ab29e24e43d174ab3cd7675` | Relation → Incoterms, single, one-way, dropdown | `incoterm` | `111` | Active is ticked | *Other Info* tab (stored), **row 9999** — intent: its own full-width row directly under the *Shipping* divider (row 22), above Incoterm Location, which moves down one |
+| **Orders** | **Incoterm Location** `6ab0c528e54d2a34fa4e8124` — the owner's | Text | `incoterm_location` — **given in one version-pinned save** | `""` as the owner left it | — | unchanged (row 23) |
+| **Invoices** | **Incoterm** `6ab29feae54d2a34faaa991a` | Relation → Incoterms, single, one-way, dropdown | `invoice_incoterm_id` | `111` | Active is ticked | *Other Info* tab (stored), **row 9999** — intent (19, 0, 6): the first row under the *Accounting* divider |
+| **Invoices** | **Incoterm Location** `6ab29feae54d2a34faaa991c` | Text | `incoterm_location` | `111` | — | *Other Info*, row 9999 — intent (19, 1, 6), beside Incoterm |
 
-Not in the wiring step: the company default (`res.company.incoterm_id`, §6) and carrying the order's Incoterm to its
-invoice (`sale_stock` `_prepare_invoice` writes `invoice_incoterm_id`; its `_compute_incoterm_location` joins the
-orders' locations) — both wait for the order → invoice link.
+- The picker shows the Incoterm's **Display Name**, "[FOB] FREE ON BOARD" — the Incoterms title; `check` confirms it.
+- Both Incoterms carry Odoo's help as their description: "International Commercial Terms are a series of predefined
+  commercial terms used in international transactions." Incoterm Location has none (Odoo gives it none).
+- Orders' Incoterm Location was **not** duplicated: the step stops if the worksheet carries anything but the owner's
+  one Text control under that name and id. The pinned save's signature diff named that control alone, of 45.
+- **Receipts** — `invoices.py` rule **Incoterm is not offered on a receipt** (`6ab29fefbd43f557622400f7`): hide
+  Incoterm and Incoterm Location while Type is Sales Receipt or Purchase Receipt — Odoo's
+  `invisible="move_type in ('out_receipt', 'in_receipt')"` on both.
+- **No read-only rule.** Odoo locks neither field (19.0 source): the sale order form gives `incoterm` and
+  `incoterm_location` no `readonly` (sale_stock/views/sale_order_views.xml:27-28) and `sale.order.write` refuses only
+  a pricelist change on a confirmed order; the invoice form gives neither a `readonly` (account_move_views.xml:1541-1542)
+  and `account.move.write`'s posted-move list (`unmodifiable_fields`) does not name them. So Orders' *A confirmed or
+  cancelled order…* and *A locked or cancelled order…* and Invoices' *A posted or cancelled document is closed for
+  editing* were **not** extended. The tenant extracts carry no read-only condition for them either.
+- Odoo's `no_create` on the order's picker is the Roles' job: every business role only views Incoterms.
+
+**Self-checks** — `orders.py selfincoterm` on *TEST Sign & Accept, CLI run* (`8aa92a30-…`) set FOB and "TEST Port
+Klang"; `invoices.py selfincoterm` on TEST-SEQ-1 (`65469834-…`) set CIF and "TEST Port of Singapore". Both read back
+the Incoterm (rowid and title) and the location **through `record get` and the listing alike**, and both records were
+put back empty and read back empty both ways. No workflow on either worksheet fires on these fields (every
+worksheet-event trigger there is narrowed to other fields).
+
+Still not built (§6): the company default Incoterm, Odoo's placeholder naming it ("Define a default in the
+settings"), and carrying the order's Incoterm and location onto its invoice.
 
 ## 9 · For the browser
 
@@ -228,4 +252,11 @@ Nothing here was seen in a browser; implementation agents have none.
    is still offered**: a button's workflow writes whatever the presser's role, so if a view-only role can press it,
    it archives — record what the page does (no earlier worksheet has settled this). **As Accounting
    Administrator**: full.
-
+7. **Orders** (a quotation) › Other Info: **Incoterm** sits at the foot of the tab until the owner places it (intent:
+   its own row under *Shipping*, above Incoterm Location). Its picker lists the eleven as "[EXW] EX WORKS" … and
+   **not** the archived TEST Incoterm. Pick one, save, reopen. It stays editable on a confirmed, locked and cancelled
+   order, as in Odoo. **As Invoicing**, the picker should offer no way to create an Incoterm (the role only views
+   them) — record what the page does. Incoterm is also a column of the owner's **All** view, which shows every field.
+8. **Invoices** › Other Info: Incoterm and Incoterm Location at the foot of the tab until placed (intent: the first
+   row under *Accounting*, side by side). Both **disappear when Type is Sales Receipt or Purchase Receipt** and come
+   back on any other type. Both stay editable on a posted invoice.

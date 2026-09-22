@@ -448,3 +448,186 @@ def row_id(created):
         inner = data.get('data') if isinstance(data.get('data'), dict) else data
         return inner.get('rowid') or inner.get('rowId')
     return None
+
+
+# ── a narrow, version-pinned control save, for any worksheet ────────────────
+#
+# orders.py has carried these for Orders since 21 Sep 2026 (`control_state`, `drift`, `pinned_write`); these are the
+# worksheet-agnostic copies the Incoterm and Tags wiring (22 Sep 2026) uses on Invoices and Contacts. The pattern is
+# products.py `step_perms`: read the controls with their version, change only the keys named, save pinned to that
+# version, and prove by signature diff that only the named controls moved.
+
+SIGNATURE_KEYS = ('controlName', 'type', 'alias', 'row', 'col', 'size', 'sectionId', 'required', 'attribute', 'unique',
+                  'fieldPermission', 'dataSource', 'sourceControlId', 'sourceControlType', 'showControls', 'desc',
+                  'hint', 'enumDefault', 'enumDefault2', 'strDefault', 'dot', 'unit', 'options', 'default', 'viewId',
+                  'coverCid', 'noticeItem', 'half', 'defaultMen')
+# advancedSetting keys whose value is JSON in a string: the server re-serialises them on read, so they are compared
+# parsed (BUILDING.md; accounts.control_state).
+JSON_SETTINGS = ('filters', 'filterregex', 'controlssorts', 'customShowControls', 'defsource', 'defaultfunc',
+                 'uniquecontrols', 'rowsummary', 'cardstyle')
+
+
+def defsource_state(value):
+    """A `defsource` in comparable form: a static Relation default reduced to its record ids (the server stores the
+    whole record, `utime` included), a member default to its sentinel — orders.defsource_state."""
+    from hap_cli.core.worksheet import _DEFSOURCE_SENTINELS
+    try:
+        entries = json.loads(value) if value else []
+    except (TypeError, ValueError):
+        return value
+    out = []
+    for e in entries if isinstance(entries, list) else []:
+        if not isinstance(e, dict):
+            out.append(e)
+            continue
+        static = e.get('staticValue')
+        if isinstance(static, str) and static.startswith('['):
+            try:
+                static = tuple((json.loads(x).get('rowid') if isinstance(x, str) and x.startswith('{') else x)
+                               for x in json.loads(static))
+            except (TypeError, ValueError, AttributeError):
+                pass
+        elif isinstance(static, str) and static.startswith('{'):
+            try:
+                static = next((v for v in json.loads(static).values() if v in _DEFSOURCE_SENTINELS), static)
+            except (TypeError, ValueError, AttributeError):
+                pass
+        out.append((e.get('cid') or '', e.get('rcid') or '', static, e.get('time') or ''))
+    return out
+
+
+def parsed_setting(key, value):
+    if key == 'defsource':
+        return defsource_state(value)
+    if key in JSON_SETTINGS and isinstance(value, str) and value:
+        try:
+            return json.loads(value)
+        except ValueError:
+            pass
+    return value
+
+
+def control_state(c, ignore_related=()):
+    """A control's attributes, JSON-valued settings parsed and a Relation's `relationControls` snapshot reduced to
+    the target controls' identity (the server reshuffles it). `ignore_related` leaves those control ids out of the
+    snapshot: a Relation to its own worksheet (Contacts' Company) lists a control appended there a moment ago, which
+    is the server describing the target, not a change to the Relation."""
+    out = {k: c.get(k) for k in SIGNATURE_KEYS}
+    out['advancedSetting'] = {k: parsed_setting(k, v) for k, v in (c.get('advancedSetting') or {}).items()}
+    out['relationControls'] = sorted((r.get('controlId'), r.get('controlName'), r.get('type'), r.get('required'))
+                                     for r in (c.get('relationControls') or [])
+                                     if r.get('controlId') not in ignore_related)
+    return out
+
+
+def control_signature(ctrls, ignore_related=()):
+    """{controlId: the control's state as a string} — what a before/after comparison of a save diffs."""
+    return {c['controlId']: json.dumps(control_state(c, ignore_related), sort_keys=True, ensure_ascii=False,
+                                       default=str)
+            for c in ctrls}
+
+
+def changed_ids(before, after):
+    return sorted(k for k in set(before) | set(after) if before.get(k) != after.get(k))
+
+
+def value_of(c, key):
+    """A control's value for a plain key or an `advancedSetting.<key>`, JSON-valued settings parsed."""
+    if key.startswith('advancedSetting.'):
+        key = key.split('.', 1)[1]
+        return parsed_setting(key, (c.get('advancedSetting') or {}).get(key))
+    return c.get(key)
+
+
+def drift(c, spec):
+    """{key: (got, want)} for every key of `spec` — plain or `advancedSetting.<key>` — the control does not carry."""
+    out = {}
+    for k, v in spec.items():
+        want = parsed_setting(k.split('.', 1)[1], v) if k.startswith('advancedSetting.') else v
+        if value_of(c, k) != want:
+            out[k] = (value_of(c, k), want)
+    return out
+
+
+def pinned_write(ws, spec, backup_name, step):
+    """Write `spec` — {controlId: {key: value}} — in **one** SaveWorksheetControls pinned to the version it read, then
+    prove by signature diff that only the controls `spec` names changed, and read them back. Returns True when it
+    saved and False when there was nothing to write. Every other control and key goes back exactly as read."""
+    ctrls, version = controls_with_version(ws)
+    by_id = {c['controlId']: c for c in ctrls}
+    missing = [cid for cid in spec if cid not in by_id]
+    if missing:
+        sys.exit(f'{step}: {missing} are not on {ws} — stopping')
+    stale = {cid: drift(by_id[cid], spec[cid]) for cid in spec if drift(by_id[cid], spec[cid])}
+    if not stale:
+        print(f"  {step}: {sorted(by_id[cid]['controlName'] for cid in spec)} already as specified; nothing saved")
+        return False
+    for cid, diff in stale.items():
+        for k, (got, want) in diff.items():
+            print(f"  {by_id[cid]['controlName']}.{k}: {got!r} -> {want!r}")
+    hap.backup(backup_name, ctrls)
+    before = control_signature(ctrls)
+    for cid, diff in stale.items():
+        c = by_id[cid]
+        for key in diff:
+            value = spec[cid][key]
+            if key.startswith('advancedSetting.'):
+                c['advancedSetting'] = {**(c.get('advancedSetting') or {}), key.split('.', 1)[1]: value}
+            else:
+                c[key] = value
+    save_controls(ws, ctrls, version=version)
+    live = hap.controls(ws)
+    after = control_signature(live)
+    changed = changed_ids(before, after)
+    names = {c['controlId']: c['controlName'] for c in live}
+    if changed != sorted(stale):
+        sys.exit(f'{step}: the save changed {[names.get(k, k) for k in changed]}, wanted only '
+                 f'{[names.get(k, k) for k in sorted(stale)]}\n' +
+                 '\n'.join(f'  {names.get(k, k)}\n    was {before.get(k)}\n    now {after.get(k)}' for k in changed))
+    by_id = {c['controlId']: c for c in live}
+    left = {names[cid]: drift(by_id[cid], spec[cid]) for cid in spec if drift(by_id[cid], spec[cid])}
+    if left:
+        sys.exit(f'{step}: read back with differences {json.dumps(left, ensure_ascii=False, default=str)}')
+    print(f'  {step}: {sorted(names[cid] for cid in stale)} written — {len(before)} controls compared, no other change')
+    return True
+
+
+def append_checked(ws, ctrls, backup_name, step, untouched=()):
+    """`append_controls`, proved: every control already on `ws` — and on each worksheet in `untouched` — reads back
+    exactly as before, and the only new ones are those appended, by name. Returns the live controls by name."""
+    hap.backup(backup_name, hap.controls(ws))
+    others = {w: control_signature(hap.controls(w)) for w in untouched}
+    before = control_signature(hap.controls(ws))
+    append_controls(ws, ctrls)
+    live = hap.controls(ws)
+    new_ids = {c['controlId'] for c in live if c['controlId'] not in before}
+    after = control_signature(live, ignore_related=new_ids)
+    moved = [k for k in before if before[k] != after.get(k)]
+    added = sorted(c['controlName'] for c in live if c['controlId'] in new_ids)
+    if moved or added != sorted(c['controlName'] for c in ctrls):
+        sys.exit(f'{step}: the append moved {moved} and added {added}, wanted only {[c["controlName"] for c in ctrls]}')
+    for w, sig in others.items():
+        if control_signature(hap.controls(w)) != sig:
+            sys.exit(f'{step}: {w} changed under the append — a one-way Relation must leave its target alone')
+    print(f"  {step}: appended {added}; {len(before)} existing controls unchanged"
+          + (f", {', '.join(untouched)} untouched" if untouched else ''))
+    return hap.by_name(c for c in live if c['type'] != TAB)
+
+
+def active_picker(active_control_id):
+    """A Relation's picker filter **Active is ticked** on the target's checkbox, as `advancedSetting.filters` — the
+    shape Invoices' Payment Terms stores. Browser-only: the API's picker query ignores it (BUILDING.md)."""
+    return json.dumps([{'controlId': active_control_id, 'dataType': 36, 'spliceType': 1, 'filterType': EQ,
+                        'dateRange': 0, 'dateRangeType': 0, 'value': '1', 'values': ['1'], 'minValue': None,
+                        'maxValue': None, 'isAsc': False, 'dynamicSource': [], 'advancedSetting': None,
+                        'isGroup': False, 'groupFilters': None, 'emptyRule': 0}], separators=(',', ':'))
+
+
+def picker_state(value):
+    """A picker filter reduced to (control, dataType, filterType, values) — what it means, not how it is spelt."""
+    try:
+        items = json.loads(value) if isinstance(value, str) else (value or [])
+    except ValueError:
+        return value
+    return sorted((i.get('controlId'), i.get('dataType'), i.get('filterType'), tuple(sorted(i.get('values') or [])))
+                  for i in items or [])

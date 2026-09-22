@@ -67,12 +67,17 @@ owner approved — deliberately nothing else.
                                                            #     pressed once through the button API; prints links
     ~/.hap-venv/bin/python nocoly/build/orders.py selfsign # 17e. sign a third TEST quotation through the API four
                                                            #     ways and read every run and cell back
+    ~/.hap-venv/bin/python nocoly/build/orders.py incoterm # 18. Incoterm (Relation → Incoterms, active only),
+                                                           #     appended; the alias `incoterm_location` on the
+                                                           #     owner's Incoterm Location — one pinned save
+    ~/.hap-venv/bin/python nocoly/build/orders.py selfincoterm # 18b. set both on the TEST order, read them back
+                                                           #     through both read paths, put them back
     ~/.hap-venv/bin/python nocoly/build/orders.py check    # read rules, Expiration, the roll-ups, the two new
                                                            #    controls, the views, the five buttons with their
                                                            #    workflows and the seed back, and report drift;
                                                            #    since §14 also the Discount product, the two
                                                            #    discount fields and Apply Discount; since §16 Send;
-                                                           #    since §17 Sign & Accept
+                                                           #    since §17 Sign & Accept; since §18 Incoterm
     ~/.hap-venv/bin/python nocoly/build/orders.py show     # the live controls and rules
 
 **There is no `fields` or `layout` step, and there must not be one** — `views` writes one view of its own,
@@ -7022,6 +7027,215 @@ def guard_problems():
     return problems
 
 
+# ── 18 · Incoterm: the Shipping pair, wired to the Incoterms worksheet ──────
+#
+# Odoo's `sale_stock` adds two fields to `sale.order` and shows them together in *Other Info › Shipping*:
+# `incoterm` (Many2one account.incoterms, `options="{'no_open': True, 'no_create': True}"`) and `incoterm_location`
+# (Char). The owner built **Incoterm Location** by hand on 21 Sep 2026 (6ab0c528e54d2a34fa4e8124, no alias); this step
+# gives it its alias in one version-pinned save and appends **Incoterm** beside it — never a second Location.
+#
+# **Neither is locked on a confirmed, locked or cancelled order.** Odoo's view gives neither field a `readonly`
+# (sale_stock/views/sale_order_views.xml:27-28, 19.0 source; the tenant extract's read-only table does not list them
+# either), and `sale.order.write` refuses only a pricelist change on a confirmed order — so RULE_CONFIRMED and
+# RULE_LOCKED do not name them. Odoo's `no_create` is the Roles' job here: every business role only views Incoterms.
+#
+# Appended with `C.append_controls` (the server mints the id); the payload carries the Other Info tab's `sectionId`,
+# which `add-fields` keeps, so it lands at the foot of that tab at row 9999 — **placement is the owner's**.
+INCOTERM, INCOTERM_LOCATION = 'Incoterm', 'Incoterm Location'
+INCOTERM_FIELDS = (INCOTERM, INCOTERM_LOCATION)
+INCOTERMS_WS = '6ab28ec1e43d174ab3cd760a'           # incoterms.py's worksheet
+INCOTERM_LOCATION_ID = '6ab0c528e54d2a34fa4e8124'   # the owner's control, read off the app on 22 Sep 2026
+OTHER_INFO_TAB = '6ab0c1cdbd43f55762c783db'         # the owner's Other Info tab (type 52)
+INCOTERM_ALIAS = {INCOTERM: 'incoterm', INCOTERM_LOCATION: 'incoterm_location'}   # Odoo's names on sale.order
+# Intent, for the owner: a full-width row of its own directly under the *Shipping* divider (row 22 today), so the tab
+# reads Shipping › Incoterm › Incoterm Location — Odoo's order. Incoterm Location and everything under it move down
+# one row. `add-fields` parks it at row 9999; only a full save places it.
+INCOTERM_PLACE = (23, 0, 12)
+INCOTERM_DESC = ('International Commercial Terms are a series of predefined commercial terms used in international '
+                 'transactions.')                   # Odoo's help on the field, which reads well for a user
+
+
+def incoterms_active():
+    """The Incoterms worksheet's Active checkbox — what the picker filter tests."""
+    active = C.fields(INCOTERMS_WS).get('Active')
+    if not active or active['type'] != CHECKBOX:
+        sys.exit(f'Incoterms has no Active checkbox ({active and active["type"]}) — run incoterms.py first')
+    return active['controlId']
+
+
+def incoterm_control():
+    return C.control('RELATE_SHEET', INCOTERM, INCOTERM_PLACE, alias=INCOTERM_ALIAS[INCOTERM], hint='',
+                     desc=INCOTERM_DESC, data_source=INCOTERMS_WS, multi=False,
+                     advanced_setting={'bidirectional': '0', 'showtype': '3',
+                                       'filters': C.active_picker(incoterms_active())},
+                     extra={'fieldPermission': '111', 'sectionId': OTHER_INFO_TAB})
+
+
+def incoterm_spec():
+    """What each control must read back as, the picker filter aside (compared by meaning). Row, column and tab are
+    placement — the owner's — so not asserted."""
+    return {
+        INCOTERM: {'type': RELATION, 'alias': INCOTERM_ALIAS[INCOTERM], 'desc': INCOTERM_DESC, 'hint': '',
+                   'required': False, 'fieldPermission': '111', 'dataSource': INCOTERMS_WS, 'enumDefault': 1,
+                   'advancedSetting.bidirectional': '0', 'advancedSetting.showtype': '3'},
+        INCOTERM_LOCATION: {'type': TEXT, 'alias': INCOTERM_ALIAS[INCOTERM_LOCATION]},
+    }
+
+
+def incoterm_problems(f):
+    problems = []
+    counts = {}
+    for c in hap.controls(ws()):
+        counts[c['controlName']] = counts.get(c['controlName'], 0) + 1
+    for n in INCOTERM_FIELDS:
+        if counts.get(n, 0) != 1:
+            problems.append(f'{WORKSHEET} carries {counts.get(n, 0)} controls named {n!r}, wanted exactly one')
+    if f.get(INCOTERM_LOCATION, {}).get('controlId') != INCOTERM_LOCATION_ID:
+        problems.append(f"{INCOTERM_LOCATION} is {f.get(INCOTERM_LOCATION, {}).get('controlId')}, not the owner's "
+                        f'{INCOTERM_LOCATION_ID} — re-read the worksheet')
+    spec = incoterm_spec()
+    for n in INCOTERM_FIELDS:
+        c = f.get(n)
+        if c is None:
+            problems.append(f'{n} is not on {WORKSHEET} — run `incoterm`')
+            continue
+        diff = C.drift(c, spec[n])
+        if diff:
+            problems.append(f'{n}: {json.dumps(diff, ensure_ascii=False, default=str)} — run `incoterm`')
+        if hap.ids().get('controls', {}).get(KEY + n) != c['controlId']:
+            problems.append(f'{n}: ids.json does not hold {c["controlId"]} — run `incoterm`')
+    c = f.get(INCOTERM)
+    if c:
+        got = C.picker_state((c.get('advancedSetting') or {}).get('filters'))
+        want = C.picker_state(C.active_picker(incoterms_active()))
+        if got != want:
+            problems.append(f'{INCOTERM} picker filter {got}, wanted {want} (Active is ticked) — run `incoterm`')
+    title = [x['controlName'] for x in hap.controls(INCOTERMS_WS) if x.get('attribute') == 1]
+    if title != ['Display Name']:
+        problems.append(f'Incoterms\' title is {title}, not Display Name — the picker would not show "[FOB] FREE ON '
+                        'BOARD"')
+    back = [x['controlName'] for x in hap.controls(INCOTERMS_WS) if x.get('dataSource') == ws()]
+    if back:
+        problems.append(f'Incoterms carries {back} pointing back at {WORKSHEET} — {INCOTERM} must be one-way')
+    return problems
+
+
+def step_incoterm():
+    """Append Incoterm if it is missing and give the owner's Incoterm Location its alias — plus anything the append did
+    not store — in one version-pinned save limited to those two controls; read both back. Re-running saves nothing."""
+    f = guard()
+    counts = {}
+    for c in hap.controls(ws()):
+        counts[c['controlName']] = counts.get(c['controlName'], 0) + 1
+    location = f.get(INCOTERM_LOCATION)
+    if counts.get(INCOTERM_LOCATION) != 1 or not location or location['controlId'] != INCOTERM_LOCATION_ID \
+            or location['type'] != TEXT:
+        sys.exit(f"{INCOTERM_LOCATION} is not the owner's single Text {INCOTERM_LOCATION_ID} "
+                 f"({counts.get(INCOTERM_LOCATION)} found, {location and (location['controlId'], location['type'])}) "
+                 '— re-read the worksheet before writing')
+    if counts.get(INCOTERM, 0) > 1:
+        sys.exit(f'{WORKSHEET} already carries {counts[INCOTERM]} controls named {INCOTERM!r} — stopping')
+    if INCOTERM in f:
+        print(f'  {INCOTERM} is already on {WORKSHEET}; nothing appended')
+    else:
+        f = C.append_checked(ws(), [incoterm_control()], 'orders_controls_pre_incoterm', 'incoterm',
+                             untouched=(INCOTERMS_WS,))
+        c = f[INCOTERM]
+        print(f"  added {INCOTERM}: {c['controlId']} (t{c['type']}, row {c.get('row')}, tab "
+              f"{'Other Info' if c.get('sectionId') == OTHER_INFO_TAB else c.get('sectionId')!r})")
+    spec = {}
+    for n, want in incoterm_spec().items():
+        stale = C.drift(f[n], want)
+        if stale:
+            spec[f[n]['controlId']] = {k: want[k] for k in stale}
+    picker = C.active_picker(incoterms_active())
+    if C.picker_state((f[INCOTERM].get('advancedSetting') or {}).get('filters')) != C.picker_state(picker):
+        spec.setdefault(f[INCOTERM]['controlId'], {})['advancedSetting.filters'] = picker
+    if spec:
+        pinned_write('incoterm', spec, 'orders_controls_pre_incoterm_alias')
+        f = C.fields(ws())
+    else:
+        print(f'  {list(INCOTERM_FIELDS)} already as specified; nothing saved')
+    for n in INCOTERM_FIELDS:
+        C.remember('controls', KEY + n, f[n]['controlId'])
+    problems = incoterm_problems(f)
+    if problems:
+        sys.exit('\n'.join(problems))
+    for n in INCOTERM_FIELDS:
+        c = f[n]
+        print(f"  OK  {n:<18} {c['controlId']} t{c['type']} alias={c.get('alias')} perm={c.get('fieldPermission')!r} "
+              f"r{c.get('row')}c{c.get('col')}s{c.get('size')} tab="
+              f"{'Other Info' if c.get('sectionId') == OTHER_INFO_TAB else c.get('sectionId')!r}")
+    if f[INCOTERM].get('row') == 9999:
+        print(f'  placement outstanding — the owner places {INCOTERM} in the designer; intended (row, col, size) '
+              f'{INCOTERM_PLACE}: its own row directly under the Shipping divider, above {INCOTERM_LOCATION}')
+    return True
+
+
+INCOTERM_TEST = 'TEST Sign & Accept, CLI run'     # the TEST order `selfsign` keeps (ids.json records)
+INCOTERM_TEST_CODE = 'FOB'
+
+
+def incoterm_cell(value):
+    """A single Relation's cell as (rowid, title) pairs, from `record get` (a list or its JSON) or the listing."""
+    if isinstance(value, str):
+        try:
+            value = json.loads(value) if value.startswith('[') else []
+        except ValueError:
+            return value
+    return [(v.get('sid') or v.get('rowid'), v.get('name')) for v in value or [] if isinstance(v, dict)]
+
+
+def read_incoterm(rowid, f):
+    """Incoterm and Incoterm Location on one order, through `record get` (by alias) and the listing (by id)."""
+    got = hap.run('worksheet', 'record', 'get', ws(), rowid, '-a', APP)['data']
+    listed = next((r for r in C.records(ws(), APP) if r['rowid'] == rowid), {})
+    return {'get': (incoterm_cell(got.get(INCOTERM_ALIAS[INCOTERM])), got.get(INCOTERM_ALIAS[INCOTERM_LOCATION])),
+            'list': (incoterm_cell(listed.get(f[INCOTERM]['controlId'])),
+                     listed.get(f[INCOTERM_LOCATION]['controlId']))}
+
+
+def step_selfincoterm():
+    """On the TEST order: set Incoterm to FOB and Incoterm Location to a TEST place through `record update`, read both
+    back through `record get` **and** the listing, then put both back as they were and read that back too."""
+    f = guard()
+    problems = incoterm_problems(f)
+    if problems:
+        sys.exit('\n'.join(problems))
+    rowid = hap.ids()['records'][KEY + INCOTERM_TEST]
+    fob = next((r['rowid'] for r in C.records(INCOTERMS_WS, APP)
+                if r.get(C.fields(INCOTERMS_WS)['Code']['controlId']) == INCOTERM_TEST_CODE), None)
+    if not fob:
+        sys.exit(f'no Incoterm {INCOTERM_TEST_CODE} — run incoterms.py seed')
+    before = read_incoterm(rowid, f)
+    print(f'  {INCOTERM_TEST} ({rowid}) before: {before}')
+    if before['get'] != before['list']:
+        print('  NOTE the two read paths differ before the test')
+    was_rows = [r for r, _ in before['get'][0]]
+    was_text = before['get'][1] or ''
+    write = lambda rows, text: hap.run('worksheet', 'record', 'update', ws(), rowid, '-a', APP, '--fields-json',
+                                       json.dumps([{'id': f[INCOTERM]['controlId'], 'value': rows},
+                                                   {'id': f[INCOTERM_LOCATION]['controlId'], 'value': text}]))
+    write([fob], 'TEST Port Klang')
+    time.sleep(3)
+    during = read_incoterm(rowid, f)
+    print(f'  set:   {during}')
+    want = ([(fob, '[FOB] FREE ON BOARD')], 'TEST Port Klang')
+    for path in ('get', 'list'):
+        if during[path] != want:
+            problems.append(f'{path}: {during[path]}, wanted {want}')
+    write(was_rows, was_text)
+    time.sleep(3)
+    after = read_incoterm(rowid, f)
+    print(f'  back:  {after}')
+    if after['get'] != before['get'] or after['list'] != before['list']:
+        problems.append(f'not put back: {after}, was {before}')
+    print('  selfincoterm: ' + ('OK — Incoterm and Incoterm Location stored and read back through both paths, and put '
+                                'back' if not problems else 'DIFFERENCES\n    ' + '\n    '.join(problems)))
+    if problems:
+        sys.exit(1)
+
+
 # ── the guard ───────────────────────────────────────────────────────────────
 
 def guard():
@@ -7042,7 +7256,8 @@ def guard():
                 for name, cid in CONTROLS.items() if (f.get(name) or {}).get('controlId') != cid]
     if problems:
         sys.exit(f'{WORKSHEET}: ' + '; '.join(problems) + ' — re-read the worksheet before writing a rule')
-    unknown = sorted(set(f) - set(CONTROLS) - set(NEW) - set(PART1) - set(DISCOUNT_FIELDS) - {TERMS, SIGNING_LINK})
+    unknown = sorted(set(f) - set(CONTROLS) - set(NEW) - set(PART1) - set(DISCOUNT_FIELDS) - {TERMS, SIGNING_LINK}
+                     - set(INCOTERM_FIELDS))
     if unknown:
         print(f'  note: {WORKSHEET} also carries {unknown} — added by the owner, and no rule here names them')
     for name in CONTROLS:
@@ -7240,6 +7455,15 @@ def step_check():
                                                if c.get('row') == 9999 else ''))
     problems += sign_share_problems(f)
     problems += signed_problems(f)
+    # §18: Incoterm, and the alias on the owner's Incoterm Location
+    found = incoterm_problems(f)
+    problems += found
+    if not found:
+        c = f[INCOTERM]
+        print(f"  OK  {INCOTERM} {c['controlId']} (Relation → Incoterms, one-way, dropdown, active only, alias "
+              f"{INCOTERM_ALIAS[INCOTERM]}) and the owner's {INCOTERM_LOCATION} {INCOTERM_LOCATION_ID} (alias "
+              f"{INCOTERM_ALIAS[INCOTERM_LOCATION]})" + (' — Incoterm still parked at row 9999, for the owner to place'
+                                                         if c.get('row') == 9999 else ''))
     # §15: Terms and conditions, the three templates on disk, and the System Print template on Orders
     found = terms_problems(f)
     problems += found
@@ -7285,8 +7509,8 @@ def step_check():
           f"§13 and §14 with their workflows, the owner's {OWNERS_BUTTON!r} rewired "
           f'(§16, published, never pressed), '
           f'the {DISCOUNT_PRODUCT} product and variant, the {len(DISCOUNT_FIELDS)} discount fields, {TERMS}, the '
-          f'{len(TEMPLATE_FILES)} templates and System Print {PRINT_NAME!r}, and §17: {SIGNING_LINK}, {SIGN!r} and '
-          f'{SIGNED_WF!r}')
+          f'{len(TEMPLATE_FILES)} templates and System Print {PRINT_NAME!r}, §17: {SIGNING_LINK}, {SIGN!r} and '
+          f'{SIGNED_WF!r}, and §18: {INCOTERM} and {INCOTERM_LOCATION}')
 
 
 def step_show():
@@ -7321,6 +7545,7 @@ STEPS = {'rules': step_rules, 'retire': step_retire, 'expiry': step_expiry, 'tot
          'terms': step_terms, 'templates': step_templates, 'print': step_print, 'selfprint': step_selfprint,
          'send': step_send, 'sendreach': step_sendreach, 'signlink': step_signlink, 'sign': step_sign,
          'signtest': step_signtest, 'selfsign': step_selfsign,
+         'incoterm': step_incoterm, 'selfincoterm': step_selfincoterm,
          'check': step_check, 'show': step_show}
 
 if __name__ == '__main__':

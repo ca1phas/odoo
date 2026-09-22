@@ -9,6 +9,12 @@
     ~/.hap-venv/bin/python nocoly/build/contacts.py buttons      # 5. Archive / Unarchive buttons and their workflows
     ~/.hap-venv/bin/python nocoly/build/contacts.py automations  # 6. company -> contact sync workflows (create or update)
     ~/.hap-venv/bin/python nocoly/build/contacts.py to194        # one-off, already applied: moved the Odoo 19.0 build to 19.4
+    ~/.hap-venv/bin/python nocoly/build/contacts.py tags         # Tags (category_id): a one-way multiple Relation to
+                                                                 #    Contact Tags, active tags only, appended — row
+                                                                 #    9999, the owner places it (22 Sep 2026)
+    ~/.hap-venv/bin/python nocoly/build/contacts.py selftags     # set two TEST tags on a TEST contact, read them back
+                                                                 #    through both read paths, put them back
+    ~/.hap-venv/bin/python nocoly/build/contacts.py check        # Tags against its spec (the rest has no check here)
     ~/.hap-venv/bin/python nocoly/build/contacts.py names        # print every contact's Name and Display Name
     ~/.hap-venv/bin/python nocoly/build/contacts.py show         # print the live control list
 
@@ -833,6 +839,178 @@ def step_to194():
                              capture_output=True, text=True).stdout)
 
 
+# ── Tags (Contact Tags wiring, 22 Sep 2026) ─────────────────────────────────
+#
+# Odoo's `res.partner.category_id` — Many2many res.partner.category, labelled *Tags*, on the form as
+# `widget="many2many_tags"` with the placeholder below, last in the right-hand group (function, vat, website, lang,
+# category_id; base/views/res_partner_views.xml:191, 19.0 source). In Odoo's list it is `optional="hide"`, so it is
+# **not** a column in any view here. Its reverse, `res.partner.category.partner_ids`, is on no view, so the Relation
+# is **one-way** and Contact Tags gets no control. No `readonly` anywhere: no rule.
+#
+# Appended with `C.append_controls` (the server mints the id; it lands at row 9999) — **placement is the owner's**:
+# `layout` predates the owner's hand layout (it has no cell for Quotation Templates, the reverse Orders' Customer
+# made) and must not be run, so it does not learn TAGS either.
+TAGS = 'Tags'
+TAGS_ALIAS = 'category_id'
+# Intent, for the owner: the right half of row 5, beside DUNS — where Odoo's right-hand group ends.
+TAGS_PLACE = (5, 1, 6, None)
+TAGS_HINT = 'e.g. "B2B", "VIP", "Consulting", ...'       # Odoo's placeholder
+CONTACT_TAGS = hap.ids()['worksheets']['Contact Tags']
+
+
+def contact_tags_active():
+    active = C.fields(CONTACT_TAGS).get('Active')
+    if not active or active['type'] != 36:
+        sys.exit('Contact Tags has no Active checkbox — run contacttags.py first')
+    return active['controlId']
+
+
+def tags_control():
+    return C.control('RELATE_SHEET', TAGS, TAGS_PLACE[:3], alias=TAGS_ALIAS, hint=TAGS_HINT, desc='',
+                     data_source=CONTACT_TAGS, multi=True,
+                     advanced_setting={'bidirectional': '0', 'showtype': '3',       # 3 = dropdown: tags as chips
+                                       'filters': C.active_picker(contact_tags_active())},
+                     extra={'fieldPermission': '111'})
+
+
+def tags_spec():
+    """What Tags must read back as, the picker filter aside. Row, column and tab are placement — the owner's."""
+    return {'type': 29, 'alias': TAGS_ALIAS, 'hint': TAGS_HINT, 'desc': '', 'required': False,
+            'fieldPermission': '111', 'dataSource': CONTACT_TAGS, 'enumDefault': 2,
+            'advancedSetting.bidirectional': '0', 'advancedSetting.showtype': '3'}
+
+
+def tags_problems():
+    problems = []
+    ctrls = hap.controls(WS)
+    named = [c for c in ctrls if c['controlName'] == TAGS]
+    if len(named) != 1:
+        return [f'Contacts carries {len(named)} controls named {TAGS!r}, wanted exactly one — run `tags`']
+    c = named[0]
+    diff = C.drift(c, tags_spec())
+    if diff:
+        problems.append(f'{TAGS}: {json.dumps(diff, ensure_ascii=False, default=str)} — run `tags`')
+    got = C.picker_state((c.get('advancedSetting') or {}).get('filters'))
+    want = C.picker_state(C.active_picker(contact_tags_active()))
+    if got != want:
+        problems.append(f'{TAGS} picker filter {got}, wanted {want} (Active is on) — run `tags`')
+    if hap.ids().get('controls', {}).get('Contacts: ' + TAGS) != c['controlId']:
+        problems.append(f'{TAGS}: ids.json does not hold {c["controlId"]} — run `tags`')
+    tags = hap.controls(CONTACT_TAGS)
+    if [x['controlName'] for x in tags if x.get('attribute') == 1] != ['Complete Name']:
+        problems.append("Contact Tags' title is not Complete Name — the chips would not read Parent / Child")
+    back = [x['controlName'] for x in tags if x.get('dataSource') == WS]
+    if back:
+        problems.append(f'Contact Tags carries {back} pointing back at Contacts — {TAGS} must be one-way')
+    app = hap.ids()['app']
+    for v in hap.listing('worksheet', 'view', 'list', WS, '-a', app):
+        info = C.view_info(WS, app, v['viewId'])
+        if c['controlId'] in (info.get('showControls') or []):
+            problems.append(f"{TAGS} is a column of the {info['name']!r} view — Odoo's list hides it")
+    return problems
+
+
+def step_tags():
+    """Append Tags if it is missing, repair anything the append did not store in one version-pinned save limited to it,
+    and read it back. Re-running saves nothing."""
+    if hap.run('app', 'info', '-a', hap.ids()['app']).get('data', {}).get('name') != 'ERP Master':
+        sys.exit('the profile does not reach ERP Master')
+    named = [c for c in hap.controls(WS) if c['controlName'] == TAGS]
+    if len(named) > 1:
+        sys.exit(f'Contacts already carries {len(named)} controls named {TAGS!r} — stopping')
+    if named:
+        print(f'  {TAGS} is already on Contacts; nothing appended')
+        f = hap.by_name(c for c in hap.controls(WS) if c['type'] != 52)
+    else:
+        f = C.append_checked(WS, [tags_control()], 'contacts_controls_pre_tags', 'tags', untouched=(CONTACT_TAGS,))
+    spec = {k: v for k, v in tags_spec().items() if k in C.drift(f[TAGS], tags_spec())}
+    picker = C.active_picker(contact_tags_active())
+    if C.picker_state((f[TAGS].get('advancedSetting') or {}).get('filters')) != C.picker_state(picker):
+        spec['advancedSetting.filters'] = picker
+    if spec:
+        C.pinned_write(WS, {f[TAGS]['controlId']: spec}, 'contacts_controls_pre_tags_repair', 'tags')
+        f = hap.by_name(c for c in hap.controls(WS) if c['type'] != 52)
+    else:
+        print(f'  {TAGS} already as specified; nothing saved')
+    C.remember('controls', 'Contacts: ' + TAGS, f[TAGS]['controlId'])
+    problems = tags_problems()
+    if problems:
+        sys.exit('\n'.join(problems))
+    c = f[TAGS]
+    print(f"  OK  {TAGS} {c['controlId']} t{c['type']} multiple alias={c.get('alias')} perm={c.get('fieldPermission')} "
+          f"r{c.get('row')}c{c.get('col')}s{c.get('size')} hint={c.get('hint')!r}")
+    if c.get('row') == 9999:
+        print(f'  placement outstanding — the owner places {TAGS} in the designer; intended (row, col, size) '
+              f'{TAGS_PLACE[:3]}: the right half of row 5, beside DUNS')
+
+
+# Found by name in the live listing: the TEST contacts ids.json holds (TEST PT …, TEST State Contact) are gone.
+TAGS_TEST_CONTACT = 'TEST Solo Trading'
+TAGS_TEST = ('Contact Tags: TEST Parent Tag', 'Contact Tags: TEST Child Tag')
+
+
+def tag_cells(value):
+    if isinstance(value, str):
+        try:
+            value = json.loads(value) if value.startswith('[') else []
+        except ValueError:
+            return value
+    return sorted((v.get('sid') or v.get('rowid'), v.get('name')) for v in value or [] if isinstance(v, dict))
+
+
+def read_tags(rowid, tags_id):
+    got = hap.run('worksheet', 'record', 'get', WS, rowid, '-a', hap.ids()['app'])['data']
+    listed = next((r for r in C.records(WS, hap.ids()['app']) if r['rowid'] == rowid), {})
+    return {'get': tag_cells(got.get(TAGS_ALIAS)), 'list': tag_cells(listed.get(tags_id))}
+
+
+def step_selftags():
+    """On a TEST contact: set two TEST tags through `record update`, read them back through `record get` **and** the
+    listing, then put the contact's tags back as they were and read that back too. The two tags are contacttags.py's
+    archived TEST tags — the Active picker filter is the browser's, so the API takes them."""
+    import time
+    problems = tags_problems()
+    if problems:
+        sys.exit('\n'.join(problems))
+    tags_id = C.fields(WS)[TAGS]['controlId']
+    records = hap.ids()['records']
+    name_id = C.fields(WS)['Name']['controlId']
+    found = [r['rowid'] for r in C.records(WS, hap.ids()['app']) if r.get(name_id) == TAGS_TEST_CONTACT]
+    if len(found) != 1:
+        sys.exit(f'{len(found)} contacts named {TAGS_TEST_CONTACT!r} — wanted exactly one')
+    rowid, wanted = found[0], [records[k] for k in TAGS_TEST]
+    before = read_tags(rowid, tags_id)
+    print(f'  {TAGS_TEST_CONTACT} ({rowid}) before: {before}')
+    write = lambda rows: hap.run('worksheet', 'record', 'update', WS, rowid, '-a', hap.ids()['app'], '--fields-json',
+                                 json.dumps([{'id': tags_id, 'value': rows}]))
+    write(wanted)
+    time.sleep(3)
+    during = read_tags(rowid, tags_id)
+    print(f'  set:   {during}')
+    want = sorted(zip(wanted, ('TEST Parent Tag', 'TEST Parent Tag / TEST Child Tag')))
+    for path in ('get', 'list'):
+        if during[path] != want:
+            problems.append(f'{path}: {during[path]}, wanted {want}')
+    write([r for r, _ in before['get']])
+    time.sleep(3)
+    after = read_tags(rowid, tags_id)
+    print(f'  back:  {after}')
+    if after != before:
+        problems.append(f'not put back: {after}, was {before}')
+    print('  selftags: ' + ('OK — two tags stored and read back through both paths, and put back' if not problems
+                            else 'DIFFERENCES\n    ' + '\n    '.join(problems)))
+    return len(problems)
+
+
+def step_check():
+    """Only what this file still owns and can check without a layout it must not run: Tags (22 Sep 2026)."""
+    problems = tags_problems()
+    print('  check: ' + ('OK — Tags: one-way multiple Relation to Contact Tags, active tags only, alias category_id, '
+                         "Odoo's placeholder, not a column; Contact Tags untouched"
+                         if not problems else 'DIFFERENCES\n    ' + '\n    '.join(problems)))
+    return len(problems)
+
+
 def show():
     ctrls = hap.controls(WS)
     tabs = {c['controlId']: c['controlName'] for c in ctrls if c['type'] == 52}
@@ -851,6 +1029,9 @@ def show():
 
 
 if __name__ == '__main__':
-    {'fields': step_fields, 'display': step_display, 'layout': step_layout, 'rules': step_rules,
-     'views': step_views, 'buttons': step_buttons, 'automations': step_automations, 'to194': step_to194,
-     'names': step_names, 'show': show}[sys.argv[1] if len(sys.argv) > 1 else 'show']()
+    result = {'fields': step_fields, 'display': step_display, 'layout': step_layout, 'rules': step_rules,
+              'views': step_views, 'buttons': step_buttons, 'automations': step_automations, 'to194': step_to194,
+              'names': step_names, 'tags': step_tags, 'selftags': step_selftags, 'check': step_check,
+              'show': show}[sys.argv[1] if len(sys.argv) > 1 else 'show']()
+    if isinstance(result, int) and result:
+        sys.exit(1)
