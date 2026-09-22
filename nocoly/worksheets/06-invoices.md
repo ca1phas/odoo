@@ -84,6 +84,9 @@ As the three blocks render:
 >
 > The whole tab comes with the e-invoicing bundle; the tab is kept so the place it belongs is already marked.
 
+**Replaced on 22 Sep 2026** for the app's users: each block now says what that part of the form is for. The
+texts above, and the Invoice Lines text `taxes.py note` wrote on 18 Sep 2026, are kept at the foot of this file.
+
 ### Form layout
 
 | Odoo 19.4 (`view_move_form`) | Nocoly |
@@ -778,3 +781,53 @@ The owner's rule of 22 Sep 2026: a description in the app says only what the fie
 | Journal | desc | The book the entry is written in. Its Sequence Prefix is what Confirm numbers the document with, so it cannot be changed once the document is numbered. | The journal the document is recorded in. Its Sequence Prefix numbers the document, so it cannot be changed once the document has a number. |
 | Lines | desc | Odoo's Invoice Lines tab. The worksheet Invoice Lines, mounted here: the same rows are also a list of their own in the sidebar, and the invoice sums them into Untaxed Amount. | The products, sections and notes on this document. |
 | Journal Type | desc | The Journal's own Type, read through the Journal relation and stored here. Odoo has no such field — it reads journal_id.type directly — but a HAP business rule can only compare a control of its own worksheet, and this is what the two journal checks stand on: Odoo's @api.constrains('journal_id', 'move_type') _check_journal_move_type, which refuses a sale document in a non-sale journal and a purchase document in a non-purchase journal. | The type of the selected journal. |
+
+### Form texts replaced (22 Sep 2026)
+
+The same rule, applied to the text on the form. The three remark blocks named what Odoo shows on each tab and which
+bundle brings it; the owner had them rewritten in place for the app's users — nothing hidden or deleted — in one
+version-pinned save of the three controls. Each now says what that part of the form is for. The old text is kept
+here word for word, HTML as stored; the Invoice Lines one is the version `taxes.py note` wrote on 18 Sep 2026, which
+`taxes.py` LINES_NOTE_TEXT now carries in its new form too, so neither builder puts the old text back.
+
+| Control | Tab | Type | Key |
+|---|---|---|---|
+| Invoice Lines note, `6aa9f846e54d2a34fa4dfedc` | Invoice Lines | 10010 | dataSource |
+| Invoice note, `6aa920d74a73a3142152e691` | Other Info, under the *Invoice* divider | 10010 | dataSource |
+| MyInvois note, `6aa9f846e54d2a34fa4dfedd` | MyInvois | 10010 | dataSource |
+
+Invoice Lines note, before:
+
+```html
+<p><strong>Odoo's Invoice Lines tab</strong> holds the product lines — product, label, quantity, unit, unit price, discount, taxes, subtotal and total — with <em>Add a line</em>, <em>Add a section</em>, <em>Add a note</em> and the product <em>Catalog</em>, and under them the totals and the payments already made.</p><p><strong>All four amounts are roll-ups of these lines.</strong> Untaxed Amount is the sum of their Subtotal; <strong>Tax</strong> is the sum of their Total less that, and stopped being a figure seeded from the tenant when the Taxes bundle arrived; Total and Amount Due are the sum of their Total. The payments already made, and the tax and payment-term lines Odoo writes itself, are not built.</p>
+```
+
+after:
+
+```html
+<p>Add the products, sections and notes of this document in the table below. Untaxed Amount, Tax, Total and Amount Due are worked out from these lines.</p>
+```
+
+Invoice note, before:
+
+```html
+<p><strong>Also on Odoo's Other Info tab:</strong> Sales Team and the marketing fields, a Payment QR-code, the Incoterm and its location, Fiscal Position, Payment Method, and — on a vendor bill — the source email and the OCR extraction.</p><p>Sales Team comes with the Sales app, the QR-code and Payment Method with the Payments bundle, and Fiscal Position, Incoterms and Cash Rounding each with their own table.</p>
+```
+
+after:
+
+```html
+<p>More details for this document: the customer's or vendor's reference, the salesperson, the bank account it is paid into, the payment reference and the delivery date.</p>
+```
+
+MyInvois note, before:
+
+```html
+<p><strong>MyInvois is Malaysia's e-invoicing clearance.</strong> Odoo's <code>l10n_my_edi</code> module puts the document's MyInvois state, its Tax Exemption Reason and a Customs Form Reference here, and adds the <em>Send To MyInvois</em>, <em>Request Cancel</em> and <em>Reload Data</em> buttons to the header.</p><p>The whole tab comes with the e-invoicing bundle; the tab is kept so the place it belongs is already marked.</p>
+```
+
+after:
+
+```html
+<p>This tab is for MyInvois, Malaysia's e-invoicing system, and has nothing to fill in.</p>
+```

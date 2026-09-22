@@ -2719,20 +2719,14 @@ def step_order():
 # 06 wrote it while the lines and the taxes were both still to come, so it told the reader that the four amounts
 # were "read-only figures seeded from the tenant" and that "Taxes themselves need the Taxes bundle". 07 made three
 # of them roll-ups and this bundle made the fourth, so both sentences are now false. Found in the browser on the
-# UI test, 18 Sep 2026 (13-taxes.md §3).
+# UI test, 18 Sep 2026 (13-taxes.md §3). Rewritten again on 22 Sep 2026 for the app's users (owner's rule): the
+# text is the same as `invoices.py` HTML[NOTE_LINES], and the one this step wrote on 18 Sep is kept word for word
+# at the foot of 06-invoices.md.
 
 INVOICES_WS = '6aa90facf363582dd37a62f7'   # the worksheet id; INVOICES above is its name
 LINES_NOTE = '6aa9f846e54d2a34fa4dfedc'
-LINES_NOTE_TEXT = (
-    "<p><strong>Odoo's Invoice Lines tab</strong> holds the product lines — product, label, quantity, unit, "
-    "unit price, discount, taxes, subtotal and total — with <em>Add a line</em>, <em>Add a section</em>, "
-    "<em>Add a note</em> and the product <em>Catalog</em>, and under them the totals and the payments already "
-    "made.</p>"
-    "<p><strong>All four amounts are roll-ups of these lines.</strong> Untaxed Amount is the sum of their "
-    "Subtotal; <strong>Tax</strong> is the sum of their Total less that, and stopped being a figure seeded from "
-    "the tenant when the Taxes bundle arrived; Total and Amount Due are the sum of their Total. The payments "
-    "already made, and the tax and payment-term lines Odoo writes itself, are not built.</p>"
-)
+LINES_NOTE_TEXT = ('<p>Add the products, sections and notes of this document in the table below. Untaxed Amount, '
+                   'Tax, Total and Amount Due are worked out from these lines.</p>')
 
 
 def step_note():

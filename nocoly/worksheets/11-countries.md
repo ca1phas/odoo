@@ -65,6 +65,9 @@ last line was rewritten by bundle 5 once the States arrived: it now reads "The *
 the form are here, at the foot of this one; the currency, the flag and the address layout are not in Phase 1."
 `countries.py` carries the new text, so a re-run does not put the old line back.
 
+**Replaced on 22 Sep 2026** for the app's users: the block now says what the form holds. The text above is
+kept at the foot of this file.
+
 ### Rules
 
 None. Both required fields are required on the control, and both uniqueness constraints are the field's own *No
@@ -446,3 +449,27 @@ The owner's rule of 22 Sep 2026: a description in the app says only what the fie
 | Control | Key | Before | After |
 |---|---|---|---|
 | States | desc | The states of this country — Odoo state_ids, the reverse of Country on States. Set the country on the state. | The states of this country. To add one, set its Country on the state. |
+
+### Form texts replaced (22 Sep 2026)
+
+The same rule, applied to the text on the form. The remark block under the six fields named what Odoo's country form
+shows and this worksheet does not; the owner had it rewritten in place for the app's users — nothing hidden or
+deleted — in one version-pinned save of that one control. It now says what the form holds. The old text is kept
+here word for word, HTML as stored — the version `states.py reverse` wrote on 18 Sep 2026. `countries.py` HTML and
+`states.py` NOTE_HTML both carry the new text, so neither builder puts the old one back.
+
+| Control | Type | Key |
+|---|---|---|
+| Country form note, `6aacb5ba7d58b0f449312e41` | 10010 | dataSource |
+
+Before:
+
+```html
+<p><strong>Also on Odoo's country form:</strong> the <strong>Currency</strong>, the country's <strong>flag</strong>, and — only in developer mode — the three <strong>Advanced Address Formatting</strong> fields: Input View, Layout in Reports and Customer Name Position. Odoo also keeps <strong>Country Groups</strong> on the model, on no view of the country.</p><p>The <strong>States</strong> Odoo lists at the foot of the form are here, at the foot of this one; the currency, the flag and the address layout are not in Phase 1.</p>
+```
+
+After:
+
+```html
+<p>The country's name, codes and address settings. Its states are listed at the foot of the form.</p>
+```

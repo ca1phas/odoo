@@ -203,14 +203,12 @@ REVERSE_PLACE = (4, 0, 12)                        # under the remark block; a sh
 REVERSE_PERMISSION = '100'
 REVERSE_COLUMNS = (NAME, CODE)                    # exactly Odoo's two columns there
 REVERSE_DESC = 'The states of this country. To add one, set its Country on the state.'
-# Countries' remark block, whose last line §1 rewrites: the States are here now.
+# Countries' remark block, whose last line §1 rewrote once the States were there. Rewritten again for the app's
+# users on 22 Sep 2026 (owner's rule): the same text as `countries.py` HTML, the Odoo text it replaced kept word for
+# word at the foot of 11-countries.md.
 NOTE_NAME = 'Country form note'
-NOTE_HTML = ("<p><strong>Also on Odoo's country form:</strong> the <strong>Currency</strong>, the country's "
-             '<strong>flag</strong>, and — only in developer mode — the three <strong>Advanced Address '
-             'Formatting</strong> fields: Input View, Layout in Reports and Customer Name Position. Odoo also '
-             'keeps <strong>Country Groups</strong> on the model, on no view of the country.</p>'
-             '<p>The <strong>States</strong> Odoo lists at the foot of the form are here, at the foot of this '
-             'one; the currency, the flag and the address layout are not in Phase 1.</p>')
+NOTE_HTML = ("<p>The country's name, codes and address settings. Its states are listed at the foot of the "
+             'form.</p>')
 
 
 def function_source(expression):

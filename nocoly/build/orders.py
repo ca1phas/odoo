@@ -432,7 +432,7 @@ SIGNATURE = ('controlName', 'type', 'alias', 'row', 'col', 'size', 'sectionId', 
              'fieldPermission', 'dataSource', 'sourceControlId', 'sourceControlType', 'showControls', 'desc',
              'hint', 'enumDefault', 'enumDefault2', 'strDefault', 'dot', 'unit', 'options', 'default', 'viewId',
              'coverCid', 'noticeItem', 'half', 'defaultMen')
-# `cardstyle` joins the list for the owner's *Sign & Acccept* control (type 49, a 查询按钮), whose
+# `cardstyle` joins the list for the owner's *Sign & Accept* control (type 49, a 查询按钮), whose
 # `advancedSetting.cardstyle` is a JSON object in a string: BUILDING.md's rule is that the server re-serialises
 # JSON-valued `advancedSetting` keys on save, so a byte comparison of one would report a change nobody made and
 # stop a pinned save that had already gone through. Comparison only — nothing here writes it.
@@ -1928,12 +1928,13 @@ SET_TO_QUOTATION, MARK_AS_SENT = 'Set to Quotation', 'Mark as Sent'
 BUTTONS = (CONFIRM, CANCEL, SET_TO_QUOTATION, MARK_AS_SENT)
 
 # The owner's, and never this builder's: their *Send Quotation* button with its own workflow, and their
-# *Sign & Acccept* SEARCH_BTN control (three c's — their spelling, kept). `step_buttons` compares both, byte for
-# byte, before and after everything it writes.
+# *Sign & Accept* SEARCH_BTN control. `step_buttons` compares both, byte for byte, before and after everything it
+# writes. The control was named *Sign & Acccept*, three c's, until the owner had the typo fixed on 22 Sep 2026 —
+# a one-attribute version-pinned save of its `controlName` (16-orders.md, foot); no ids.json key carries it.
 OWNERS_BUTTON = 'Send Quotation'
 OWNERS_BUTTON_ID = '6ab0aac1e54d2a34fa4e7c1b'
 OWNERS_WORKFLOW = '6ab0aac1789584ded3230fe1'
-OWNERS_CONTROL, OWNERS_CONTROL_ID = 'Sign & Acccept', '6ab0f80f7d58b0f449317238'
+OWNERS_CONTROL, OWNERS_CONTROL_ID = 'Sign & Accept', '6ab0f80f7d58b0f449317238'
 SEARCH_BTN = 49
 
 # Each button's one update step. The name is what the workflow editor and `workflow structure` show.
@@ -2543,7 +2544,7 @@ def owners_button_state():
 
 
 def owners_control_state():
-    """The owner's *Sign & Acccept* SEARCH_BTN, in `control_state`'s comparable form."""
+    """The owner's *Sign & Accept* SEARCH_BTN, in `control_state`'s comparable form."""
     c = next((x for x in hap.controls(ws()) if x['controlId'] == OWNERS_CONTROL_ID), None)
     if c is None or c['controlName'] != OWNERS_CONTROL or c['type'] != SEARCH_BTN:
         sys.exit(f'{OWNERS_CONTROL!r} {OWNERS_CONTROL_ID} is not on the worksheet as a t{SEARCH_BTN} any more')
@@ -2595,7 +2596,7 @@ def step_buttons():
 
     Writes **no control, no rule and no view**, and nothing at all on Order Lines: the whole of it is custom
     actions and their own workflows. The owner's *Send Quotation* button, its workflow and their
-    *Sign & Acccept* control are compared byte for byte before and after.
+    *Sign & Accept* control are compared byte for byte before and after.
 
     Re-runnable: a button that exists by name is never re-created (`create-custom-action --action-spec` ignores
     `--btn-id` and would add a duplicate), every workflow node is matched by name and read back before it is

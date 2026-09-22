@@ -105,12 +105,17 @@ FIRST_BUILD = {
 
 # Odoo saas~19.4 view_account_journal_form on HAP's 12-column grid: Journal Name; Type · Sequence Prefix; then
 # Odoo's two notebook pages as HAP tabs — Journal Entries (page name="bank_account") and Advanced Settings. Each
-# tab also carries a remark block naming what Odoo shows there and which bundle or table brings it (owner,
-# 16 Sep 2026). Sequence is on no Odoo form: it is the list's drag handle, and a HAP table has none (its help
-# says so). Active is hidden and belongs to no tab.
+# tab also carries a divider heading and a remark block (owner, 16 Sep 2026). Until 22 Sep 2026 they named what
+# Odoo shows there and which bundle brings it; on the owner's rule that every text in the app is for its users
+# they now say, in plain words, what the tab is for — the old text is kept at the foot of 05-journals.md. The
+# headings cannot be just "Journal Entries" / "Advanced Settings": the tabs carry those names, and `guard` refuses
+# two controls with one name. Sequence is on no Odoo form: it is the list's drag handle, and a HAP table has none
+# (its help says so). Active is hidden and belongs to no tab.
 JOURNAL_ENTRIES, ADVANCED_SETTINGS = 'Journal Entries', 'Advanced Settings'
-REMARK_ENTRIES = "Also on Odoo's Journal Entries tab"       # type 22: the heading only (its desc renders nowhere)
-REMARK_ADVANCED = "Also on Odoo's Advanced Settings tab"
+# type 22: the heading only (its desc renders nowhere). ids.json keeps these two ids under their first names,
+# "Journals: Also on Odoo's Journal Entries tab" and "… Advanced Settings tab" — keys are never renamed.
+REMARK_ENTRIES = 'About Journal Entries'
+REMARK_ADVANCED = 'About Advanced Settings'
 NOTE_ENTRIES, NOTE_ADVANCED = 'Journal Entries note', 'Advanced Settings note'   # type 10010: the text itself
 TABS = (JOURNAL_ENTRIES, ADVANCED_SETTINGS)
 # The Chart of Accounts bundle (09-chart-of-accounts.md, built by accounts.py `journals`) brings Odoo's five account
@@ -138,17 +143,13 @@ PLACE = {  # name -> (row, col, size, tab)
     'Active': (14, 0, 6, None),
 }
 # What each tab's remark block says, as the HTML the block stores. A remark block renders this; a divider's
-# description renders nowhere, so the dividers keep their heading and nothing else.
+# description renders nowhere, so the dividers keep their heading and nothing else. For the app's users only
+# (owner, 22 Sep 2026): the Odoo text these replaced is kept word for word at the foot of 05-journals.md.
 HTML = {
-    NOTE_ENTRIES: "<p><strong>Also on Odoo's Journal Entries tab:</strong> the Invoice report, and — on Bank and "
-                  'Credit Card journals — the Bank Account Number, BIC and Bank Feeds. Odoo also lists this '
-                  "journal's payment method lines on its Incoming and Outgoing Payments tabs.</p>"
-                  '<p>The bank fields come with bank accounts, the report with the invoice report templates, and '
-                  'the payment method lines with the Payments bundle.</p>',
-    NOTE_ADVANCED: "<p><strong>Also on Odoo's Advanced Settings tab:</strong> Automation (Self Billing), Emails "
-                   '(Email Alias and Send Copy To) and Electronic Data Interchange.</p>'
-                   '<p>Self Billing and the EDI settings come with e-invoicing; the alias needs a mail alias and '
-                   'incoming mail.</p>',
+    NOTE_ENTRIES: "<p>The accounts this journal posts to, and whether its credit notes and payments get their own "
+                  "numbering. Which of these fields show depends on the journal's Type.</p>",
+    NOTE_ADVANCED: "<p>How the payment reference on this journal's customer invoices is set. These settings show on "
+                   'Sales journals only.</p>',
 }
 HINTS = {  # Odoo's placeholders on this form; every other field's placeholder is cleared
     'Journal Name': 'e.g. Customer Invoices',     # Odoo computes name_placeholder from Type

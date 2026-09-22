@@ -194,30 +194,16 @@ PLACE = {  # name -> (row, col, size, tab)
     NOTE_MYINVOIS: (22, 0, 12, MYINVOIS),
 }
 
-# What each remark block says, as the HTML the block stores (worksheets/06-invoices.md §1).
+# What each remark block says, as the HTML the block stores. For the app's users only (owner, 22 Sep 2026): what
+# that part of the form is for, in plain words. The Odoo text these replaced — the Invoice Lines one as
+# `taxes.py note` had rewritten it on 18 Sep 2026 — is kept word for word at the foot of 06-invoices.md.
+# `taxes.py` LINES_NOTE_TEXT carries the same Invoice Lines text, so its `note` step does not put the old one back.
 HTML = {
-    # Rewritten by `taxes.py note` on 18 Sep 2026: 06 wrote this while the lines and the taxes were both still
-    # to come, and both of its sentences went false — 07 made three amounts roll-ups and bundle 6 the fourth.
-    NOTE_LINES: "<p><strong>Odoo's Invoice Lines tab</strong> holds the product lines — product, label, "
-                'quantity, unit, unit price, discount, taxes, subtotal and total — with <em>Add a line</em>, '
-                '<em>Add a section</em>, <em>Add a note</em> and the product <em>Catalog</em>, and under them '
-                'the totals and the payments already made.</p>'
-                '<p><strong>All four amounts are roll-ups of these lines.</strong> Untaxed Amount is the sum '
-                'of their Subtotal; <strong>Tax</strong> is the sum of their Total less that, and stopped '
-                'being a figure seeded from the tenant when the Taxes bundle arrived; Total and Amount Due '
-                'are the sum of their Total. The payments already made, and the tax and payment-term lines '
-                "Odoo writes itself, are not built.</p>",
-    NOTE_OTHER: "<p><strong>Also on Odoo's Other Info tab:</strong> Sales Team and the marketing fields, a Payment "
-                'QR-code, the Incoterm and its location, Fiscal Position, Payment Method, and — on a vendor bill — '
-                'the source email and the OCR extraction.</p>'
-                '<p>Sales Team comes with the Sales app, the QR-code and Payment Method with the Payments bundle, '
-                'and Fiscal Position, Incoterms and Cash Rounding each with their own table.</p>',
-    NOTE_MYINVOIS: "<p><strong>MyInvois is Malaysia's e-invoicing clearance.</strong> Odoo's "
-                   "<code>l10n_my_edi</code> module puts the document's MyInvois state, its Tax Exemption Reason "
-                   'and a Customs Form Reference here, and adds the <em>Send To MyInvois</em>, <em>Request '
-                   'Cancel</em> and <em>Reload Data</em> buttons to the header.</p>'
-                   '<p>The whole tab comes with the e-invoicing bundle; the tab is kept so the place it belongs is '
-                   'already marked.</p>',
+    NOTE_LINES: '<p>Add the products, sections and notes of this document in the table below. Untaxed Amount, Tax, '
+                'Total and Amount Due are worked out from these lines.</p>',
+    NOTE_OTHER: "<p>More details for this document: the customer's or vendor's reference, the salesperson, the "
+                'bank account it is paid into, the payment reference and the delivery date.</p>',
+    NOTE_MYINVOIS: "<p>This tab is for MyInvois, Malaysia's e-invoicing system, and has nothing to fill in.</p>",
 }
 
 HINTS = {  # Odoo's placeholders on this form; every other field's placeholder is cleared

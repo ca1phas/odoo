@@ -148,15 +148,12 @@ NOTE = 10010                                      # HAP's remark block: HTML in 
                                                   # so its JSON is written out in full below (05's pattern)
 SWITCH, TEXT, NUMBER, RELATION = 36, 2, 6, 29
 
-# What the remark block says, as the HTML it stores. §1: what Odoo's country form shows and this worksheet
-# does not.
+# What the remark block says, as the HTML it stores. For the app's users only (owner, 22 Sep 2026): what the form
+# holds, in plain words. The Odoo text it replaced — the version `states.py reverse` had rewritten — is kept word
+# for word at the foot of 11-countries.md; `states.py` NOTE_HTML carries the same text as this.
 HTML = {
-    NOTE_NAME: "<p><strong>Also on Odoo's country form:</strong> the <strong>Currency</strong>, the country's "
-               '<strong>flag</strong>, and — only in developer mode — the three <strong>Advanced Address '
-               'Formatting</strong> fields: Input View, Layout in Reports and Customer Name Position. Odoo also '
-               'keeps <strong>Country Groups</strong> on the model, on no view of the country.</p>'
-               '<p>The <strong>States</strong> Odoo lists at the foot of the form are here, at the foot of '
-               'this one; the currency, the flag and the address layout are not in Phase 1.</p>',
+    NOTE_NAME: "<p>The country's name, codes and address settings. Its states are listed at the foot of the "
+               'form.</p>',
 }
 ADVANCED = {  # the advancedSetting keys this script owns
     # A form-side check, as 05's Sequence Prefix is: `record create` and `record update` store a longer value

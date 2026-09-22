@@ -602,3 +602,13 @@ The owner's rule of 22 Sep 2026: a description in the app says only what the fie
 | Control | Key | Before | After |
 |---|---|---|---|
 | Tax rate | desc | The sum of the Amounts of this line's Taxes, counting only the ones whose Tax Computation is Percentage — so a Fixed or Custom Formula tax cannot add its amount as if it were a rate. A roll-up (汇总) over the Taxes relation; hidden and read-only, and Total is computed from it. | The combined percentage of this line's taxes. |
+
+### Form text corrected (22 Sep 2026)
+
+| Control | Type | Key | Before | After |
+|---|---|---|---|---|
+| The owner's search button, `6ab0f80f7d58b0f449317238` | 49 | controlName | Sign & Acccept | Sign & Accept |
+
+A typo, three c's, fixed at the owner's request in one version-pinned save of that one attribute; its button text
+(`hint` "Query") and everything else are as the owner left them. `orders.py` OWNERS_CONTROL follows, so `buttons`
+and `check` recognise it. No custom button carries the name, and no `ids.json` key records this control.

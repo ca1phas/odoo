@@ -78,6 +78,9 @@ there and what will bring it. As the blocks render:
 The heading is repeated because the two controls are separate: the divider shows only its name, and the block's own
 name is hidden (`hidetitle`), so the block restates it as its bold lead-in.
 
+**Replaced on 22 Sep 2026** for the app's users: the headings are now *About Journal Entries* and *About
+Advanced Settings*, and the blocks say what the tab is for. The texts above are kept at the foot of this file.
+
 ### Rules
 
 All five are interaction rules on Type. A HAP rule applies its action while its condition holds and the opposite
@@ -531,3 +534,46 @@ The owner's rule of 22 Sep 2026: a description in the app says only what the fie
 | Active | desc | Set active to false to hide the Journal without removing it. | Untick to hide the journal without deleting it. |
 | Sequence | desc | Used to order Journals in the dashboard view. A HAP table has no drag handle, so a journal is moved up or down the list by changing this number. Odoo gives every new journal 10. | Journals are listed by this number, lowest first. Change it to move a journal up or down the list. |
 | Default Account | desc | Odoo labels this Bank Account on a Bank journal, Cash Account on Cash, Journal Account on Credit Card, Default Income Account on Sales, Default Expense Account on Purchase, and Default Account on Miscellaneous, where it is used to automatically balance entries. | The journal's main account: the income account on a sales journal, the expense account on a purchase journal, and the account the money is held in on a bank, cash or credit card journal. On a miscellaneous journal it is used to balance entries automatically. |
+
+### Form texts replaced (22 Sep 2026)
+
+The same rule, applied to the text on the form. The two tabs' divider headings and remark blocks named what Odoo
+shows there and which bundle brings it; the owner had them rewritten in place for the app's users — nothing hidden
+or deleted — in one version-pinned save of the four controls. The old text is kept here word for word, the remark
+blocks' HTML as stored.
+
+| Control | Type | Key | Before | After |
+|---|---|---|---|---|
+| Divider on Journal Entries, `6aa9e869e54d2a34fa4dfe42` | 22 | controlName | Also on Odoo's Journal Entries tab | About Journal Entries |
+| Divider on Advanced Settings, `6aa9e869e54d2a34fa4dfe43` | 22 | controlName | Also on Odoo's Advanced Settings tab | About Advanced Settings |
+| Journal Entries note, `6aa9eca8e43d174ab37499c2` | 10010 | dataSource | below | below |
+| Advanced Settings note, `6aa9eca8e43d174ab37499c3` | 10010 | dataSource | below | below |
+
+The headings are not plain *Journal Entries* and *Advanced Settings*: the two tabs already carry those names, and
+`journals.py guard` refuses two controls with one name. `ids.json` keeps both ids under their first keys,
+`Journals: Also on Odoo's Journal Entries tab` and `Journals: Also on Odoo's Advanced Settings tab` — keys are never
+renamed — and the new names were added beside them.
+
+Journal Entries note, before:
+
+```html
+<p><strong>Also on Odoo's Journal Entries tab:</strong> the Invoice report, and — on Bank and Credit Card journals — the Bank Account Number, BIC and Bank Feeds. Odoo also lists this journal's payment method lines on its Incoming and Outgoing Payments tabs.</p><p>The bank fields come with bank accounts, the report with the invoice report templates, and the payment method lines with the Payments bundle.</p>
+```
+
+after:
+
+```html
+<p>The accounts this journal posts to, and whether its credit notes and payments get their own numbering. Which of these fields show depends on the journal's Type.</p>
+```
+
+Advanced Settings note, before:
+
+```html
+<p><strong>Also on Odoo's Advanced Settings tab:</strong> Automation (Self Billing), Emails (Email Alias and Send Copy To) and Electronic Data Interchange.</p><p>Self Billing and the EDI settings come with e-invoicing; the alias needs a mail alias and incoming mail.</p>
+```
+
+after:
+
+```html
+<p>How the payment reference on this journal's customer invoices is set. These settings show on Sales journals only.</p>
+```

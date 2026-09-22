@@ -343,7 +343,9 @@
   "Orders: Signed By": "6ab10089e54d2a34fa4e88c6",
   "Orders: Signed On": "6ab10089e54d2a34fa4e88c7",
   "Orders: Discount Type": "6ab23575e54d2a34fa4f7b8b",
-  "Orders: Discount Value": "6ab23575e54d2a34fa4f7b8c"
+  "Orders: Discount Value": "6ab23575e54d2a34fa4f7b8c",
+  "Journals: About Journal Entries": "6aa9e869e54d2a34fa4dfe42",
+  "Journals: About Advanced Settings": "6aa9e869e54d2a34fa4dfe43"
  },
  "rules": {
   "Journals: Payment Communications only for Sales": "6aa9dae5e54d2a34fa4dfde2",
