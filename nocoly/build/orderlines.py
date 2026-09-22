@@ -1132,12 +1132,60 @@ def step_check():
             print(f"  OK  all {len(data['lines'])} seeded lines are live and as the seed writes them"
                   + (f' ({extra} other line(s) on the worksheet)' if extra else ''))
         O.report_gaps(gaps)
+        problems += discount_line_problems(f, live)
     report(f)
     if problems:
         print('  check: ' + '\n         '.join(problems))
         sys.exit(1)
     print(f'  check: OK — {len(NEW)} appended controls, {list(CONVERT)} as Formulas with no default left, '
           f'two required fields, one rule, {len(ALIAS)} aliases')
+
+
+def discount_line_problems(f, live):
+    """Orders' Apply Discount (orders.py §14) writes lines here on the Discount product's variant. Read back: the
+    controls it writes are still the ids it names, the variant is live, and every line on that variant is one it
+    could have written — Display Type Product, Quantity 1, Discount 0, Sequence 999, Units, a price of 0 or
+    less — with at most one per tax combination on each order. Through both read paths."""
+    problems = []
+    moved = [n for n, cid in O.CHILD.items() if (f.get(n) or {}).get('controlId') != cid]
+    if moved:
+        problems.append(f'{moved}: not the ids Apply Discount writes (orders.py CHILD) — re-read before pressing it')
+    vid = hap.ids().get('records', {}).get(O.VARIANT_KEY)
+    if not vid:
+        return problems + [f'no {O.VARIANT_KEY!r} in ids.json — run `orders.py discountproduct`']
+    try:
+        v = hap.run('worksheet', 'record', 'get', VARIANTS(), vid, '-a', APP)['data']
+    except RuntimeError:
+        return problems + [f'the Discount variant {vid} does not read back']
+    if str(v.get('active')) not in ('1', 'True', 'true'):
+        problems.append(f'the Discount variant {vid} is archived — Apply Discount would write lines on it')
+    listed = {r['rowid']: r for r in C.records(ws(), APP)}
+    want = {'Display Type': [O.PRODUCT_LINE], 'Quantity': 1.0, 'Discount': 0.0, 'Sequence': 999.0,
+            'Unit': [O.UNITS_UOM]}
+    seen, count = {}, 0
+    for d in live.values():
+        if O.read_cell(f['Product'], d) != [vid]:
+            continue
+        count += 1
+        rowid = d.get('rowid') or d.get('rowId')
+        row = listed.get(rowid, {})
+        bad = {n: O.read_cell(f[n], d) for n, w in want.items() if O.read_cell(f[n], d) != w}
+        bad.update({f'{n} (listing)': O.READERS[f[n]['type']](row.get(f[n]['controlId']))
+                    for n, w in want.items() if O.READERS[f[n]['type']](row.get(f[n]['controlId'])) != w})
+        price = O.read_cell(f['Unit Price'], d)
+        if price is None or price > 0:
+            bad['Unit Price'] = price
+        if bad:
+            problems.append(f'Discount line {rowid}: {bad}')
+        key = (tuple(O.read_cell(f['Orders'], d)), tuple(sorted(O.read_cell(f['Taxes'], d))))
+        seen.setdefault(key, []).append(rowid)
+    doubled = {k: v for k, v in seen.items() if len(v) > 1}
+    if doubled:
+        problems.append(f'Discount lines stacked on one tax combination: {doubled}')
+    if not problems:
+        print(f'  OK  the Discount variant {vid} is live; {count} Discount line(s) on the worksheet, each as Apply '
+              f'Discount writes it and one per tax combination per order (both read paths)')
+    return problems
 
 
 def step_show():

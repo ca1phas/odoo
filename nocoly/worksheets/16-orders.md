@@ -518,3 +518,46 @@ that do not exist yet, so it follows Order Lines' new fields. So: **Order Lines'
 rate, Lead Time, Optional Line) → **Tax Amount's function** → the two `required` flags → **Orders' three
 roll-ups and the subtable's columns** in one save → **the rules**, Order Lines' section rule and Orders'
 7.1 items 3 and 4 as one pass → **the aliases** last, as a pass of their own over both worksheets.
+
+## 8 · Discount — built 22 Sep 2026 (`orders.py` §14)
+
+Odoo's discount wizard (`sale.order.discount`) writes the discount **as order lines** on a Discount product. The
+owner chose the same. Odoo's third mode, *On All Order Lines*, is not built: it is the subtable's Batch Operation on
+each line's Discount %.
+
+**Piece 1 · the Discount product** (`discountproduct`): *Discount*, Service, Sales Price 0, Cost 0, no Sales or
+Purchase Taxes, category Services, unit Units; created as a **record** in Products (no control saved). Its variant
+came from Product Variants' own *create a new product's variant* automation. Ids in `ids.json` › records
+(`Products: Discount` 4464529e…, `Product Variants: Discount` dd0780ce…). Not carried: `invoice_policy 'order'`
+(Products has no Invoicing Policy control); Odoo's default purchase tax (unknowable with the tenant gone).
+`discountline` proved a line on it is an ordinary product line: on S00006, Qty 1 × −100 at 10% G stored Subtotal
+−100.00, Tax Amount −10.00, Total −110.00, and Untaxed / Tax / Total went 247,225.00 / 24,518.50 / 271,743.50 →
+247,125.00 / 24,508.50 / 271,633.50, then back once the test line was deleted.
+
+**Piece 2 · Apply Discount**: two controls, **Discount Type** (Global Discount · Fixed Amount, `discount_type`)
+and **Discount Value** (2 decimals, `discount_value`), stand in for the wizard. **They are parked at row 9999 for
+the owner to place** (intent: side by side above the totals). The button is offered unless Locked is ticked or
+Status is Cancelled (Odoo's `invisible="locked or state == 'cancel'"`). It removes the order's lines on the
+Discount product, stops if Value is empty or 0, then writes **one line per tax combination** — grouped, not the
+one-per-product-line fallback. Line names follow `_prepare_global_discount_so_lines`: one combination →
+**"Discount 10.00%"** / **"Discount"**; several → `"Discount 10.00%- On products with the following taxes 10% G"`.
+The percentage prints with two decimals because Odoo formats it with `float_repr(…, Discount precision = 2)`.
+
+Divergences from Odoo (also in `orders.py` §14c and the button's description): named *Apply Discount*, not
+*Discount*; **replaces** instead of stacking; Fixed Amount is spread over the **untaxed** subtotals (Odoo's
+targets the tax-included total); no cent adjustment on a Fixed split; no >100% refusal; the wizard is two fields
+on the order.
+
+**Proved** (`selfdiscount`, both read paths, 22 Sep 2026) on S00006 — lines 128,250 + 89,775 + 19,000 at 10% G
+and 10,200 at 8% S, untaxed 247,225.00:
+
+| Press | Discount lines | Untaxed / Tax / Total |
+|---|---|---|
+| Global 10% | 10% G −23,702.50 (tax −2,370.25) · 8% S −1,020.00 (tax −81.60) | 222,502.50 / 22,066.65 / 244,569.15 — untaxed −24,722.50 exactly |
+| Global 10% again | the same two, new ids — still one set | the same |
+| Fixed 1,000 | 10% G −958.74 · 8% S −41.26 = **−1,000.00** | 246,225.00 / 24,419.33 / 270,644.33 |
+| Value 0 | none | 247,225.00 / 24,518.50 / 271,743.50 |
+
+S00006 ended with no Discount line and Discount Type / Value empty. The one-combination name was proved on S00007
+(one line "Discount 10.00%", −10,460.32 on 104,603.20), then removed and the fields cleared. **Not UI-tested**:
+nothing here opened a browser.

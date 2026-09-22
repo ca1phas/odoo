@@ -67,7 +67,10 @@
   "Orders: Set to Quotation": "6ab1070d789584ded32f15e7",
   "Orders: Mark as Sent": "6ab10711a2c872a5c1305bae",
   "Orders: Deliver": "6ab218bea2c872a5c138c9ca",
-  "Orders: Deliver: one product line": "6ab218c1a2c872a5c138ca18"
+  "Orders: Deliver: one product line": "6ab218c1a2c872a5c138ca18",
+  "Orders: Apply Discount": "6ab235f0a2c872a5c13a8b06",
+  "Orders: Apply Discount: one product line": "6ab23689e606b26d26fe5ebb",
+  "Orders: Apply Discount: one tax group": "6ab23692e606b26d26fe5f0c"
  },
  "buttons": {
   "Archive": "6aa8a5654720c515252bda3d",
@@ -94,7 +97,8 @@
   "Orders: Cancel": "6ab1070abd43f55762c78d2d",
   "Orders: Set to Quotation": "6ab1070dbd43f55762c78d2f",
   "Orders: Mark as Sent": "6ab10711e54d2a34fa4e89ab",
-  "Orders: Deliver": "6ab218bee43d174ab3754894"
+  "Orders: Deliver": "6ab218bee43d174ab3754894",
+  "Orders: Apply Discount": "6ab235f07d58b0f44939500c"
  },
  "views": {
   "Units & Packagings: Units & Packagings": "6aa8d14d4a73a3142152d3fa",
@@ -337,7 +341,9 @@
   "Orders: Invoicing Closed": "6ab10089e54d2a34fa4e88c4",
   "Orders: Signature": "6ab10089e54d2a34fa4e88c5",
   "Orders: Signed By": "6ab10089e54d2a34fa4e88c6",
-  "Orders: Signed On": "6ab10089e54d2a34fa4e88c7"
+  "Orders: Signed On": "6ab10089e54d2a34fa4e88c7",
+  "Orders: Discount Type": "6ab23575e54d2a34fa4f7b8b",
+  "Orders: Discount Value": "6ab23575e54d2a34fa4f7b8c"
  },
  "rules": {
   "Journals: Payment Communications only for Sales": "6aa9dae5e54d2a34fa4dfde2",
@@ -938,7 +944,9 @@
   "Order Lines: S00021 line 30": "887a60c3-b76d-4377-b011-dc4857c7975c",
   "Order Lines: S00021 line 40": "bf072bd0-8f34-4118-b73c-8c745d6979c2",
   "Order Lines: S00021 line 50": "fc24f112-ab4c-4f2a-b73e-5644d034802f",
-  "Order Lines: S00022 line 10": "4e923a86-3de2-43c8-b6a1-fbbb439787e0"
+  "Order Lines: S00022 line 10": "4e923a86-3de2-43c8-b6a1-fbbb439787e0",
+  "Products: Discount": "4464529e-94ab-4597-a5cc-25714cd251c2",
+  "Product Variants: Discount": "dd0780ce-bf32-4e02-9d41-d3d6b5f6bb9f"
  },
  "roles": {
   "Administrator": "25ef76ef-5538-4779-a5e6-ab1fbce9dcfe",

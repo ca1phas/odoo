@@ -27,16 +27,28 @@ owner approved — deliberately nothing else.
                                                            #     Set to Quotation · Mark as Sent, their
                                                            #     workflows, and Odoo's missing-product guard
                                                            #     on Confirm; and Part 3, Deliver, with its
-                                                           #     get-multiple and per-line sub-process
+                                                           #     get-multiple and per-line sub-process; and
+                                                           #     §14c, Apply Discount and its two children
     ~/.hap-venv/bin/python nocoly/build/orders.py selfcheck# 13b. press all four through the CLI on one tenant
                                                            #     order and put it back, and prove the guard
                                                            #     refuses the order whose lines have no Product
     ~/.hap-venv/bin/python nocoly/build/orders.py selfdeliver# 13b2. press Deliver on one Sales Order through the CLI,
                                                            #     read every line back both ways, restore it, and
                                                            #     ask the server where the button is offered
+    ~/.hap-venv/bin/python nocoly/build/orders.py discountproduct # 14. Odoo's Discount product (a record in
+                                                           #     Products, never a control) and its variant
+    ~/.hap-venv/bin/python nocoly/build/orders.py discountline # 14a. prove a Discount line is an ordinary product
+                                                           #     line: add one to S00006, read it, delete it
+    ~/.hap-venv/bin/python nocoly/build/orders.py discountfields # 14b. Discount Type and Discount Value, appended
+                                                           #     (`buttons` then builds Apply Discount, §14c)
+    ~/.hap-venv/bin/python nocoly/build/orders.py selfdiscount # 14d. press Apply Discount on S00006 through the
+                                                           #     CLI — Global 10%, again, Fixed 1,000, 0 — and
+                                                           #     the one-tax-group name on another order; restore
     ~/.hap-venv/bin/python nocoly/build/orders.py check    # read rules, Expiration, the roll-ups, the two new
                                                            #    controls, the views, the five buttons with their
-                                                           #    workflows and the seed back, and report drift
+                                                           #    workflows and the seed back, and report drift;
+                                                           #    since §14 also the Discount product, the two
+                                                           #    discount fields and Apply Discount
     ~/.hap-venv/bin/python nocoly/build/orders.py show     # the live controls and rules
 
 **There is no `fields` or `layout` step, and there must not be one** — `views` writes one view of its own,
@@ -542,6 +554,7 @@ INVLINES_WS = '6aaa2b50e54d2a34fa4e0221'       # Invoice Lines — the shape bot
 # named here because a 汇总's `sourceControlId` is a control id on the *other* worksheet and nothing else can
 # express it.
 CHILD = {
+    'Orders': '6ab0c740e43d174ab37535b1',          # the back-relation to Orders (LINES_ORDERS)
     'Display Type': '6ab0c864e43d174ab37535f7',
     'Sequence': '6ab0c740e43d174ab37535b7',
     'Product': '6ab0c864e43d174ab37535f8',
@@ -2605,6 +2618,10 @@ def step_buttons():
     if f['Status'].get('fieldPermission') != READ_ONLY_PERMISSION:
         sys.exit(f"Status carries fieldPermission {f['Status'].get('fieldPermission')!r}, not "
                  f'{READ_ONLY_PERMISSION!r} — these buttons exist because nobody may type it')
+    missing = [n for n in DISCOUNT_FIELDS if n not in f]
+    if missing:
+        sys.exit(f'{missing} are not on {WORKSHEET} — run `discountfields` first; {APPLY} reads them')
+    discount_variant()                             # exits unless `discountproduct` has recorded it
     before = untouched_state()
     specs = button_specs(f)
     C.upsert_buttons(ws(), APP, specs, KEY, 'orders_buttons_pre_buttons')
@@ -2624,7 +2641,8 @@ def step_buttons():
             trouble.append(f'{name}: {step!r} stored {json.dumps(live, ensure_ascii=False)}, wanted '
                            f'{json.dumps([write_state(x) for x in wanted[name]], ensure_ascii=False)}')
     ensure_deliver(f)
-    specs_by_name = dict({s['name']: s for s, _, _ in specs}, **{DELIVER: deliver_spec(f)})
+    ensure_apply(f)
+    specs_by_name = dict({s['name']: s for s, _, _ in specs}, **{DELIVER: deliver_spec(f), APPLY: apply_spec(f)})
     for b in hap.listing('worksheet', 'custom-actions', ws()):
         if b['name'] not in specs_by_name:
             continue
@@ -2632,10 +2650,11 @@ def step_buttons():
         if button_state(b) != button_wanted(spec):
             trouble.append(f'{b["name"]}: stored {button_state(b)}, wanted {button_wanted(spec)}')
     trouble += deliver_problems()
+    trouble += apply_problems(f)
     compare_untouched(before)
     if trouble:
         sys.exit('  ' + '\n  '.join(trouble))
-    for name in BUTTONS + (DELIVER, DELIVER_INNER):
+    for name in BUTTONS + (DELIVER, DELIVER_INNER, APPLY, A_INNER, A_PRICE_INNER):
         print(C.structure(hap.ids()['workflows'][KEY + name]))
     return True
 
@@ -2920,6 +2939,1403 @@ def step_selfdeliver():
     return True
 
 
+# ── 14 · Discount, Piece 1: the Discount product ────────────────────────────
+#
+# Odoo's discount wizard (addons/sale/wizard/sale_order_discount.py) writes a discount as **order lines** on a
+# product of its own, created the first time the wizard runs (`_get_discount_product`) with
+# `_prepare_discount_product_values`: name *Discount*, type *service*, invoice_policy *order*, list_price 0,
+# **no taxes** (`taxes_id: None`) and the category *Services*. This step creates that product once, in Products,
+# as a **record write only** — Products' controls are another administrator's and nothing here saves one.
+#
+# Its variant is made the way every product's is: Product Variants' automation *create a new product's variant*
+# (variants.py §9, a worksheet-create trigger) runs on the create. The step waits for it, and falls back to
+# `variants.py seed Discount` — the same one-variant upsert — only if the automation has not delivered.
+#
+# Divergences, recorded: Products has **no Invoicing Policy** control, so `invoice_policy 'order'` has nowhere to
+# go; Odoo leaves `supplier_taxes_id` at the company's default purchase tax, which the tenant (expired) can no
+# longer tell us, so Purchase Taxes stays empty like Sales Taxes. Odoo keeps the product on
+# `company.sale_discount_product_id`; here its ids live in ids.json (`Products: Discount`,
+# `Product Variants: Discount`), where the Apply Discount workflow reads the variant from (`discount_variant`).
+PRODUCTS_WS = '6aa8ea0c4a22ad87b728cf0b'
+VARIANTS_WS = '6aa90c161204328eb1af1b82'
+DISCOUNT_PRODUCT = 'Discount'
+SERVICES_CATEGORY = 'f762ae70-04c2-410e-aa18-a9f5abbbf5ae'      # Product Categories / Services
+UNITS_UOM = '1c6ae984-a3ca-4721-be6f-e04481d8310c'              # Units & Packagings / Units — Odoo's default uom
+PRODUCT_KEY, VARIANT_KEY = 'Products: ' + DISCOUNT_PRODUCT, 'Product Variants: ' + DISCOUNT_PRODUCT
+
+
+def discount_variant():
+    vid = hap.ids().get('records', {}).get(VARIANT_KEY)
+    if not vid:
+        sys.exit(f'ids.json has no {VARIANT_KEY!r} — run `discountproduct` first')
+    return vid
+
+
+def discount_product_values(pf):
+    kinds = {o['value']: o['key'] for o in pf['Product Type']['options'] if not o.get('isDeleted')}
+    cid = lambda n: pf[n]['controlId']
+    return [{'id': cid('Name'), 'value': DISCOUNT_PRODUCT},
+            {'id': cid('Product Type'), 'value': [kinds['Service']]},
+            {'id': cid('Sales'), 'value': 1}, {'id': cid('Purchase'), 'value': 1},   # Odoo's defaults, both True
+            {'id': cid('Sales Price'), 'value': '0'}, {'id': cid('Cost'), 'value': '0'},
+            {'id': cid('Unit'), 'value': [UNITS_UOM]},
+            {'id': cid('Category'), 'value': [SERVICES_CATEGORY]},
+            {'id': cid('Internal Reference'), 'value': ''}, {'id': cid('Sales Description'), 'value': ''},
+            {'id': cid('Weight'), 'value': '0'}, {'id': cid('Volume'), 'value': '0'},
+            {'id': cid('Favorite'), 'value': 0}, {'id': cid('Active'), 'value': 1}]
+
+
+def discount_product_problems(pid):
+    """What the Discount product reads back as, against Odoo's values — both read paths."""
+    import products as P
+    got = P.read_product(pid)
+    d = read_record(PRODUCTS_WS, pid)
+    pf = C.fields(PRODUCTS_WS)
+    listing = next((r for r in C.records(PRODUCTS_WS, APP) if r['rowid'] == pid), {})
+    want = dict(name=DISCOUNT_PRODUCT, type='Service', sale_ok=True, purchase_ok=True, active=True,
+                list_price=0, standard_price=0, uom='Units')
+    problems = [f'{DISCOUNT_PRODUCT}: {k} reads {got.get(k)!r}, wanted {v!r}' for k, v in want.items() if got.get(k) != v]
+    for name, wanted in (('Category', [SERVICES_CATEGORY]), ('Sales Taxes', []), ('Purchase Taxes', [])):
+        c = pf[name]
+        for path, value in (('record get', read_cell(c, d)), ('listing', relation_ids(listing.get(c['controlId'])))):
+            if value != wanted:
+                problems.append(f'{DISCOUNT_PRODUCT}: {name} reads {value} through {path}, wanted {wanted}')
+    return problems
+
+
+def find_discount_product():
+    name = C.fields(PRODUCTS_WS)['Name']['controlId']
+    rows = [r['rowid'] for r in C.records(PRODUCTS_WS, APP) if r.get(name) == DISCOUNT_PRODUCT]
+    if len(rows) > 1:
+        sys.exit(f'{len(rows)} products are named {DISCOUNT_PRODUCT!r}: {rows} — resolve by hand first')
+    return rows[0] if rows else None
+
+
+def discount_variant_of(pid, seconds=0):
+    """The Discount product's own variant (its oldest), waiting up to `seconds` for automation A."""
+    import variants as V
+    for _ in range(max(seconds, 1)):
+        product = C.fields(VARIANTS_WS)['Product']['controlId']
+        mine = [r['rowid'] for r in C.records(VARIANTS_WS, APP) if relation_ids(r.get(product)) == [pid]]
+        if mine:
+            got = sorted((V.read_variant(r) for r in mine), key=lambda v: (v['created'], v['rowid']))
+            return got[0]['rowid'], len(got)
+        if seconds:
+            time.sleep(1)
+    return None, 0
+
+
+def discount_variant_problems(pid, vid):
+    """The variant against its product, as variants.py compares every one (copies, lookups, Display Name).
+    Lookups settle asynchronously after a create, so a fresh variant gets a few seconds."""
+    import products as P
+    import variants as V
+    for _ in range(15):
+        diffs = V.product_differences(V.read_variant(vid), P.read_product(pid))
+        if not diffs:
+            return []
+        time.sleep(1)
+    return [f'the {DISCOUNT_PRODUCT} variant {vid} differs from its product: {diffs}']
+
+
+def step_discountproduct():
+    """Create Odoo's Discount product once, see that its variant exists, and record both ids."""
+    import variants as V
+    pid = find_discount_product()
+    if pid is None:
+        values = discount_product_values(C.fields(PRODUCTS_WS))
+        pid = C.row_id(hap.run('worksheet', 'record', 'create', PRODUCTS_WS, '-a', APP,
+                               '--fields-json', json.dumps(values, ensure_ascii=False)))
+        if not pid:
+            sys.exit(f'{DISCOUNT_PRODUCT}: record create returned no rowid')
+        print(f'  created the product {DISCOUNT_PRODUCT}: {pid}')
+    else:
+        print(f'  the product {DISCOUNT_PRODUCT} exists: {pid}')
+    problems = discount_product_problems(pid)
+    if problems:
+        sys.exit('\n'.join(problems) + '\n  — the product is not written again by this step; correct it by hand')
+    if hap.ids().get('records', {}).get(PRODUCT_KEY) != pid:
+        C.remember('records', PRODUCT_KEY, pid)
+    vid, count = discount_variant_of(pid, seconds=30)
+    if vid is None:
+        print("  automation A delivered no variant in 30 s — running variants.py's seed for this product only")
+        V.step_seed(DISCOUNT_PRODUCT)
+        vid, count = discount_variant_of(pid, seconds=10)
+    if vid is None or count != 1:
+        sys.exit(f'{DISCOUNT_PRODUCT}: {count} variant(s) — wanted exactly one')
+    if hap.ids().get('records', {}).get(VARIANT_KEY) != vid:
+        C.remember('records', VARIANT_KEY, vid)
+    problems = discount_variant_problems(pid, vid)
+    if problems:
+        sys.exit('\n'.join(problems))
+    print(f'  OK    {DISCOUNT_PRODUCT}: product {pid}, variant {vid} — Service, RM 0.00, no taxes, Services, Units')
+
+
+# The proof Piece 2 stands on: a discount line is an ordinary product line. One is added to DISCOUNT_ORDER with
+# Unit Price −100 and 10% G, read back through both paths — Subtotal −100, Tax Amount −10, Total −110 — and the
+# order's three roll-ups must drop by exactly that; then the line is deleted (soft, to the recycle bin: it is this
+# step's own test data) and the order must read as before.
+DISCOUNT_ORDER = 'S00006'                       # a Sales Order with three lines at 10% G and one at 8% S
+TAX_10G = '1fd5f54c-c22a-45d9-8c74-38d29b52b183'
+TOTALS = ('Untaxed Amount', 'Tax', 'Total')
+
+
+def order_totals(f, rowid):
+    """The three roll-ups through `record get` and through the listing."""
+    d = read_record(ws(), rowid)
+    row = next((r for r in C.records(ws(), APP) if r['rowid'] == rowid), {})
+    return ({n: read_cell(f[n], d) for n in TOTALS},
+            {n: number_of(row.get(f[n]['controlId'])) for n in TOTALS})
+
+
+def wait_totals(f, rowid, wanted, seconds=40):
+    for _ in range(seconds):
+        got = order_totals(f, rowid)
+        if got[0] == wanted and got[1] == wanted:
+            return got
+        time.sleep(1)
+    return order_totals(f, rowid)
+
+
+def step_discountline():
+    f = guard()
+    f_lines = hap.by_name(c for c in hap.controls(LINES_WS) if c['type'] != C.TAB)
+    order = by_number()[DISCOUNT_ORDER]
+    before = order_totals(f, order)
+    if before[0] != before[1]:
+        sys.exit(f'{DISCOUNT_ORDER}: the two read paths disagree before anything is written: {before}')
+    print(f'  {DISCOUNT_ORDER} before: {before[0]}')
+    values = [{'id': CHILD['Orders'], 'value': [order]}, {'id': CHILD['Display Type'], 'value': [PRODUCT_LINE]},
+              {'id': CHILD['Product'], 'value': [discount_variant()]},
+              {'id': CHILD['Description'], 'value': 'TEST discount line'},
+              {'id': CHILD['Quantity'], 'value': '1'}, {'id': CHILD['Unit Price'], 'value': '-100'},
+              # Discount % must be written as 0: Subtotal's formula is not null-as-zero, so an empty Discount
+              # computes Subtotal — and with it Tax Amount, Total and the order's roll-ups — **empty**.
+              {'id': CHILD['Discount'], 'value': '0'},
+              {'id': CHILD['Taxes'], 'value': [TAX_10G]}, {'id': CHILD['Sequence'], 'value': '999'}]
+    line = C.row_id(hap.run('worksheet', 'record', 'create', LINES_WS, '-a', APP,
+                            '--fields-json', json.dumps(values, ensure_ascii=False)))
+    problems = []
+    try:
+        time.sleep(3)
+        got, listed = line_cells(f_lines, line), listed_lines(f_lines).get(line, {})
+        for n, want in (('Subtotal', -100.0), ('Tax Amount', -10.0), ('Total', -110.0)):
+            ok = got[n] == want and listed.get(n) == want
+            print(f"  {'OK  ' if ok else 'FAIL'}  line {n}: {got[n]} (record get) / {listed.get(n)} (listing), "
+                  f'wanted {want}')
+            if not ok:
+                problems.append(f'line {n} {got[n]}/{listed.get(n)}, wanted {want}')
+        wanted = {n: round(before[0][n] + d, 2) for n, d in zip(TOTALS, (-100, -10, -110))}
+        after = wait_totals(f, order, wanted)
+        for n in TOTALS:
+            ok = after[0][n] == wanted[n] and after[1][n] == wanted[n]
+            print(f"  {'OK  ' if ok else 'FAIL'}  {DISCOUNT_ORDER} {n}: {before[0][n]} -> {after[0][n]} (record get) / "
+                  f'{after[1][n]} (listing), wanted {wanted[n]}')
+            if not ok:
+                problems.append(f'{DISCOUNT_ORDER} {n} {after}, wanted {wanted[n]}')
+    finally:
+        hap.run('worksheet', 'record', 'delete', LINES_WS, '--row-ids', line, '-a', APP, '-y')
+    back = wait_totals(f, order, before[0])
+    if back != before:
+        problems.append(f'{DISCOUNT_ORDER} after the delete: {back}, wanted {before}')
+    else:
+        print(f'  OK    the test line {line} deleted; {DISCOUNT_ORDER} reads {back[0]} again through both paths')
+    if problems:
+        print('  discountline: ' + '\n                '.join(problems))
+        sys.exit(1)
+    print('  discountline: OK — a Discount line is an ordinary product line and the roll-ups carry it')
+
+
+# ── 14b · Discount, Piece 2: the wizard's two fields ─────────────────────────
+#
+# Odoo's discount is a **transient wizard** (`sale.order.discount`): a dialog holding discount_type and the
+# percentage or amount, gone once applied. HAP has no transient record a button can open, so the two inputs live
+# on the order itself and the Apply Discount button reads them. Only Odoo's `so_discount` and `amount` modes are
+# offered: its third, `sol_discount` *On All Order Lines*, writes each line's own Discount %, which the subtable's
+# Batch Operation already does. Appended with `C.append_controls` (the server mints the ids, nothing else is
+# re-sent); **placement is the owner's** — `add-fields` parks a new control at row 9999.
+DISCOUNT_TYPE, DISCOUNT_VALUE = 'Discount Type', 'Discount Value'
+DISCOUNT_FIELDS = (DISCOUNT_TYPE, DISCOUNT_VALUE)
+GLOBAL_DISCOUNT, FIXED_AMOUNT = 'Global Discount', 'Fixed Amount'      # Odoo's labels for so_discount · amount
+DISCOUNT_OPTIONS = (GLOBAL_DISCOUNT, FIXED_AMOUNT)
+DISCOUNT_ALIAS = {DISCOUNT_TYPE: 'discount_type', DISCOUNT_VALUE: 'discount_value'}
+DISCOUNT_PLACE = {DISCOUNT_TYPE: (30, 0, 6), DISCOUNT_VALUE: (30, 1, 6)}   # intent: side by side, above the
+                                                                           # totals; only `size` survives
+DISCOUNT_DESC = {
+    DISCOUNT_TYPE: "Stands in for Odoo's discount wizard (sale.order.discount), which is a dialog and not part of "
+                   'the order. Global Discount: Discount Value is a percentage of each tax group\'s subtotal. '
+                   'Fixed Amount: Discount Value in RM, shared over the tax groups in proportion to their '
+                   "subtotals. Press Apply Discount to write the discount lines. Odoo's third mode, On All Order "
+                   "Lines, is the lines' own Discount % — use the subtable's Batch Operation.",
+    DISCOUNT_VALUE: "Stands in for the wizard's Percentage and Amount (discount_percentage, discount_amount) as one "
+                    'number: the percentage for Global Discount (10 = 10%), the amount in RM for Fixed Amount. '
+                    'Empty or 0, Apply Discount removes the discount lines — which is how a discount is taken off.',
+}
+
+
+def discount_controls():
+    return {
+        DISCOUNT_TYPE: C.control('DROP_DOWN', DISCOUNT_TYPE, DISCOUNT_PLACE[DISCOUNT_TYPE],
+                                 alias=DISCOUNT_ALIAS[DISCOUNT_TYPE], hint='', desc=DISCOUNT_DESC[DISCOUNT_TYPE],
+                                 options=list(DISCOUNT_OPTIONS)),
+        DISCOUNT_VALUE: C.control('NUMBER', DISCOUNT_VALUE, DISCOUNT_PLACE[DISCOUNT_VALUE],
+                                  alias=DISCOUNT_ALIAS[DISCOUNT_VALUE], hint='', desc=DISCOUNT_DESC[DISCOUNT_VALUE],
+                                  extra={'dot': 2}),
+    }
+
+
+def discount_fields_problems(f):
+    problems = []
+    for n in DISCOUNT_FIELDS:
+        c = f.get(n)
+        if c is None:
+            problems.append(f'{n} is not on {WORKSHEET} — run `discountfields`')
+            continue
+        want = {'type': DROPDOWN if n == DISCOUNT_TYPE else NUMBER, 'alias': DISCOUNT_ALIAS[n],
+                'desc': DISCOUNT_DESC[n], 'required': False}
+        got = {k: c.get(k) for k in want}
+        if got != want:
+            problems.append(f'{n}: {({k: v for k, v in got.items() if want[k] != v})}, wanted '
+                            f'{({k: v for k, v in want.items() if got[k] != v})}')
+        if n == DISCOUNT_TYPE:
+            labels = [o['value'] for o in c.get('options') or [] if not o.get('isDeleted')]
+            if labels != list(DISCOUNT_OPTIONS):
+                problems.append(f'{n}: options {labels}, wanted {list(DISCOUNT_OPTIONS)}')
+        if n == DISCOUNT_VALUE and c.get('dot') != 2:
+            problems.append(f'{n}: {c.get("dot")} decimals, wanted 2')
+        if (f.get(n) or {}).get('controlId') and hap.ids().get('controls', {}).get(KEY + n) != c['controlId']:
+            problems.append(f'{n}: ids.json does not hold {c["controlId"]} — run `discountfields`')
+    return problems
+
+
+def step_discountfields():
+    """Append Discount Type and Discount Value if they are missing, and read them back."""
+    f = guard()
+    missing = [n for n in DISCOUNT_FIELDS if n not in f]
+    if missing:
+        hap.backup('orders_controls_pre_discount', hap.controls(ws()))
+        b = discount_controls()
+        C.append_controls(ws(), [b[n] for n in missing])
+        f = C.fields(ws())
+        for n in missing:
+            if n not in f:
+                sys.exit(f'{n} did not come back from the worksheet — the append did not store')
+            print(f"  added {n}: {f[n]['controlId']} (t{f[n]['type']}, row {f[n].get('row')})")
+    else:
+        print(f'  {list(DISCOUNT_FIELDS)} are already on {WORKSHEET}; nothing appended')
+    for n in DISCOUNT_FIELDS:
+        if hap.ids().get('controls', {}).get(KEY + n) != f[n]['controlId']:
+            C.remember('controls', KEY + n, f[n]['controlId'])
+    problems = discount_fields_problems(f)
+    if problems:
+        sys.exit('\n'.join(problems) + '\n  — not repaired automatically: read the control before a pinned save')
+    for n in DISCOUNT_FIELDS:
+        c = f[n]
+        print(f"  OK  {n:<15} {c['controlId']} t{c['type']} alias={c['alias']} r{c.get('row')}c{c.get('col')} "
+              f"s{c.get('size')}" + (f" options={[o['value'] for o in c['options'] if not o.get('isDeleted')]}"
+                                    if c.get('options') else f" dot={c.get('dot')}"))
+    parked = [n for n in DISCOUNT_FIELDS if f[n].get('row') == 9999]
+    if parked:
+        print('  placement outstanding — the owner places these in the designer; intended (row, col, size): '
+              + ', '.join(f'{n} {DISCOUNT_PLACE[n]}' for n in parked))
+
+
+# ── 14c · Discount, Piece 2: the Apply Discount button ──────────────────────
+#
+# Odoo's `sale.order.discount` → `_create_discount_lines`: one negative line on the Discount product **per tax
+# combination** of the order's product lines, `price_unit` the group's share, `tax_ids` the group's taxes,
+# quantity 1, sequence 999. Grouped here, not one line per product line — the fallback the brief allowed was not
+# needed:
+#
+#     Trigger by button (one order)
+#       → The Discount product            get-single, Product Variants, rowid = ids.json's variant
+#       → This order's discount lines     get-multiple: Orders is this order, Product is the Discount variant
+#       → Remove them                     delete, to the recycle bin — so the button can be pressed again
+#       → Is there a discount to apply?   No: Discount Value empty, or 0, or Discount Type empty (nothing more)
+#         Yes ↓
+#           This order's product lines    get-multiple (fetched once): Orders is this order, Display Type Product
+#           Their subtotal                worksheet total (107): Σ Subtotal of those lines, after the removal
+#           The discount's label          "Discount 10.00%" (Global) / "Discount" (Fixed) — see below
+#           What the discount is taken over   "100" (Global) / Their subtotal (Fixed), as text
+#           Add each product line to its tax group's discount line   sub-process, one line at a time, passing
+#             └ child A "Apply Discount: one product line"            the label as a parameter
+#                 The Discount product · The line's taxes (its own Taxes, in the taxes' Sequence order)
+#                 The line's tax group    code block: label + "- On products with the following taxes " +
+#                                         the names joined by ", " — Odoo's multi-combination line name
+#                 Its tax group's discount line   get-single: same order, Discount product, that Description
+#                   Found     → Unit Price −= the line's Subtotal
+#                   Not found → create it: Unit Price −Subtotal, the line's Taxes, qty 1, seq 999, Discount 0,
+#                               Units, Display Type Product
+#           This order's discount lines, one per tax group   → How many tax groups (object count)
+#           Only one tax group?  Yes → Description = the plain label (Odoo's single-combination name)
+#           Price each tax group's discount line   sub-process, passing Discount Value and the divisor
+#             └ child B "Apply Discount: one tax group"
+#                 The discount on this tax group   number formula, 2 decimals: Unit Price × Value ÷ divisor
+#                 Set its Unit Price
+#
+# So a group's line first accumulates −(the group's subtotal), then is priced once: round(group × Value ÷ 100) for
+# Global Discount, round(Value × group ÷ Σ product lines) for Fixed Amount — Odoo's rounding per group, not per
+# line. The Fixed denominator is summed **inside the run, after the removal**, never read off the order's Untaxed
+# Amount roll-up.
+#
+# Divergences from Odoo, each deliberate:
+#   * the button is **Apply Discount**, not Odoo's *Discount*, so it is not mistaken for the lines' Discount %;
+#   * it **replaces** this order's Discount lines (any line on the Discount product) instead of adding more —
+#     Odoo's wizard stacks a second discount when pressed twice; the owner chose replace, and Value 0 removes;
+#   * the wizard is two fields on the order (§14b), not a dialog; Odoo's third mode, On All Order Lines, is the
+#     subtable's Batch Operation on Discount %;
+#   * Odoo's **Fixed Amount is tax-included** (`_reduce_base_lines_to_target_amount` spreads the amount over
+#     `total_excluded + tax_amount`, so the order's *Total* drops by the amount); here, as briefed, the amount is
+#     spread over the **untaxed** subtotals and the discount lines' **Subtotals** sum to it;
+#   * Odoo nudges the last line so a Fixed Amount reconciles to the cent; nothing here adjusts cents — a
+#     non-reconciling split would show, and `selfdiscount` reports it;
+#   * Odoo refuses a percentage above 100 (`_check_discount_amount`); nothing here does;
+#   * the wizard's lines carry `extra_tax_data` so their tax is the exact complement of the order's; here each
+#     discount line's tax is its own Subtotal × rate, like every other line.
+APPLY = 'Apply Discount'
+APPLY_DESC = ("Odoo's Discount button (the sale.order.discount wizard), named Apply Discount here so it is not "
+              "confused with the lines' Discount % column. Writes the discount set in Discount Type and Discount "
+              'Value as Discount lines, one per tax combination, as Odoo does — replacing any this order already '
+              'has, so it can be pressed again. With Discount Value empty or 0 it removes them. Not offered on a '
+              'locked or cancelled order.')
+# the parent's steps
+A_VARIANT = 'The Discount product'
+A_OLD = "This order's discount lines"
+A_REMOVE = 'Remove them'
+A_BRANCH = 'Is there a discount to apply?'
+A_LINES = "This order's product lines"
+A_LABEL = "The discount's label"
+A_EACH = "Add each product line to its tax group's discount line"
+A_GROUPS = "This order's discount lines, one per tax group"
+A_COUNT = 'How many tax groups'
+A_PRICE = "Price each tax group's discount line"
+A_SINGLE = 'One tax group: plain description'
+A_ONE = 'Only one tax group?'
+# the two children
+A_INNER = 'Apply Discount: one product line'
+A_PRICE_INNER = 'Apply Discount: one tax group'
+DELETE_NODE = '3'
+UNITS_LINE = UNITS_UOM
+
+
+def apply_spec(f):
+    """Offered unless Locked is ticked or Status is Cancelled — Odoo's `invisible="locked or state == 'cancel'"`."""
+    return {'name': APPLY, 'type': 'triggerWorkflow', 'desc': APPLY_DESC, 'isBatch': False,
+            'enableWhen': {'type': 'group', 'logic': 'AND', 'children': [
+                {'field': f['Status']['controlId'], 'dataType': DROPDOWN, 'operator': 'ne',
+                 'value': [STATUS_KEYS['Cancelled']]},
+                switch_when(f, 'Locked', False)]}}
+
+
+def ensure_apply_button(f):
+    live = {b['name']: b for b in hap.listing('worksheet', 'custom-actions', ws())}
+    key = KEY + APPLY
+    if APPLY in live:
+        pid = hap.ids().get('workflows', {}).get(key)
+        if not pid:
+            sys.exit(f'{APPLY} exists ({live[APPLY]["btnId"]}) but ids.json has no workflow for it')
+        return pid, False
+    hap.backup('orders_buttons_pre_apply_discount', list(live.values()))
+    out = hap.run('worksheet', 'create-custom-action', ws(), '-a', APP, '--action-spec',
+                  json.dumps(apply_spec(f), ensure_ascii=False))
+    data = out.get('data', out) if isinstance(out, dict) else {}
+    pid = data.get('processId')
+    if not pid:
+        sys.exit(f'{APPLY}: no processId in create-custom-action output: {out}')
+    C.remember('workflows', key, pid)
+    btn = next((b for b in hap.listing('worksheet', 'custom-actions', ws()) if b['name'] == APPLY), None)
+    if not btn:
+        sys.exit(f'{APPLY}: created, but it does not come back from custom-actions')
+    C.remember('buttons', key, btn['btnId'])
+    return pid, True
+
+
+PARAM_NODE = '6038a1cbf18158039fb40e68'         # the fixed 本流程参数 node every process carries
+STRING_FX = 'string_fx_id'
+NUMBER_FORMULA, FUNCTION_FORMULA, OBJECT_TOTAL = '100', '106', '105'
+FORMULA_NODE = 9
+A_TOTAL = 'Their subtotal'
+A_DIVISOR = 'What the discount is taken over'
+# child A
+A_A_VARIANT = 'The Discount product'
+A_TAXES = "The line's taxes"
+A_KEY = "The line's tax group"
+TAXES_WS = '6aad1034805aef703286ac2f'
+TAX_NAME, TAX_SEQUENCE = '6aad104e7d58b0f4493141f9', '6aad104e7d58b0f4493141fe'   # Taxes' Tax Name · Sequence
+FROM_RELATION = '401'                           # a get-multiple over a record's own Relation
+A_GROUP = "Its tax group's discount line"
+A_FOUND = 'Does the tax group have its line yet?'
+A_ADD = "Add the line's subtotal to it"
+A_NEG = "The line's subtotal, negated"
+A_CREATE = "Create the tax group's discount line"
+# child B
+A_SHARE = 'The discount on this tax group'
+A_SET = 'Set its Unit Price'
+LABEL_PARAM, VALUE_PARAM, DIVISOR_PARAM = 'label', 'value', 'divisor'
+
+
+def discount_label_formula(type_ref, value_ref):
+    """Odoo's line name, from `_prepare_global_discount_so_lines`: "Discount %(percent)s%%" with the percentage as
+    `float_repr(…, Discount precision 2)` — so **10 reads "10.00"** — or plain "Discount" for a fixed amount.
+    HAP's function formulas have no number formatting, so the two decimals are built by hand."""
+    v = value_ref
+    two = f'RIGHT(CONCAT("0", ROUND({v}*100, 0) - INT({v})*100), 2)'
+    return (f'IF({type_ref} == "{GLOBAL_DISCOUNT}", CONCAT("Discount ", INT({v}), ".", {two}, "%"), '
+            f'"Discount")')
+
+
+def apply_nodes(f, params):
+    """The whole Apply Discount workflow for one `batch-add` on its empty button workflow."""
+    t = lambda fid: f'$trigger-{fid}$'
+    typ, val = f[DISCOUNT_TYPE]['controlId'], f[DISCOUNT_VALUE]['controlId']
+    trig = {'nodeAlias': 'trigger'}
+    orders_is = lambda node, field: {'left': {'node': trig, 'fieldId': LINES_ORDERS, '_filedTypeId': RELATION},
+                                     'op': RELATION_EQ, 'right': {'kind': 'field', 'node': node, 'fieldId': field}}
+    product_is = lambda alias: {'left': {'node': trig, 'fieldId': CHILD['Product'], '_filedTypeId': RELATION},
+                                'op': RELATION_EQ,
+                                'right': {'kind': 'field', 'node': {'nodeAlias': alias}, 'fieldId': 'rowid'}}
+    variant = lambda alias, name: {
+        'nodeAlias': alias, 'nodeType': 'get_single', 'name': name,
+        'config': {'worksheet': VARIANTS_WS, 'execute_type': 0, 'filter': {'logic': 'and', 'items': [
+            {'left': {'node': trig, 'fieldId': 'rowid', '_filedTypeId': TEXT}, 'op': 'eq',
+             'right': {'kind': 'literal', 'value': discount_variant()}}]}}}
+    param = lambda name: f'${PARAM_NODE}-{params[name]}$'
+    sub = {'nodeAlias': 'sub_trigger'}
+    child_a = [
+        variant('a_variant', A_A_VARIANT),
+        {'nodeAlias': 'a_taxes', 'nodeType': 'get_relation_records', 'name': A_TAXES,
+         'config': {'worksheet': TAXES_WS, 'target': {'node': sub}, 'fields': [{'fieldId': CHILD['Taxes']}],
+                    'sorts': [{'controlId': TAX_SEQUENCE, 'controlType': NUMBER, 'isAsc': True}]}},
+        {'nodeAlias': 'a_group', 'nodeType': 'get_single', 'name': A_GROUP,
+         'config': {'worksheet': LINES_WS, 'execute_type': 2, 'filter': {'logic': 'and', 'items': [
+             {'left': {'node': sub, 'fieldId': LINES_ORDERS, '_filedTypeId': RELATION}, 'op': RELATION_EQ,
+              'right': {'kind': 'field', 'node': sub, 'fieldId': LINES_ORDERS}},
+             {'left': {'node': sub, 'fieldId': CHILD['Product'], '_filedTypeId': RELATION}, 'op': RELATION_EQ,
+              'right': {'kind': 'field', 'node': {'nodeAlias': 'a_variant'}, 'fieldId': 'rowid'}},
+             # the third condition — Description is the code block's key — is saved by `sync_apply`,
+             # because `batch-add` cannot make the code block (BUILDING.md) and so nothing here can name it
+             ]}}},
+        {'nodeAlias': 'a_found', 'nodeType': 'branch', 'name': A_FOUND, 'config': {'paths': [
+            {'alias': 'a_has', 'result_type': 'has_data', 'name': 'Yes', 'nodes': [
+                {'nodeAlias': 'a_add', 'nodeType': 'update_record', 'name': A_ADD,
+                 'config': {'worksheet': LINES_WS, 'target': {'node': {'nodeAlias': 'a_group'}},
+                            'fields': [{'fieldId': CHILD['Unit Price'], 'type': 8, 'addType': 2,
+                                        'valueRef': {'node': sub, 'fieldId': CHILD['Subtotal']}}]}}]},
+            {'alias': 'a_none', 'result_type': 'no_data', 'name': 'No', 'nodes': [
+                {'nodeAlias': 'a_neg', 'nodeType': 'compute', 'name': A_NEG,
+                 'config': {'mode': 'number', 'formula': f'0-$sub_trigger-{CHILD["Subtotal"]}$'}},
+                {'nodeAlias': 'a_create', 'nodeType': 'create_record', 'name': A_CREATE,
+                 'config': {'worksheet': LINES_WS, 'fields': [
+                     {'fieldId': LINES_ORDERS, 'type': RELATION,
+                      'valueRef': {'node': sub, 'fieldId': LINES_ORDERS}},
+                     {'fieldId': CHILD['Display Type'], 'type': DROPDOWN, 'value': PRODUCT_LINE},
+                     {'fieldId': CHILD['Product'], 'type': RELATION,
+                      'valueRef': {'node': {'nodeAlias': 'a_variant'}, 'fieldId': 'rowid'}},
+                     {'fieldId': CHILD['Description'], 'type': TEXT, 'value': ''},      # `sync_apply` binds it
+                     {'fieldId': CHILD['Quantity'], 'type': NUMBER, 'value': '1'},
+                     {'fieldId': CHILD['Unit Price'], 'type': 8,
+                      'valueRef': {'node': {'nodeAlias': 'a_neg'}, 'fieldId': NUMBER_FX, 'nodeActionId': '100'}},
+                     {'fieldId': CHILD['Discount'], 'type': NUMBER, 'value': '0'},
+                     {'fieldId': CHILD['Taxes'], 'type': RELATION,
+                      'valueRef': {'node': sub, 'fieldId': CHILD['Taxes']}},
+                     {'fieldId': CHILD['Sequence'], 'type': NUMBER, 'value': '999'},
+                 ]}}]},
+        ]}},
+    ]
+    child_b = [
+        {'nodeAlias': 'b_share', 'nodeType': 'compute', 'name': A_SHARE,
+         'config': {'mode': 'number', 'formula': f'$sub_trigger-{CHILD["Unit Price"]}$*{param(VALUE_PARAM)}'
+                                                 f'/{param(DIVISOR_PARAM)}'}},
+        {'nodeAlias': 'b_set', 'nodeType': 'update_record', 'name': A_SET,
+         'config': {'worksheet': LINES_WS, 'target': {'node': sub},
+                    'fields': [{'fieldId': CHILD['Unit Price'], 'type': 8,
+                                'valueRef': {'node': {'nodeAlias': 'b_share'}, 'fieldId': NUMBER_FX,
+                                             'nodeActionId': '100'}}]}},
+    ]
+    lines_of_order = {'logic': 'and', 'items': [
+        orders_is(trig, 'rowid'),
+        {'left': {'node': trig, 'fieldId': CHILD['Display Type'], '_filedTypeId': DROPDOWN}, 'op': IS_ANY_OF,
+         'right': {'kind': 'literal', 'values': [{'key': PRODUCT_LINE, 'value': 'Product', 'isDeleted': False}]}}]}
+    discount_lines = {'logic': 'and', 'items': [orders_is(trig, 'rowid'), product_is('variant')]}
+    value_empty = {'left': {'node': trig, 'fieldId': val, '_filedTypeId': NUMBER}, 'op': EMPTY}
+    value_zero = {'left': {'node': trig, 'fieldId': val, '_filedTypeId': NUMBER}, 'op': 'eq',
+                  'right': {'kind': 'literal', 'value': '0'}}
+    type_empty = {'left': {'node': trig, 'fieldId': typ, '_filedTypeId': DROPDOWN}, 'op': EMPTY}
+    return [
+        variant('variant', A_VARIANT),
+        {'nodeAlias': 'old', 'nodeType': 'get_multiple', 'name': A_OLD,
+         'config': {'worksheet': LINES_WS, 'filter': discount_lines}},
+        {'nodeAlias': 'remove', 'nodeType': 'delete_record', 'name': A_REMOVE,
+         'config': {'worksheet': LINES_WS, 'target': {'node': {'nodeAlias': 'old'}}}},
+        {'nodeAlias': 'gate', 'nodeType': 'branch', 'name': A_BRANCH, 'config': {'paths': [
+            {'alias': 'nothing', 'name': 'No', 'condition': {'logic': 'or',
+                                                            'items': [value_empty, value_zero, type_empty]}},
+            {'alias': 'apply', 'name': 'Yes', 'nodes': [
+                {'nodeAlias': 'lines', 'nodeType': 'get_multiple', 'name': A_LINES,
+                 'config': {'worksheet': LINES_WS, 'filter': lines_of_order}},
+                {'nodeAlias': 'total', 'nodeType': 'rollup', 'name': A_TOTAL,
+                 'config': {'mode': 'worksheet', 'worksheet': LINES_WS, 'aggregate': 'sum',
+                            'field': CHILD['Subtotal'], 'filter': lines_of_order}},
+                {'nodeAlias': 'label', 'nodeType': 'compute', 'name': A_LABEL,
+                 'config': {'mode': 'function', 'output_type': 'text',
+                            'formula': discount_label_formula(t(typ), t(val))}},
+                {'nodeAlias': 'divisor', 'nodeType': 'compute', 'name': A_DIVISOR,
+                 'config': {'mode': 'function', 'output_type': 'text',
+                            'formula': f'CONCAT(IF({t(typ)} == "{GLOBAL_DISCOUNT}", 100, '
+                                       f'$total-{NUMBER_FX}$))'}},
+                {'nodeAlias': 'each', 'nodeType': 'sub_process', 'name': A_EACH,
+                 'config': {'target': {'kind': 'record', 'node': {'nodeAlias': 'lines'}},
+                            'process': {'name': A_INNER, 'nodes': child_a, 'parameters': [
+                                {'name': LABEL_PARAM, 'controlId': params[LABEL_PARAM],
+                                 'value': {'kind': 'field', 'node': {'nodeAlias': 'label'}, 'fieldId': STRING_FX}}]},
+                            'execution': {'mode': 'sequential_each', 'continueAfterComplete': True}}},
+                {'nodeAlias': 'groups', 'nodeType': 'get_multiple', 'name': A_GROUPS,
+                 'config': {'worksheet': LINES_WS, 'filter': discount_lines}},
+                {'nodeAlias': 'count', 'nodeType': 'rollup', 'name': A_COUNT,
+                 'config': {'source': {'node': {'nodeAlias': 'groups'}}, 'aggregate': 'count'}},
+                {'nodeAlias': 'single', 'nodeType': 'branch', 'name': A_ONE, 'config': {'paths': [
+                    {'alias': 'one', 'name': 'Yes', 'condition': {'logic': 'and', 'items': [
+                        {'left': {'node': {'nodeAlias': 'count'}, 'fieldId': NUMBER_FX, '_filedTypeId': NUMBER},
+                         'op': 'eq', 'right': {'kind': 'literal', 'value': '1'}}]},
+                     'nodes': [{'nodeAlias': 'plain', 'nodeType': 'update_record', 'name': A_SINGLE,
+                                'config': {'worksheet': LINES_WS, 'target': {'node': {'nodeAlias': 'groups'}},
+                                           'fields': [{'fieldId': CHILD['Description'], 'type': TEXT,
+                                                       'value': f'$label-{STRING_FX}$'}]}}]},
+                    {'alias': 'several', 'name': 'No'}]}},
+                {'nodeAlias': 'price', 'nodeType': 'sub_process', 'name': A_PRICE,
+                 'config': {'target': {'kind': 'record', 'node': {'nodeAlias': 'groups'}},
+                            'process': {'name': A_PRICE_INNER, 'nodes': child_b, 'parameters': [
+                                {'name': VALUE_PARAM, 'controlId': params[VALUE_PARAM],
+                                 'value': {'kind': 'field', 'node': trig, 'fieldId': val}},
+                                {'name': DIVISOR_PARAM, 'controlId': params[DIVISOR_PARAM],
+                                 'value': {'kind': 'field', 'node': {'nodeAlias': 'divisor'},
+                                           'fieldId': STRING_FX}}]},
+                            'execution': {'mode': 'sequential_each', 'continueAfterComplete': True}}},
+            ]}]}},
+    ]
+
+
+GET_ONE = 7
+FROM_SHEET_ONE = '406'
+WORKSHEET_TOTAL_NODE = '107'
+CONTINUE_IF_NONE = 2                            # a search step's executeType: carry on when nothing is found
+STOP_IF_NONE = 0
+
+
+# `check` runs the same comparisons as the build with DRIFT set to a list: every step that would write appends what
+# it found instead, and nothing is saved.
+DRIFT = None
+
+
+def drifted(what):
+    """True when a write is due — recorded instead of made while `check` is reading."""
+    if DRIFT is None:
+        return False
+    DRIFT.append(what)
+    return True
+
+
+def wf_cond(node_id, kind, action, field, name, type_id, condition, values, enum_default=0, source_type=0):
+    """One stored filter condition, in the shape `lines_filter` writes and the server keeps."""
+    return {'nodeId': node_id, 'nodeType': kind, 'actionId': action, 'filedId': field, 'filedValue': name,
+            'filedTypeId': type_id, 'enumDefault': enum_default, 'conditionId': condition,
+            'sourceType': source_type, 'conditionValues': values}
+
+
+def order_is(node_id, kind, action, value_node, value_field='rowid'):
+    """The line belongs to `value_node`'s order: its rowid, or its own Orders relation (conditionId 33)."""
+    return wf_cond(node_id, kind, action, LINES_ORDERS, 'Orders', RELATION, RELATION_EQ,
+                   [{'nodeId': value_node, 'controlId': value_field}], enum_default=1, source_type=33)
+
+
+def product_is_node(node_id, kind, action, variant_node):
+    return wf_cond(node_id, kind, action, CHILD['Product'], 'Product', RELATION, RELATION_EQ,
+                   [{'nodeId': variant_node, 'controlId': 'rowid'}], enum_default=1, source_type=33)
+
+
+def is_product_line(node_id, kind, action):
+    return wf_cond(node_id, kind, action, CHILD['Display Type'], 'Display Type', DROPDOWN, IS_ANY_OF,
+                   [{'value': {'key': PRODUCT_LINE, 'value': 'Product', 'isDeleted': False, 'score': None,
+                               'index': None}}])
+
+
+def is_the_variant(node_id):
+    return wf_cond(node_id, GET_ONE, FROM_SHEET_ONE, 'rowid', 'Record ID', TEXT, '9',
+                   [{'value': discount_variant()}])
+
+
+def filters_of(*conds):
+    return [{'spliceType': 1, 'conditions': [list(conds)]}]
+
+
+def filter_state(filters_):
+    """(field, conditionId, compared with) per condition — what the builder and `check` compare."""
+    out = []
+    for flt in filters_ or []:
+        for g in flt.get('conditions') or []:
+            for c in g:
+                vals = []
+                for v in c.get('conditionValues') or []:
+                    value = v.get('value')
+                    if isinstance(value, dict):
+                        value = value.get('key')
+                    vals.append((v.get('nodeId') or '', v.get('controlId') or '', value or ''))
+                out.append((c.get('filedId'), c.get('conditionId'), vals))
+    return out
+
+
+def sync_search(pid, node, worksheet, filters_, kind, action, execute_type=None, execute=None):
+    """A get-single (7) or get-multiple (13) step's worksheet, `filters`, not-found behaviour and fetch mode.
+    `batch-add` writes a search step's filter as `operateCondition`, which is not what the step reads."""
+    got = read_node(pid, node['id'])
+    same = filter_state(got.get('filters')) == filter_state(filters_) and got.get('appId') == worksheet and \
+        (execute_type is None or got.get('executeType') == execute_type) and \
+        (execute is None or bool(got.get('execute')) == execute)
+    if same:
+        return False
+    if drifted(f"{node['name']}: filter {filter_state(got.get('filters'))} on {got.get('appId')} "
+               f"executeType={got.get('executeType')} execute={got.get('execute')}"):
+        return True
+    cfg = {'actionId': action, 'appId': worksheet, 'appType': 1, 'selectNodeId': '', 'filters': filters_,
+           'operateCondition': []}
+    if kind == GET_ONE:
+        cfg['sorts'] = got.get('sorts') or [{'controlId': 'ctime', 'controlType': 16, 'isAsc': True}]
+        cfg['executeType'] = execute_type if execute_type is not None else got.get('executeType', 0)
+    else:
+        cfg['execute'] = execute if execute is not None else got.get('execute', False)
+    hap.run('workflow', 'node', 'save', pid, node['id'], '--type', str(kind), '-n', node['name'],
+            '-c', json.dumps(cfg, ensure_ascii=False))
+    back = read_node(pid, node['id'])
+    if filter_state(back.get('filters')) != filter_state(filters_) or back.get('appId') != worksheet:
+        sys.exit(f"{node['name']}: filter reads back {filter_state(back.get('filters'))}, wanted "
+                 f'{filter_state(filters_)} — `hap workflow rollback {pid} -y` restores the published version')
+    return True
+
+
+def set_entries(pid, node, wanted):
+    """Give a create or update step these field writes, keeping every other entry and its configuration;
+    True when it wrote. Compared on what `write_state` reads."""
+    d = read_node(pid, node['id'])
+    fields = list(d.get('fields') or [])
+    changed = False
+    for want in wanted:
+        entry = next((x for x in fields if x.get('fieldId') == want['fieldId']), None)
+        if entry and write_state(entry) == write_state(want):
+            continue
+        if entry:
+            entry.update(want)
+        else:
+            fields.append(want)
+        changed = True
+    if not changed:
+        return False
+    if drifted(f"{node['name']}: field writes differ from {[w['fieldId'] for w in wanted]}"):
+        return True
+    hap.run('workflow', 'node', 'save', pid, node['id'], '--type', str(UPDATE_NODE), '-n', node['name'],
+            '-c', json.dumps({'actionId': d.get('actionId'), 'appId': d.get('appId'), 'appType': 1,
+                              'selectNodeId': d.get('selectNodeId') or '', 'fields': fields}, ensure_ascii=False))
+    back = {x.get('fieldId'): write_state(x) for x in read_node(pid, node['id']).get('fields') or []}
+    bad = [w['fieldId'] for w in wanted if back.get(w['fieldId']) != write_state(w)]
+    if bad or read_node(pid, node['id']).get('isException'):
+        sys.exit(f"{node['name']}: {bad} read back {[back.get(b) for b in bad]}")
+    return True
+
+
+def sync_related(pid, node, select, field, sorts):
+    """A get-multiple step over a record's own Relation (13 / 401): the records `field` of `select` points at,
+    in `sorts` order. Odoo joins a line's tax names in the taxes' own order — `account.tax` is ordered by
+    sequence, then id."""
+    got = read_node(pid, node['id'])
+    key = lambda d: (d.get('selectNodeId'), [x.get('fieldId') for x in d.get('fields') or []],
+                     [(x.get('controlId'), bool(x.get('isAsc'))) for x in d.get('sorts') or []])
+    want = (select, [field], [(x['controlId'], x['isAsc']) for x in sorts])
+    if key(got) == want and not got.get('isException'):
+        return False
+    if drifted(f"{node['name']}: {key(got)}, wanted {want}"):
+        return True
+    hap.run('workflow', 'node', 'save', pid, node['id'], '--type', str(GET_MANY), '-n', node['name'],
+            '-c', json.dumps({'actionId': FROM_RELATION, 'appId': TAXES_WS, 'appType': 1, 'selectNodeId': select,
+                              'fields': [{'fieldId': field}], 'sorts': sorts, 'execute': True},
+                             ensure_ascii=False))
+    back = read_node(pid, node['id'])
+    if key(back) != want or back.get('isException'):
+        sys.exit(f"{node['name']}: reads back {key(back)} exception={back.get('isException')}, wanted {want}")
+    return True
+
+
+def sync_total(pid, node, filters_, field):
+    """A worksheet-total step (9 / 107): the sum of `field` over the lines `filters_` names."""
+    got = read_node(pid, node['id'])
+    want = {'reportControlId': field, 'reportType': 3, 'appId': LINES_WS}
+    if all(got.get(k) == v for k, v in want.items()) and filter_state(got.get('filters')) == filter_state(filters_):
+        return False
+    if drifted(f"{node['name']}: {({k: got.get(k) for k in want})} {filter_state(got.get('filters'))}"):
+        return True
+    hap.run('workflow', 'node', 'save', pid, node['id'], '--type', str(FORMULA_NODE), '-n', node['name'],
+            '-c', json.dumps({'actionId': WORKSHEET_TOTAL_NODE, 'appId': LINES_WS, 'appType': 1, 'execute': True,
+                              'reportControlId': field, 'reportType': 3, 'filters': filters_,
+                              'number': 2, 'nullZero': True}, ensure_ascii=False))
+    back = read_node(pid, node['id'])
+    if any(back.get(k) != v for k, v in want.items()) or filter_state(back.get('filters')) != filter_state(filters_):
+        sys.exit(f"{node['name']}: reads back {({k: back.get(k) for k in want})} {filter_state(back.get('filters'))}")
+    return True
+
+
+def sync_formula(pid, node, action, expression, number=2, null_zero=True, out_type=None):
+    """A formula step's expression, decimals and empty-as-0 (invlines.set_formula's contract). A 106 carries its
+    output type (text 2) so its result is `string_fx_id`."""
+    got = read_node(pid, node['id'])
+    want = {'formulaValue': expression, 'number': number, 'nullZero': null_zero}
+    if all(got.get(k) == v for k, v in want.items()) and not got.get('isException'):
+        return False
+    if drifted(f"{node['name']}: {({k: got.get(k) for k in want})} exception={got.get('isException')}"):
+        return True
+    cfg = {'actionId': action, 'name': node['name'], 'execute': True, 'formulaValue': expression,
+           'number': number, 'nullZero': null_zero}
+    if out_type is not None:
+        cfg['type'] = out_type
+    elif action == NUMBER_FORMULA:
+        cfg['type'] = NUMBER
+    hap.run('workflow', 'node', 'save', pid, node['id'], '--type', str(FORMULA_NODE), '-n', node['name'],
+            '-c', json.dumps(cfg, ensure_ascii=False))
+    back = read_node(pid, node['id'])
+    if any(back.get(k) != v for k, v in want.items()) or back.get('isException'):
+        sys.exit(f"{node['name']}: reads back {({k: back.get(k) for k in want})} exception={back.get('isException')}")
+    return True
+
+
+def sync_path_names(pid, gateway, names_by_next):
+    """Name each path of a gateway by the node it runs into (`None` for the empty one). `batch-add` leaves the
+    two default paths unnamed (BUILDING.md)."""
+    proc = hap.run('workflow', 'node', 'list', pid)
+    changed = False
+    for p in proc['flowNodeMap'].values():
+        if p.get('typeId') != BRANCH_PATH or p.get('prveId') != gateway['id']:
+            continue
+        key = p.get('nextId') if p.get('nextId') not in (None, '', '99') else None
+        want = names_by_next.get(key)
+        if want and p.get('name') != want:
+            if not drifted(f"{gateway['name']}: a path is named {p.get('name')!r}, wanted {want!r}"):
+                hap.run('workflow', 'node', 'rename', pid, p['id'], '-n', want)
+            changed = True
+    return changed
+
+
+JAVASCRIPT, CODE_NODE = '102', 14
+SUBTRACT = 2                                    # a field write's addType: 0 set · 1 add · 2 subtract
+KEY_OUT = 'key'
+
+
+def key_code():
+    """Child A's code block: the tax group's key, which is also Odoo's line name for it when an order has several
+    tax combinations — `"%(label)s- On products with the following taxes %(taxes)s"` with the names joined by
+    ", " (`_prepare_global_discount_so_lines`; the missing space before the dash is Odoo's own). HAP's function
+    formulas render a Relation as its **count** and a get-multiple field as nothing, so the names are joined here.
+    A get-multiple field reaches a code block as a list, parsed whether it is a JSON array or plain text."""
+    return """function list(v) {
+  if (v === undefined || v === null) return [];
+  if (Array.isArray(v)) return v;
+  var s = String(v).trim();
+  if (!s) return [];
+  try { var j = JSON.parse(s); return Array.isArray(j) ? j : [j]; } catch (e) { return [s]; }
+}
+function name(x) {
+  while (x && typeof x === 'object') x = Array.isArray(x) ? x[0] : (x.name || x.value || '');
+  return x === undefined || x === null ? '' : String(x).trim();
+}
+var names = list(input.names).map(name).filter(function (x) { return x !== ''; });
+output = {
+  key: (String(input.label || '') + '- On products with the following taxes ' + names.join(', ')).replace(/\\s+$/, ''),
+  seen: JSON.stringify({names: input.names, taxes: input.taxes})
+};
+"""
+
+
+def key_inputs(a_start, taxes_node, label_ref):
+    return [{'name': 'label', 'value': label_ref},
+            {'name': 'names', 'value': f'${taxes_node}-{TAX_NAME}$'},
+            {'name': 'taxes', 'value': f'${a_start}-{CHILD["Taxes"]}$'}]
+
+
+KEY_TEST = {'label': 'Discount 10.00%', 'names': '["10% G","Exempt C 1,2"]', 'taxes': '[]'}
+
+
+def ensure_key_code(pid, byname, a_start, label_ref):
+    """The code block after the taxes step: added with `node add --type 14` (batch-add refuses one), saved with
+    its inputs and code, then run once through codeTest, which registers its `key` output."""
+    import base64
+    from hap_cli.core import flow_node
+    from hap_cli.core.session import Session
+    b64 = lambda text: base64.b64encode(text.encode('utf-8')).decode('ascii')
+    changed = False
+    if A_KEY not in byname and drifted(f'{A_KEY}: the code block is missing'):
+        return True
+    if A_KEY not in byname:
+        hap.run('workflow', 'node', 'add', pid, '--type', str(CODE_NODE), '-n', A_KEY,
+                '--after', byname[A_TAXES]['id'], '-a', JAVASCRIPT)
+        byname = nodes_by_name(pid)[1]
+        changed = True
+    node = byname[A_KEY]
+    got = read_node(pid, node['id'])
+    code, inputs = key_code(), key_inputs(a_start, byname[A_TAXES]['id'], label_ref)
+    live = got.get('code') or ''                   # stored as plain text, though it is sent base64-encoded
+    live_inputs = [(x.get('name'), x.get('value')) for x in got.get('inputDatas') or [] if x.get('name')]
+    stale = live.strip() != code.strip() or live_inputs != [(x['name'], x['value']) for x in inputs]
+    if (stale or str(got.get('actionId')) != JAVASCRIPT or KEY_OUT not in
+            {c.get('controlId') for c in got.get('controls') or []}) and \
+            drifted(f'{A_KEY}: code, inputs {live_inputs} or its {KEY_OUT!r} output differ'):
+        return True
+    if stale:
+        flow_node.save_node(Session.load(None), pid, node['id'], CODE_NODE,
+                            {'actionId': JAVASCRIPT, 'inputDatas': inputs, 'code': b64(code),
+                             'testMap': got.get('testMap') or {}, 'version': got.get('version') or '',
+                             'maxRetries': got.get('maxRetries', 1)}, name=A_KEY)
+        changed = True
+    got = read_node(pid, node['id'])
+    if changed or KEY_OUT not in {c.get('controlId') for c in got.get('controls') or []}:
+        test = flow_node.test_code(Session.load(None), pid, node['id'], b64(code),
+                                   [{**x, 'value': KEY_TEST[x['name']]} for x in inputs],
+                                   action_id=JAVASCRIPT, version=got.get('version') or '')
+        print(f'  codeTest: {json.dumps(test, ensure_ascii=False)[:400]}')
+        got = read_node(pid, node['id'])
+        if KEY_OUT not in {c.get('controlId') for c in got.get('controls') or []}:
+            sys.exit(f'{A_KEY}: codeTest registered no {KEY_OUT!r} output: {got.get("controls")}')
+    return changed
+
+
+def lit(field, kind, value):
+    """A field write of a constant, in the shape the server stores."""
+    return {'fieldId': field, 'type': kind, 'addType': 0, 'fieldValue': value, 'fieldValueId': '', 'nodeId': ''}
+
+
+def ref(field, kind, node, source, node_type, action, add=0):
+    """A field write taken from another step's record or result: `nodeId` + `fieldValueId`. The binding keys the
+    server also needs (`nodeAppType`, `nodeTypeId`, `nodeActionId`) are sent but not compared — it rewrites them
+    (a sub-process record's "401" reads back "400", a formula's `nodeAppType` 1 reads back 11; BUILDING.md)."""
+    return {'fieldId': field, 'type': kind, 'addType': add, 'fieldValue': '', 'fieldValueId': source,
+            'nodeId': node, 'sureNodeId': node, 'nodeAppType': 1, 'nodeTypeId': node_type, 'nodeActionId': action}
+
+
+def apply_writes(pid, by, kids):
+    """[(process, step, its field writes)] for the four steps that write Order Lines.
+
+    The created discount line is Odoo's `_prepare_global_discount_so_lines` line: the Discount product, quantity
+    1, the group's (negative) amount as unit price, the group's taxes, sequence 999 — plus what this app needs a
+    line to carry: Display Type *Product*, Discount 0 (Subtotal's formula is not null-as-zero, so an empty
+    Discount computes everything empty) and the unit, Units (the variant's own Unit is a lookup, which a step
+    cannot bind to a Relation, so the record is named)."""
+    a_pid, b_pid = kids[A_INNER], kids[A_PRICE_INNER]
+    a_proc, a_by = nodes_by_name(a_pid)
+    b_proc, b_by = nodes_by_name(b_pid)
+    a_start, b_start = a_proc['startEventId'], b_proc['startEventId']
+    from_line = lambda field, kind, source, add=0: ref(field, kind, a_start, source, 0, FROM_RECORD, add)
+    return [
+        (a_pid, A_CREATE, [
+            from_line(LINES_ORDERS, RELATION, LINES_ORDERS),
+            lit(CHILD['Display Type'], DROPDOWN, PRODUCT_LINE),
+            ref(CHILD['Product'], RELATION, a_by[A_A_VARIANT]['id'], 'rowid', GET_ONE, FROM_SHEET_ONE),
+            lit(CHILD['Description'], TEXT, f"${a_by[A_KEY]['id']}-{KEY_OUT}$"),
+            lit(CHILD['Quantity'], NUMBER, '1'),
+            ref(CHILD['Unit Price'], 8, a_by[A_NEG]['id'], NUMBER_FX, FORMULA_NODE, NUMBER_FORMULA),
+            lit(CHILD['Discount'], NUMBER, '0'),
+            from_line(CHILD['Taxes'], RELATION, CHILD['Taxes']),
+            lit(CHILD['Sequence'], NUMBER, '999'),
+            lit(CHILD['Unit'], RELATION, UNITS_UOM)]),
+        (a_pid, A_ADD, [from_line(CHILD['Unit Price'], 8, CHILD['Subtotal'], add=SUBTRACT)]),
+        (b_pid, A_SET, [ref(CHILD['Unit Price'], 8, b_by[A_SHARE]['id'], NUMBER_FX, FORMULA_NODE, NUMBER_FORMULA)]),
+        (pid, A_SINGLE, [lit(CHILD['Description'], TEXT, f"${by[A_LABEL]['id']}-{STRING_FX}$")]),
+    ]
+
+
+def apply_children(pid, byname):
+    """{A_INNER: child A's process id, A_PRICE_INNER: child B's} — read off the two sub-process steps."""
+    out = {}
+    for step, inner in ((A_EACH, A_INNER), (A_PRICE, A_PRICE_INNER)):
+        node = byname.get(step)
+        out[inner] = read_node(pid, node['id']).get('subProcessId') if node else ''
+    return out
+
+
+def sub_params(pid, node):
+    """{parameter name: its controlId} passed by a sub-process step, and the values it passes."""
+    d = read_node(pid, node['id'])
+    names = {v['controlId']: v['controlName'] for v in d.get('subProcessVariables') or []}
+    return {names.get(x['fieldId'], x['fieldId']): (x['fieldId'], x.get('fieldValue')) for x in d.get('fields') or []}
+
+
+def apply_wanted(f, pid):
+    """Every step of the three workflows, as the builder wants it: [(process id, step name, kind, what)]."""
+    proc, by = nodes_by_name(pid)
+    trigger = proc['startEventId']
+    typ, val = f[DISCOUNT_TYPE]['controlId'], f[DISCOUNT_VALUE]['controlId']
+    t = lambda fid: f'${trigger}-{fid}$'
+    kids = apply_children(pid, by)
+    a_pid, b_pid = kids[A_INNER], kids[A_PRICE_INNER]
+    a_proc, a_by = nodes_by_name(a_pid)
+    b_proc, b_by = nodes_by_name(b_pid)
+    a_start, b_start = a_proc['startEventId'], b_proc['startEventId']
+    pa, pb = sub_params(pid, by[A_EACH]), sub_params(pid, by[A_PRICE])
+    param = lambda p, name: f'${PARAM_NODE}-{p[name][0]}$'
+    n = lambda b, name: b[name]['id']
+    many = lambda b, name, *conds: filters_of(*conds)
+    return proc, by, kids, [
+        (pid, A_VARIANT, 'search', dict(worksheet=VARIANTS_WS, kind=GET_ONE, action=FROM_SHEET_ONE,
+                                        execute_type=STOP_IF_NONE,
+                                        filters=filters_of(is_the_variant(n(by, A_VARIANT))))),
+        (pid, A_OLD, 'search', dict(worksheet=LINES_WS, kind=GET_MANY, action=FROM_WORKSHEET, execute=True,
+                                    filters=filters_of(order_is(n(by, A_OLD), GET_MANY, FROM_WORKSHEET, trigger),
+                                                       product_is_node(n(by, A_OLD), GET_MANY, FROM_WORKSHEET,
+                                                                       n(by, A_VARIANT))))),
+        (pid, A_LINES, 'search', dict(worksheet=LINES_WS, kind=GET_MANY, action=FROM_WORKSHEET, execute=True,
+                                      filters=filters_of(order_is(n(by, A_LINES), GET_MANY, FROM_WORKSHEET, trigger),
+                                                         is_product_line(n(by, A_LINES), GET_MANY, FROM_WORKSHEET)))),
+        (pid, A_TOTAL, 'total', dict(field=CHILD['Subtotal'], filters=filters_of(
+            order_is(n(by, A_TOTAL), 18, WORKSHEET_TOTAL_NODE, trigger),
+            is_product_line(n(by, A_TOTAL), 18, WORKSHEET_TOTAL_NODE)))),
+        (pid, A_LABEL, 'formula', dict(action=FUNCTION_FORMULA, number=2, null_zero=False, out_type=TEXT,
+                                       expression=discount_label_formula(t(typ), t(val)))),
+        (pid, A_DIVISOR, 'formula', dict(action=FUNCTION_FORMULA, number=2, null_zero=False, out_type=TEXT,
+                                         expression=f'CONCAT(IF({t(typ)} == "{GLOBAL_DISCOUNT}", 100, '
+                                                    f'${n(by, A_TOTAL)}-{NUMBER_FX}$))')),
+        (pid, A_GROUPS, 'search', dict(worksheet=LINES_WS, kind=GET_MANY, action=FROM_WORKSHEET, execute=True,
+                                       filters=filters_of(order_is(n(by, A_GROUPS), GET_MANY, FROM_WORKSHEET, trigger),
+                                                          product_is_node(n(by, A_GROUPS), GET_MANY, FROM_WORKSHEET,
+                                                                          n(by, A_VARIANT))))),
+        (a_pid, A_A_VARIANT, 'search', dict(worksheet=VARIANTS_WS, kind=GET_ONE, action=FROM_SHEET_ONE,
+                                            execute_type=STOP_IF_NONE,
+                                            filters=filters_of(is_the_variant(n(a_by, A_A_VARIANT))))),
+        (a_pid, A_TAXES, 'related', dict(select=a_start, field=CHILD['Taxes'],
+                                         sorts=[{'controlId': TAX_SEQUENCE, 'controlType': NUMBER, 'isAsc': True}])),
+        (a_pid, A_GROUP, 'search', dict(worksheet=LINES_WS, kind=GET_ONE, action=FROM_SHEET_ONE,
+                                        execute_type=CONTINUE_IF_NONE, filters=filters_of(
+                order_is(n(a_by, A_GROUP), GET_ONE, FROM_SHEET_ONE, a_start, LINES_ORDERS),
+                product_is_node(n(a_by, A_GROUP), GET_ONE, FROM_SHEET_ONE, n(a_by, A_A_VARIANT)),
+                wf_cond(n(a_by, A_GROUP), GET_ONE, FROM_SHEET_ONE, CHILD['Description'], 'Description', TEXT, '9',
+                        [{'nodeId': n(a_by, A_KEY), 'controlId': KEY_OUT}])))),
+        (a_pid, A_NEG, 'formula', dict(action=NUMBER_FORMULA, number=2, null_zero=True,
+                                       expression=f'0-${a_start}-{CHILD["Subtotal"]}$')),
+        (b_pid, A_SHARE, 'formula', dict(action=NUMBER_FORMULA, number=2, null_zero=True,
+                                         expression=f'${b_start}-{CHILD["Unit Price"]}$*{param(pb, VALUE_PARAM)}'
+                                                    f'/{param(pb, DIVISOR_PARAM)}')),
+    ]
+
+
+def sync_apply(f, pid):
+    """Bring every step of Apply Discount and its two children to what `apply_wanted` says; True if written."""
+    proc, by = nodes_by_name(pid)
+    kids = apply_children(pid, by)
+    changed = {pid: False, kids[A_INNER]: False, kids[A_PRICE_INNER]: False}
+    a_proc, a_by = nodes_by_name(kids[A_INNER])
+    changed[kids[A_INNER]] |= sync_related(kids[A_INNER], a_by[A_TAXES], a_proc['startEventId'], CHILD['Taxes'],
+                                           [{'controlId': TAX_SEQUENCE, 'controlType': NUMBER, 'isAsc': True}])
+    label = sub_params(pid, by[A_EACH])[LABEL_PARAM][0]
+    changed[kids[A_INNER]] |= ensure_key_code(kids[A_INNER], a_by, a_proc['startEventId'],
+                                              f'${PARAM_NODE}-{label}$')
+    proc, by, kids, wanted = apply_wanted(f, pid)
+    for p, name, kind, w in wanted:
+        node = nodes_by_name(p)[1][name]
+        if kind == 'search':
+            hit = sync_search(p, node, w['worksheet'], w['filters'], w['kind'], w['action'],
+                              execute_type=w.get('execute_type'), execute=w.get('execute'))
+        elif kind == 'related':
+            hit = sync_related(p, node, w['select'], w['field'], w['sorts'])
+        elif kind == 'total':
+            hit = sync_total(p, node, w['filters'], w['field'])
+        else:
+            hit = sync_formula(p, node, w['action'], w['expression'], number=w['number'],
+                               null_zero=w['null_zero'], out_type=w.get('out_type'))
+        if hit:
+            print(f'  {name}: written')
+        changed[p] |= hit
+    by = nodes_by_name(pid)[1]
+    for p, name, wanted_writes in apply_writes(pid, by, kids):
+        changed[p] |= set_entries(p, nodes_by_name(p)[1][name], wanted_writes)
+    a_by = nodes_by_name(kids[A_INNER])[1]
+    changed[pid] |= sync_path_names(pid, by[A_BRANCH], {by[A_LINES]['id']: 'Yes', None: 'No'})
+    changed[pid] |= sync_path_names(pid, by[A_ONE], {by[A_SINGLE]['id']: 'Yes', None: 'No'})
+    changed[kids[A_INNER]] |= sync_path_names(kids[A_INNER], a_by[A_FOUND],
+                                              {a_by[A_ADD]['id']: 'Found', a_by[A_NEG]['id']: 'Not found'})
+    return changed
+
+
+def ensure_apply(f):
+    """Build or repair Apply Discount: the button once, the three workflows from `apply_nodes` onto an empty
+    button workflow, then every step brought to `apply_wanted`; publish the children, then the parent, and only
+    what changed."""
+    from hap_cli.core.workflow_node_dsl import _new_control_id
+    pid, created = ensure_apply_button(f)
+    proc, by = nodes_by_name(pid)
+    trigger = proc['startEventId']
+    if proc['flowNodeMap'][trigger].get('nextId') in (None, '', '99'):
+        params = {n: _new_control_id() for n in (LABEL_PARAM, VALUE_PARAM, DIVISOR_PARAM)}
+        hap.run('workflow', 'node', 'batch-add', pid, '--nodes', json.dumps(apply_nodes(f, params), ensure_ascii=False),
+                '--trigger-node-id', trigger, '--trigger-alias', 'trigger')
+        created = True
+    print('  backup:', hap.backup('orders_apply_discount_workflow', nodes_by_name(pid)[0]))
+    changed = sync_apply(f, pid)
+    kids = apply_children(pid, nodes_by_name(pid)[1])
+    for name, inner in kids.items():
+        if hap.ids().get('workflows', {}).get(KEY + name) != inner:
+            C.remember('workflows', KEY + name, inner)
+    if created or any(changed.values()):
+        for name, inner in kids.items():
+            print(f'  {name}: {C.publish(inner)}')
+        print(f'  {APPLY}: {C.publish(pid)}')
+    else:
+        print(f'  {APPLY}: already built; not re-published')
+    return created or any(changed.values())
+
+
+PARENT_STEPS = (A_VARIANT, A_OLD, A_REMOVE, A_BRANCH, A_LINES, A_TOTAL, A_LABEL, A_DIVISOR, A_EACH, A_GROUPS,
+                A_COUNT, A_ONE, A_SINGLE, A_PRICE)
+INNER_STEPS = (A_A_VARIANT, A_TAXES, A_KEY, A_GROUP, A_FOUND, A_ADD, A_NEG, A_CREATE)
+PRICE_STEPS = (A_SHARE, A_SET)
+
+
+def steps_of(proc):
+    return sorted(n['name'] for n in proc['flowNodeMap'].values()
+                  if n.get('typeId') not in (None, 0, 100, BRANCH_PATH) and n.get('prveId'))
+
+
+def apply_structure(f, pid):
+    """What `sync_apply` does not repair, read back: the button, the three workflows' steps, the chain's
+    record sources, the delete, the two sub-processes and what they pass, the two gateways' conditions, and
+    that all three workflows are published. Returns a list of problems."""
+    problems = []
+    b = next((x for x in hap.listing('worksheet', 'custom-actions', ws()) if x['name'] == APPLY), None)
+    if b is None:
+        return [f'the {APPLY!r} button is missing — run `buttons`']
+    if button_state(b) != button_wanted(apply_spec(f)) or (b.get('desc') or '') != APPLY_DESC:
+        problems.append(f'{APPLY}: stored {button_state(b)} desc={b.get("desc")!r}, wanted '
+                        f'{button_wanted(apply_spec(f))}')
+    proc, by = nodes_by_name(pid)
+    kids = apply_children(pid, by)
+    for p, wanted in ((pid, PARENT_STEPS), (kids[A_INNER], INNER_STEPS), (kids[A_PRICE_INNER], PRICE_STEPS)):
+        got = steps_of(nodes_by_name(p)[0]) if p else []
+        if got != sorted(wanted):
+            problems.append(f'workflow {p}: steps {got}, wanted {sorted(wanted)}')
+    if problems:
+        return problems
+    trigger = proc['startEventId']
+    typ, val = f[DISCOUNT_TYPE]['controlId'], f[DISCOUNT_VALUE]['controlId']
+    a_proc, a_by = nodes_by_name(kids[A_INNER])
+    b_proc, b_by = nodes_by_name(kids[A_PRICE_INNER])
+    sources = [(pid, by, A_REMOVE, '3', A_OLD), (pid, by, A_SINGLE, '2', A_GROUPS),
+               (kids[A_INNER], a_by, A_ADD, '2', A_GROUP), (kids[A_INNER], a_by, A_CREATE, '1', None),
+               (kids[A_PRICE_INNER], b_by, A_SET, '2', b_proc['startEventId']),
+               (pid, by, A_COUNT, OBJECT_TOTAL, A_GROUPS)]
+    for p, names, step, action, source in sources:
+        d = read_node(p, names[step]['id'])
+        want_select = names[source]['id'] if source in names else (source or '')
+        if (str(d.get('actionId')), d.get('selectNodeId') or '', bool(d.get('destroy')), bool(d.get('isException'))) \
+                != (action, want_select, False, False):
+            problems.append(f"{step}: actionId={d.get('actionId')} over {d.get('selectNodeId')!r} "
+                            f"destroy={d.get('destroy')} exception={d.get('isException')}, wanted {action} over "
+                            f'{want_select!r}, to the recycle bin')
+    for step, over, inner, passes in (
+            (A_EACH, A_LINES, kids[A_INNER], {LABEL_PARAM: f"${by[A_LABEL]['id']}-{STRING_FX}$"}),
+            (A_PRICE, A_GROUPS, kids[A_PRICE_INNER], {VALUE_PARAM: f'${trigger}-{val}$',
+                                                     DIVISOR_PARAM: f"${by[A_DIVISOR]['id']}-{STRING_FX}$"})):
+        d = read_node(pid, by[step]['id'])
+        got = {k: v[1] for k, v in sub_params(pid, by[step]).items()}
+        if (d.get('selectNodeId'), d.get('executeType'), bool(d.get('nextExecute')), d.get('subProcessId'), got) != \
+                (by[over]['id'], SEQUENTIAL, True, inner, passes):
+            problems.append(f"{step}: over {d.get('selectNodeId')} executeType={d.get('executeType')} "
+                            f"waits={d.get('nextExecute')} child={d.get('subProcessId')} passes {got}")
+    paths = {n['id']: n for n in proc['flowNodeMap'].values() if n.get('typeId') == BRANCH_PATH}
+    cond = lambda p_id: [[(c.get('filedId'), c.get('conditionId'),
+                           [v.get('value') for v in c.get('conditionValues') or []]) for c in g]
+                         for g in read_node(pid, p_id).get('conditions') or []]
+    for gateway, wanted in ((A_BRANCH, {'No': [[(val, EMPTY, [])], [(val, '9', ['0'])], [(typ, EMPTY, [])]],
+                                        'Yes': []}),
+                            (A_ONE, {'Yes': [[(NUMBER_FX, '9', ['1'])]], 'No': []})):
+        got = {p['name']: cond(p['id']) for p in paths.values() if p.get('prveId') == by[gateway]['id']}
+        if got != wanted:
+            problems.append(f'{gateway}: paths {got}, wanted {wanted}')
+    for p in (pid, kids[A_INNER], kids[A_PRICE_INNER]):
+        got = hap.run('workflow', 'get', p)
+        got = got.get('data', got) if isinstance(got, dict) else {}
+        if not got.get('enabled', True) or got.get('publishStatus') not in (None, 2):
+            problems.append(f"workflow {p}: enabled={got.get('enabled')} publishStatus={got.get('publishStatus')} "
+                            '— run `buttons` (it republishes what changed)')
+    return problems
+
+
+def apply_problems(f):
+    """Apply Discount read back: its structure, then every step `sync_apply` owns compared without writing."""
+    global DRIFT
+    pid = hap.ids().get('workflows', {}).get(KEY + APPLY)
+    if not pid:
+        return [f'{APPLY}: no workflow id in ids.json — run `buttons`']
+    problems = apply_structure(f, pid)
+    if problems:
+        return problems
+    DRIFT = []
+    try:
+        sync_apply(f, pid)
+        problems += [f'{APPLY}: {d}' for d in DRIFT]
+    finally:
+        DRIFT = None
+    kids = apply_children(pid, nodes_by_name(pid)[1])
+    for name, inner in kids.items():
+        if hap.ids().get('workflows', {}).get(KEY + name) != inner:
+            problems.append(f'{name}: ids.json does not hold {inner} — run `buttons`')
+    if not problems:
+        print(f"  OK  {APPLY:<17} btnId={hap.ids()['buttons'].get(KEY + APPLY)} isBatch=False when Status is not "
+              f'Cancelled and Locked is not ticked\n'
+              f'        then remove the Discount lines → if Discount Value is set, per product line ({A_INNER} '
+              f'{kids[A_INNER]}) add its Subtotal to its tax group\'s Discount line, creating it the first time → '
+              f'one tax group: its line named plainly ("Discount 10.00%" / "Discount") → per group ({A_PRICE_INNER} {kids[A_PRICE_INNER]}) '
+              f'Unit Price × Value ÷ (100 | the product lines\' subtotal)')
+    return problems
+
+
+# ── 14d · driving Apply Discount from the CLI ───────────────────────────────
+#
+# `selfdiscount` presses the button through `hap workflow trigger`, as `selfdeliver` does, on DISCOUNT_ORDER — a
+# Sales Order whose lines carry two tax combinations — and reads every line and the three roll-ups back through
+# **both** read paths after each press: Global Discount 10%, the same again (still one set of lines), Fixed
+# Amount 1,000, then 0 (every Discount line gone). It then proves the one-tax-group naming on the first order
+# whose product lines share one tax combination, and puts both orders back exactly as they were. Like
+# `selfdeliver`, it writes records by design and is not part of a "saves nothing" re-run.
+from decimal import Decimal, ROUND_HALF_UP
+
+
+def cents(x):
+    return float(Decimal(str(x)).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP))
+
+
+def tax_order():
+    """{tax rowid: (Sequence, Tax Name)} — Odoo joins a line's tax names in `account.tax` order."""
+    tf = C.fields(TAXES_WS)
+    return {r['rowid']: (number_of(r.get(tf['Sequence']['controlId'])) or 0, r.get(tf['Tax Name']['controlId']) or '')
+            for r in C.records(TAXES_WS, APP)}
+
+
+def order_lines(f_lines, order):
+    """{line rowid: cells} for one order, through `record get`, and the same through the listing."""
+    listing = listed_lines(f_lines)
+    mine = lines_of(listing, order)
+    return {r: line_cells(f_lines, r) for r in mine}, {r: listing[r] for r in mine}, listing
+
+
+def discount_state(f, order):
+    d = read_record(ws(), order)
+    row = next((r for r in C.records(ws(), APP) if r['rowid'] == order), {})
+    get = (read_cell(f[DISCOUNT_TYPE], d), read_cell(f[DISCOUNT_VALUE], d))
+    listed = (option_keys(row.get(f[DISCOUNT_TYPE]['controlId'])), number_of(row.get(f[DISCOUNT_VALUE]['controlId'])))
+    return get, listed
+
+
+def set_discount(f, order, label, value):
+    """Write Discount Type and Value, and read them back — a write that times out has been seen to land, so
+    the read-back decides, not the answer."""
+    key = option_key(f[DISCOUNT_TYPE], label) if label else None
+    values = [{'id': f[DISCOUNT_TYPE]['controlId'], 'value': [key] if key else []},
+              {'id': f[DISCOUNT_VALUE]['controlId'], 'value': '' if value is None else str(value)}]
+    want = ([key] if key else [], None if value is None else float(value))
+    for attempt in range(3):
+        try:
+            write_cells(order, values)
+        except RuntimeError as e:
+            print(f'    (the write answered {str(e)[:80]}… — reading it back)')
+        for _ in range(10):
+            got = discount_state(f, order)
+            if got[0] == want and got[1] == want:
+                return
+            time.sleep(2)
+    sys.exit(f'Discount Type/Value read back {discount_state(f, order)}, wanted {want}')
+
+
+def expected_discount(before, taxes, label_kind, value):
+    """Odoo's discount lines for these product lines: {sorted tax ids: (description, unit price)}."""
+    groups = {}
+    for cells in before.values():
+        if cells['Display Type'] != [PRODUCT_LINE]:
+            continue
+        groups.setdefault(tuple(sorted(cells['Taxes'])), []).append(cells['Subtotal'] or 0)
+    total = sum(sum(v) for v in groups.values())
+    label = f'Discount {Decimal(str(value)).quantize(Decimal("0.01"))}%' if label_kind == GLOBAL_DISCOUNT \
+        else 'Discount'
+    out = {}
+    for key, subtotals in groups.items():
+        g = sum(subtotals)
+        share = cents(g * value / 100) if label_kind == GLOBAL_DISCOUNT else cents(value * g / total)
+        names = ', '.join(taxes[t][1] for t in sorted(key, key=lambda t: taxes.get(t, (0, ''))))
+        text = label if len(groups) == 1 else f'{label}- On products with the following taxes {names}'
+        out[key] = (text, -share)
+    return out, total
+
+
+def wait_discount(f_lines, order, count, seconds=90):
+    for _ in range(seconds // 3):
+        got, listed, _ = order_lines(f_lines, order)
+        disc = [r for r, c in got.items() if c['Product'] == [discount_variant()]]
+        if len(disc) == count and all(got[r]['Subtotal'] is not None for r in disc):
+            return
+        time.sleep(3)
+
+
+def check_press(f, f_lines, order, number, before, before_totals, taxes, label, value, problems):
+    """Press, then compare every line and the roll-ups with Odoo's result, through both read paths."""
+    want, total = expected_discount(before, taxes, label, value) if value else ({}, 0)
+    press(APPLY, order)
+    wait_discount(f_lines, order, len(want))
+    time.sleep(3)
+    got, listed, _ = order_lines(f_lines, order)
+    disc = {r: c for r, c in got.items() if r not in before}
+    gone = [r for r in before if r not in got]
+    if gone:
+        problems.append(f'{number}: lines {gone} disappeared')
+    for r in before:
+        if r in got and got[r] != before[r]:
+            problems.append(f'{number}: line {r} moved: {before[r]} -> {got[r]}')
+    seen = {}
+    for r, c in disc.items():
+        key = tuple(sorted(c['Taxes']))
+        seen.setdefault(key, []).append(r)
+        text, price = want.get(key, (None, None))
+        exp = {'Orders': [order], 'Display Type': [PRODUCT_LINE], 'Product': [discount_variant()],
+               'Description': text, 'Quantity': 1.0, 'Unit Price': price, 'Discount': 0.0, 'Sequence': 999.0,
+               'Unit': [UNITS_UOM], 'Subtotal': price}
+        bad = {k: (c.get(k), v) for k, v in exp.items() if c.get(k) != v}
+        bad.update({f'{k} (listing)': (listed[r].get(k), v) for k, v in exp.items() if listed[r].get(k) != v})
+        tax_ok = c['Tax Amount'] == listed[r]['Tax Amount'] and c['Total'] == listed[r]['Total'] and \
+            c['Total'] == cents((c['Subtotal'] or 0) + (c['Tax Amount'] or 0))
+        print(f"    {'OK  ' if not bad and tax_ok else 'FAIL'}  {c['Description']!r}  Unit Price {c['Unit Price']}  "
+              f"Subtotal {c['Subtotal']}  Tax {c['Tax Amount']}  Total {c['Total']}  taxes "
+              f"{[taxes.get(t, (0, t))[1] for t in c['Taxes']]}  (listing: {listed[r]['Subtotal']} / "
+              f"{listed[r]['Tax Amount']} / {listed[r]['Total']})")
+        if bad or not tax_ok:
+            problems.append(f'{number} {label} {value}: line {r} {bad or "tax/total disagree"}')
+    if sorted(seen) != sorted(want) or any(len(v) != 1 for v in seen.values()):
+        problems.append(f'{number} {label} {value}: {len(disc)} discount line(s) over tax groups '
+                        f'{[[taxes.get(t, (0, t))[1] for t in k] for k in seen]}, wanted one per group '
+                        f'{[[taxes.get(t, (0, t))[1] for t in k] for k in want]}')
+    drop = {'Untaxed Amount': cents(sum(c['Subtotal'] or 0 for c in disc.values())),
+            'Tax': cents(sum(c['Tax Amount'] or 0 for c in disc.values())),
+            'Total': cents(sum(c['Total'] or 0 for c in disc.values()))}
+    wanted_totals = {n: cents(before_totals[n] + drop[n]) for n in TOTALS}
+    after = wait_totals(f, order, wanted_totals)
+    ok = after[0] == wanted_totals and after[1] == wanted_totals
+    print(f"    {'OK  ' if ok else 'FAIL'}  {number} totals {before_totals} -> {after[0]} (record get) / "
+          f'{after[1]} (listing); the discount lines sum to {drop}')
+    if not ok:
+        problems.append(f'{number} {label} {value}: totals {after}, wanted {wanted_totals}')
+    return disc, drop, total
+
+
+def single_group_order(f, f_lines, rows):
+    """The first order (by number) with two or more product lines, all on one tax combination, no Discount line,
+    not locked and not cancelled — the case Odoo names its line plainly."""
+    listing = listed_lines(f_lines)
+    for number, rowid in sorted(rows.items()):
+        if number == DISCOUNT_ORDER:
+            continue
+        d = read_record(ws(), rowid)
+        if read_cell(f['Locked'], d) == '1' or read_cell(f['Status'], d) == [STATUS_KEYS['Cancelled']]:
+            continue
+        mine = [listing[r] for r in lines_of(listing, rowid)]
+        product = [c for c in mine if c['Display Type'] == [PRODUCT_LINE]]
+        if len(product) >= 2 and len({tuple(sorted(c['Taxes'])) for c in product}) == 1 and \
+                not any(c['Product'] == [discount_variant()] for c in mine) and \
+                all(c['Subtotal'] is not None for c in product):
+            return number, rowid
+    return None, None
+
+
+def step_selfdiscount():
+    f = guard()
+    f_lines = hap.by_name(c for c in hap.controls(LINES_WS) if c['type'] != C.TAB)
+    rows, problems, taxes = by_number(), [], tax_order()
+    order = rows[DISCOUNT_ORDER]
+
+    # ── where the button is offered, by the server's own evaluation ──
+    for number, rowid in sorted(rows.items()):
+        d = read_record(ws(), rowid)
+        wanted = read_cell(f['Status'], d) != [STATUS_KEYS['Cancelled']] and read_cell(f['Locked'], d) != '1'
+        offered = buttons_offered(rowid).get(APPLY)
+        if offered != wanted:
+            problems.append(f'{APPLY} is {"offered" if offered else "not offered"} on {number} '
+                            f'({status_label(read_cell(f["Status"], d))}, Locked {read_cell(f["Locked"], d)})')
+    if not problems:
+        print(f'  OK    {APPLY} is offered on every order that is neither locked nor cancelled, and on no other '
+              f'(GetWorksheetBtns with each rowId)')
+
+    # ── before ──
+    start = discount_state(f, order)
+    before, before_listed, before_all = order_lines(f_lines, order)
+    before_totals = order_totals(f, order)
+    if before_totals[0] != before_totals[1] or start[0] != start[1]:
+        sys.exit(f'{DISCOUNT_ORDER}: the two read paths disagree before anything is written: {before_totals} {start}')
+    if any(c['Product'] == [discount_variant()] for c in before.values()):
+        sys.exit(f'{DISCOUNT_ORDER} already carries a Discount line — clear it with Value 0 first')
+    before_totals = before_totals[0]
+    print(f'  {DISCOUNT_ORDER} before: Discount Type/Value {start[0]}, totals {before_totals}')
+    for r, c in sorted(before.items(), key=lambda x: x[1]['Sequence'] or 0):
+        print(f"    {r}  {c['Description']!r}  Subtotal {c['Subtotal']}  taxes "
+              f"{[taxes.get(t, (0, t))[1] for t in c['Taxes']]}")
+
+    runs = ((GLOBAL_DISCOUNT, 10, 'Global Discount 10%'), (GLOBAL_DISCOUNT, 10, 'pressed again'),
+            (FIXED_AMOUNT, 1000, 'Fixed Amount 1,000'), (FIXED_AMOUNT, 0, 'Value 0'))
+    for label, value, title in runs:
+        print(f'  ── {title} ──')
+        set_discount(f, order, label, value)
+        disc, drop, total = check_press(f, f_lines, order, DISCOUNT_ORDER, before, before_totals, taxes, label,
+                                        value, problems)
+        if title == 'Global Discount 10%' and drop['Untaxed Amount'] != -24722.50:
+            problems.append(f'Global 10%: the untaxed total dropped by {drop["Untaxed Amount"]}, wanted -24722.50')
+        if label == FIXED_AMOUNT and value:
+            if drop['Untaxed Amount'] != -float(value):
+                print(f"    NOTE  the discount lines sum to {drop['Untaxed Amount']}, not {-float(value)} — the cents "
+                      'do not reconcile, and nothing here adjusts them')
+                problems.append(f'Fixed {value}: lines sum to {drop["Untaxed Amount"]}')
+            else:
+                print(f'    OK    the discount lines sum to exactly {-float(value):.2f}')
+        if not value and disc:
+            problems.append(f'Value 0 left {len(disc)} discount line(s)')
+
+    # ── back as it was ──
+    set_discount(f, order, None, None)
+    after, after_listed, after_all = order_lines(f_lines, order)
+    end = discount_state(f, order)
+    if after != before or after_listed != before_listed or end != start or \
+            order_totals(f, order) != (before_totals, before_totals):
+        problems.append(f'{DISCOUNT_ORDER} was not restored: {end} {order_totals(f, order)}')
+    else:
+        print(f'  OK    {DISCOUNT_ORDER} reads as before through both paths: no Discount line, Discount Type and '
+              f'Value empty, totals {before_totals}')
+    others = sorted(r for r in before_all if r not in before and before_all[r] != after_all.get(r))
+    if others:
+        problems.append(f'{len(others)} line(s) of other orders moved: {others}')
+
+    # ── one tax group: Odoo's plain name ──
+    number, rowid = single_group_order(f, f_lines, rows)
+    if not number:
+        print('  note: no order has product lines on a single tax combination — the plain-name path is untested')
+    else:
+        print(f'  ── one tax group, on {number} ──')
+        s_start = discount_state(f, rowid)
+        s_before, s_listed, _ = order_lines(f_lines, rowid)
+        s_totals = order_totals(f, rowid)[0]
+        set_discount(f, rowid, GLOBAL_DISCOUNT, 10)
+        check_press(f, f_lines, rowid, number, s_before, s_totals, taxes, GLOBAL_DISCOUNT, 10, problems)
+        set_discount(f, rowid, GLOBAL_DISCOUNT, 0)
+        check_press(f, f_lines, rowid, number, s_before, s_totals, taxes, GLOBAL_DISCOUNT, 0, problems)
+        set_discount(f, rowid, None, None)
+        s_after, s_after_listed, _ = order_lines(f_lines, rowid)
+        if s_after != s_before or s_after_listed != s_listed or discount_state(f, rowid) != s_start or \
+                order_totals(f, rowid) != (s_totals, s_totals):
+            problems.append(f'{number} was not restored')
+        else:
+            print(f'  OK    {number} reads as before through both paths')
+    if problems:
+        print('  selfdiscount: ' + '\n                '.join(problems))
+        sys.exit(1)
+    print(f'  selfdiscount: OK — {APPLY} writes Odoo\'s discount lines, one per tax combination, replaces them on '
+          f'a second press, removes them at 0, and {DISCOUNT_ORDER} is back as it was')
+
+
 # ── 13c · reading the four buttons and the guard back ───────────────────────
 
 def button_problems():
@@ -2972,6 +4388,7 @@ def button_problems():
                                 f'else on it')
     problems += guard_problems()
     problems += deliver_problems()
+    problems += apply_problems(f)
     # The owner's, never touched by this builder: read both back so `check` fails if either has gone.
     b = live.get(OWNERS_BUTTON)
     if not b or b['btnId'] != OWNERS_BUTTON_ID:
@@ -2990,7 +4407,7 @@ def button_problems():
     else:
         print(f"  the owner's {OWNERS_CONTROL!r} {OWNERS_CONTROL_ID} t{c['type']} at r{c.get('row')}"
               f"c{c.get('col')}s{c.get('size')} — untouched")
-    for name in BUTTONS + (DELIVER,):
+    for name in BUTTONS + (DELIVER, APPLY):
         if live.get(name):
             C.remember('buttons', KEY + name, live[name]['btnId'])
     return problems
@@ -3090,7 +4507,7 @@ def guard():
                 for name, cid in CONTROLS.items() if (f.get(name) or {}).get('controlId') != cid]
     if problems:
         sys.exit(f'{WORKSHEET}: ' + '; '.join(problems) + ' — re-read the worksheet before writing a rule')
-    unknown = sorted(set(f) - set(CONTROLS) - set(NEW) - set(PART1))
+    unknown = sorted(set(f) - set(CONTROLS) - set(NEW) - set(PART1) - set(DISCOUNT_FIELDS))
     if unknown:
         print(f'  note: {WORKSHEET} also carries {unknown} — added by the owner, and no rule here names them')
     for name in CONTROLS:
@@ -3252,6 +4669,29 @@ def step_check():
         if not (info.get('filters') or []):
             print(f"  the owner's {name!r} view has no filter, so **templates appear in it** — "
                   f'{template_filter_note()}')
+    pid = hap.ids().get('records', {}).get(PRODUCT_KEY)
+    if not pid:
+        problems.append(f'no {PRODUCT_KEY!r} in ids.json — run `discountproduct`')
+    else:
+        found = discount_product_problems(pid)
+        vid = hap.ids().get('records', {}).get(VARIANT_KEY)
+        live_vid, count = discount_variant_of(pid)
+        if (vid, count) != (live_vid, 1):
+            found.append(f'the {DISCOUNT_PRODUCT} variant: ids.json {vid}, live {live_vid} ({count} variant(s))')
+        else:
+            found += discount_variant_problems(pid, vid)
+        problems += found
+        if not found:
+            print(f'  OK  the {DISCOUNT_PRODUCT} product {pid} (Service, RM 0.00, no taxes, Services, Units) and its '
+                  f'one variant {vid}')
+    found = discount_fields_problems(f)
+    problems += found
+    if not found:
+        print(f"  OK  {DISCOUNT_TYPE} {f[DISCOUNT_TYPE]['controlId']} ({' · '.join(DISCOUNT_OPTIONS)}) and "
+              f"{DISCOUNT_VALUE} {f[DISCOUNT_VALUE]['controlId']} (2 decimals), aliases "
+              f"{DISCOUNT_ALIAS[DISCOUNT_TYPE]} / {DISCOUNT_ALIAS[DISCOUNT_VALUE]}"
+              + ('' if all(f[n].get('row') != 9999 for n in DISCOUNT_FIELDS)
+                 else ' — still parked at row 9999, for the owner to place'))
     problems += button_problems()
     data, _lines = seed_data()
     seeded = seeded_orders()
@@ -3277,8 +4717,9 @@ def step_check():
           f'decimals, the {len(SUBTABLE_COLUMNS)} subtable columns, {INVOICING_STATUS} at '
           f'{READ_ONLY_PERMISSION}, the {len(PART1)} controls of §6b at '
           f'{[PART1_PERMISSION[n] for n in PART1]}, '
-          f'{len(VIEW_ROWS)} views returning exactly the orders their filters name and the {len(BUTTONS) + 1} buttons of '
-          f"§13 with their workflows (the owner's {OWNERS_BUTTON!r} and {OWNERS_CONTROL!r} untouched)")
+          f'{len(VIEW_ROWS)} views returning exactly the orders their filters name, the {len(BUTTONS) + 2} buttons of '
+          f"§13 and §14 with their workflows (the owner's {OWNERS_BUTTON!r} and {OWNERS_CONTROL!r} untouched), "
+          f'the {DISCOUNT_PRODUCT} product and variant and the {len(DISCOUNT_FIELDS)} discount fields')
 
 
 def step_show():
@@ -3307,7 +4748,9 @@ STEPS = {'rules': step_rules, 'retire': step_retire, 'expiry': step_expiry, 'tot
          'dots': step_dots, 'controls': step_controls, 'part1': step_part1, 'customer': step_customer,
          'invstatus': step_invstatus, 'views': step_views,
          'wipe': step_wipe, 'seed': step_seed, 'figures': step_figures, 'buttons': step_buttons,
-         'selfcheck': step_selfcheck, 'selfdeliver': step_selfdeliver, 'check': step_check, 'show': step_show}
+         'selfcheck': step_selfcheck, 'selfdeliver': step_selfdeliver,
+         'discountproduct': step_discountproduct, 'discountline': step_discountline,
+         'discountfields': step_discountfields, 'selfdiscount': step_selfdiscount, 'check': step_check, 'show': step_show}
 
 if __name__ == '__main__':
     if len(sys.argv) < 2 or sys.argv[1] not in STEPS:

@@ -1150,3 +1150,34 @@ Two smaller findings from the same build:
   same per-record check the record page uses. It tests a button's enable condition without a browser.
 - A child workflow's field write reads `nodeActionId` back as **"400" when "401" was sent**. Leave that key out
   of any comparison, or the step re-saves on every run.
+
+### Grouping records inside a workflow (22 Sep 2026, Orders' Apply Discount)
+
+Odoo writes one discount line **per tax combination**. HAP has no group-by step, but a **sequential sub-process
+that finds-or-creates** does the same: for each product line, a get-single looks for "the line of my group"
+(same order, same product, **Description = a key**); found → update it with `addType` **2** (subtract) from the
+line's Subtotal; not found → create it. A second sub-process then prices each group's line once. Built in
+`orders.py` §14c, proved on S00006 (two groups) and S00007 (one).
+
+- **A function formula renders a Relation as its count** — `$line-Taxes$` gave `"1"` — and a **get-multiple
+  step's field as nothing**. To get the related records' names as text, fetch them (get-multiple 13 / **401**,
+  over the line's own Relation, sortable) and join them in a **code block**; its output is bindable as
+  `$<codeNode>-<key>$` in a text write and as a search condition's value (`{nodeId: code, controlId: key}`).
+- **A code block's `code` reads back as plain text**, though it is sent base64-encoded. Compare it as text, or a
+  re-run re-saves and re-tests it every time.
+- **Sub-process parameters work**: `batch-add`'s `process.parameters` defines them on the child (text, type 2)
+  and passes `$node-field$` templates; the child reads them from the fixed 本流程参数 node
+  `6038a1cbf18158039fb40e68`. A **number formula (100) accepts them** — `$price$*$param-value$/$param-divisor$`
+  computed correctly with text-typed parameters.
+- **An object total (9 / 105) only counts** the records of a get-multiple step: it stores `selectNodeId` and
+  nothing else, whatever aggregate and field were sent. To sum a column, use a worksheet total (107) with its own
+  filter.
+- **A static Relation value in a create step is the bare rowid** in `fieldValue`. Sent as `'["<rowid>"]'` it is
+  accepted and stored as a relation to a record whose id is that whole string — a malformed value, no error.
+- A text **equals** condition did not match a Description stored with a trailing space: the key was
+  `"…taxes "` and four lines were created instead of one. Trim keys.
+- **A delete step (6 / 3) over a get-multiple** sends the records to the recycle bin (`destroy` false).
+- **An Order Line needs Discount written as 0**: Subtotal's formula is not null-as-zero, so a line created with
+  an empty Discount computes Subtotal, Tax Amount, Total and the order's roll-ups **empty**.
+- `worksheet record update` on Orders answered **ReadTimeout** several times on 22 Sep 2026 and **the write had
+  landed** each time (the record log shows it). Read back before retrying.
