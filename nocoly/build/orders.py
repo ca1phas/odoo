@@ -4843,8 +4843,9 @@ def step_selfprint():
 #
 # **Two templates, two email steps.** Odoo's quotation template has a sale branch of its own, but the template that
 # is actually used for a sales order is the confirmation template, so each path carries the text of the template
-# Odoo would pick. The subject is Odoo's `{company} Quotation|Order (Ref {number})`; the company is **casimir**, the
-# name the print template heads its page with (there are no company settings in this app). Odoo's optional
+# Odoo would pick. The subject is Odoo's `{company} Quotation|Order (Ref {number})`; the company is **MyTech Products &
+# Services**, the name the print templates head their page with (there are no company settings in this app). It was
+# *casimir* until the 23 Sep 2026 demo rename. Odoo's optional
 # *(with reference: …)* for a Source Document and its product-document list are not carried.
 #
 # **The amount is formatted by a code block** because a workflow text template inserts a number as stored; Odoo
@@ -4854,7 +4855,7 @@ def step_selfprint():
 #
 # **Nothing here sends email.** The step builds, publishes and reads back; it never triggers the workflow.
 SEND = OWNERS_BUTTON
-COMPANY = 'casimir'                          # print-templates/quotation_order_template.docx heads its page with it
+COMPANY = 'MyTech Products & Services'       # print-templates/quotation_order_template.docx heads its page with it
 CONTACTS_WS = CONTACTS[0]
 CONTACT_EMAIL, CONTACT_NAME = '6aa8a452f363582dd37a50d9', '6aa8a3b34a22ad87b728c4ff'
 # the steps, by name — the owner's names are kept where the node is theirs
