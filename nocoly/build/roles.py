@@ -82,7 +82,7 @@ FULL, EDIT, VIEW = 'full', 'view · add · edit', 'view'
 
 ORDER = ['Contacts', 'Contact Tags', 'Countries', 'States', 'Units & Packagings', 'Products', 'Product Variants',
          'Product Categories', 'Chart of Accounts', 'Taxes', 'Journals', 'Payment Terms', 'Payment Term Lines',
-         'Incoterms', 'Invoices', 'Invoice Lines']
+         'Incoterms', 'Invoices', 'Invoice Lines', 'Orders', 'Order Lines']
 
 # Worksheets no business role may write, whatever its accounting level: Odoo keeps them behind a group none of
 # the four stands for. Countries is the first and, so far, the only one (base.group_system writes res.country;
@@ -93,6 +93,12 @@ ORDER = ['Contacts', 'Contact Tags', 'Countries', 'States', 'Units & Packagings'
 # to follow Odoo's access list rather than its menu: ir.model.access.csv reads res.partner.category to
 # base.group_user and writes it from base.group_partner_manager (rows 79-80), exactly as res.country.state — so
 # each role has the same cell on Contact Tags that it has on Contacts and States (20-contact-tags.md §6 › Roles).
+# **Orders and Order Lines joined on 23 Sep 2026.** They were built after this table and so were never in it,
+# which left every role on HAP's default for a new worksheet — read, edit **and delete**, plus add. The owner
+# asked for Accounting Read-only to be view-only there, as it is everywhere else; the other three follow the
+# app-wide rule that only Accounting Administrator deletes, so Accountant and Invoicing keep add and edit and
+# lose delete. Odoo itself writes sale.order from the sales groups, none of which these four accounting roles
+# stand for — a Sales role belongs here when Phase 3 gets one, and these cells should be revisited then.
 VIEW_ONLY = {'Countries'}
 
 ROLES = {
@@ -111,7 +117,8 @@ ROLES = {
          'Products': VIEW, 'Product Variants': VIEW,
          'Product Categories': VIEW, 'Chart of Accounts': VIEW, 'Taxes': VIEW, 'Journals': EDIT,
          'Payment Terms': VIEW,
-         'Payment Term Lines': VIEW, 'Incoterms': VIEW, 'Invoices': EDIT, 'Invoice Lines': EDIT},
+         'Payment Term Lines': VIEW, 'Incoterms': VIEW, 'Invoices': EDIT, 'Invoice Lines': EDIT,
+         'Orders': EDIT, 'Order Lines': EDIT},
     ),
     'Invoicing': (
         'Odoo group account.group_account_invoice — "Invoicing". Invoices, payments and basic invoice '
@@ -120,7 +127,8 @@ ROLES = {
          'Products': VIEW, 'Product Variants': VIEW,
          'Product Categories': VIEW, 'Chart of Accounts': VIEW, 'Taxes': VIEW, 'Journals': VIEW,
          'Payment Terms': VIEW,
-         'Payment Term Lines': VIEW, 'Incoterms': VIEW, 'Invoices': EDIT, 'Invoice Lines': EDIT},
+         'Payment Term Lines': VIEW, 'Incoterms': VIEW, 'Invoices': EDIT, 'Invoice Lines': EDIT,
+         'Orders': EDIT, 'Order Lines': EDIT},
     ),
     'Accounting Read-only': (
         'Odoo group account.group_account_readonly — "Show Accounting Features - Readonly". Can see (and '
