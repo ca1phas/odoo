@@ -1181,3 +1181,22 @@ line's Subtotal; not found → create it. A second sub-process then prices each 
   an empty Discount computes Subtotal, Tax Amount, Total and the order's roll-ups **empty**.
 - `worksheet record update` on Orders answered **ReadTimeout** several times on 22 Sep 2026 and **the write had
   landed** each time (the record log shows it). Read back before retrying.
+
+### System Print — Word templates over the API (22 Sep 2026, Orders' Download)
+
+- **hap-cli has no print-template command, but the three calls the form designer makes work from a script**
+  (pd-openweb `src/pages/FormSet/components/EditPrint.jsx`; `orders.py step_print`): `Qiniu/GetUploadToken
+  {files: [{bucket: 3, ext: '.docx'}], type: 33}` plus the bytes to the file store (hap-cli's `upload._post_to_store`;
+  the key lands under `Print/`), then `AppManagement/GetToken {worksheetId, tokenType: 5}`, then POST
+  `<downLoadUrl>/PrintTemplate/EditPrint {token, worksheetId, accountId, doc: <key>, fileName, id: '', type: 2,
+  name, allowDownloadPermission: 0, allowEditAfterPrint: false, advanceSettings: []}`, which answers the new
+  template's id. `downLoadUrl` comes from `Worksheet/GetWorksheetInfo` (`https://www.nocoly.com/excelapi`), and
+  `Session._post` carries the call. `Worksheet/GetPrintList {worksheetId}` reads templates back (type 0 system ·
+  2 Word · 5 Excel).
+- **A filled print can be read back without a browser**: POST `<downLoadUrl>/ExportWord/GetWordPath {id, rowId,
+  accountId, worksheetId, appId, projectId, t, viewId: '', token, download: 0}` (token type 5 again) answers a
+  signed URL of the filled .docx (pd-openweb `src/pages/Print/core/util.js`). `orders.py step_selfprint` reads it in
+  memory and checks the text.
+- A Word placeholder is `#{<control id>}`, `#{<relation>.<control>}` into a related record or a subtable's lines,
+  optionally with a trailing `[S]`. A rich-text value prints as formatted text: `<p>…<strong>…</strong></p><p>…</p>`
+  came out as two paragraphs with no tag showing (Orders' Terms and conditions, 22 Sep 2026).

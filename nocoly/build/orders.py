@@ -44,6 +44,13 @@ owner approved — deliberately nothing else.
     ~/.hap-venv/bin/python nocoly/build/orders.py selfdiscount # 14d. press Apply Discount on S00006 through the
                                                            #     CLI — Global 10%, again, Fixed 1,000, 0 — and
                                                            #     the one-tax-group name on another order; restore
+    ~/.hap-venv/bin/python nocoly/build/orders.py terms    # 15a. Terms and conditions (Odoo's `note`), appended
+    ~/.hap-venv/bin/python nocoly/build/orders.py templates# 15b. point the three Word templates' Terms placeholder
+                                                           #     at it — a file change in nocoly/print-templates/
+    ~/.hap-venv/bin/python nocoly/build/orders.py print    # 15c. upload the general template as System Print
+                                                           #     'Quotation / Order' on Orders
+    ~/.hap-venv/bin/python nocoly/build/orders.py selfprint# 15d. fill it for one order through the CLI, with and
+                                                           #     without a TEST Terms value; put the order back
     ~/.hap-venv/bin/python nocoly/build/orders.py check    # read rules, Expiration, the roll-ups, the two new
                                                            #    controls, the views, the five buttons with their
                                                            #    workflows and the seed back, and report drift;
@@ -69,7 +76,8 @@ Requirements: nocoly/worksheets/16-orders.md (§7.1 for what `totals` does). Ord
 is `orderlines.py`'s — run its `fields` step before `totals`, so the columns the subtable names all exist.
 Generic helpers: common.py.
 """
-import json, os, sys, time
+import json, os, re, shutil, sys, time, zipfile
+from xml.etree import ElementTree
 
 import common as C
 import hap
@@ -4343,6 +4351,429 @@ def step_selfdiscount():
           f'a second press, removes them at 0, and {DISCOUNT_ORDER} is back as it was')
 
 
+# ── 15 · Download: Terms and conditions, the templates, System Print ────────
+#
+# Odoo's *Download* (`sale.action_report_saleorder` — the tenant labels the button Download, the 19.0 source Print,
+# and both hide it on a Sales Order) renders the quotation / order PDF. Here it is **System Print with a Word
+# template**: native, so no button and no workflow (16-orders.md §3 row 2 and §9).
+#
+# 15a · **Terms and conditions** is Odoo's `sale.order.note`: `fields.Html(string="Terms and conditions",
+# compute='_compute_note', store=True, readonly=False, precompute=True)` (addons/sale/models/sale_order.py). The
+# form puts it on the Order Lines page in `note_group`, below the lines — the note on the left (colspan 4 of 6), the
+# tax totals on the right — with the placeholder "Terms and conditions..." and **no readonly and no invisible
+# condition**, in the 19.0 source and in the tenant extract alike. So no rule here names it.
+#
+# Rich text (41), modelled on Invoices' Terms and Conditions (`narration`, INVOICES_TERMS): full width,
+# fieldPermission "111", Odoo's placeholder as the hint (HAP never draws a rich text's hint — BUILDING.md — so the
+# hint is consistency, not behaviour). **Default empty**: Odoo's compute fills it from the company's default terms
+# (`account.use_invoice_terms` with `invoice_terms` / `invoice_terms_html`), and this app has no company settings.
+# That divergence is in 16-orders.md §9 and DECISIONS.md, never in the app.
+#
+# Appended with `C.append_controls`, never `C.add_fields`. The payload carries the Order Lines tab's `sectionId`,
+# which `add-fields` keeps (BUILDING.md), so the control lands at the foot of that tab; its row is parked at 9999
+# and **placement is the owner's**. TERMS_PLACE is the intent: a full-width row of its own directly below the lines
+# and above Untaxed Amount · Tax · Total, which is where Invoices keeps its Terms and Conditions. Odoo sets it
+# *beside* the totals; a HAP row cannot copy that, since a row has no row-span and the three totals fill row 12.
+TERMS = 'Terms and conditions'
+RICH_TEXT = 41
+TERMS_ALIAS = 'note'
+TERMS_TAB = '6ab0bfaf7d58b0f449316ad7'           # the Order Lines tab (type 52), not the subtable of that name
+TERMS_PLACE = (12, 0, 12)                        # (row, col, size) in TERMS_TAB — only `size` survives the append
+TERMS_HINT = 'Terms and conditions...'           # Odoo's placeholder
+TERMS_PERMISSION = '111'                         # what Invoices' Terms and Conditions carries
+TERMS_DESC = 'The terms printed at the foot of the quotation or order.'
+INVOICES_TERMS = ('6aa90facf363582dd37a62f7', '6aa9f847e54d2a34fa4dfef2')     # Invoices › Terms and Conditions
+
+
+def terms_control():
+    return C.control('RICH_TEXT', TERMS, TERMS_PLACE, alias=TERMS_ALIAS, hint=TERMS_HINT, desc=TERMS_DESC,
+                     extra={'fieldPermission': TERMS_PERMISSION, 'sectionId': TERMS_TAB})
+
+
+def terms_spec():
+    """What the control must read back as. Its tab, row and width are placement, the owner's, so not asserted."""
+    return {'type': RICH_TEXT, 'alias': TERMS_ALIAS, 'desc': TERMS_DESC, 'hint': TERMS_HINT, 'required': False,
+            'fieldPermission': TERMS_PERMISSION}
+
+
+def terms_problems(f):
+    c = f.get(TERMS)
+    if c is None:
+        return [f'{TERMS} is not on {WORKSHEET} — run `terms`']
+    problems = []
+    diff = drift(c, terms_spec())
+    if diff:
+        problems.append(f'{TERMS}: {json.dumps(diff, ensure_ascii=False, default=str)}')
+    if c.get('default') or (c.get('advancedSetting') or {}).get('defsource'):
+        problems.append(f"{TERMS}: carries a default ({c.get('default')!r} / "
+                        f"{(c.get('advancedSetting') or {}).get('defsource')!r}); Odoo's comes from company "
+                        'settings this app does not have, so it is empty here')
+    if hap.ids().get('controls', {}).get(KEY + TERMS) != c['controlId']:
+        problems.append(f'{TERMS}: ids.json does not hold {c["controlId"]} — run `terms`')
+    return problems
+
+
+def rules_naming(cid):
+    return [r['name'] for r in hap.listing('worksheet', 'rules', ws())
+            if any(x['controlId'] == cid for i in r['ruleItems'] for x in i['controls'])
+            or any(x.get('controlId') == cid for g in r['filters'] for x in (g.get('groupFilters') or [g]))]
+
+
+def step_terms():
+    """Append Terms and conditions if it is missing, and read it back."""
+    f = guard()
+    if TERMS in f:
+        print(f'  {TERMS} is already on {WORKSHEET}; nothing appended')
+    else:
+        model = next((c for c in hap.controls(INVOICES_TERMS[0]) if c['controlId'] == INVOICES_TERMS[1]), None)
+        if not model or model['type'] != RICH_TEXT or model.get('fieldPermission') != TERMS_PERMISSION:
+            sys.exit(f"Invoices' Terms and Conditions {INVOICES_TERMS[1]} no longer reads as the rich text, "
+                     f'permission {TERMS_PERMISSION}, this control copies — re-read it before appending')
+        tabs = {c['controlId']: c['controlName'] for c in hap.controls(ws()) if c['type'] == C.TAB}
+        if tabs.get(TERMS_TAB) != ORDER_LINES:
+            sys.exit(f'{TERMS_TAB} is {tabs.get(TERMS_TAB)!r}, not the {ORDER_LINES!r} tab — re-read the worksheet')
+        hap.backup('orders_controls_pre_terms', hap.controls(ws()))
+        C.append_controls(ws(), [terms_control()])
+        f = C.fields(ws())
+        if TERMS not in f:
+            sys.exit(f'{TERMS} did not come back from the worksheet — the append did not store')
+        print(f"  added {TERMS}: {f[TERMS]['controlId']} (t{f[TERMS]['type']}, row {f[TERMS].get('row')})")
+    c = f[TERMS]
+    if hap.ids().get('controls', {}).get(KEY + TERMS) != c['controlId']:
+        C.remember('controls', KEY + TERMS, c['controlId'])
+    problems = terms_problems(f)
+    if problems:
+        sys.exit('\n'.join(problems) + '\n  — not repaired automatically: read the control before a pinned save')
+    tabs = {x['controlId']: x['controlName'] for x in hap.controls(ws()) if x['type'] == C.TAB}
+    print(f"  OK  {TERMS:<21} {c['controlId']} t{c['type']} alias={c['alias']} perm={c.get('fieldPermission')} "
+          f"tab={tabs.get(c.get('sectionId'), c.get('sectionId') or '-')} r{c.get('row')}c{c.get('col')} "
+          f"s{c.get('size')} default empty")
+    named = rules_naming(c['controlId'])
+    print(f'  rules: {named or "none name it"} — Odoo puts no readonly or invisible condition on the field')
+    if c.get('row') == 9999:
+        print(f'  placement outstanding — the owner places it in the designer; intended: the {ORDER_LINES} tab, '
+              f'(row, col, size) {TERMS_PLACE}, below the lines and above the totals')
+
+
+# 15b · **The three Word templates** in nocoly/print-templates/ were re-pointed from the Sales app's control ids to
+# ERP Master's on 21 Sep 2026, all but one placeholder: Terms & Conditions, which still named the Sales app's own
+# rich text (SALES_TERMS, read to identify it and never written). `templates` re-points that one placeholder in all
+# three files to the control 15a appended and changes nothing else: every other part of the .docx is copied byte for
+# byte under its own ZipInfo, and the read-back proves the only difference is that id. The placeholder syntax is
+# `#{<control id>}`, `#{<relation>.<control>}` into a related record or the lines, and a trailing `[S]` on some.
+#
+#   * TEMPLATE_GENERAL heads the page "<Status> # <Number>" — Quotation, Quotation Sent, Sales Order or Cancelled —
+#     so it serves every state, as Odoo's one report does ("Quotation" / "Order" by state);
+#   * TEMPLATE_QUOTATION heads it "Quotation # <Number>", TEMPLATE_ORDER "Order # <Number>".
+PRINT_TEMPLATES = os.path.normpath(os.path.join(hap.HERE, os.pardir, 'print-templates'))
+TEMPLATE_GENERAL = 'quotation_order_template.docx'
+TEMPLATE_QUOTATION = 'quotation_template_quotation.docx'
+TEMPLATE_ORDER = 'quotation_template_order.docx'
+TEMPLATE_FILES = (TEMPLATE_GENERAL, TEMPLATE_QUOTATION, TEMPLATE_ORDER)
+TEMPLATE_HEADS = {TEMPLATE_GENERAL: None, TEMPLATE_QUOTATION: 'Quotation # ', TEMPLATE_ORDER: 'Order # '}
+TEMPLATE_PART = 'word/document.xml'
+SALES_TERMS = '6a9e38cd4a22ad87b727b5d9'         # the Sales app's Orders › Terms and Conditions
+PLACEHOLDER = re.compile(r'#\{([0-9a-f]{24})(?:\.([0-9a-f]{24}))?(?:\[[A-Z]\])?\}')
+
+
+def placeholder(cid):
+    return '#{' + cid + '}'
+
+
+def template_parts(path):
+    with zipfile.ZipFile(path) as z:
+        return {i.filename: z.read(i) for i in z.infolist()}
+
+
+def template_text(path):
+    """The document's visible text, one paragraph a line."""
+    xml = template_parts(path)[TEMPLATE_PART].decode('utf-8')
+    return re.sub(r'<[^>]+>', '', xml.replace('</w:p>', '\n'))
+
+
+def repoint(path, old, new):
+    """Rewrite the .docx at `path` with `old` replaced by `new` in its document part; every other part is copied
+    byte for byte under its own ZipInfo (name, date, compression, order)."""
+    tmp = path + '.tmp'
+    with zipfile.ZipFile(path) as src, zipfile.ZipFile(tmp, 'w') as dst:
+        for info in src.infolist():
+            data = src.read(info)
+            if info.filename == TEMPLATE_PART:
+                data = data.replace(old.encode(), new.encode())
+            dst.writestr(info, data)
+    os.replace(tmp, path)
+
+
+def template_problems(f):
+    """Each template must be a valid .docx whose Terms placeholder names this app's control, and every placeholder
+    must name a live control — on Orders, or on the worksheet a relation or the lines subtable leads to."""
+    problems = []
+    if TERMS not in f:
+        return [f'{TERMS} is not on {WORKSHEET} — run `terms`']
+    orders = {c['controlId']: c for c in hap.controls(ws())}
+    targets = {}
+    for name in TEMPLATE_FILES:
+        path = os.path.join(PRINT_TEMPLATES, name)
+        with zipfile.ZipFile(path) as z:
+            if z.testzip() is not None:
+                problems.append(f'{name}: a corrupt zip member')
+                continue
+        parts = template_parts(path)
+        for part, data in parts.items():
+            if part.endswith('.xml') or part.endswith('.rels'):
+                try:
+                    ElementTree.fromstring(data)
+                except ElementTree.ParseError as e:
+                    problems.append(f'{name}: {part} is not well-formed XML ({e})')
+        xml = parts[TEMPLATE_PART].decode('utf-8')
+        counts = (xml.count(placeholder(SALES_TERMS)), xml.count(placeholder(f[TERMS]['controlId'])))
+        if counts != (0, 1):
+            problems.append(f'{name}: {counts[0]} Sales-app and {counts[1]} ERP Master Terms placeholders, wanted '
+                            '0 and 1 — run `templates`')
+        found = re.findall(r'#\{[^}]*\}', xml)
+        for raw in found:
+            m = PLACEHOLDER.fullmatch(raw)
+            if not m:
+                problems.append(f'{name}: {raw} is not a placeholder this check can read')
+                continue
+            head, tail = m.groups()
+            if head not in orders:
+                problems.append(f'{name}: {raw} — {head} is not a control on {WORKSHEET}')
+            elif tail:
+                target = (orders[head].get('dataSource') or '').strip('$')
+                if target not in targets:
+                    targets[target] = {c['controlId'] for c in hap.controls(target)} if target else set()
+                if tail not in targets[target]:
+                    problems.append(f'{name}: {raw} — {tail} is not on {orders[head]["controlName"]}\'s worksheet')
+        head = TEMPLATE_HEADS[name]
+        text = template_text(path)
+        general = f"{placeholder(CONTROLS['Status'])} # {placeholder(CONTROLS['Number'])}"
+        if head is None and general not in text:
+            problems.append(f'{name}: does not head the page with Status before the Number')
+        if head is not None and f"{head}{placeholder(CONTROLS['Number'])}" not in text:
+            problems.append(f'{name}: does not head the page "{head}<Number>"')
+    return problems
+
+
+def step_templates():
+    """Re-point the Terms placeholder in the three templates at this app's control, and read the files back."""
+    f = guard()
+    if TERMS not in f:
+        sys.exit(f'{TERMS} is not on {WORKSHEET} — run `terms` first')
+    old, new = placeholder(SALES_TERMS), placeholder(f[TERMS]['controlId'])
+    for name in TEMPLATE_FILES:
+        path = os.path.join(PRINT_TEMPLATES, name)
+        before = template_parts(path)
+        xml = before[TEMPLATE_PART].decode('utf-8')
+        counts = (xml.count(old), xml.count(new))
+        if counts == (0, 1):
+            print(f'  {name}: already names {new}; nothing saved')
+            continue
+        if counts != (1, 0):
+            sys.exit(f'{name}: {counts[0]} {old} and {counts[1]} {new}, wanted one of the first and none of the '
+                     'second — left alone')
+        os.makedirs(hap.BACKUPS, exist_ok=True)
+        stamp = time.strftime('%Y%m%d-%H%M%S')
+        kept = os.path.join(hap.BACKUPS, f'print-templates_{name[:-5]}_pre_terms_{stamp}.docx')
+        shutil.copy2(path, kept)
+        repoint(path, old, new)
+        after = template_parts(path)
+        changed = sorted(p for p in set(before) | set(after) if before.get(p) != after.get(p))
+        if (changed != [TEMPLATE_PART] or list(after) != list(before)
+                or after[TEMPLATE_PART] != before[TEMPLATE_PART].replace(old.encode(), new.encode())):
+            shutil.copy2(kept, path)
+            sys.exit(f'{name}: the rewrite changed {changed}, not only the Terms id — the original is put back')
+        print(f'  {name}: {old} -> {new} (original kept as {os.path.relpath(kept, hap.HERE)})')
+    problems = template_problems(f)
+    if problems:
+        sys.exit('\n'.join(problems))
+    for name in TEMPLATE_FILES:
+        n = len(re.findall(r'#\{[^}]*\}', template_parts(os.path.join(PRINT_TEMPLATES, name))[TEMPLATE_PART]
+                           .decode('utf-8')))
+        kind = ('general: heads the page "<Status> # <Number>"' if TEMPLATE_HEADS[name] is None
+                else f'heads the page "{TEMPLATE_HEADS[name]}<Number>"')
+        print(f'  OK  {name:<34} {kind}; {n} placeholders, every one a live control; valid zip and XML')
+
+
+# 15c · **System Print.** HAP's main-site API has no single "upload a Word template" call, but pd-openweb — the
+# platform's own open-source front end — shows the three the designer makes (src/pages/FormSet/components/
+# EditPrint.jsx, `createUploader` and `onOk`):
+#
+#   1. `Qiniu/GetUploadToken {files: [{bucket: 3, ext: '.docx'}], type: 33}`, then the bytes to the file store —
+#      hap-cli's own `upload._post_to_store`, which mirrors pd-openweb's uploader; the store answers the file `key`;
+#   2. `AppManagement/GetToken {worksheetId, tokenType: 5}` — 5 is "Word print";
+#   3. POST `<worksheet info downLoadUrl>/PrintTemplate/EditPrint` with `{token, worksheetId, accountId, doc: key,
+#      fileName, id: '', type: 2, name, allowDownloadPermission: 0, allowEditAfterPrint: false,
+#      advanceSettings: []}` — type 2 is Word; an empty `id` creates.
+#
+# `Worksheet/GetPrintList {worksheetId}` reads the result back. Only the general template is uploaded, as
+# PRINT_NAME; the Quotation-only and Order-only files stay on disk. The Sales app's three Word templates carry the
+# same defaults (download permission 0, no edit after print, no advance settings, range 1), read on 22 Sep 2026.
+PRINT_NAME = 'Quotation / Order'
+PRINT_KEY = KEY + PRINT_NAME                     # ids.json › prints
+WORD_PRINT = 2                                   # a print template's type: 0 system · 2 Word · 5 Excel
+WORD_PRINT_TOKEN = 5                             # AppManagement/GetToken tokenType: 3 export · 4 import · 5 Word print
+PRINT_UPLOAD = 33                                # Qiniu/GetUploadToken `type` of the print-template uploader
+DOC_BUCKET = 3                                   # the file store's document bucket
+
+
+def print_templates():
+    from hap_cli.core.session import Session
+    out = Session.load(None).api_call('Worksheet', 'GetPrintList', {'worksheetId': ws()})
+    return out if isinstance(out, list) else []
+
+
+def print_problems():
+    live = [p for p in print_templates() if p.get('name') == PRINT_NAME]
+    if not live:
+        return [f'no {PRINT_NAME!r} print template on {WORKSHEET} — run `print`, or upload it in the browser']
+    if len(live) > 1:
+        return [f'{len(live)} print templates named {PRINT_NAME!r}: {[p["id"] for p in live]}']
+    p = live[0]
+    want = {'type': WORD_PRINT, 'formName': TEMPLATE_GENERAL, 'disabled': False, 'worksheetId': ws()}
+    got = {k: p.get(k) for k in want}
+    problems = [f'{PRINT_NAME!r}: {got}, wanted {want}'] if got != want else []
+    if hap.ids().get('prints', {}).get(PRINT_KEY) != p['id']:
+        problems.append(f'{PRINT_NAME!r}: ids.json does not hold {p["id"]} — run `print`')
+    return problems
+
+
+def step_print():
+    """Upload the general template as the System Print template PRINT_NAME on Orders, if it is not there."""
+    from hap_cli.core import upload
+    from hap_cli.core.session import Session
+    f = guard()
+    problems = template_problems(f)
+    if problems:
+        sys.exit('the template on disk is not ready:\n' + '\n'.join(problems))
+    live = [p for p in print_templates() if p.get('name') == PRINT_NAME]
+    if live:
+        print(f'  {PRINT_NAME!r} is already on {WORKSHEET} ({live[0]["id"]}); nothing uploaded')
+    else:
+        s = Session.load(None)
+        info = s.api_call('Worksheet', 'GetWorksheetInfo', {'worksheetId': ws(), 'getTemplate': False,
+                                                            'getViews': False})
+        base = (info or {}).get('downLoadUrl')
+        if not base:
+            sys.exit(f'GetWorksheetInfo gave no downLoadUrl: {json.dumps(info, ensure_ascii=False)[:300]}')
+        path = os.path.join(PRINT_TEMPLATES, TEMPLATE_GENERAL)
+        content = open(path, 'rb').read()
+        token = s.api_call('Qiniu', 'GetUploadToken', {'files': [{'bucket': DOC_BUCKET, 'ext': '.docx'}],
+                                                        'type': PRINT_UPLOAD})
+        token = token[0] if isinstance(token, list) and token else token
+        if not isinstance(token, dict) or not token.get('uptoken') or not token.get('key'):
+            sys.exit(f'GetUploadToken answered {str(token)[:200]}')
+        stored = upload._post_to_store(upload.upload_host(s), token, content,
+                                       original_name=TEMPLATE_GENERAL[:-5], ext='.docx')
+        key = stored.get('key') or token['key']
+        print(f'  uploaded {TEMPLATE_GENERAL} ({len(content)} bytes) to the document store as {key}')
+        word = s.api_call('AppManagement', 'GetToken', {'worksheetId': ws(), 'tokenType': WORD_PRINT_TOKEN})
+        if not isinstance(word, str) or not word:
+            sys.exit(f'AppManagement/GetToken answered {str(word)[:200]}')
+        res = s._post(base.rstrip('/') + '/PrintTemplate/EditPrint', {
+            'token': word, 'worksheetId': ws(), 'accountId': s.account_id, 'doc': key,
+            'fileName': TEMPLATE_GENERAL, 'id': '', 'type': WORD_PRINT, 'name': PRINT_NAME,
+            'allowDownloadPermission': 0, 'allowEditAfterPrint': False, 'advanceSettings': []}, 60)
+        print(f'  EditPrint answered {json.dumps(res, ensure_ascii=False)[:200]}')
+        live = [p for p in print_templates() if p.get('name') == PRINT_NAME]
+        if len(live) != 1:
+            sys.exit(f'{len(live)} print templates named {PRINT_NAME!r} read back — the upload did not store as '
+                     'one template')
+    C.remember('prints', PRINT_KEY, live[0]['id'])
+    problems = print_problems()
+    if problems:
+        sys.exit('\n'.join(problems))
+    p = live[0]
+    print(f"  OK  {PRINT_NAME!r} {p['id']}: Word (type {p['type']}), file {p['formName']}, range {p.get('range')}, "
+          f"views {p.get('views')}, filters {p.get('filters')}, download permission "
+          f"{p.get('allowDownloadPermission')}, edit after print {p.get('allowEditAfterPrint')}")
+
+
+# 15d · **Printing from the CLI.** pd-openweb's print page (src/pages/Print/core/util.js `getDownLoadUrl`) fills a
+# Word template for one record with POST `<downLoadUrl>/ExportWord/GetWordPath {id, rowId, accountId, worksheetId,
+# appId, projectId, t, viewId, token, download: 0}` — the token again `AppManagement/GetToken` type 5 — and gets
+# back the address of the filled .docx. `selfprint` fills PRINT_NAME for PRINT_ORDER and reads the document **in
+# memory** (nothing is written to disk); then puts a TEST value in the order's Terms and conditions, fills it again
+# to prove that placeholder, and clears the value, read back empty through both read paths.
+PRINT_ORDER = 'S00017'                           # a Sales Order with a customer, so the address block prints
+TERMS_TEST = 'TEST terms - printed by System Print'
+STATUS_HEAD = re.compile(r'(Quotation|Quotation Sent|Sales Order|Cancelled) # (S\d{5})')
+
+
+def render(rowid):
+    """The filled template's text for one order, a paragraph a line."""
+    import io, requests
+    from hap_cli.core.session import Session
+    s = Session.load(None)
+    info = s.api_call('Worksheet', 'GetWorksheetInfo', {'worksheetId': ws(), 'getTemplate': False,
+                                                        'getViews': False})
+    token = s.api_call('AppManagement', 'GetToken', {'worksheetId': ws(), 'viewId': '', 'tokenType': WORD_PRINT_TOKEN})
+    url = s._post(info['downLoadUrl'].rstrip('/') + '/ExportWord/GetWordPath', {
+        'id': hap.ids()['prints'][PRINT_KEY], 'rowId': rowid, 'accountId': s.account_id, 'worksheetId': ws(),
+        'appId': APP, 'projectId': info['projectId'], 't': int(time.time() * 1000), 'viewId': '', 'token': token,
+        'download': 0}, 90)
+    if not isinstance(url, str) or not url.startswith('http'):
+        sys.exit(f'GetWordPath answered {str(url)[:200]}')
+    got = requests.get(url, timeout=60)
+    got.raise_for_status()
+    xml = zipfile.ZipFile(io.BytesIO(got.content)).read(TEMPLATE_PART).decode('utf-8')
+    return [line for line in re.sub(r'<[^>]+>', '', xml.replace('</w:p>', '\n')).splitlines() if line.strip()]
+
+
+def terms_cells(f, rowid):
+    """Terms and conditions through both read paths: `record get`, then the listing."""
+    cid = f[TERMS]['controlId']
+    listed = next((r for r in C.records(ws(), APP) if r.get('rowid') == rowid), {})
+    return read_record(ws(), rowid).get(cid), listed.get(cid)
+
+
+def step_selfprint():
+    """Fill the System Print template for PRINT_ORDER, once as it stands and once with a TEST Terms value, and put
+    the order back."""
+    f = guard()
+    problems = print_problems()
+    if problems:
+        sys.exit('\n'.join(problems))
+    rowid = by_number().get(PRINT_ORDER)
+    if not rowid:
+        sys.exit(f'{PRINT_ORDER} is not on {WORKSHEET}')
+    before = terms_cells(f, rowid)
+    if any(before):
+        sys.exit(f'{PRINT_ORDER} already carries Terms and conditions {before} — not overwriting it')
+    problems = []
+    lines = render(rowid)
+    heads = [m.groups() for m in map(STATUS_HEAD.fullmatch, lines) if m]
+    if [h[1] for h in heads] != [PRINT_ORDER]:
+        problems.append(f'the page is not headed "<Status> # {PRINT_ORDER}": {heads}')
+    if any('#{' in line for line in lines):
+        problems.append(f"placeholders left unfilled: {[line for line in lines if '#{' in line]}")
+    for label in ('Untaxed Amount', 'Total', 'Terms &amp; Conditions'):
+        if label not in lines:
+            problems.append(f'{label!r} is not on the page')
+    print(f'  {PRINT_ORDER}: {len(lines)} lines, headed {heads}, no placeholder left; the Terms heading prints '
+          f'with nothing under it')
+    try:
+        write_cells(rowid, [{'id': f[TERMS]['controlId'], 'value': TERMS_TEST}])
+        stored = terms_cells(f, rowid)
+        print(f'  wrote {TERMS_TEST!r}; read back {stored}')
+        lines = render(rowid)
+        at = lines.index('Terms &amp; Conditions') if 'Terms &amp; Conditions' in lines else -1
+        if at < 0 or TERMS_TEST not in lines[at + 1:at + 3]:
+            problems.append(f'the TEST terms did not print under the Terms heading: {lines[at:at + 3]}')
+        else:
+            print(f'  printed under the Terms heading: {lines[at + 1]!r}')
+    finally:
+        write_cells(rowid, [{'id': f[TERMS]['controlId'], 'value': ''}])
+    after = terms_cells(f, rowid)
+    if any(after):
+        problems.append(f'{PRINT_ORDER} still carries Terms and conditions {after} after the clear')
+    if problems:
+        print('  selfprint: ' + '\n             '.join(problems))
+        sys.exit(1)
+    print(f'  selfprint: OK — {PRINT_NAME!r} fills for {PRINT_ORDER}, prints its Terms and conditions, and the '
+          f'order is back as it was (Terms and conditions empty on both read paths)')
+
+
 # ── 13c · reading the four buttons and the guard back ───────────────────────
 
 def button_problems():
@@ -4514,7 +4945,7 @@ def guard():
                 for name, cid in CONTROLS.items() if (f.get(name) or {}).get('controlId') != cid]
     if problems:
         sys.exit(f'{WORKSHEET}: ' + '; '.join(problems) + ' — re-read the worksheet before writing a rule')
-    unknown = sorted(set(f) - set(CONTROLS) - set(NEW) - set(PART1) - set(DISCOUNT_FIELDS))
+    unknown = sorted(set(f) - set(CONTROLS) - set(NEW) - set(PART1) - set(DISCOUNT_FIELDS) - {TERMS})
     if unknown:
         print(f'  note: {WORKSHEET} also carries {unknown} — added by the owner, and no rule here names them')
     for name in CONTROLS:
@@ -4700,6 +5131,23 @@ def step_check():
               + ('' if all(f[n].get('row') != 9999 for n in DISCOUNT_FIELDS)
                  else ' — still parked at row 9999, for the owner to place'))
     problems += button_problems()
+    # §15: Terms and conditions, the three templates on disk, and the System Print template on Orders
+    found = terms_problems(f)
+    problems += found
+    if not found:
+        c = f[TERMS]
+        print(f"  OK  {TERMS} {c['controlId']} (rich text, alias {TERMS_ALIAS}, permission {TERMS_PERMISSION}, "
+              f'no default)' + (' — still parked at row 9999, for the owner to place' if c.get('row') == 9999 else ''))
+        found = template_problems(f)
+        problems += found
+        if not found:
+            print(f'  OK  the {len(TEMPLATE_FILES)} templates name {c["controlId"]} for Terms, every placeholder a '
+                  f'live control; {TEMPLATE_GENERAL} is the general one')
+    found = print_problems()
+    problems += found
+    if not found:
+        print(f"  OK  System Print {PRINT_NAME!r} {hap.ids()['prints'][PRINT_KEY]} on {WORKSHEET}: Word, "
+              f'{TEMPLATE_GENERAL}')
     data, _lines = seed_data()
     seeded = seeded_orders()
     absent = [o['name'] for o in data['orders'] if o['name'] not in seeded]
@@ -4726,7 +5174,8 @@ def step_check():
           f'{[PART1_PERMISSION[n] for n in PART1]}, '
           f'{len(VIEW_ROWS)} views returning exactly the orders their filters name, the {len(BUTTONS) + 2} buttons of '
           f"§13 and §14 with their workflows (the owner's {OWNERS_BUTTON!r} and {OWNERS_CONTROL!r} untouched), "
-          f'the {DISCOUNT_PRODUCT} product and variant and the {len(DISCOUNT_FIELDS)} discount fields')
+          f'the {DISCOUNT_PRODUCT} product and variant, the {len(DISCOUNT_FIELDS)} discount fields, {TERMS}, the '
+          f'{len(TEMPLATE_FILES)} templates and System Print {PRINT_NAME!r}')
 
 
 def step_show():
@@ -4757,7 +5206,9 @@ STEPS = {'rules': step_rules, 'retire': step_retire, 'expiry': step_expiry, 'tot
          'wipe': step_wipe, 'seed': step_seed, 'figures': step_figures, 'buttons': step_buttons,
          'selfcheck': step_selfcheck, 'selfdeliver': step_selfdeliver,
          'discountproduct': step_discountproduct, 'discountline': step_discountline,
-         'discountfields': step_discountfields, 'selfdiscount': step_selfdiscount, 'check': step_check, 'show': step_show}
+         'discountfields': step_discountfields, 'selfdiscount': step_selfdiscount,
+         'terms': step_terms, 'templates': step_templates, 'print': step_print, 'selfprint': step_selfprint,
+         'check': step_check, 'show': step_show}
 
 if __name__ == '__main__':
     if len(sys.argv) < 2 or sys.argv[1] not in STEPS:

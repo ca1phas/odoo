@@ -63,6 +63,7 @@ values **casimir holds today**:
 | Online signature `require_signature` | `portal_confirmation_sign` | **Online Signature** | **true** | **ticked** |
 | Online payment `require_payment` | `portal_confirmation_pay` | **Online Payment** | **false** | **unticked** |
 | Prepayment % `prepayment_percent` | `prepayment_percent` | **Prepayment percentage** | **1** | **100 %** — Odoo stores a **fraction**, not a percentage |
+| Terms and conditions `note` | `invoice_terms` / `invoice_terms_html`, behind `account.use_invoice_terms` | **Default Terms & Conditions** (Invoicing settings) | **unknown** — never extracted | **empty** — no company settings here; see §9 |
 
 Proved on the tenant, not inferred: **S00021** is dated 2026-09-14 and expires **2026-10-14**; **S00022** is
 dated 2026-09-21 and expires **2026-10-21**. Both are exactly thirty days.
@@ -200,7 +201,7 @@ The rule for the last column: **prefer a Nocoly native feature over a built work
 | # | Button | Odoo behaviour | Here |
 |---|---|---|---|
 | 1 | **Send** | mail composer; sending marks the order Quotation Sent | **workflow** — send-email node, then set Status. Not yet working |
-| 2 | **Download** | `sale.action_report_saleorder`, the quotation PDF | **System Print** with a print template — native, no workflow |
+| 2 | **Download** | `sale.action_report_saleorder`, the quotation PDF | **System Print** with a print template — native, no workflow. **Built 22 Sep 2026, §9** |
 | 3 | **Confirm** | guards, then Status → Sales Order and **Quotation/Order Date → now** | **button + workflow** (the guard is a branch) |
 | 4 | **Preview** | `act_url` to `get_portal_url()` — the customer-facing page | **Public Sharing** — native, effectively already there |
 | 5 | **Cancel** | refuses a locked order; Status → Cancelled | **button**, disabled while Locked is ticked |
@@ -273,7 +274,7 @@ amount_total · invoice_status · expected_date`, with a dozen more available an
 | **Quote Builder** tab (`quotation_document_ids`, `customizable_pdf_form_fields`) | See worksheet 17 — it configures a PDF assembler HAP does not have |
 | Down payments (`is_downpayment`), optional lines' ordering, combos (`combo_item_id`, `linked_line_id`), product custom attributes | Each is its own machinery; the fields are on the line but nothing in Phase 1 drives them |
 | Online signature and payment (`require_signature`, `require_payment`, `prepayment_percent` as behaviour) | The checkboxes can be stored with their company-setting defaults; the customer portal cannot |
-| Preview · Download · Send as behaviour | No PDF, no mail |
+| Preview · Send as behaviour | No mail. **Download is built** as System Print, §9 |
 | `fiscal_position_id`, `incoterm`, `project_id`, `preferred_payment_method_line_id` | Each needs a table that is not built |
 | Smart buttons (Invoices, Projects, Tasks, Transactions) | Counts over tables that do not exist yet |
 
@@ -576,6 +577,86 @@ and 10,200 at 8% S, untaxed 247,225.00:
 S00006 ended with no Discount line and Discount Type / Value empty. The one-combination name was proved on S00007
 (one line "Discount 10.00%", −10,460.32 on 104,603.20), then removed and the fields cleared. **Not UI-tested**:
 nothing here opened a browser.
+
+
+## 9 · Download — built 22 Sep 2026 (`orders.py` §15)
+
+Odoo's *Download* (the tenant's label; the 19.0 source calls the same header button *Print*) is
+`sale.action_report_saleorder`, the quotation / order PDF. Both hide the header button on a Sales Order, but Odoo's
+Print menu still offers the report in every state, headed *Quotation* or *Order* by state. Here it is **System
+Print with a Word template** — native, so no button and no workflow.
+
+**Piece 1 · Terms and conditions** (`terms`). Odoo's `sale.order.note`, `fields.Html(string="Terms and
+conditions", compute='_compute_note', store=True, readonly=False)` (19.0 source, `addons/sale/models/sale_order.py`
+149–152). The form (`sale_order_views.xml` 845) puts it on the Order Lines page in `note_group`, below the lines,
+placeholder *Terms and conditions...*, with **no readonly and no invisible condition** — in the 19.0 source and in
+the tenant extract alike — so **no rule was touched**.
+
+| | |
+|---|---|
+| Control | **Terms and conditions** `6ab2587bbd43f5576223fb06`, rich text (41), alias `note` — modelled on Invoices' Terms and Conditions (`narration`) |
+| Permission | `111`, as Invoices' |
+| Hint | Odoo's placeholder *Terms and conditions...* (HAP never draws a rich text's hint) |
+| Description | *The terms printed at the foot of the quotation or order.* |
+| Default | **none** — see the divergence below |
+| Rules | none name it |
+| Where it is | appended with `C.append_controls` into the **Order Lines tab** (the payload carried the tab's `sectionId`), **parked at row 9999** — the foot of that tab, below the totals |
+
+**Placement is the owner's.** Intent (`TERMS_PLACE`): the Order Lines tab, a full-width row of its own directly
+below the lines and above Untaxed Amount · Tax · Total — where Invoices keeps its Terms and Conditions. Odoo sets it
+*beside* the totals (4 of 6 columns against 2); a HAP row has no row-span and the three totals already fill row 12,
+so beside is not available without restacking them.
+
+**Divergence — no default.** Odoo's `_compute_note` fills the field from the company's default terms when
+`account.use_invoice_terms` is on: the plain `invoice_terms` in the customer's language, or, when `terms_type` is
+*html*, a line linking to the company's terms page — recomputed when the customer changes. This app has no company
+settings, so the field starts **empty** and is typed per order. What casimir held is **unknown**: the tenant's
+`note` was never extracted and the tenant is gone. The one indirect sign is that its three seeded invoices, whose
+`narration` Odoo fills from the same setting, carry an empty value (`data/casimir-invoice-seed.json`).
+
+**Piece 2 · the three templates** (`templates`). The Word templates in `nocoly/print-templates/` had been
+re-pointed from the Sales app to ERP Master on 21 Sep 2026, all but the Terms placeholder, which still named the
+Sales app's own rich text `6a9e38cd4a22ad87b727b5d9` (read to identify it, never written). The placeholder syntax is
+`#{<control id>}`, `#{<relation>.<control>}` into a related record or a line, and a trailing `[S]` on some.
+
+| File | Heads the page | Placeholders | On Orders |
+|---|---|---|---|
+| `quotation_order_template.docx` | **`<Status> # <Number>`** — *Sales Order # S00017* — so **the general one**, for every state | 28 | **uploaded** as System Print *Quotation / Order* |
+| `quotation_template_quotation.docx` | *Quotation # `<Number>`* | 27 | not uploaded |
+| `quotation_template_order.docx` | *Order # `<Number>`* | 27 | not uploaded |
+
+In all three `#{6a9e38cd4a22ad87b727b5d9}` became `#{6ab2587bbd43f5576223fb06}` and nothing else changed: the
+read-back compares every part of each .docx and only `word/document.xml` differs, by that id. All three pass
+`unzip -t` and parse as XML, and every placeholder names a live control on Orders or on the worksheet its relation
+or the lines lead to. The originals are in `build/backups/print-templates_*_pre_terms_20260922-183005.docx` (not
+committed).
+
+**Piece 3 · System Print** (`print`). The main-site API has no single upload call, but pd-openweb — the platform's
+open-source front end — shows the three calls the designer makes (`src/pages/FormSet/components/EditPrint.jsx`):
+`Qiniu/GetUploadToken {files: [{bucket: 3, ext: '.docx'}], type: 33}` and the bytes to the file store (hap-cli's own
+`upload._post_to_store`); `AppManagement/GetToken {worksheetId, tokenType: 5}`; and POST
+`<downLoadUrl>/PrintTemplate/EditPrint` with the file key, type 2 (Word) and the name. `Worksheet/GetPrintList`
+reads it back. Only the general template went up:
+
+| | |
+|---|---|
+| Template | **Quotation / Order** `6ab258cd7903a53029f5ade7` — `ids.json` › prints › `Orders: Quotation / Order` |
+| File | `quotation_order_template.docx` · type 2 (Word) |
+| Settings | range 1 (every view) · no filter · download permission 0 · no edit after print · no advance settings — the same as the Sales app's three Word templates |
+| Roles | every role has record printing on for Orders — HAP's default for a worksheet `roles.py` does not own |
+
+**Proved** (`selfprint`, 22 Sep 2026) by filling the template through the same call the print page makes
+(`<downLoadUrl>/ExportWord/GetWordPath`) and reading the .docx in memory: for **S00017** (a Sales Order) the page is
+headed *Sales Order # S00017*, the lines, totals and payment terms fill, and no placeholder is left. With a TEST
+value in its Terms and conditions the value printed under *Terms & Conditions*; the value was then cleared and reads
+back empty. A formatted value, `<p>TEST terms <strong>bold</strong> line one</p><p>TEST line two</p>`, printed as two
+paragraphs with no tag showing (checked once by hand the same way, and cleared). (`record get` returns nothing for this control on orders that existed before it — the known gap in
+CLAUDE.md — so the listing is the path that shows the value.) **Not UI-tested**: nothing here opened a browser.
+
+**Left for the browser.** Place Terms and conditions (intent above). Open an order, print it with *Quotation /
+Order* from the record's print menu and look at the page itself — the fill is proved, the layout is not. Upload the
+Quotation-only and Order-only templates as well if you want them (the worksheet's form settings, print templates,
+new Word template), and if the general one should not be offered in some state, give it a filter there.
 
 
 ## Descriptions rewritten for the app's users (22 Sep 2026)

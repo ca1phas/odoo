@@ -345,7 +345,8 @@
   "Orders: Discount Type": "6ab23575e54d2a34fa4f7b8b",
   "Orders: Discount Value": "6ab23575e54d2a34fa4f7b8c",
   "Journals: About Journal Entries": "6aa9e869e54d2a34fa4dfe42",
-  "Journals: About Advanced Settings": "6aa9e869e54d2a34fa4dfe43"
+  "Journals: About Advanced Settings": "6aa9e869e54d2a34fa4dfe43",
+  "Orders: Terms and conditions": "6ab2587bbd43f5576223fb06"
  },
  "rules": {
   "Journals: Payment Communications only for Sales": "6aa9dae5e54d2a34fa4dfde2",
@@ -974,5 +975,8 @@
   "Orders: S00020": "S00015",
   "Orders: S00021": "S00016",
   "Orders: S00022": "S00017"
+ },
+ "prints": {
+  "Orders: Quotation / Order": "6ab258cd7903a53029f5ade7"
  }
 }
