@@ -4,8 +4,8 @@
 Two things:
 
   1. HAP's **five stock roles** are renamed from Chinese to English — Administrator · Operator · Developer ·
-     Member · Read-only. Only the label changes; `roleType` and the members are never touched, so Casimir and
-     Teh Li Wei stay app administrators exactly as they are.
+     Member · Read-only. Only the label changes; `roleType` and the members are never touched, so Casimir,
+     Oscar Wong and Teh Li Wei stay app administrators exactly as they are.
   2. **Four business roles**, one per Odoo accounting group, each with per-worksheet access rules
      (`hap app role create-fine`). Nobody is assigned to any of them — who belongs in which role is the
      owner's call. The Chart of Accounts bundle added per-field hiding: the account fields Odoo keeps from its
@@ -487,7 +487,7 @@ def step_check():
         elif r['roleType'] != role_type:
             problems.append(f'{english}: roleType {r["roleType"]}, want {role_type}')
     admin = live.get('Administrator')
-    if admin and members(admin) != ['Casimir Chiong Ming Yuan', 'Teh Li Wei']:
+    if admin and members(admin) != ['Casimir Chiong Ming Yuan', 'Oscar Wong', 'Teh Li Wei']:
         problems.append(f'Administrator members {members(admin)}')
     v3 = v3_rows()
     for name, (description, matrix) in ROLES.items():
