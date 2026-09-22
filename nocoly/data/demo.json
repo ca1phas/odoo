@@ -1,0 +1,5169 @@
+{
+ "_note": [
+  "The demo dataset for ERP Master: MyTech Products & Services Sdn Bhd, an invented Malaysian reseller of consumer tech and services. Every brand, company, person, email and phone number here is made up; every email address ends in example.com.",
+  "Dates are OFFSETS IN DAYS from the seeding day, never fixed dates: -348 is 348 days before the day demo.py runs, +11 is eleven days after it. The dataset therefore stays \"the last twelve months\" whenever it is reseeded.",
+  "Record numbers are never written here. Orders take the number the auto-number control mints; an invoice Number is built at seed time from its journal prefix, the year of its Accounting Date and its position in that series. Every record is matched on a key of its own: a tag on its path, a contact on its key, a product or variant on its Internal Reference, an order on its Customer Reference (or Template Name), an invoice on its Customer Reference, a line on (its parent, its Sequence).",
+  "Amounts: order and invoice line Subtotal/Total are formulas and the four invoice amounts are written by Invoice Lines' roll-up workflow, so no total is written here."
+ ],
+ "company": "MyTech Products & Services Sdn Bhd",
+ "country": "Malaysia",
+ "currency": "RM",
+ "tags": [
+  {
+   "key": "industry",
+   "name": "Industry",
+   "parent": null,
+   "color": "No color"
+  },
+  {
+   "key": "account_type",
+   "name": "Account Type",
+   "parent": null,
+   "color": "No color"
+  },
+  {
+   "key": "education",
+   "name": "Education",
+   "parent": "industry",
+   "color": "Blue"
+  },
+  {
+   "key": "healthcare",
+   "name": "Healthcare",
+   "parent": "industry",
+   "color": "Teal"
+  },
+  {
+   "key": "government",
+   "name": "Government",
+   "parent": "industry",
+   "color": "Purple"
+  },
+  {
+   "key": "design_media",
+   "name": "Design & Media",
+   "parent": "industry",
+   "color": "Raspberry"
+  },
+  {
+   "key": "retail",
+   "name": "Retail",
+   "parent": "industry",
+   "color": "Orange"
+  },
+  {
+   "key": "key_account",
+   "name": "Key Account",
+   "parent": "account_type",
+   "color": "Green"
+  },
+  {
+   "key": "reseller",
+   "name": "Reseller",
+   "parent": "account_type",
+   "color": "Cyan"
+  },
+  {
+   "key": "supplier",
+   "name": "Supplier",
+   "parent": "account_type",
+   "color": "Almond"
+  }
+ ],
+ "contacts": [
+  {
+   "key": "smbd",
+   "name": "Sekolah Menengah Bukit Damai",
+   "company": null,
+   "type": "Contact",
+   "email": "pejabat@smbukitdamai.example.com",
+   "phone": "+60 3 5510 8821",
+   "street": "Jalan Damai 3",
+   "street2": "Seksyen 13",
+   "city": "Shah Alam",
+   "state": "Selangor",
+   "zip": "40100",
+   "website": "https://smbukitdamai.example.com",
+   "vat": "C1180042300",
+   "company_registry": "196501000123",
+   "tags": [
+    "education",
+    "key_account"
+   ],
+   "customer_terms": "45 Days",
+   "notes": "School ICT refresh programme, three-year rolling plan."
+  },
+  {
+   "key": "smbd_ict",
+   "name": "Faridah Ismail",
+   "company": "smbd",
+   "type": "Contact",
+   "email": "faridah.ismail@smbukitdamai.example.com",
+   "phone": "+60 12 331 7742",
+   "job": "Head of ICT",
+   "tags": [
+    "education"
+   ],
+   "address_from_company": true
+  },
+  {
+   "key": "smbd_store",
+   "name": "Stor ICT Blok C",
+   "company": "smbd",
+   "type": "Delivery",
+   "email": "stor.ict@smbukitdamai.example.com",
+   "phone": "+60 3 5510 8829",
+   "address_from_company": true
+  },
+  {
+   "key": "ktn",
+   "name": "Kolej Teknologi Nusantara",
+   "company": null,
+   "type": "Contact",
+   "email": "procurement@ktnusantara.example.com",
+   "phone": "+60 3 2712 4400",
+   "street": "Menara Ilmu, Jalan Tun Razak",
+   "city": "Kuala Lumpur",
+   "state": "Kuala Lumpur",
+   "zip": "50400",
+   "website": "https://ktnusantara.example.com",
+   "vat": "C2290117400",
+   "company_registry": "200201004456",
+   "tags": [
+    "education"
+   ],
+   "customer_terms": "30% Now, Balance 60 Days",
+   "notes": "Staged payment on capital purchases."
+  },
+  {
+   "key": "kma",
+   "name": "Klinik Mediviva Ampang",
+   "company": null,
+   "type": "Contact",
+   "email": "admin@mediviva-ampang.example.com",
+   "phone": "+60 3 4256 9013",
+   "street": "12 Jalan Mamanda 7",
+   "city": "Ampang",
+   "state": "Selangor",
+   "zip": "68000",
+   "vat": "C3011882100",
+   "company_registry": "201101008812",
+   "tags": [
+    "healthcare"
+   ],
+   "customer_terms": "30 Days"
+  },
+  {
+   "key": "kma_dir",
+   "name": "Dr. Lim Chee Keong",
+   "company": "kma",
+   "type": "Contact",
+   "email": "drlim@mediviva-ampang.example.com",
+   "phone": "+60 19 277 3310",
+   "job": "Clinic Director",
+   "tags": [
+    "healthcare"
+   ],
+   "address_from_company": true
+  },
+  {
+   "key": "hpsc",
+   "name": "Hospital Pakar Seri Cahaya",
+   "company": null,
+   "type": "Contact",
+   "email": "purchasing@hpsericahaya.example.com",
+   "phone": "+60 4 643 7700",
+   "street": "Lot 8, Lebuh Bayan Lepas",
+   "city": "Bayan Lepas",
+   "state": "Pulau Pinang",
+   "zip": "11900",
+   "website": "https://hpsericahaya.example.com",
+   "vat": "C4412007700",
+   "company_registry": "199801003390",
+   "tags": [
+    "healthcare",
+    "key_account"
+   ],
+   "customer_terms": "45 Days",
+   "notes": "Ward tablet rollout, device enrolment handled by MyTech."
+  },
+  {
+   "key": "srw",
+   "name": "Studio Reka Warna",
+   "company": null,
+   "type": "Contact",
+   "email": "hello@rekawarna.example.com",
+   "phone": "+60 3 2201 6688",
+   "street": "31A Jalan Telawi 2",
+   "street2": "Bangsar Baru",
+   "city": "Kuala Lumpur",
+   "state": "Kuala Lumpur",
+   "zip": "59100",
+   "website": "https://rekawarna.example.com",
+   "vat": "C5520331900",
+   "company_registry": "201701012204",
+   "tags": [
+    "design_media",
+    "key_account"
+   ],
+   "customer_terms": "15 Days",
+   "notes": "Creative studio; buys the top-of-range machines and displays."
+  },
+  {
+   "key": "srw_mgr",
+   "name": "Rajesh Kumar",
+   "company": "srw",
+   "type": "Contact",
+   "email": "rajesh@rekawarna.example.com",
+   "phone": "+60 16 882 4417",
+   "job": "Studio Manager",
+   "tags": [
+    "design_media"
+   ],
+   "address_from_company": true
+  },
+  {
+   "key": "jpnj",
+   "name": "Jabatan Pendidikan Negeri Johor",
+   "company": null,
+   "type": "Contact",
+   "email": "perolehan@jpnjohor.example.com",
+   "phone": "+60 7 233 1200",
+   "street": "Blok B, Kompleks Pentadbiran",
+   "city": "Johor Bahru",
+   "state": "Johor",
+   "zip": "80000",
+   "vat": "G1100045600",
+   "company_registry": "JPNJ-2026",
+   "tags": [
+    "government",
+    "key_account"
+   ],
+   "customer_terms": "45 Days",
+   "notes": "Tender-based purchasing, quotations valid 60 days."
+  },
+  {
+   "key": "mpsp",
+   "name": "Majlis Perbandaran Seberang Perai",
+   "company": null,
+   "type": "Contact",
+   "email": "ict@mpseberangperai.example.com",
+   "phone": "+60 4 538 9999",
+   "street": "Menara MPSP, Jalan Perda Utama",
+   "city": "Bukit Mertajam",
+   "state": "Pulau Pinang",
+   "zip": "14000",
+   "vat": "G1200078900",
+   "company_registry": "MPSP-2026",
+   "tags": [
+    "government"
+   ],
+   "customer_terms": "45 Days"
+  },
+  {
+   "key": "ggr",
+   "name": "Gadget Galeri Retail Sdn Bhd",
+   "company": null,
+   "type": "Contact",
+   "email": "orders@gadgetgaleri.example.com",
+   "phone": "+60 6 281 4455",
+   "street": "Lot G-12, Melaka Central Mall",
+   "city": "Melaka",
+   "state": "Melaka",
+   "zip": "75300",
+   "website": "https://gadgetgaleri.example.com",
+   "vat": "C6631099200",
+   "company_registry": "201401007731",
+   "tags": [
+    "retail",
+    "reseller"
+   ],
+   "customer_terms": "30 Days",
+   "notes": "Reseller; monthly accessory replenishment."
+  },
+  {
+   "key": "ggr_store",
+   "name": "Gudang Melaka Tengah",
+   "company": "ggr",
+   "type": "Delivery",
+   "email": "gudang@gadgetgaleri.example.com",
+   "phone": "+60 6 281 4460",
+   "address_from_company": true
+  },
+  {
+   "key": "pkk",
+   "name": "Pusat Komputer Kinabalu",
+   "company": null,
+   "type": "Contact",
+   "email": "sales@pkkinabalu.example.com",
+   "phone": "+60 88 271 330",
+   "street": "Blok C, Jalan Coastal",
+   "city": "Kota Kinabalu",
+   "state": "Sabah",
+   "zip": "88000",
+   "vat": "C7740221100",
+   "company_registry": "200901003318",
+   "tags": [
+    "retail",
+    "reseller"
+   ],
+   "customer_terms": "Immediate Payment"
+  },
+  {
+   "key": "awan",
+   "name": "Awan Digital Solutions Sdn Bhd",
+   "company": null,
+   "type": "Contact",
+   "email": "accounts@awandigital.example.com",
+   "phone": "+60 3 7965 2200",
+   "street": "Level 6, Menara Awan",
+   "street2": "Jalan SS7/19",
+   "city": "Petaling Jaya",
+   "state": "Selangor",
+   "zip": "47301",
+   "website": "https://awandigital.example.com",
+   "vat": "C8851776600",
+   "company_registry": "202001005590",
+   "tags": [
+    "design_media"
+   ],
+   "customer_terms": "21 Days"
+  },
+  {
+   "key": "nurul",
+   "name": "Nurul Aisyah binti Rahman",
+   "company": null,
+   "type": "Contact",
+   "email": "nurul.aisyah@example.com",
+   "phone": "+60 13 447 2201",
+   "street": "9 Jalan Setia Impian 5",
+   "city": "Setia Alam",
+   "state": "Selangor",
+   "zip": "40170",
+   "tags": [
+    "retail"
+   ],
+   "customer_terms": "Immediate Payment"
+  },
+  {
+   "key": "tanwm",
+   "name": "Tan Wei Ming",
+   "company": null,
+   "type": "Contact",
+   "email": "tan.weiming@example.com",
+   "phone": "+60 17 660 8834",
+   "street": "44 Lorong Burma",
+   "city": "George Town",
+   "state": "Pulau Pinang",
+   "zip": "10250",
+   "tags": [
+    "retail"
+   ],
+   "customer_terms": "Immediate Payment"
+  },
+  {
+   "key": "sinar",
+   "name": "Sinar Teknologi Distribusi Sdn Bhd",
+   "company": null,
+   "type": "Contact",
+   "email": "ap@sinartek.example.com",
+   "phone": "+60 3 5122 7788",
+   "street": "Lot 44, Jalan Pelabur 23/1",
+   "city": "Shah Alam",
+   "state": "Selangor",
+   "zip": "40300",
+   "website": "https://sinartek.example.com",
+   "vat": "C9962884400",
+   "company_registry": "199301002215",
+   "tags": [
+    "supplier"
+   ],
+   "vendor_terms": "30 Days",
+   "notes": "Main hardware distributor."
+  },
+  {
+   "key": "logistik",
+   "name": "Logistik Ekspres Semenanjung",
+   "company": null,
+   "type": "Contact",
+   "email": "billing@logistikekspres.example.com",
+   "phone": "+60 3 3341 9900",
+   "street": "Pusat Kargo Utara, Jalan Kastam",
+   "city": "Klang",
+   "state": "Selangor",
+   "zip": "42000",
+   "vat": "C1073992200",
+   "company_registry": "201201009947",
+   "tags": [
+    "supplier"
+   ],
+   "vendor_terms": "15 Days"
+  },
+  {
+   "key": "saujana",
+   "name": "Pejabat Sewa Menara Saujana",
+   "company": null,
+   "type": "Contact",
+   "email": "leasing@menarasaujana.example.com",
+   "phone": "+60 3 2166 4321",
+   "street": "Menara Saujana, Jalan Sultan Ismail",
+   "city": "Kuala Lumpur",
+   "state": "Kuala Lumpur",
+   "zip": "50250",
+   "vat": "C1184003300",
+   "company_registry": "198801001102",
+   "tags": [
+    "supplier"
+   ],
+   "vendor_terms": "15 Days"
+  }
+ ],
+ "products": [
+  {
+   "key": "MYB-AIR13",
+   "name": "myBook Air 13\"",
+   "group": "Computers",
+   "category": "Goods / IT Equipment",
+   "type": "Goods",
+   "unit": "Units",
+   "internal_reference": "MYB-AIR13",
+   "list_price": 4299.0,
+   "cost": 3550.0,
+   "sales": true,
+   "purchase": true,
+   "active": true,
+   "sales_description": "13-inch fanless notebook, 18-hour battery, 16GB memory.",
+   "sales_taxes": [
+    "10% G"
+   ],
+   "purchase_taxes": [
+    "10% G"
+   ],
+   "variants": [
+    {
+     "key": "MYB-AIR13-256-SLV",
+     "internal_reference": "MYB-AIR13-256-SLV",
+     "label": "256GB · Silver",
+     "cost": 3550.0,
+     "barcode": "9551000100011"
+    },
+    {
+     "key": "MYB-AIR13-512-SLV",
+     "internal_reference": "MYB-AIR13-512-SLV",
+     "label": "512GB · Silver",
+     "cost": 3810.0,
+     "barcode": "9551000100028"
+    },
+    {
+     "key": "MYB-AIR13-512-MID",
+     "internal_reference": "MYB-AIR13-512-MID",
+     "label": "512GB · Midnight",
+     "cost": 3810.0,
+     "barcode": "9551000100035"
+    }
+   ]
+  },
+  {
+   "key": "MYB-PRO14",
+   "name": "myBook Pro 14\"",
+   "group": "Computers",
+   "category": "Goods / IT Equipment",
+   "type": "Goods",
+   "unit": "Units",
+   "internal_reference": "MYB-PRO14",
+   "list_price": 7999.0,
+   "cost": 6750.0,
+   "sales": true,
+   "purchase": true,
+   "active": true,
+   "sales_description": "14-inch workstation notebook, 36GB memory, colour-calibrated display.",
+   "sales_taxes": [
+    "10% G"
+   ],
+   "purchase_taxes": [
+    "10% G"
+   ],
+   "variants": [
+    {
+     "key": "MYB-PRO14-512-SPG",
+     "internal_reference": "MYB-PRO14-512-SPG",
+     "label": "512GB · Space Grey",
+     "cost": 6750.0,
+     "barcode": "9551000200018"
+    },
+    {
+     "key": "MYB-PRO14-1TB-SPG",
+     "internal_reference": "MYB-PRO14-1TB-SPG",
+     "label": "1TB · Space Grey",
+     "cost": 7180.0,
+     "barcode": "9551000200025"
+    },
+    {
+     "key": "MYB-PRO14-1TB-SLV",
+     "internal_reference": "MYB-PRO14-1TB-SLV",
+     "label": "1TB · Silver",
+     "cost": 7180.0,
+     "barcode": "9551000200032"
+    }
+   ]
+  },
+  {
+   "key": "MYM-24",
+   "name": "myMac 24\"",
+   "group": "Computers",
+   "category": "Goods / IT Equipment",
+   "type": "Goods",
+   "unit": "Units",
+   "internal_reference": "MYM-24",
+   "list_price": 5499.0,
+   "cost": 4600.0,
+   "sales": true,
+   "purchase": true,
+   "active": true,
+   "sales_description": "24-inch all-in-one desktop, 16GB memory, 512GB storage.",
+   "sales_taxes": [
+    "10% G"
+   ],
+   "purchase_taxes": [
+    "10% G"
+   ],
+   "variants": []
+  },
+  {
+   "key": "MYM-MINI",
+   "name": "myMac mini",
+   "group": "Computers",
+   "category": "Goods / IT Equipment",
+   "type": "Goods",
+   "unit": "Units",
+   "internal_reference": "MYM-MINI",
+   "list_price": 2899.0,
+   "cost": 2350.0,
+   "sales": true,
+   "purchase": true,
+   "active": true,
+   "sales_description": "Compact desktop, 16GB memory, 256GB storage, no display.",
+   "sales_taxes": [
+    "10% G"
+   ],
+   "purchase_taxes": [
+    "10% G"
+   ],
+   "variants": []
+  },
+  {
+   "key": "MYP-16",
+   "name": "myPhone 16",
+   "group": "Phones & tablets",
+   "category": "Goods / IT Equipment",
+   "type": "Goods",
+   "unit": "Units",
+   "internal_reference": "MYP-16",
+   "list_price": 3999.0,
+   "cost": 3320.0,
+   "sales": true,
+   "purchase": true,
+   "active": true,
+   "sales_description": "6.1-inch handset, dual camera, 5G.",
+   "sales_taxes": [
+    "10% G"
+   ],
+   "purchase_taxes": [
+    "10% G"
+   ],
+   "variants": [
+    {
+     "key": "MYP-16-128-BLK",
+     "internal_reference": "MYP-16-128-BLK",
+     "label": "128GB · Black",
+     "cost": 3320.0,
+     "barcode": "9551000300015"
+    },
+    {
+     "key": "MYP-16-256-BLK",
+     "internal_reference": "MYP-16-256-BLK",
+     "label": "256GB · Black",
+     "cost": 3560.0,
+     "barcode": "9551000300022"
+    },
+    {
+     "key": "MYP-16-256-TEAL",
+     "internal_reference": "MYP-16-256-TEAL",
+     "label": "256GB · Teal",
+     "cost": 3560.0,
+     "barcode": "9551000300039"
+    }
+   ]
+  },
+  {
+   "key": "MYP-16PRO",
+   "name": "myPhone 16 Pro",
+   "group": "Phones & tablets",
+   "category": "Goods / IT Equipment",
+   "type": "Goods",
+   "unit": "Units",
+   "internal_reference": "MYP-16PRO",
+   "list_price": 5499.0,
+   "cost": 4650.0,
+   "sales": true,
+   "purchase": true,
+   "active": true,
+   "sales_description": "6.3-inch handset, triple camera, titanium frame.",
+   "sales_taxes": [
+    "10% G"
+   ],
+   "purchase_taxes": [
+    "10% G"
+   ],
+   "variants": []
+  },
+  {
+   "key": "MYPAD-A11",
+   "name": "myPad Air 11\"",
+   "group": "Phones & tablets",
+   "category": "Goods / IT Equipment",
+   "type": "Goods",
+   "unit": "Units",
+   "internal_reference": "MYPAD-A11",
+   "list_price": 2799.0,
+   "cost": 2290.0,
+   "sales": true,
+   "purchase": true,
+   "active": true,
+   "sales_description": "11-inch tablet, 128GB, Wi-Fi, pencil support.",
+   "sales_taxes": [
+    "10% G"
+   ],
+   "purchase_taxes": [
+    "10% G"
+   ],
+   "variants": []
+  },
+  {
+   "key": "MYPAD-P13",
+   "name": "myPad Pro 13\"",
+   "group": "Phones & tablets",
+   "category": "Goods / IT Equipment",
+   "type": "Goods",
+   "unit": "Units",
+   "internal_reference": "MYPAD-P13",
+   "list_price": 5299.0,
+   "cost": 4420.0,
+   "sales": true,
+   "purchase": true,
+   "active": true,
+   "sales_description": "13-inch tablet, 256GB, Wi-Fi + cellular.",
+   "sales_taxes": [
+    "10% G"
+   ],
+   "purchase_taxes": [
+    "10% G"
+   ],
+   "variants": []
+  },
+  {
+   "key": "MYP-15",
+   "name": "myPhone 15",
+   "group": "Phones & tablets",
+   "category": "Goods / IT Equipment",
+   "type": "Goods",
+   "unit": "Units",
+   "internal_reference": "MYP-15",
+   "list_price": 3299.0,
+   "cost": 2780.0,
+   "sales": true,
+   "purchase": true,
+   "active": false,
+   "sales_description": "Discontinued. Superseded by myPhone 16.",
+   "sales_taxes": [
+    "10% G"
+   ],
+   "purchase_taxes": [
+    "10% G"
+   ],
+   "variants": []
+  },
+  {
+   "key": "MYD-STUDIO",
+   "name": "myDisplay Studio",
+   "group": "Accessories",
+   "category": "Goods / Consumables",
+   "type": "Goods",
+   "unit": "Units",
+   "internal_reference": "MYD-STUDIO",
+   "list_price": 6999.0,
+   "cost": 5900.0,
+   "sales": true,
+   "purchase": true,
+   "active": true,
+   "sales_description": "27-inch 5K display, height-adjustable stand, built-in camera.",
+   "sales_taxes": [
+    "10% G"
+   ],
+   "purchase_taxes": [
+    "10% G"
+   ],
+   "variants": []
+  },
+  {
+   "key": "MYA-KB",
+   "name": "myKeyboard",
+   "group": "Accessories",
+   "category": "Goods / Consumables",
+   "type": "Goods",
+   "unit": "Units",
+   "internal_reference": "MYA-KB",
+   "list_price": 499.0,
+   "cost": 385.0,
+   "sales": true,
+   "purchase": true,
+   "active": true,
+   "sales_description": "Wireless low-profile keyboard, numeric pad.",
+   "sales_taxes": [
+    "10% G"
+   ],
+   "purchase_taxes": [
+    "10% G"
+   ],
+   "variants": []
+  },
+  {
+   "key": "MYA-MOUSE",
+   "name": "myMouse",
+   "group": "Accessories",
+   "category": "Goods / Consumables",
+   "type": "Goods",
+   "unit": "Units",
+   "internal_reference": "MYA-MOUSE",
+   "list_price": 379.0,
+   "cost": 290.0,
+   "sales": true,
+   "purchase": true,
+   "active": true,
+   "sales_description": "Wireless multi-touch mouse, USB-C charging.",
+   "sales_taxes": [
+    "10% G"
+   ],
+   "purchase_taxes": [
+    "10% G"
+   ],
+   "variants": []
+  },
+  {
+   "key": "MYA-PENCIL",
+   "name": "myPencil Pro",
+   "group": "Accessories",
+   "category": "Goods / Consumables",
+   "type": "Goods",
+   "unit": "Units",
+   "internal_reference": "MYA-PENCIL",
+   "list_price": 599.0,
+   "cost": 465.0,
+   "sales": true,
+   "purchase": true,
+   "active": true,
+   "sales_description": "Pressure-sensitive stylus for myPad, magnetic charging.",
+   "sales_taxes": [
+    "10% G"
+   ],
+   "purchase_taxes": [
+    "10% G"
+   ],
+   "variants": []
+  },
+  {
+   "key": "MYA-PODS",
+   "name": "myPods Pro",
+   "group": "Accessories",
+   "category": "Goods / Consumables",
+   "type": "Goods",
+   "unit": "Units",
+   "internal_reference": "MYA-PODS",
+   "list_price": 1099.0,
+   "cost": 860.0,
+   "sales": true,
+   "purchase": true,
+   "active": true,
+   "sales_description": "In-ear headphones, active noise cancellation, charging case.",
+   "sales_taxes": [
+    "10% G"
+   ],
+   "purchase_taxes": [
+    "10% G"
+   ],
+   "variants": []
+  },
+  {
+   "key": "MYA-HUB",
+   "name": "USB-C hub",
+   "group": "Accessories",
+   "category": "Goods / Consumables",
+   "type": "Goods",
+   "unit": "Units",
+   "internal_reference": "MYA-HUB",
+   "list_price": 289.0,
+   "cost": 195.0,
+   "sales": true,
+   "purchase": true,
+   "active": true,
+   "sales_description": "7-in-1 hub: HDMI, card reader, three USB-A, 100W pass-through.",
+   "sales_taxes": [
+    "10% G"
+   ],
+   "purchase_taxes": [
+    "10% G"
+   ],
+   "variants": []
+  },
+  {
+   "key": "MYS-CARE",
+   "name": "myCare+",
+   "group": "Services",
+   "category": "Services",
+   "type": "Service",
+   "unit": "Units",
+   "internal_reference": "MYS-CARE",
+   "list_price": 899.0,
+   "cost": 0.0,
+   "sales": true,
+   "purchase": false,
+   "active": true,
+   "sales_description": "Three-year hardware cover with accidental damage, per device.",
+   "sales_taxes": [
+    "8% S"
+   ],
+   "purchase_taxes": [],
+   "variants": []
+  },
+  {
+   "key": "MYS-SETUP",
+   "name": "Setup & Migration",
+   "group": "Services",
+   "category": "Services",
+   "type": "Service",
+   "unit": "Units",
+   "internal_reference": "MYS-SETUP",
+   "list_price": 350.0,
+   "cost": 120.0,
+   "sales": true,
+   "purchase": false,
+   "active": true,
+   "sales_description": "Unbox, configure and migrate data for one device.",
+   "sales_taxes": [
+    "8% S"
+   ],
+   "purchase_taxes": [],
+   "variants": []
+  },
+  {
+   "key": "MYS-ONSITE",
+   "name": "Onsite Support Day",
+   "group": "Services",
+   "category": "Services",
+   "type": "Service",
+   "unit": "Days",
+   "internal_reference": "MYS-ONSITE",
+   "list_price": 1800.0,
+   "cost": 900.0,
+   "sales": true,
+   "purchase": false,
+   "active": true,
+   "sales_description": "One engineer on site for a full working day.",
+   "sales_taxes": [
+    "8% S"
+   ],
+   "purchase_taxes": [],
+   "variants": []
+  },
+  {
+   "key": "MYS-ENROL",
+   "name": "Device Enrolment",
+   "group": "Services",
+   "category": "Services",
+   "type": "Service",
+   "unit": "Units",
+   "internal_reference": "MYS-ENROL",
+   "list_price": 45.0,
+   "cost": 15.0,
+   "sales": true,
+   "purchase": false,
+   "active": true,
+   "sales_description": "Enrol one device in the customer device-management tenant.",
+   "sales_taxes": [
+    "8% S"
+   ],
+   "purchase_taxes": [],
+   "variants": []
+  }
+ ],
+ "orders": [
+  {
+   "key": "SMBD-PO-2025-0418",
+   "customer": "smbd",
+   "status": "Sales Order",
+   "date_offset": -348,
+   "expiry_offset": -318,
+   "invoice_status": "Fully Invoiced",
+   "delivery_status": "Fully Delivered",
+   "locked": true,
+   "invoicing_closed": false,
+   "signed": null,
+   "incoterm": null,
+   "incoterm_location": null,
+   "payment_terms": "45 Days",
+   "delivery_address": "smbd_store",
+   "invoice_address": null,
+   "delivery_date_offset": -338,
+   "discount_type": null,
+   "discount_value": null,
+   "is_template": false,
+   "template_name": null,
+   "source_document": null,
+   "tax_mode": "Tax Excluded",
+   "online_signature": false,
+   "online_payment": false,
+   "prepayment_percentage": null,
+   "to_invoice_later": false,
+   "demonstrates": "oldest confirmed order; Locked, Fully Delivered, Fully Invoiced",
+   "lines": [
+    {
+     "kind": "Product",
+     "product": "MYB-AIR13-256-SLV",
+     "description": "myBook Air 13\" (256GB · Silver)",
+     "quantity": 8.0,
+     "unit": "Units",
+     "price": 4299.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 10
+    },
+    {
+     "kind": "Product",
+     "product": "MYA-KB",
+     "description": "myKeyboard",
+     "quantity": 8.0,
+     "unit": "Units",
+     "price": 499.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 20
+    },
+    {
+     "kind": "Product",
+     "product": "MYS-SETUP",
+     "description": "Setup & Migration",
+     "quantity": 8.0,
+     "unit": "Units",
+     "price": 350.0,
+     "discount": 0.0,
+     "taxes": [
+      "8% S"
+     ],
+     "lead": null,
+     "sequence": 30
+    }
+   ]
+  },
+  {
+   "key": "PKK-PO-4471",
+   "customer": "pkk",
+   "status": "Sales Order",
+   "date_offset": -331,
+   "expiry_offset": -301,
+   "invoice_status": "Fully Invoiced",
+   "delivery_status": "Fully Delivered",
+   "locked": false,
+   "invoicing_closed": false,
+   "signed": null,
+   "incoterm": null,
+   "incoterm_location": null,
+   "payment_terms": "Immediate Payment",
+   "delivery_address": null,
+   "invoice_address": null,
+   "delivery_date_offset": null,
+   "discount_type": null,
+   "discount_value": null,
+   "is_template": false,
+   "template_name": null,
+   "source_document": null,
+   "tax_mode": "Tax Excluded",
+   "online_signature": false,
+   "online_payment": false,
+   "prepayment_percentage": null,
+   "to_invoice_later": false,
+   "demonstrates": "reseller accessory order",
+   "lines": [
+    {
+     "kind": "Product",
+     "product": "MYA-MOUSE",
+     "description": "myMouse",
+     "quantity": 25.0,
+     "unit": "Units",
+     "price": 379.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 10
+    },
+    {
+     "kind": "Product",
+     "product": "MYA-KB",
+     "description": "myKeyboard",
+     "quantity": 25.0,
+     "unit": "Units",
+     "price": 499.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 20
+    },
+    {
+     "kind": "Product",
+     "product": "MYA-HUB",
+     "description": "USB-C hub",
+     "quantity": 30.0,
+     "unit": "Units",
+     "price": 289.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 30
+    }
+   ]
+  },
+  {
+   "key": "KMA-2025-0093",
+   "customer": "kma",
+   "status": "Sales Order",
+   "date_offset": -312,
+   "expiry_offset": -282,
+   "invoice_status": "Fully Invoiced",
+   "delivery_status": "Fully Delivered",
+   "locked": false,
+   "invoicing_closed": false,
+   "signed": null,
+   "incoterm": null,
+   "incoterm_location": null,
+   "payment_terms": "30 Days",
+   "delivery_address": null,
+   "invoice_address": null,
+   "delivery_date_offset": null,
+   "discount_type": null,
+   "discount_value": null,
+   "is_template": false,
+   "template_name": null,
+   "source_document": null,
+   "tax_mode": "Tax Excluded",
+   "online_signature": false,
+   "online_payment": false,
+   "prepayment_percentage": null,
+   "to_invoice_later": false,
+   "demonstrates": "clinic tablet order",
+   "lines": [
+    {
+     "kind": "Product",
+     "product": "MYPAD-A11",
+     "description": "myPad Air 11\"",
+     "quantity": 4.0,
+     "unit": "Units",
+     "price": 2799.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 10
+    },
+    {
+     "kind": "Product",
+     "product": "MYA-PENCIL",
+     "description": "myPencil Pro",
+     "quantity": 4.0,
+     "unit": "Units",
+     "price": 599.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 20
+    },
+    {
+     "kind": "Product",
+     "product": "MYS-ENROL",
+     "description": "Device Enrolment",
+     "quantity": 4.0,
+     "unit": "Units",
+     "price": 45.0,
+     "discount": 0.0,
+     "taxes": [
+      "8% S"
+     ],
+     "lead": null,
+     "sequence": 30
+    }
+   ]
+  },
+  {
+   "key": "SRW-PO-2025-114",
+   "customer": "srw",
+   "status": "Sales Order",
+   "date_offset": -286,
+   "expiry_offset": -256,
+   "invoice_status": "Fully Invoiced",
+   "delivery_status": "Fully Delivered",
+   "locked": true,
+   "invoicing_closed": false,
+   "signed": null,
+   "incoterm": null,
+   "incoterm_location": null,
+   "payment_terms": "15 Days",
+   "delivery_address": null,
+   "invoice_address": null,
+   "delivery_date_offset": null,
+   "discount_type": null,
+   "discount_value": null,
+   "is_template": false,
+   "template_name": null,
+   "source_document": null,
+   "tax_mode": "Tax Excluded",
+   "online_signature": false,
+   "online_payment": false,
+   "prepayment_percentage": null,
+   "to_invoice_later": false,
+   "demonstrates": "design studio, top-of-range machines; Locked",
+   "lines": [
+    {
+     "kind": "Product",
+     "product": "MYB-PRO14-1TB-SPG",
+     "description": "myBook Pro 14\" (1TB · Space Grey)",
+     "quantity": 3.0,
+     "unit": "Units",
+     "price": 7999.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 10
+    },
+    {
+     "kind": "Product",
+     "product": "MYD-STUDIO",
+     "description": "myDisplay Studio",
+     "quantity": 3.0,
+     "unit": "Units",
+     "price": 6999.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 20
+    },
+    {
+     "kind": "Product",
+     "product": "MYS-CARE",
+     "description": "myCare+",
+     "quantity": 3.0,
+     "unit": "Units",
+     "price": 899.0,
+     "discount": 0.0,
+     "taxes": [
+      "8% S"
+     ],
+     "lead": null,
+     "sequence": 30
+    }
+   ]
+  },
+  {
+   "key": "GGR-PO-88231",
+   "customer": "ggr",
+   "status": "Sales Order",
+   "date_offset": -264,
+   "expiry_offset": -234,
+   "invoice_status": "Fully Invoiced",
+   "delivery_status": "Fully Delivered",
+   "locked": false,
+   "invoicing_closed": false,
+   "signed": null,
+   "incoterm": "DAP",
+   "incoterm_location": "Gudang Melaka Tengah",
+   "payment_terms": "30 Days",
+   "delivery_address": "ggr_store",
+   "invoice_address": null,
+   "delivery_date_offset": null,
+   "discount_type": null,
+   "discount_value": null,
+   "is_template": false,
+   "template_name": null,
+   "source_document": null,
+   "tax_mode": "Tax Excluded",
+   "online_signature": false,
+   "online_payment": false,
+   "prepayment_percentage": null,
+   "to_invoice_later": false,
+   "demonstrates": "reseller stock order with an Incoterm",
+   "lines": [
+    {
+     "kind": "Product",
+     "product": "MYP-16-128-BLK",
+     "description": "myPhone 16 (128GB · Black)",
+     "quantity": 20.0,
+     "unit": "Units",
+     "price": 3999.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 10
+    },
+    {
+     "kind": "Product",
+     "product": "MYA-PODS",
+     "description": "myPods Pro",
+     "quantity": 20.0,
+     "unit": "Units",
+     "price": 1099.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 20
+    },
+    {
+     "kind": "Product",
+     "product": "MYA-HUB",
+     "description": "USB-C hub",
+     "quantity": 40.0,
+     "unit": "Units",
+     "price": 289.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 30
+    }
+   ]
+  },
+  {
+   "key": "JPNJ-T-2026-007",
+   "customer": "jpnj",
+   "status": "Sales Order",
+   "date_offset": -232,
+   "expiry_offset": -172,
+   "invoice_status": "Fully Invoiced",
+   "delivery_status": "Fully Delivered",
+   "locked": true,
+   "invoicing_closed": false,
+   "signed": null,
+   "incoterm": null,
+   "incoterm_location": null,
+   "payment_terms": "45 Days",
+   "delivery_address": null,
+   "invoice_address": null,
+   "delivery_date_offset": -200,
+   "discount_type": null,
+   "discount_value": null,
+   "is_template": false,
+   "template_name": null,
+   "source_document": null,
+   "tax_mode": "Tax Excluded",
+   "online_signature": false,
+   "online_payment": false,
+   "prepayment_percentage": null,
+   "to_invoice_later": false,
+   "demonstrates": "the order carrying a Section and a Note; state tender, 60-day validity",
+   "lines": [
+    {
+     "kind": "Section",
+     "description": "Phase 1 — classroom notebooks",
+     "sequence": 10
+    },
+    {
+     "kind": "Product",
+     "product": "MYB-AIR13-256-SLV",
+     "description": "myBook Air 13\" (256GB · Silver)",
+     "quantity": 40.0,
+     "unit": "Units",
+     "price": 4299.0,
+     "discount": 5.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 20
+    },
+    {
+     "kind": "Product",
+     "product": "MYS-SETUP",
+     "description": "Setup & Migration",
+     "quantity": 40.0,
+     "unit": "Units",
+     "price": 350.0,
+     "discount": 5.0,
+     "taxes": [
+      "8% S"
+     ],
+     "lead": null,
+     "sequence": 30
+    },
+    {
+     "kind": "Note",
+     "description": "Delivery in two batches, twenty units each, to the district stores.",
+     "sequence": 40
+    },
+    {
+     "kind": "Product",
+     "product": "MYS-ONSITE",
+     "description": "Onsite Support Day",
+     "quantity": 6.0,
+     "unit": "Days",
+     "price": 1800.0,
+     "discount": 0.0,
+     "taxes": [
+      "8% S"
+     ],
+     "lead": null,
+     "sequence": 50
+    }
+   ]
+  },
+  {
+   "key": "HPSC-PO-2026-0221",
+   "customer": "hpsc",
+   "status": "Sales Order",
+   "date_offset": -205,
+   "expiry_offset": -175,
+   "invoice_status": "Fully Invoiced",
+   "delivery_status": "Fully Delivered",
+   "locked": false,
+   "invoicing_closed": false,
+   "signed": null,
+   "incoterm": "CIF",
+   "incoterm_location": "Port Klang",
+   "payment_terms": "45 Days",
+   "delivery_address": null,
+   "invoice_address": null,
+   "delivery_date_offset": null,
+   "discount_type": null,
+   "discount_value": null,
+   "is_template": false,
+   "template_name": null,
+   "source_document": null,
+   "tax_mode": "Tax Excluded",
+   "online_signature": false,
+   "online_payment": false,
+   "prepayment_percentage": null,
+   "to_invoice_later": false,
+   "demonstrates": "ward tablet rollout, four lines",
+   "lines": [
+    {
+     "kind": "Product",
+     "product": "MYPAD-P13",
+     "description": "myPad Pro 13\"",
+     "quantity": 24.0,
+     "unit": "Units",
+     "price": 5299.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 10
+    },
+    {
+     "kind": "Product",
+     "product": "MYS-ENROL",
+     "description": "Device Enrolment",
+     "quantity": 24.0,
+     "unit": "Units",
+     "price": 45.0,
+     "discount": 0.0,
+     "taxes": [
+      "8% S"
+     ],
+     "lead": null,
+     "sequence": 20
+    },
+    {
+     "kind": "Product",
+     "product": "MYS-CARE",
+     "description": "myCare+",
+     "quantity": 24.0,
+     "unit": "Units",
+     "price": 899.0,
+     "discount": 0.0,
+     "taxes": [
+      "8% S"
+     ],
+     "lead": null,
+     "sequence": 30
+    },
+    {
+     "kind": "Product",
+     "product": "MYA-PENCIL",
+     "description": "myPencil Pro",
+     "quantity": 24.0,
+     "unit": "Units",
+     "price": 599.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 40
+    }
+   ]
+  },
+  {
+   "key": "MPSP-PO-2026-0455",
+   "customer": "mpsp",
+   "status": "Sales Order",
+   "date_offset": -168,
+   "expiry_offset": -138,
+   "invoice_status": "Fully Invoiced",
+   "delivery_status": "Fully Delivered",
+   "locked": false,
+   "invoicing_closed": true,
+   "signed": null,
+   "incoterm": null,
+   "incoterm_location": null,
+   "payment_terms": "45 Days",
+   "delivery_address": null,
+   "invoice_address": null,
+   "delivery_date_offset": null,
+   "discount_type": null,
+   "discount_value": null,
+   "is_template": false,
+   "template_name": null,
+   "source_document": null,
+   "tax_mode": "Tax Excluded",
+   "online_signature": false,
+   "online_payment": false,
+   "prepayment_percentage": null,
+   "to_invoice_later": false,
+   "demonstrates": "Invoicing Closed ticked (nothing more will be invoiced)",
+   "lines": [
+    {
+     "kind": "Product",
+     "product": "MYM-24",
+     "description": "myMac 24\"",
+     "quantity": 12.0,
+     "unit": "Units",
+     "price": 5499.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 10
+    },
+    {
+     "kind": "Product",
+     "product": "MYA-KB",
+     "description": "myKeyboard",
+     "quantity": 12.0,
+     "unit": "Units",
+     "price": 499.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 20
+    },
+    {
+     "kind": "Product",
+     "product": "MYA-MOUSE",
+     "description": "myMouse",
+     "quantity": 12.0,
+     "unit": "Units",
+     "price": 379.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 30
+    }
+   ]
+  },
+  {
+   "key": "AWAN-PO-2026-0310",
+   "customer": "awan",
+   "status": "Sales Order",
+   "date_offset": -142,
+   "expiry_offset": -112,
+   "invoice_status": "To Invoice",
+   "delivery_status": "Fully Delivered",
+   "locked": false,
+   "invoicing_closed": false,
+   "signed": null,
+   "incoterm": null,
+   "incoterm_location": null,
+   "payment_terms": "21 Days",
+   "delivery_address": null,
+   "invoice_address": null,
+   "delivery_date_offset": null,
+   "discount_type": null,
+   "discount_value": null,
+   "is_template": false,
+   "template_name": null,
+   "source_document": null,
+   "tax_mode": "Tax Excluded",
+   "online_signature": false,
+   "online_payment": false,
+   "prepayment_percentage": null,
+   "to_invoice_later": true,
+   "demonstrates": "To Invoice quick filter; delivered and waiting to be billed",
+   "lines": [
+    {
+     "kind": "Product",
+     "product": "MYB-PRO14-512-SPG",
+     "description": "myBook Pro 14\" (512GB · Space Grey)",
+     "quantity": 6.0,
+     "unit": "Units",
+     "price": 7999.0,
+     "discount": 8.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 10
+    },
+    {
+     "kind": "Product",
+     "product": "MYD-STUDIO",
+     "description": "myDisplay Studio",
+     "quantity": 6.0,
+     "unit": "Units",
+     "price": 6999.0,
+     "discount": 8.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 20
+    },
+    {
+     "kind": "Product",
+     "product": "MYS-CARE",
+     "description": "myCare+",
+     "quantity": 6.0,
+     "unit": "Units",
+     "price": 899.0,
+     "discount": 0.0,
+     "taxes": [
+      "8% S"
+     ],
+     "lead": null,
+     "sequence": 30
+    }
+   ]
+  },
+  {
+   "key": "SMBD-PO-2026-0502",
+   "customer": "smbd",
+   "status": "Sales Order",
+   "date_offset": -118,
+   "expiry_offset": -88,
+   "invoice_status": "To Invoice",
+   "delivery_status": "Partially Delivered",
+   "locked": false,
+   "invoicing_closed": false,
+   "signed": null,
+   "incoterm": null,
+   "incoterm_location": null,
+   "payment_terms": "45 Days",
+   "delivery_address": "smbd_store",
+   "invoice_address": null,
+   "delivery_date_offset": null,
+   "discount_type": null,
+   "discount_value": null,
+   "is_template": false,
+   "template_name": null,
+   "source_document": null,
+   "tax_mode": "Tax Excluded",
+   "online_signature": false,
+   "online_payment": false,
+   "prepayment_percentage": null,
+   "to_invoice_later": true,
+   "demonstrates": "Partially Delivered; To Invoice",
+   "lines": [
+    {
+     "kind": "Product",
+     "product": "MYPAD-A11",
+     "description": "myPad Air 11\"",
+     "quantity": 30.0,
+     "unit": "Units",
+     "price": 2799.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 10
+    },
+    {
+     "kind": "Product",
+     "product": "MYA-PENCIL",
+     "description": "myPencil Pro",
+     "quantity": 30.0,
+     "unit": "Units",
+     "price": 599.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 20
+    },
+    {
+     "kind": "Product",
+     "product": "MYS-ENROL",
+     "description": "Device Enrolment",
+     "quantity": 30.0,
+     "unit": "Units",
+     "price": 45.0,
+     "discount": 0.0,
+     "taxes": [
+      "8% S"
+     ],
+     "lead": null,
+     "sequence": 30
+    },
+    {
+     "kind": "Product",
+     "product": "MYS-ONSITE",
+     "description": "Onsite Support Day",
+     "quantity": 4.0,
+     "unit": "Days",
+     "price": 1800.0,
+     "discount": 0.0,
+     "taxes": [
+      "8% S"
+     ],
+     "lead": null,
+     "sequence": 40
+    }
+   ]
+  },
+  {
+   "key": "KTN-PO-2026-0119",
+   "customer": "ktn",
+   "status": "Sales Order",
+   "date_offset": -96,
+   "expiry_offset": -66,
+   "invoice_status": "Upselling Opportunity",
+   "delivery_status": "Fully Delivered",
+   "locked": false,
+   "invoicing_closed": false,
+   "signed": null,
+   "incoterm": null,
+   "incoterm_location": null,
+   "payment_terms": "30% Now, Balance 60 Days",
+   "delivery_address": null,
+   "invoice_address": null,
+   "delivery_date_offset": null,
+   "discount_type": null,
+   "discount_value": null,
+   "is_template": false,
+   "template_name": null,
+   "source_document": null,
+   "tax_mode": "Tax Excluded",
+   "online_signature": false,
+   "online_payment": false,
+   "prepayment_percentage": null,
+   "to_invoice_later": false,
+   "demonstrates": "To Upsell quick filter (Upselling Opportunity)",
+   "lines": [
+    {
+     "kind": "Product",
+     "product": "MYB-AIR13-512-SLV",
+     "description": "myBook Air 13\" (512GB · Silver)",
+     "quantity": 25.0,
+     "unit": "Units",
+     "price": 4299.0,
+     "discount": 10.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 10
+    },
+    {
+     "kind": "Product",
+     "product": "MYS-SETUP",
+     "description": "Setup & Migration",
+     "quantity": 25.0,
+     "unit": "Units",
+     "price": 350.0,
+     "discount": 10.0,
+     "taxes": [
+      "8% S"
+     ],
+     "lead": null,
+     "sequence": 20
+    },
+    {
+     "kind": "Product",
+     "product": "MYS-CARE",
+     "description": "myCare+",
+     "quantity": 25.0,
+     "unit": "Units",
+     "price": 899.0,
+     "discount": 0.0,
+     "taxes": [
+      "8% S"
+     ],
+     "lead": null,
+     "sequence": 30
+    }
+   ]
+  },
+  {
+   "key": "GGR-PO-91104",
+   "customer": "ggr",
+   "status": "Sales Order",
+   "date_offset": -74,
+   "expiry_offset": -44,
+   "invoice_status": "Upselling Opportunity",
+   "delivery_status": "Fully Delivered",
+   "locked": false,
+   "invoicing_closed": true,
+   "signed": null,
+   "incoterm": null,
+   "incoterm_location": null,
+   "payment_terms": "30 Days",
+   "delivery_address": "ggr_store",
+   "invoice_address": null,
+   "delivery_date_offset": null,
+   "discount_type": null,
+   "discount_value": null,
+   "is_template": false,
+   "template_name": null,
+   "source_document": null,
+   "tax_mode": "Tax Excluded",
+   "online_signature": false,
+   "online_payment": false,
+   "prepayment_percentage": null,
+   "to_invoice_later": false,
+   "demonstrates": "Upselling Opportunity with Invoicing Closed",
+   "lines": [
+    {
+     "kind": "Product",
+     "product": "MYP-16PRO",
+     "description": "myPhone 16 Pro",
+     "quantity": 15.0,
+     "unit": "Units",
+     "price": 5499.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 10
+    },
+    {
+     "kind": "Product",
+     "product": "MYA-PODS",
+     "description": "myPods Pro",
+     "quantity": 15.0,
+     "unit": "Units",
+     "price": 1099.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 20
+    },
+    {
+     "kind": "Product",
+     "product": "MYA-HUB",
+     "description": "USB-C hub",
+     "quantity": 25.0,
+     "unit": "Units",
+     "price": 289.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 30
+    }
+   ]
+  },
+  {
+   "key": "SRW-PO-2026-207",
+   "customer": "srw",
+   "status": "Sales Order",
+   "date_offset": -52,
+   "expiry_offset": -22,
+   "invoice_status": "To Invoice",
+   "delivery_status": "Partially Delivered",
+   "locked": true,
+   "invoicing_closed": false,
+   "signed": {
+    "by": "Rajesh Kumar",
+    "days": -53
+   },
+   "incoterm": null,
+   "incoterm_location": null,
+   "payment_terms": "15 Days",
+   "delivery_address": null,
+   "invoice_address": null,
+   "delivery_date_offset": null,
+   "discount_type": null,
+   "discount_value": null,
+   "is_template": false,
+   "template_name": null,
+   "source_document": null,
+   "tax_mode": "Tax Excluded",
+   "online_signature": false,
+   "online_payment": false,
+   "prepayment_percentage": null,
+   "to_invoice_later": true,
+   "demonstrates": "signed order (Signature, Signed By, Signed On); Locked; Partially Delivered",
+   "lines": [
+    {
+     "kind": "Product",
+     "product": "MYM-24",
+     "description": "myMac 24\"",
+     "quantity": 4.0,
+     "unit": "Units",
+     "price": 5499.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 10
+    },
+    {
+     "kind": "Product",
+     "product": "MYD-STUDIO",
+     "description": "myDisplay Studio",
+     "quantity": 4.0,
+     "unit": "Units",
+     "price": 6999.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 20
+    },
+    {
+     "kind": "Product",
+     "product": "MYA-KB",
+     "description": "myKeyboard",
+     "quantity": 4.0,
+     "unit": "Units",
+     "price": 499.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 30
+    },
+    {
+     "kind": "Product",
+     "product": "MYA-MOUSE",
+     "description": "myMouse",
+     "quantity": 4.0,
+     "unit": "Units",
+     "price": 379.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 40
+    }
+   ]
+  },
+  {
+   "key": "HPSC-PO-2026-0788",
+   "customer": "hpsc",
+   "status": "Sales Order",
+   "date_offset": -34,
+   "expiry_offset": -4,
+   "invoice_status": "To Invoice",
+   "delivery_status": "Not Delivered",
+   "locked": false,
+   "invoicing_closed": false,
+   "signed": {
+    "by": "Nor Azlina Hashim",
+    "days": -33
+   },
+   "incoterm": null,
+   "incoterm_location": null,
+   "payment_terms": "45 Days",
+   "delivery_address": null,
+   "invoice_address": null,
+   "delivery_date_offset": null,
+   "discount_type": null,
+   "discount_value": null,
+   "is_template": false,
+   "template_name": null,
+   "source_document": null,
+   "tax_mode": "Tax Excluded",
+   "online_signature": false,
+   "online_payment": false,
+   "prepayment_percentage": null,
+   "to_invoice_later": true,
+   "demonstrates": "second signed order; Not Delivered",
+   "lines": [
+    {
+     "kind": "Product",
+     "product": "MYB-PRO14-1TB-SLV",
+     "description": "myBook Pro 14\" (1TB · Silver)",
+     "quantity": 4.0,
+     "unit": "Units",
+     "price": 7999.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 10
+    },
+    {
+     "kind": "Product",
+     "product": "MYS-CARE",
+     "description": "myCare+",
+     "quantity": 4.0,
+     "unit": "Units",
+     "price": 899.0,
+     "discount": 0.0,
+     "taxes": [
+      "8% S"
+     ],
+     "lead": null,
+     "sequence": 20
+    },
+    {
+     "kind": "Product",
+     "product": "MYS-ONSITE",
+     "description": "Onsite Support Day",
+     "quantity": 3.0,
+     "unit": "Days",
+     "price": 1800.0,
+     "discount": 0.0,
+     "taxes": [
+      "8% S"
+     ],
+     "lead": null,
+     "sequence": 30
+    }
+   ]
+  },
+  {
+   "key": "NURUL-2026-0044",
+   "customer": "nurul",
+   "status": "Sales Order",
+   "date_offset": -19,
+   "expiry_offset": 11,
+   "invoice_status": "Fully Invoiced",
+   "delivery_status": "Fully Delivered",
+   "locked": false,
+   "invoicing_closed": false,
+   "signed": null,
+   "incoterm": null,
+   "incoterm_location": null,
+   "payment_terms": "Immediate Payment",
+   "delivery_address": null,
+   "invoice_address": null,
+   "delivery_date_offset": null,
+   "discount_type": null,
+   "discount_value": null,
+   "is_template": false,
+   "template_name": null,
+   "source_document": null,
+   "tax_mode": "Tax Excluded",
+   "online_signature": false,
+   "online_payment": false,
+   "prepayment_percentage": null,
+   "to_invoice_later": false,
+   "demonstrates": "walk-in individual customer",
+   "lines": [
+    {
+     "kind": "Product",
+     "product": "MYP-16-256-TEAL",
+     "description": "myPhone 16 (256GB · Teal)",
+     "quantity": 1.0,
+     "unit": "Units",
+     "price": 3999.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 10
+    },
+    {
+     "kind": "Product",
+     "product": "MYA-PODS",
+     "description": "myPods Pro",
+     "quantity": 1.0,
+     "unit": "Units",
+     "price": 1099.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 20
+    },
+    {
+     "kind": "Product",
+     "product": "MYS-SETUP",
+     "description": "Setup & Migration",
+     "quantity": 1.0,
+     "unit": "Units",
+     "price": 350.0,
+     "discount": 0.0,
+     "taxes": [
+      "8% S"
+     ],
+     "lead": null,
+     "sequence": 30
+    }
+   ]
+  },
+  {
+   "key": "TANWM-2026-0051",
+   "customer": "tanwm",
+   "status": "Sales Order",
+   "date_offset": -8,
+   "expiry_offset": 22,
+   "invoice_status": "To Invoice",
+   "delivery_status": "Nothing to Deliver",
+   "locked": false,
+   "invoicing_closed": false,
+   "signed": null,
+   "incoterm": null,
+   "incoterm_location": null,
+   "payment_terms": "Immediate Payment",
+   "delivery_address": null,
+   "invoice_address": null,
+   "delivery_date_offset": null,
+   "discount_type": null,
+   "discount_value": null,
+   "is_template": false,
+   "template_name": null,
+   "source_document": null,
+   "tax_mode": "Tax Excluded",
+   "online_signature": false,
+   "online_payment": false,
+   "prepayment_percentage": null,
+   "to_invoice_later": true,
+   "demonstrates": "Nothing to Deliver; newest confirmed order",
+   "lines": [
+    {
+     "kind": "Product",
+     "product": "MYPAD-P13",
+     "description": "myPad Pro 13\"",
+     "quantity": 1.0,
+     "unit": "Units",
+     "price": 5299.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 10
+    },
+    {
+     "kind": "Product",
+     "product": "MYA-PENCIL",
+     "description": "myPencil Pro",
+     "quantity": 1.0,
+     "unit": "Units",
+     "price": 599.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 20
+    },
+    {
+     "kind": "Product",
+     "product": "MYS-CARE",
+     "description": "myCare+",
+     "quantity": 1.0,
+     "unit": "Units",
+     "price": 899.0,
+     "discount": 0.0,
+     "taxes": [
+      "8% S"
+     ],
+     "lead": null,
+     "sequence": 30
+    }
+   ]
+  },
+  {
+   "key": "SMBD-RFQ-2026-0611",
+   "customer": "smbd",
+   "status": "Quotation",
+   "date_offset": -40,
+   "expiry_offset": -12,
+   "invoice_status": "Nothing to Invoice",
+   "delivery_status": null,
+   "locked": false,
+   "invoicing_closed": false,
+   "signed": null,
+   "incoterm": null,
+   "incoterm_location": null,
+   "payment_terms": "45 Days",
+   "delivery_address": null,
+   "invoice_address": null,
+   "delivery_date_offset": null,
+   "discount_type": null,
+   "discount_value": null,
+   "is_template": false,
+   "template_name": null,
+   "source_document": null,
+   "tax_mode": "Tax Excluded",
+   "online_signature": false,
+   "online_payment": false,
+   "prepayment_percentage": null,
+   "to_invoice_later": false,
+   "demonstrates": "expired quotation (Expiration 12 days ago)",
+   "lines": [
+    {
+     "kind": "Product",
+     "product": "MYM-MINI",
+     "description": "myMac mini",
+     "quantity": 15.0,
+     "unit": "Units",
+     "price": 2899.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 10
+    },
+    {
+     "kind": "Product",
+     "product": "MYA-KB",
+     "description": "myKeyboard",
+     "quantity": 15.0,
+     "unit": "Units",
+     "price": 499.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 20
+    },
+    {
+     "kind": "Product",
+     "product": "MYA-MOUSE",
+     "description": "myMouse",
+     "quantity": 15.0,
+     "unit": "Units",
+     "price": 379.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 30
+    }
+   ]
+  },
+  {
+   "key": "KTN-RFQ-2026-0288",
+   "customer": "ktn",
+   "status": "Quotation",
+   "date_offset": -35,
+   "expiry_offset": -4,
+   "invoice_status": "Nothing to Invoice",
+   "delivery_status": null,
+   "locked": false,
+   "invoicing_closed": false,
+   "signed": null,
+   "incoterm": null,
+   "incoterm_location": null,
+   "payment_terms": "30% Now, Balance 60 Days",
+   "delivery_address": null,
+   "invoice_address": null,
+   "delivery_date_offset": null,
+   "discount_type": null,
+   "discount_value": null,
+   "is_template": false,
+   "template_name": null,
+   "source_document": null,
+   "tax_mode": "Tax Excluded",
+   "online_signature": false,
+   "online_payment": false,
+   "prepayment_percentage": null,
+   "to_invoice_later": false,
+   "demonstrates": "expired quotation (Expiration 4 days ago) — Share for Signature is withheld",
+   "lines": [
+    {
+     "kind": "Product",
+     "product": "MYB-AIR13-512-MID",
+     "description": "myBook Air 13\" (512GB · Midnight)",
+     "quantity": 12.0,
+     "unit": "Units",
+     "price": 4299.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 10
+    },
+    {
+     "kind": "Product",
+     "product": "MYS-SETUP",
+     "description": "Setup & Migration",
+     "quantity": 12.0,
+     "unit": "Units",
+     "price": 350.0,
+     "discount": 0.0,
+     "taxes": [
+      "8% S"
+     ],
+     "lead": null,
+     "sequence": 20
+    }
+   ]
+  },
+  {
+   "key": "MPSP-RFQ-2026-0512",
+   "customer": "mpsp",
+   "status": "Quotation",
+   "date_offset": -25,
+   "expiry_offset": 3,
+   "invoice_status": "Nothing to Invoice",
+   "delivery_status": null,
+   "locked": false,
+   "invoicing_closed": false,
+   "signed": null,
+   "incoterm": "EXW",
+   "incoterm_location": "MyTech Warehouse, Shah Alam",
+   "payment_terms": "45 Days",
+   "delivery_address": null,
+   "invoice_address": null,
+   "delivery_date_offset": null,
+   "discount_type": null,
+   "discount_value": null,
+   "is_template": false,
+   "template_name": null,
+   "source_document": null,
+   "tax_mode": "Tax Excluded",
+   "online_signature": false,
+   "online_payment": false,
+   "prepayment_percentage": null,
+   "to_invoice_later": false,
+   "demonstrates": "expires in 3 days",
+   "lines": [
+    {
+     "kind": "Product",
+     "product": "MYM-24",
+     "description": "myMac 24\"",
+     "quantity": 20.0,
+     "unit": "Units",
+     "price": 5499.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 10
+    },
+    {
+     "kind": "Product",
+     "product": "MYD-STUDIO",
+     "description": "myDisplay Studio",
+     "quantity": 8.0,
+     "unit": "Units",
+     "price": 6999.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 20
+    },
+    {
+     "kind": "Product",
+     "product": "MYS-ONSITE",
+     "description": "Onsite Support Day",
+     "quantity": 5.0,
+     "unit": "Days",
+     "price": 1800.0,
+     "discount": 0.0,
+     "taxes": [
+      "8% S"
+     ],
+     "lead": null,
+     "sequence": 30
+    }
+   ]
+  },
+  {
+   "key": "AWAN-RFQ-2026-0377",
+   "customer": "awan",
+   "status": "Quotation",
+   "date_offset": -21,
+   "expiry_offset": 6,
+   "invoice_status": "Nothing to Invoice",
+   "delivery_status": null,
+   "locked": false,
+   "invoicing_closed": false,
+   "signed": null,
+   "incoterm": null,
+   "incoterm_location": null,
+   "payment_terms": "21 Days",
+   "delivery_address": null,
+   "invoice_address": null,
+   "delivery_date_offset": null,
+   "discount_type": null,
+   "discount_value": null,
+   "is_template": false,
+   "template_name": null,
+   "source_document": null,
+   "tax_mode": "Tax Excluded",
+   "online_signature": false,
+   "online_payment": false,
+   "prepayment_percentage": null,
+   "to_invoice_later": false,
+   "demonstrates": "expires in 6 days",
+   "lines": [
+    {
+     "kind": "Product",
+     "product": "MYB-PRO14-1TB-SPG",
+     "description": "myBook Pro 14\" (1TB · Space Grey)",
+     "quantity": 8.0,
+     "unit": "Units",
+     "price": 7999.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 10
+    },
+    {
+     "kind": "Product",
+     "product": "MYD-STUDIO",
+     "description": "myDisplay Studio",
+     "quantity": 8.0,
+     "unit": "Units",
+     "price": 6999.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 20
+    },
+    {
+     "kind": "Product",
+     "product": "MYS-CARE",
+     "description": "myCare+",
+     "quantity": 8.0,
+     "unit": "Units",
+     "price": 899.0,
+     "discount": 0.0,
+     "taxes": [
+      "8% S"
+     ],
+     "lead": null,
+     "sequence": 30
+    },
+    {
+     "kind": "Product",
+     "product": "MYS-SETUP",
+     "description": "Setup & Migration",
+     "quantity": 8.0,
+     "unit": "Units",
+     "price": 350.0,
+     "discount": 0.0,
+     "taxes": [
+      "8% S"
+     ],
+     "lead": null,
+     "sequence": 40
+    }
+   ]
+  },
+  {
+   "key": "HPSC-RFQ-2026-0812",
+   "customer": "hpsc",
+   "status": "Quotation",
+   "date_offset": -16,
+   "expiry_offset": 44,
+   "invoice_status": "Nothing to Invoice",
+   "delivery_status": null,
+   "locked": false,
+   "invoicing_closed": false,
+   "signed": null,
+   "incoterm": null,
+   "incoterm_location": null,
+   "payment_terms": "45 Days",
+   "delivery_address": null,
+   "invoice_address": null,
+   "delivery_date_offset": null,
+   "discount_type": "Global Discount",
+   "discount_value": 10.0,
+   "is_template": false,
+   "template_name": null,
+   "source_document": null,
+   "tax_mode": "Tax Excluded",
+   "online_signature": false,
+   "online_payment": false,
+   "prepayment_percentage": null,
+   "to_invoice_later": false,
+   "demonstrates": "percentage discount lines (Discount 10.00% per tax group)",
+   "lines": [
+    {
+     "kind": "Product",
+     "product": "MYPAD-A11",
+     "description": "myPad Air 11\"",
+     "quantity": 40.0,
+     "unit": "Units",
+     "price": 2799.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 10
+    },
+    {
+     "kind": "Product",
+     "product": "MYS-ENROL",
+     "description": "Device Enrolment",
+     "quantity": 40.0,
+     "unit": "Units",
+     "price": 45.0,
+     "discount": 0.0,
+     "taxes": [
+      "8% S"
+     ],
+     "lead": null,
+     "sequence": 20
+    },
+    {
+     "kind": "Product",
+     "product": "MYA-PENCIL",
+     "description": "myPencil Pro",
+     "quantity": 40.0,
+     "unit": "Units",
+     "price": 599.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 30
+    },
+    {
+     "kind": "Product",
+     "product": "DISCOUNT",
+     "description": "Discount 10.00%",
+     "quantity": 1.0,
+     "unit": "Units",
+     "price": -13592.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "sequence": 40
+    },
+    {
+     "kind": "Product",
+     "product": "DISCOUNT",
+     "description": "Discount 10.00%",
+     "quantity": 1.0,
+     "unit": "Units",
+     "price": -180.0,
+     "discount": 0.0,
+     "taxes": [
+      "8% S"
+     ],
+     "sequence": 50
+    }
+   ]
+  },
+  {
+   "key": "GGR-RFQ-93012",
+   "customer": "ggr",
+   "status": "Quotation",
+   "date_offset": -12,
+   "expiry_offset": 18,
+   "invoice_status": "Nothing to Invoice",
+   "delivery_status": null,
+   "locked": false,
+   "invoicing_closed": false,
+   "signed": null,
+   "incoterm": null,
+   "incoterm_location": null,
+   "payment_terms": "30 Days",
+   "delivery_address": "ggr_store",
+   "invoice_address": null,
+   "delivery_date_offset": null,
+   "discount_type": "Fixed Amount",
+   "discount_value": 500.0,
+   "is_template": false,
+   "template_name": null,
+   "source_document": null,
+   "tax_mode": "Tax Excluded",
+   "online_signature": false,
+   "online_payment": false,
+   "prepayment_percentage": null,
+   "to_invoice_later": false,
+   "demonstrates": "fixed-amount discount line (Discount)",
+   "lines": [
+    {
+     "kind": "Product",
+     "product": "MYP-16-256-BLK",
+     "description": "myPhone 16 (256GB · Black)",
+     "quantity": 30.0,
+     "unit": "Units",
+     "price": 3999.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 10
+    },
+    {
+     "kind": "Product",
+     "product": "MYA-PODS",
+     "description": "myPods Pro",
+     "quantity": 30.0,
+     "unit": "Units",
+     "price": 1099.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 20
+    },
+    {
+     "kind": "Product",
+     "product": "MYA-HUB",
+     "description": "USB-C hub",
+     "quantity": 50.0,
+     "unit": "Units",
+     "price": 289.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 30
+    },
+    {
+     "kind": "Product",
+     "product": "DISCOUNT",
+     "description": "Discount",
+     "quantity": 1.0,
+     "unit": "Units",
+     "price": -500.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "sequence": 40
+    }
+   ]
+  },
+  {
+   "key": "SRW-RFQ-2026-231",
+   "customer": "srw",
+   "status": "Quotation",
+   "date_offset": -9,
+   "expiry_offset": 21,
+   "invoice_status": "Nothing to Invoice",
+   "delivery_status": null,
+   "locked": false,
+   "invoicing_closed": false,
+   "signed": null,
+   "incoterm": null,
+   "incoterm_location": null,
+   "payment_terms": "15 Days",
+   "delivery_address": null,
+   "invoice_address": null,
+   "delivery_date_offset": null,
+   "discount_type": null,
+   "discount_value": null,
+   "is_template": false,
+   "template_name": null,
+   "source_document": null,
+   "tax_mode": "Tax Excluded",
+   "online_signature": false,
+   "online_payment": false,
+   "prepayment_percentage": null,
+   "to_invoice_later": false,
+   "demonstrates": "plain open quotation",
+   "lines": [
+    {
+     "kind": "Product",
+     "product": "MYB-PRO14-1TB-SLV",
+     "description": "myBook Pro 14\" (1TB · Silver)",
+     "quantity": 2.0,
+     "unit": "Units",
+     "price": 7999.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 10
+    },
+    {
+     "kind": "Product",
+     "product": "MYD-STUDIO",
+     "description": "myDisplay Studio",
+     "quantity": 2.0,
+     "unit": "Units",
+     "price": 6999.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 20
+    }
+   ]
+  },
+  {
+   "key": "KMA-RFQ-2026-0141",
+   "customer": "kma",
+   "status": "Quotation",
+   "date_offset": -5,
+   "expiry_offset": 25,
+   "invoice_status": "Nothing to Invoice",
+   "delivery_status": null,
+   "locked": false,
+   "invoicing_closed": false,
+   "signed": null,
+   "incoterm": null,
+   "incoterm_location": null,
+   "payment_terms": "30 Days",
+   "delivery_address": null,
+   "invoice_address": null,
+   "delivery_date_offset": null,
+   "discount_type": null,
+   "discount_value": null,
+   "is_template": false,
+   "template_name": null,
+   "source_document": null,
+   "tax_mode": "Tax Excluded",
+   "online_signature": false,
+   "online_payment": false,
+   "prepayment_percentage": null,
+   "to_invoice_later": false,
+   "demonstrates": "plain open quotation",
+   "lines": [
+    {
+     "kind": "Product",
+     "product": "MYM-MINI",
+     "description": "myMac mini",
+     "quantity": 3.0,
+     "unit": "Units",
+     "price": 2899.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 10
+    },
+    {
+     "kind": "Product",
+     "product": "MYA-KB",
+     "description": "myKeyboard",
+     "quantity": 3.0,
+     "unit": "Units",
+     "price": 499.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 20
+    },
+    {
+     "kind": "Product",
+     "product": "MYS-SETUP",
+     "description": "Setup & Migration",
+     "quantity": 3.0,
+     "unit": "Units",
+     "price": 350.0,
+     "discount": 0.0,
+     "taxes": [
+      "8% S"
+     ],
+     "lead": null,
+     "sequence": 30
+    },
+    {
+     "kind": "Product",
+     "product": "MYS-CARE",
+     "description": "myCare+",
+     "quantity": 3.0,
+     "unit": "Units",
+     "price": 899.0,
+     "discount": 0.0,
+     "taxes": [
+      "8% S"
+     ],
+     "lead": null,
+     "sequence": 40
+    }
+   ]
+  },
+  {
+   "key": "PKK-RFQ-4620",
+   "customer": "pkk",
+   "status": "Quotation",
+   "date_offset": -2,
+   "expiry_offset": 28,
+   "invoice_status": "Nothing to Invoice",
+   "delivery_status": null,
+   "locked": false,
+   "invoicing_closed": false,
+   "signed": null,
+   "incoterm": null,
+   "incoterm_location": null,
+   "payment_terms": "Immediate Payment",
+   "delivery_address": null,
+   "invoice_address": null,
+   "delivery_date_offset": null,
+   "discount_type": null,
+   "discount_value": null,
+   "is_template": false,
+   "template_name": null,
+   "source_document": null,
+   "tax_mode": "Tax Excluded",
+   "online_signature": false,
+   "online_payment": false,
+   "prepayment_percentage": null,
+   "to_invoice_later": false,
+   "demonstrates": "newest quotation",
+   "lines": [
+    {
+     "kind": "Product",
+     "product": "MYA-MOUSE",
+     "description": "myMouse",
+     "quantity": 40.0,
+     "unit": "Units",
+     "price": 379.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 10
+    },
+    {
+     "kind": "Product",
+     "product": "MYA-KB",
+     "description": "myKeyboard",
+     "quantity": 40.0,
+     "unit": "Units",
+     "price": 499.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 20
+    }
+   ]
+  },
+  {
+   "key": "JPNJ-RFQ-2026-0091",
+   "customer": "jpnj",
+   "status": "Quotation Sent",
+   "date_offset": -58,
+   "expiry_offset": 2,
+   "invoice_status": "Nothing to Invoice",
+   "delivery_status": null,
+   "locked": false,
+   "invoicing_closed": false,
+   "signed": null,
+   "incoterm": null,
+   "incoterm_location": null,
+   "payment_terms": "45 Days",
+   "delivery_address": null,
+   "invoice_address": null,
+   "delivery_date_offset": null,
+   "discount_type": null,
+   "discount_value": null,
+   "is_template": false,
+   "template_name": null,
+   "source_document": null,
+   "tax_mode": "Tax Excluded",
+   "online_signature": true,
+   "online_payment": false,
+   "prepayment_percentage": null,
+   "to_invoice_later": false,
+   "demonstrates": "largest open tender; Online Signature on, expires in 2 days",
+   "lines": [
+    {
+     "kind": "Product",
+     "product": "MYB-AIR13-256-SLV",
+     "description": "myBook Air 13\" (256GB · Silver)",
+     "quantity": 60.0,
+     "unit": "Units",
+     "price": 4299.0,
+     "discount": 5.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 10
+    },
+    {
+     "kind": "Product",
+     "product": "MYS-SETUP",
+     "description": "Setup & Migration",
+     "quantity": 60.0,
+     "unit": "Units",
+     "price": 350.0,
+     "discount": 5.0,
+     "taxes": [
+      "8% S"
+     ],
+     "lead": null,
+     "sequence": 20
+    },
+    {
+     "kind": "Product",
+     "product": "MYS-ONSITE",
+     "description": "Onsite Support Day",
+     "quantity": 10.0,
+     "unit": "Days",
+     "price": 1800.0,
+     "discount": 0.0,
+     "taxes": [
+      "8% S"
+     ],
+     "lead": null,
+     "sequence": 30
+    },
+    {
+     "kind": "Product",
+     "product": "MYS-CARE",
+     "description": "myCare+",
+     "quantity": 60.0,
+     "unit": "Units",
+     "price": 899.0,
+     "discount": 0.0,
+     "taxes": [
+      "8% S"
+     ],
+     "lead": null,
+     "sequence": 40
+    }
+   ]
+  },
+  {
+   "key": "SMBD-RFQ-2026-0702",
+   "customer": "smbd",
+   "status": "Quotation Sent",
+   "date_offset": -30,
+   "expiry_offset": 30,
+   "invoice_status": "Nothing to Invoice",
+   "delivery_status": null,
+   "locked": false,
+   "invoicing_closed": false,
+   "signed": null,
+   "incoterm": null,
+   "incoterm_location": null,
+   "payment_terms": "45 Days",
+   "delivery_address": null,
+   "invoice_address": null,
+   "delivery_date_offset": null,
+   "discount_type": null,
+   "discount_value": null,
+   "is_template": false,
+   "template_name": null,
+   "source_document": null,
+   "tax_mode": "Tax Excluded",
+   "online_signature": true,
+   "online_payment": false,
+   "prepayment_percentage": null,
+   "to_invoice_later": false,
+   "demonstrates": "sent quotation awaiting the customer",
+   "lines": [
+    {
+     "kind": "Product",
+     "product": "MYPAD-A11",
+     "description": "myPad Air 11\"",
+     "quantity": 20.0,
+     "unit": "Units",
+     "price": 2799.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 10
+    },
+    {
+     "kind": "Product",
+     "product": "MYA-PENCIL",
+     "description": "myPencil Pro",
+     "quantity": 20.0,
+     "unit": "Units",
+     "price": 599.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 20
+    },
+    {
+     "kind": "Product",
+     "product": "MYS-ENROL",
+     "description": "Device Enrolment",
+     "quantity": 20.0,
+     "unit": "Units",
+     "price": 45.0,
+     "discount": 0.0,
+     "taxes": [
+      "8% S"
+     ],
+     "lead": null,
+     "sequence": 30
+    }
+   ]
+  },
+  {
+   "key": "KMA-RFQ-2026-0128",
+   "customer": "kma",
+   "status": "Quotation Sent",
+   "date_offset": -24,
+   "expiry_offset": 36,
+   "invoice_status": "Nothing to Invoice",
+   "delivery_status": null,
+   "locked": false,
+   "invoicing_closed": false,
+   "signed": null,
+   "incoterm": null,
+   "incoterm_location": null,
+   "payment_terms": "30 Days",
+   "delivery_address": null,
+   "invoice_address": null,
+   "delivery_date_offset": null,
+   "discount_type": null,
+   "discount_value": null,
+   "is_template": false,
+   "template_name": null,
+   "source_document": null,
+   "tax_mode": "Tax Excluded",
+   "online_signature": false,
+   "online_payment": false,
+   "prepayment_percentage": null,
+   "to_invoice_later": false,
+   "demonstrates": "sent quotation awaiting the customer",
+   "lines": [
+    {
+     "kind": "Product",
+     "product": "MYPAD-P13",
+     "description": "myPad Pro 13\"",
+     "quantity": 6.0,
+     "unit": "Units",
+     "price": 5299.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 10
+    },
+    {
+     "kind": "Product",
+     "product": "MYS-ENROL",
+     "description": "Device Enrolment",
+     "quantity": 6.0,
+     "unit": "Units",
+     "price": 45.0,
+     "discount": 0.0,
+     "taxes": [
+      "8% S"
+     ],
+     "lead": null,
+     "sequence": 20
+    },
+    {
+     "kind": "Product",
+     "product": "MYS-CARE",
+     "description": "myCare+",
+     "quantity": 6.0,
+     "unit": "Units",
+     "price": 899.0,
+     "discount": 0.0,
+     "taxes": [
+      "8% S"
+     ],
+     "lead": null,
+     "sequence": 30
+    }
+   ]
+  },
+  {
+   "key": "AWAN-RFQ-2026-0401",
+   "customer": "awan",
+   "status": "Quotation Sent",
+   "date_offset": -18,
+   "expiry_offset": 12,
+   "invoice_status": "Nothing to Invoice",
+   "delivery_status": null,
+   "locked": false,
+   "invoicing_closed": false,
+   "signed": null,
+   "incoterm": null,
+   "incoterm_location": null,
+   "payment_terms": "21 Days",
+   "delivery_address": null,
+   "invoice_address": null,
+   "delivery_date_offset": null,
+   "discount_type": "Global Discount",
+   "discount_value": 5.0,
+   "is_template": false,
+   "template_name": null,
+   "source_document": null,
+   "tax_mode": "Tax Excluded",
+   "online_signature": false,
+   "online_payment": false,
+   "prepayment_percentage": null,
+   "to_invoice_later": false,
+   "demonstrates": "second percentage discount (Discount 5.00%)",
+   "lines": [
+    {
+     "kind": "Product",
+     "product": "MYM-24",
+     "description": "myMac 24\"",
+     "quantity": 6.0,
+     "unit": "Units",
+     "price": 5499.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 10
+    },
+    {
+     "kind": "Product",
+     "product": "MYA-KB",
+     "description": "myKeyboard",
+     "quantity": 6.0,
+     "unit": "Units",
+     "price": 499.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 20
+    },
+    {
+     "kind": "Product",
+     "product": "MYA-MOUSE",
+     "description": "myMouse",
+     "quantity": 6.0,
+     "unit": "Units",
+     "price": 379.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 30
+    },
+    {
+     "kind": "Product",
+     "product": "MYS-CARE",
+     "description": "myCare+",
+     "quantity": 6.0,
+     "unit": "Units",
+     "price": 899.0,
+     "discount": 0.0,
+     "taxes": [
+      "8% S"
+     ],
+     "lead": null,
+     "sequence": 40
+    },
+    {
+     "kind": "Product",
+     "product": "DISCOUNT",
+     "description": "Discount 5.00%",
+     "quantity": 1.0,
+     "unit": "Units",
+     "price": -1913.1,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "sequence": 50
+    },
+    {
+     "kind": "Product",
+     "product": "DISCOUNT",
+     "description": "Discount 5.00%",
+     "quantity": 1.0,
+     "unit": "Units",
+     "price": -269.7,
+     "discount": 0.0,
+     "taxes": [
+      "8% S"
+     ],
+     "sequence": 60
+    }
+   ]
+  },
+  {
+   "key": "MPSP-RFQ-2026-0603",
+   "customer": "mpsp",
+   "status": "Quotation Sent",
+   "date_offset": -11,
+   "expiry_offset": 49,
+   "invoice_status": "Nothing to Invoice",
+   "delivery_status": null,
+   "locked": false,
+   "invoicing_closed": false,
+   "signed": null,
+   "incoterm": "DDP",
+   "incoterm_location": "Menara MPSP, Bukit Mertajam",
+   "payment_terms": "45 Days",
+   "delivery_address": null,
+   "invoice_address": null,
+   "delivery_date_offset": null,
+   "discount_type": null,
+   "discount_value": null,
+   "is_template": false,
+   "template_name": null,
+   "source_document": null,
+   "tax_mode": "Tax Excluded",
+   "online_signature": false,
+   "online_payment": false,
+   "prepayment_percentage": null,
+   "to_invoice_later": false,
+   "demonstrates": "sent quotation with an Incoterm",
+   "lines": [
+    {
+     "kind": "Product",
+     "product": "MYP-16-128-BLK",
+     "description": "myPhone 16 (128GB · Black)",
+     "quantity": 25.0,
+     "unit": "Units",
+     "price": 3999.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 10
+    },
+    {
+     "kind": "Product",
+     "product": "MYS-ENROL",
+     "description": "Device Enrolment",
+     "quantity": 25.0,
+     "unit": "Units",
+     "price": 45.0,
+     "discount": 0.0,
+     "taxes": [
+      "8% S"
+     ],
+     "lead": null,
+     "sequence": 20
+    }
+   ]
+  },
+  {
+   "key": "TANWM-RFQ-2026-0058",
+   "customer": "tanwm",
+   "status": "Quotation Sent",
+   "date_offset": -3,
+   "expiry_offset": 27,
+   "invoice_status": "Nothing to Invoice",
+   "delivery_status": null,
+   "locked": false,
+   "invoicing_closed": false,
+   "signed": null,
+   "incoterm": null,
+   "incoterm_location": null,
+   "payment_terms": "Immediate Payment",
+   "delivery_address": null,
+   "invoice_address": null,
+   "delivery_date_offset": null,
+   "discount_type": null,
+   "discount_value": null,
+   "is_template": false,
+   "template_name": null,
+   "source_document": null,
+   "tax_mode": "Tax Excluded",
+   "online_signature": true,
+   "online_payment": false,
+   "prepayment_percentage": null,
+   "to_invoice_later": false,
+   "demonstrates": "newest sent quotation",
+   "lines": [
+    {
+     "kind": "Product",
+     "product": "MYB-AIR13-512-SLV",
+     "description": "myBook Air 13\" (512GB · Silver)",
+     "quantity": 1.0,
+     "unit": "Units",
+     "price": 4299.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 10
+    },
+    {
+     "kind": "Product",
+     "product": "MYS-CARE",
+     "description": "myCare+",
+     "quantity": 1.0,
+     "unit": "Units",
+     "price": 899.0,
+     "discount": 0.0,
+     "taxes": [
+      "8% S"
+     ],
+     "lead": null,
+     "sequence": 20
+    }
+   ]
+  },
+  {
+   "key": "KTN-RFQ-2026-0102",
+   "customer": "ktn",
+   "status": "Cancelled",
+   "date_offset": -220,
+   "expiry_offset": -190,
+   "invoice_status": "Nothing to Invoice",
+   "delivery_status": null,
+   "locked": false,
+   "invoicing_closed": false,
+   "signed": null,
+   "incoterm": null,
+   "incoterm_location": null,
+   "payment_terms": "30% Now, Balance 60 Days",
+   "delivery_address": null,
+   "invoice_address": null,
+   "delivery_date_offset": null,
+   "discount_type": null,
+   "discount_value": null,
+   "is_template": false,
+   "template_name": null,
+   "source_document": null,
+   "tax_mode": "Tax Excluded",
+   "online_signature": false,
+   "online_payment": false,
+   "prepayment_percentage": null,
+   "to_invoice_later": false,
+   "demonstrates": "cancelled — budget withdrawn",
+   "lines": [
+    {
+     "kind": "Product",
+     "product": "MYB-PRO14-512-SPG",
+     "description": "myBook Pro 14\" (512GB · Space Grey)",
+     "quantity": 15.0,
+     "unit": "Units",
+     "price": 7999.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 10
+    },
+    {
+     "kind": "Product",
+     "product": "MYS-SETUP",
+     "description": "Setup & Migration",
+     "quantity": 15.0,
+     "unit": "Units",
+     "price": 350.0,
+     "discount": 0.0,
+     "taxes": [
+      "8% S"
+     ],
+     "lead": null,
+     "sequence": 20
+    }
+   ]
+  },
+  {
+   "key": "PKK-PO-4502",
+   "customer": "pkk",
+   "status": "Cancelled",
+   "date_offset": -130,
+   "expiry_offset": -100,
+   "invoice_status": "Nothing to Invoice",
+   "delivery_status": null,
+   "locked": false,
+   "invoicing_closed": false,
+   "signed": null,
+   "incoterm": null,
+   "incoterm_location": null,
+   "payment_terms": "Immediate Payment",
+   "delivery_address": null,
+   "invoice_address": null,
+   "delivery_date_offset": null,
+   "discount_type": null,
+   "discount_value": null,
+   "is_template": false,
+   "template_name": null,
+   "source_document": null,
+   "tax_mode": "Tax Excluded",
+   "online_signature": false,
+   "online_payment": false,
+   "prepayment_percentage": null,
+   "to_invoice_later": false,
+   "demonstrates": "cancelled — reseller reduced the order",
+   "lines": [
+    {
+     "kind": "Product",
+     "product": "MYP-16PRO",
+     "description": "myPhone 16 Pro",
+     "quantity": 10.0,
+     "unit": "Units",
+     "price": 5499.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 10
+    },
+    {
+     "kind": "Product",
+     "product": "MYA-PODS",
+     "description": "myPods Pro",
+     "quantity": 10.0,
+     "unit": "Units",
+     "price": 1099.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 20
+    }
+   ]
+  },
+  {
+   "key": "SRW-RFQ-2026-198",
+   "customer": "srw",
+   "status": "Cancelled",
+   "date_offset": -45,
+   "expiry_offset": -15,
+   "invoice_status": "Nothing to Invoice",
+   "delivery_status": null,
+   "locked": false,
+   "invoicing_closed": false,
+   "signed": null,
+   "incoterm": null,
+   "incoterm_location": null,
+   "payment_terms": "15 Days",
+   "delivery_address": null,
+   "invoice_address": null,
+   "delivery_date_offset": null,
+   "discount_type": null,
+   "discount_value": null,
+   "is_template": false,
+   "template_name": null,
+   "source_document": null,
+   "tax_mode": "Tax Excluded",
+   "online_signature": false,
+   "online_payment": false,
+   "prepayment_percentage": null,
+   "to_invoice_later": false,
+   "demonstrates": "cancelled — customer bought elsewhere",
+   "lines": [
+    {
+     "kind": "Product",
+     "product": "MYD-STUDIO",
+     "description": "myDisplay Studio",
+     "quantity": 2.0,
+     "unit": "Units",
+     "price": 6999.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 10
+    },
+    {
+     "kind": "Product",
+     "product": "MYA-KB",
+     "description": "myKeyboard",
+     "quantity": 2.0,
+     "unit": "Units",
+     "price": 499.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 20
+    }
+   ]
+  },
+  {
+   "key": "TPL-CLASSROOM",
+   "customer": null,
+   "status": "Quotation",
+   "date_offset": -300,
+   "expiry_offset": 60,
+   "invoice_status": "Nothing to Invoice",
+   "delivery_status": null,
+   "locked": false,
+   "invoicing_closed": false,
+   "signed": null,
+   "incoterm": null,
+   "incoterm_location": null,
+   "payment_terms": null,
+   "delivery_address": null,
+   "invoice_address": null,
+   "delivery_date_offset": null,
+   "discount_type": null,
+   "discount_value": null,
+   "is_template": true,
+   "template_name": "Starter Classroom Pack",
+   "source_document": null,
+   "tax_mode": "Tax Excluded",
+   "online_signature": false,
+   "online_payment": false,
+   "prepayment_percentage": null,
+   "to_invoice_later": false,
+   "demonstrates": "Templates view; Is Template ticked",
+   "lines": [
+    {
+     "kind": "Section",
+     "description": "Classroom starter pack — per room",
+     "sequence": 10
+    },
+    {
+     "kind": "Product",
+     "product": "MYB-AIR13-256-SLV",
+     "description": "myBook Air 13\" (256GB · Silver)",
+     "quantity": 1.0,
+     "unit": "Units",
+     "price": 4299.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 20
+    },
+    {
+     "kind": "Product",
+     "product": "MYPAD-A11",
+     "description": "myPad Air 11\"",
+     "quantity": 6.0,
+     "unit": "Units",
+     "price": 2799.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 30
+    },
+    {
+     "kind": "Product",
+     "product": "MYA-PENCIL",
+     "description": "myPencil Pro",
+     "quantity": 6.0,
+     "unit": "Units",
+     "price": 599.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 40
+    },
+    {
+     "kind": "Product",
+     "product": "MYS-SETUP",
+     "description": "Setup & Migration",
+     "quantity": 7.0,
+     "unit": "Units",
+     "price": 350.0,
+     "discount": 0.0,
+     "taxes": [
+      "8% S"
+     ],
+     "lead": null,
+     "sequence": 50
+    },
+    {
+     "kind": "Note",
+     "description": "Prices reviewed each school term.",
+     "sequence": 60
+    }
+   ]
+  },
+  {
+   "key": "TPL-FRONTDESK",
+   "customer": null,
+   "status": "Quotation",
+   "date_offset": -300,
+   "expiry_offset": 60,
+   "invoice_status": "Nothing to Invoice",
+   "delivery_status": null,
+   "locked": false,
+   "invoicing_closed": false,
+   "signed": null,
+   "incoterm": null,
+   "incoterm_location": null,
+   "payment_terms": null,
+   "delivery_address": null,
+   "invoice_address": null,
+   "delivery_date_offset": null,
+   "discount_type": null,
+   "discount_value": null,
+   "is_template": true,
+   "template_name": "Clinic Front-Desk Bundle",
+   "source_document": null,
+   "tax_mode": "Tax Excluded",
+   "online_signature": false,
+   "online_payment": false,
+   "prepayment_percentage": null,
+   "to_invoice_later": false,
+   "demonstrates": "Templates view; Is Template ticked",
+   "lines": [
+    {
+     "kind": "Product",
+     "product": "MYM-MINI",
+     "description": "myMac mini",
+     "quantity": 1.0,
+     "unit": "Units",
+     "price": 2899.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 10
+    },
+    {
+     "kind": "Product",
+     "product": "MYA-KB",
+     "description": "myKeyboard",
+     "quantity": 1.0,
+     "unit": "Units",
+     "price": 499.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 20
+    },
+    {
+     "kind": "Product",
+     "product": "MYA-MOUSE",
+     "description": "myMouse",
+     "quantity": 1.0,
+     "unit": "Units",
+     "price": 379.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "lead": null,
+     "sequence": 30
+    },
+    {
+     "kind": "Product",
+     "product": "MYS-SETUP",
+     "description": "Setup & Migration",
+     "quantity": 1.0,
+     "unit": "Units",
+     "price": 350.0,
+     "discount": 0.0,
+     "taxes": [
+      "8% S"
+     ],
+     "lead": null,
+     "sequence": 40
+    },
+    {
+     "kind": "Product",
+     "product": "MYS-CARE",
+     "description": "myCare+",
+     "quantity": 1.0,
+     "unit": "Units",
+     "price": 899.0,
+     "discount": 0.0,
+     "taxes": [
+      "8% S"
+     ],
+     "lead": null,
+     "sequence": 50
+    }
+   ]
+  }
+ ],
+ "invoices": [
+  {
+   "key": "INV-SMBD-0418",
+   "type": "Customer Invoice",
+   "status": "Posted",
+   "partner": "smbd",
+   "invoice_date_offset": -338,
+   "accounting_date_offset": -338,
+   "due_offset": -293,
+   "payment_terms": "45 Days",
+   "journal": "Sales",
+   "numbered": true,
+   "customer_reference": "INV-SMBD-0418",
+   "payment_reference": null,
+   "delivery_address": null,
+   "delivery_date_offset": null,
+   "tax_mode": "Tax Excluded",
+   "demonstrates": "paid in full long ago",
+   "lines": [
+    {
+     "kind": "Product",
+     "product": "MYB-AIR13-256-SLV",
+     "label": "myBook Air 13\" (256GB · Silver)",
+     "quantity": 8.0,
+     "unit": "Units",
+     "price": 4299.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "sequence": 10
+    },
+    {
+     "kind": "Product",
+     "product": "MYA-KB",
+     "label": "myKeyboard",
+     "quantity": 8.0,
+     "unit": "Units",
+     "price": 499.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "sequence": 20
+    },
+    {
+     "kind": "Product",
+     "product": "MYS-SETUP",
+     "label": "Setup & Migration",
+     "quantity": 8.0,
+     "unit": "Units",
+     "price": 350.0,
+     "discount": 0.0,
+     "taxes": [
+      "8% S"
+     ],
+     "sequence": 30
+    }
+   ]
+  },
+  {
+   "key": "INV-PKK-4471",
+   "type": "Customer Invoice",
+   "status": "Posted",
+   "partner": "pkk",
+   "invoice_date_offset": -330,
+   "accounting_date_offset": -330,
+   "due_offset": -330,
+   "payment_terms": "Immediate Payment",
+   "journal": "Sales",
+   "numbered": true,
+   "customer_reference": "INV-PKK-4471",
+   "payment_reference": null,
+   "delivery_address": null,
+   "delivery_date_offset": null,
+   "tax_mode": "Tax Excluded",
+   "demonstrates": "immediate-payment reseller invoice",
+   "lines": [
+    {
+     "kind": "Product",
+     "product": "MYA-MOUSE",
+     "label": "myMouse",
+     "quantity": 25.0,
+     "unit": "Units",
+     "price": 379.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "sequence": 10
+    },
+    {
+     "kind": "Product",
+     "product": "MYA-KB",
+     "label": "myKeyboard",
+     "quantity": 25.0,
+     "unit": "Units",
+     "price": 499.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "sequence": 20
+    },
+    {
+     "kind": "Product",
+     "product": "MYA-HUB",
+     "label": "USB-C hub",
+     "quantity": 30.0,
+     "unit": "Units",
+     "price": 289.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "sequence": 30
+    }
+   ]
+  },
+  {
+   "key": "INV-KMA-0093",
+   "type": "Customer Invoice",
+   "status": "Posted",
+   "partner": "kma",
+   "invoice_date_offset": -310,
+   "accounting_date_offset": -310,
+   "due_offset": -280,
+   "payment_terms": "30 Days",
+   "journal": "Sales",
+   "numbered": true,
+   "customer_reference": "INV-KMA-0093",
+   "payment_reference": null,
+   "delivery_address": null,
+   "delivery_date_offset": null,
+   "tax_mode": "Tax Excluded",
+   "demonstrates": "clinic invoice",
+   "lines": [
+    {
+     "kind": "Product",
+     "product": "MYPAD-A11",
+     "label": "myPad Air 11\"",
+     "quantity": 4.0,
+     "unit": "Units",
+     "price": 2799.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "sequence": 10
+    },
+    {
+     "kind": "Product",
+     "product": "MYA-PENCIL",
+     "label": "myPencil Pro",
+     "quantity": 4.0,
+     "unit": "Units",
+     "price": 599.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "sequence": 20
+    },
+    {
+     "kind": "Product",
+     "product": "MYS-ENROL",
+     "label": "Device Enrolment",
+     "quantity": 4.0,
+     "unit": "Units",
+     "price": 45.0,
+     "discount": 0.0,
+     "taxes": [
+      "8% S"
+     ],
+     "sequence": 30
+    }
+   ]
+  },
+  {
+   "key": "INV-SRW-114",
+   "type": "Customer Invoice",
+   "status": "Posted",
+   "partner": "srw",
+   "invoice_date_offset": -284,
+   "accounting_date_offset": -284,
+   "due_offset": -269,
+   "payment_terms": "15 Days",
+   "journal": "Sales",
+   "numbered": true,
+   "customer_reference": "INV-SRW-114",
+   "payment_reference": null,
+   "delivery_address": null,
+   "delivery_date_offset": null,
+   "tax_mode": "Tax Excluded",
+   "demonstrates": "design studio invoice",
+   "lines": [
+    {
+     "kind": "Product",
+     "product": "MYB-PRO14-1TB-SPG",
+     "label": "myBook Pro 14\" (1TB · Space Grey)",
+     "quantity": 3.0,
+     "unit": "Units",
+     "price": 7999.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "sequence": 10
+    },
+    {
+     "kind": "Product",
+     "product": "MYD-STUDIO",
+     "label": "myDisplay Studio",
+     "quantity": 3.0,
+     "unit": "Units",
+     "price": 6999.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "sequence": 20
+    },
+    {
+     "kind": "Product",
+     "product": "MYS-CARE",
+     "label": "myCare+",
+     "quantity": 3.0,
+     "unit": "Units",
+     "price": 899.0,
+     "discount": 0.0,
+     "taxes": [
+      "8% S"
+     ],
+     "sequence": 30
+    }
+   ]
+  },
+  {
+   "key": "INV-GGR-88231",
+   "type": "Customer Invoice",
+   "status": "Posted",
+   "partner": "ggr",
+   "invoice_date_offset": -262,
+   "accounting_date_offset": -262,
+   "due_offset": -232,
+   "payment_terms": "30 Days",
+   "journal": "Sales",
+   "numbered": true,
+   "customer_reference": "INV-GGR-88231",
+   "payment_reference": null,
+   "delivery_address": "ggr_store",
+   "delivery_date_offset": null,
+   "tax_mode": "Tax Excluded",
+   "demonstrates": "reseller invoice with a delivery address",
+   "lines": [
+    {
+     "kind": "Product",
+     "product": "MYP-16-128-BLK",
+     "label": "myPhone 16 (128GB · Black)",
+     "quantity": 20.0,
+     "unit": "Units",
+     "price": 3999.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "sequence": 10
+    },
+    {
+     "kind": "Product",
+     "product": "MYA-PODS",
+     "label": "myPods Pro",
+     "quantity": 20.0,
+     "unit": "Units",
+     "price": 1099.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "sequence": 20
+    },
+    {
+     "kind": "Product",
+     "product": "MYA-HUB",
+     "label": "USB-C hub",
+     "quantity": 40.0,
+     "unit": "Units",
+     "price": 289.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "sequence": 30
+    }
+   ]
+  },
+  {
+   "key": "INV-JPNJ-007A",
+   "type": "Customer Invoice",
+   "status": "Posted",
+   "partner": "jpnj",
+   "invoice_date_offset": -215,
+   "accounting_date_offset": -215,
+   "due_offset": -170,
+   "payment_terms": "45 Days",
+   "journal": "Sales",
+   "numbered": true,
+   "customer_reference": "INV-JPNJ-007A",
+   "payment_reference": null,
+   "delivery_address": null,
+   "delivery_date_offset": null,
+   "tax_mode": "Tax Excluded",
+   "demonstrates": "first of two staged invoices; carries a Section",
+   "lines": [
+    {
+     "kind": "Section",
+     "label": "Phase 1 — classroom notebooks",
+     "sequence": 10
+    },
+    {
+     "kind": "Product",
+     "product": "MYB-AIR13-256-SLV",
+     "label": "myBook Air 13\" (256GB · Silver)",
+     "quantity": 20.0,
+     "unit": "Units",
+     "price": 4299.0,
+     "discount": 5.0,
+     "taxes": [
+      "10% G"
+     ],
+     "sequence": 20
+    },
+    {
+     "kind": "Product",
+     "product": "MYS-SETUP",
+     "label": "Setup & Migration",
+     "quantity": 20.0,
+     "unit": "Units",
+     "price": 350.0,
+     "discount": 5.0,
+     "taxes": [
+      "8% S"
+     ],
+     "sequence": 30
+    }
+   ]
+  },
+  {
+   "key": "INV-JPNJ-007B",
+   "type": "Customer Invoice",
+   "status": "Posted",
+   "partner": "jpnj",
+   "invoice_date_offset": -196,
+   "accounting_date_offset": -196,
+   "due_offset": -151,
+   "payment_terms": "45 Days",
+   "journal": "Sales",
+   "numbered": true,
+   "customer_reference": "INV-JPNJ-007B",
+   "payment_reference": null,
+   "delivery_address": null,
+   "delivery_date_offset": null,
+   "tax_mode": "Tax Excluded",
+   "demonstrates": "second staged invoice; carries a Note",
+   "lines": [
+    {
+     "kind": "Product",
+     "product": "MYB-AIR13-256-SLV",
+     "label": "myBook Air 13\" (256GB · Silver)",
+     "quantity": 20.0,
+     "unit": "Units",
+     "price": 4299.0,
+     "discount": 5.0,
+     "taxes": [
+      "10% G"
+     ],
+     "sequence": 10
+    },
+    {
+     "kind": "Product",
+     "product": "MYS-SETUP",
+     "label": "Setup & Migration",
+     "quantity": 20.0,
+     "unit": "Units",
+     "price": 350.0,
+     "discount": 5.0,
+     "taxes": [
+      "8% S"
+     ],
+     "sequence": 20
+    },
+    {
+     "kind": "Product",
+     "product": "MYS-ONSITE",
+     "label": "Onsite Support Day",
+     "quantity": 6.0,
+     "unit": "Days",
+     "price": 1800.0,
+     "discount": 0.0,
+     "taxes": [
+      "8% S"
+     ],
+     "sequence": 30
+    },
+    {
+     "kind": "Note",
+     "label": "Second and final batch of the 2026 classroom programme.",
+     "sequence": 40
+    }
+   ]
+  },
+  {
+   "key": "INV-HPSC-0221",
+   "type": "Customer Invoice",
+   "status": "Posted",
+   "partner": "hpsc",
+   "invoice_date_offset": -200,
+   "accounting_date_offset": -200,
+   "due_offset": -155,
+   "payment_terms": "45 Days",
+   "journal": "Sales",
+   "numbered": true,
+   "customer_reference": "INV-HPSC-0221",
+   "payment_reference": null,
+   "delivery_address": null,
+   "delivery_date_offset": null,
+   "tax_mode": "Tax Excluded",
+   "demonstrates": "ward rollout invoice",
+   "lines": [
+    {
+     "kind": "Product",
+     "product": "MYPAD-P13",
+     "label": "myPad Pro 13\"",
+     "quantity": 24.0,
+     "unit": "Units",
+     "price": 5299.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "sequence": 10
+    },
+    {
+     "kind": "Product",
+     "product": "MYS-ENROL",
+     "label": "Device Enrolment",
+     "quantity": 24.0,
+     "unit": "Units",
+     "price": 45.0,
+     "discount": 0.0,
+     "taxes": [
+      "8% S"
+     ],
+     "sequence": 20
+    },
+    {
+     "kind": "Product",
+     "product": "MYS-CARE",
+     "label": "myCare+",
+     "quantity": 24.0,
+     "unit": "Units",
+     "price": 899.0,
+     "discount": 0.0,
+     "taxes": [
+      "8% S"
+     ],
+     "sequence": 30
+    }
+   ]
+  },
+  {
+   "key": "INV-MPSP-0455",
+   "type": "Customer Invoice",
+   "status": "Posted",
+   "partner": "mpsp",
+   "invoice_date_offset": -160,
+   "accounting_date_offset": -160,
+   "due_offset": -115,
+   "payment_terms": "45 Days",
+   "journal": "Sales",
+   "numbered": true,
+   "customer_reference": "INV-MPSP-0455",
+   "payment_reference": null,
+   "delivery_address": null,
+   "delivery_date_offset": null,
+   "tax_mode": "Tax Excluded",
+   "demonstrates": "council invoice",
+   "lines": [
+    {
+     "kind": "Product",
+     "product": "MYM-24",
+     "label": "myMac 24\"",
+     "quantity": 12.0,
+     "unit": "Units",
+     "price": 5499.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "sequence": 10
+    },
+    {
+     "kind": "Product",
+     "product": "MYA-KB",
+     "label": "myKeyboard",
+     "quantity": 12.0,
+     "unit": "Units",
+     "price": 499.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "sequence": 20
+    },
+    {
+     "kind": "Product",
+     "product": "MYA-MOUSE",
+     "label": "myMouse",
+     "quantity": 12.0,
+     "unit": "Units",
+     "price": 379.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "sequence": 30
+    }
+   ]
+  },
+  {
+   "key": "INV-KTN-0119",
+   "type": "Customer Invoice",
+   "status": "Posted",
+   "partner": "ktn",
+   "invoice_date_offset": -88,
+   "accounting_date_offset": -88,
+   "due_offset": null,
+   "payment_terms": null,
+   "journal": "Sales",
+   "numbered": true,
+   "customer_reference": "INV-KTN-0119",
+   "payment_reference": null,
+   "delivery_address": null,
+   "delivery_date_offset": null,
+   "tax_mode": "Tax Excluded",
+   "demonstrates": "the one document that states NEITHER Payment Terms NOR Due Date: both are left to *Payment Terms follow the Customer / Vendor* and *Due Date follows the Payment Terms*",
+   "lines": [
+    {
+     "kind": "Product",
+     "product": "MYB-AIR13-512-SLV",
+     "label": "myBook Air 13\" (512GB · Silver)",
+     "quantity": 25.0,
+     "unit": "Units",
+     "price": 4299.0,
+     "discount": 10.0,
+     "taxes": [
+      "10% G"
+     ],
+     "sequence": 10
+    },
+    {
+     "kind": "Product",
+     "product": "MYS-SETUP",
+     "label": "Setup & Migration",
+     "quantity": 25.0,
+     "unit": "Units",
+     "price": 350.0,
+     "discount": 10.0,
+     "taxes": [
+      "8% S"
+     ],
+     "sequence": 20
+    }
+   ]
+  },
+  {
+   "key": "INV-SMBD-0502",
+   "type": "Customer Invoice",
+   "status": "Posted",
+   "partner": "smbd",
+   "invoice_date_offset": -62,
+   "accounting_date_offset": -62,
+   "due_offset": -17,
+   "payment_terms": "45 Days",
+   "journal": "Sales",
+   "numbered": true,
+   "customer_reference": "INV-SMBD-0502",
+   "payment_reference": null,
+   "delivery_address": null,
+   "delivery_date_offset": null,
+   "tax_mode": "Tax Excluded",
+   "demonstrates": "OVERDUE by 17 days",
+   "lines": [
+    {
+     "kind": "Product",
+     "product": "MYPAD-A11",
+     "label": "myPad Air 11\"",
+     "quantity": 30.0,
+     "unit": "Units",
+     "price": 2799.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "sequence": 10
+    },
+    {
+     "kind": "Product",
+     "product": "MYA-PENCIL",
+     "label": "myPencil Pro",
+     "quantity": 30.0,
+     "unit": "Units",
+     "price": 599.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "sequence": 20
+    },
+    {
+     "kind": "Product",
+     "product": "MYS-ENROL",
+     "label": "Device Enrolment",
+     "quantity": 30.0,
+     "unit": "Units",
+     "price": 45.0,
+     "discount": 0.0,
+     "taxes": [
+      "8% S"
+     ],
+     "sequence": 30
+    }
+   ]
+  },
+  {
+   "key": "INV-HPSC-0640",
+   "type": "Customer Invoice",
+   "status": "Posted",
+   "partner": "hpsc",
+   "invoice_date_offset": -48,
+   "accounting_date_offset": -48,
+   "due_offset": -3,
+   "payment_terms": "45 Days",
+   "journal": "Sales",
+   "numbered": true,
+   "customer_reference": "INV-HPSC-0640",
+   "payment_reference": null,
+   "delivery_address": null,
+   "delivery_date_offset": null,
+   "tax_mode": "Tax Excluded",
+   "demonstrates": "OVERDUE by 3 days",
+   "lines": [
+    {
+     "kind": "Product",
+     "product": "MYPAD-A11",
+     "label": "myPad Air 11\"",
+     "quantity": 12.0,
+     "unit": "Units",
+     "price": 2799.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "sequence": 10
+    },
+    {
+     "kind": "Product",
+     "product": "MYS-ENROL",
+     "label": "Device Enrolment",
+     "quantity": 12.0,
+     "unit": "Units",
+     "price": 45.0,
+     "discount": 0.0,
+     "taxes": [
+      "8% S"
+     ],
+     "sequence": 20
+    },
+    {
+     "kind": "Product",
+     "product": "MYA-PENCIL",
+     "label": "myPencil Pro",
+     "quantity": 12.0,
+     "unit": "Units",
+     "price": 599.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "sequence": 30
+    }
+   ]
+  },
+  {
+   "key": "INV-GGR-91104",
+   "type": "Customer Invoice",
+   "status": "Posted",
+   "partner": "ggr",
+   "invoice_date_offset": -41,
+   "accounting_date_offset": -41,
+   "due_offset": -11,
+   "payment_terms": "30 Days",
+   "journal": "Sales",
+   "numbered": true,
+   "customer_reference": "INV-GGR-91104",
+   "payment_reference": null,
+   "delivery_address": "ggr_store",
+   "delivery_date_offset": null,
+   "tax_mode": "Tax Excluded",
+   "demonstrates": "OVERDUE by 11 days",
+   "lines": [
+    {
+     "kind": "Product",
+     "product": "MYP-16PRO",
+     "label": "myPhone 16 Pro",
+     "quantity": 15.0,
+     "unit": "Units",
+     "price": 5499.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "sequence": 10
+    },
+    {
+     "kind": "Product",
+     "product": "MYA-PODS",
+     "label": "myPods Pro",
+     "quantity": 15.0,
+     "unit": "Units",
+     "price": 1099.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "sequence": 20
+    },
+    {
+     "kind": "Product",
+     "product": "MYA-HUB",
+     "label": "USB-C hub",
+     "quantity": 25.0,
+     "unit": "Units",
+     "price": 289.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "sequence": 30
+    }
+   ]
+  },
+  {
+   "key": "INV-NURUL-0044",
+   "type": "Customer Invoice",
+   "status": "Posted",
+   "partner": "nurul",
+   "invoice_date_offset": -19,
+   "accounting_date_offset": -19,
+   "due_offset": -19,
+   "payment_terms": "Immediate Payment",
+   "journal": "Sales",
+   "numbered": true,
+   "customer_reference": "INV-NURUL-0044",
+   "payment_reference": null,
+   "delivery_address": null,
+   "delivery_date_offset": null,
+   "tax_mode": "Tax Excluded",
+   "demonstrates": "OVERDUE by 19 days, walk-in sale",
+   "lines": [
+    {
+     "kind": "Product",
+     "product": "MYP-16-256-TEAL",
+     "label": "myPhone 16 (256GB · Teal)",
+     "quantity": 1.0,
+     "unit": "Units",
+     "price": 3999.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "sequence": 10
+    },
+    {
+     "kind": "Product",
+     "product": "MYA-PODS",
+     "label": "myPods Pro",
+     "quantity": 1.0,
+     "unit": "Units",
+     "price": 1099.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "sequence": 20
+    },
+    {
+     "kind": "Product",
+     "product": "MYS-SETUP",
+     "label": "Setup & Migration",
+     "quantity": 1.0,
+     "unit": "Units",
+     "price": 350.0,
+     "discount": 0.0,
+     "taxes": [
+      "8% S"
+     ],
+     "sequence": 30
+    }
+   ]
+  },
+  {
+   "key": "INV-AWAN-0310",
+   "type": "Customer Invoice",
+   "status": "Draft",
+   "partner": "awan",
+   "invoice_date_offset": -6,
+   "accounting_date_offset": -6,
+   "due_offset": 15,
+   "payment_terms": "21 Days",
+   "journal": "Sales",
+   "numbered": false,
+   "customer_reference": "INV-AWAN-0310",
+   "payment_reference": null,
+   "delivery_address": null,
+   "delivery_date_offset": null,
+   "tax_mode": "Tax Excluded",
+   "demonstrates": "draft waiting for Confirm; the Number reads Draft",
+   "lines": [
+    {
+     "kind": "Product",
+     "product": "MYB-PRO14-512-SPG",
+     "label": "myBook Pro 14\" (512GB · Space Grey)",
+     "quantity": 6.0,
+     "unit": "Units",
+     "price": 7999.0,
+     "discount": 8.0,
+     "taxes": [
+      "10% G"
+     ],
+     "sequence": 10
+    },
+    {
+     "kind": "Product",
+     "product": "MYD-STUDIO",
+     "label": "myDisplay Studio",
+     "quantity": 6.0,
+     "unit": "Units",
+     "price": 6999.0,
+     "discount": 8.0,
+     "taxes": [
+      "10% G"
+     ],
+     "sequence": 20
+    },
+    {
+     "kind": "Product",
+     "product": "MYS-CARE",
+     "label": "myCare+",
+     "quantity": 6.0,
+     "unit": "Units",
+     "price": 899.0,
+     "discount": 0.0,
+     "taxes": [
+      "8% S"
+     ],
+     "sequence": 30
+    }
+   ]
+  },
+  {
+   "key": "INV-SRW-207",
+   "type": "Customer Invoice",
+   "status": "Draft",
+   "partner": "srw",
+   "invoice_date_offset": -4,
+   "accounting_date_offset": -4,
+   "due_offset": 11,
+   "payment_terms": "15 Days",
+   "journal": "Sales",
+   "numbered": false,
+   "customer_reference": "INV-SRW-207",
+   "payment_reference": null,
+   "delivery_address": null,
+   "delivery_date_offset": null,
+   "tax_mode": "Tax Excluded",
+   "demonstrates": "draft waiting for Confirm",
+   "lines": [
+    {
+     "kind": "Product",
+     "product": "MYM-24",
+     "label": "myMac 24\"",
+     "quantity": 4.0,
+     "unit": "Units",
+     "price": 5499.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "sequence": 10
+    },
+    {
+     "kind": "Product",
+     "product": "MYD-STUDIO",
+     "label": "myDisplay Studio",
+     "quantity": 4.0,
+     "unit": "Units",
+     "price": 6999.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "sequence": 20
+    },
+    {
+     "kind": "Product",
+     "product": "MYA-KB",
+     "label": "myKeyboard",
+     "quantity": 4.0,
+     "unit": "Units",
+     "price": 499.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "sequence": 30
+    }
+   ]
+  },
+  {
+   "key": "INV-TANWM-0051",
+   "type": "Customer Invoice",
+   "status": "Draft",
+   "partner": "tanwm",
+   "invoice_date_offset": -2,
+   "accounting_date_offset": -2,
+   "due_offset": -2,
+   "payment_terms": "Immediate Payment",
+   "journal": "Sales",
+   "numbered": false,
+   "customer_reference": "INV-TANWM-0051",
+   "payment_reference": null,
+   "delivery_address": null,
+   "delivery_date_offset": null,
+   "tax_mode": "Tax Excluded",
+   "demonstrates": "draft, immediate payment",
+   "lines": [
+    {
+     "kind": "Product",
+     "product": "MYPAD-P13",
+     "label": "myPad Pro 13\"",
+     "quantity": 1.0,
+     "unit": "Units",
+     "price": 5299.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "sequence": 10
+    },
+    {
+     "kind": "Product",
+     "product": "MYA-PENCIL",
+     "label": "myPencil Pro",
+     "quantity": 1.0,
+     "unit": "Units",
+     "price": 599.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "sequence": 20
+    },
+    {
+     "kind": "Product",
+     "product": "MYS-CARE",
+     "label": "myCare+",
+     "quantity": 1.0,
+     "unit": "Units",
+     "price": 899.0,
+     "discount": 0.0,
+     "taxes": [
+      "8% S"
+     ],
+     "sequence": 30
+    }
+   ]
+  },
+  {
+   "key": "INV-KMA-0141",
+   "type": "Customer Invoice",
+   "status": "Draft",
+   "partner": "kma",
+   "invoice_date_offset": -1,
+   "accounting_date_offset": -1,
+   "due_offset": 29,
+   "payment_terms": "30 Days",
+   "journal": "Sales",
+   "numbered": false,
+   "customer_reference": "INV-KMA-0141",
+   "payment_reference": null,
+   "delivery_address": null,
+   "delivery_date_offset": null,
+   "tax_mode": "Tax Excluded",
+   "demonstrates": "draft raised yesterday",
+   "lines": [
+    {
+     "kind": "Product",
+     "product": "MYM-MINI",
+     "label": "myMac mini",
+     "quantity": 3.0,
+     "unit": "Units",
+     "price": 2899.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "sequence": 10
+    },
+    {
+     "kind": "Product",
+     "product": "MYA-KB",
+     "label": "myKeyboard",
+     "quantity": 3.0,
+     "unit": "Units",
+     "price": 499.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "sequence": 20
+    },
+    {
+     "kind": "Product",
+     "product": "MYS-SETUP",
+     "label": "Setup & Migration",
+     "quantity": 3.0,
+     "unit": "Units",
+     "price": 350.0,
+     "discount": 0.0,
+     "taxes": [
+      "8% S"
+     ],
+     "sequence": 30
+    }
+   ]
+  },
+  {
+   "key": "INV-HPSC-0788",
+   "type": "Customer Invoice",
+   "status": "Draft",
+   "partner": "hpsc",
+   "invoice_date_offset": 0,
+   "accounting_date_offset": 0,
+   "due_offset": 45,
+   "payment_terms": "45 Days",
+   "journal": "Sales",
+   "numbered": false,
+   "customer_reference": "INV-HPSC-0788",
+   "payment_reference": null,
+   "delivery_address": null,
+   "delivery_date_offset": null,
+   "tax_mode": "Tax Excluded",
+   "demonstrates": "draft raised on the demo day",
+   "lines": [
+    {
+     "kind": "Product",
+     "product": "MYB-PRO14-1TB-SLV",
+     "label": "myBook Pro 14\" (1TB · Silver)",
+     "quantity": 4.0,
+     "unit": "Units",
+     "price": 7999.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "sequence": 10
+    },
+    {
+     "kind": "Product",
+     "product": "MYS-CARE",
+     "label": "myCare+",
+     "quantity": 4.0,
+     "unit": "Units",
+     "price": 899.0,
+     "discount": 0.0,
+     "taxes": [
+      "8% S"
+     ],
+     "sequence": 20
+    },
+    {
+     "kind": "Product",
+     "product": "MYS-ONSITE",
+     "label": "Onsite Support Day",
+     "quantity": 3.0,
+     "unit": "Days",
+     "price": 1800.0,
+     "discount": 0.0,
+     "taxes": [
+      "8% S"
+     ],
+     "sequence": 30
+    }
+   ]
+  },
+  {
+   "key": "INV-SMBD-0705",
+   "type": "Customer Invoice",
+   "status": "Draft",
+   "partner": "smbd",
+   "invoice_date_offset": 0,
+   "accounting_date_offset": 0,
+   "due_offset": 45,
+   "payment_terms": "45 Days",
+   "journal": "Sales",
+   "numbered": false,
+   "customer_reference": "INV-SMBD-0705",
+   "payment_reference": null,
+   "delivery_address": null,
+   "delivery_date_offset": null,
+   "tax_mode": "Tax Excluded",
+   "demonstrates": "services-only draft, 8% tax throughout",
+   "lines": [
+    {
+     "kind": "Product",
+     "product": "MYS-ONSITE",
+     "label": "Onsite Support Day",
+     "quantity": 4.0,
+     "unit": "Days",
+     "price": 1800.0,
+     "discount": 0.0,
+     "taxes": [
+      "8% S"
+     ],
+     "sequence": 10
+    },
+    {
+     "kind": "Product",
+     "product": "MYS-ENROL",
+     "label": "Device Enrolment",
+     "quantity": 20.0,
+     "unit": "Units",
+     "price": 45.0,
+     "discount": 0.0,
+     "taxes": [
+      "8% S"
+     ],
+     "sequence": 20
+    }
+   ]
+  },
+  {
+   "key": "INV-KTN-0102",
+   "type": "Customer Invoice",
+   "status": "Cancelled",
+   "partner": "ktn",
+   "invoice_date_offset": -214,
+   "accounting_date_offset": -214,
+   "due_offset": -154,
+   "payment_terms": "30% Now, Balance 60 Days",
+   "journal": "Sales",
+   "numbered": true,
+   "customer_reference": "INV-KTN-0102",
+   "payment_reference": null,
+   "delivery_address": null,
+   "delivery_date_offset": null,
+   "tax_mode": "Tax Excluded",
+   "demonstrates": "cancelled after the order was withdrawn; it keeps its Number. Its two-line payment term puts the Due Date on the LAST line, 60 days out",
+   "lines": [
+    {
+     "kind": "Product",
+     "product": "MYB-PRO14-512-SPG",
+     "label": "myBook Pro 14\" (512GB · Space Grey)",
+     "quantity": 15.0,
+     "unit": "Units",
+     "price": 7999.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "sequence": 10
+    },
+    {
+     "kind": "Product",
+     "product": "MYS-SETUP",
+     "label": "Setup & Migration",
+     "quantity": 15.0,
+     "unit": "Units",
+     "price": 350.0,
+     "discount": 0.0,
+     "taxes": [
+      "8% S"
+     ],
+     "sequence": 20
+    }
+   ]
+  },
+  {
+   "key": "INV-PKK-4502",
+   "type": "Customer Invoice",
+   "status": "Cancelled",
+   "partner": "pkk",
+   "invoice_date_offset": -126,
+   "accounting_date_offset": -126,
+   "due_offset": -126,
+   "payment_terms": "Immediate Payment",
+   "journal": "Sales",
+   "numbered": true,
+   "customer_reference": "INV-PKK-4502",
+   "payment_reference": null,
+   "delivery_address": null,
+   "delivery_date_offset": null,
+   "tax_mode": "Tax Excluded",
+   "demonstrates": "cancelled reseller invoice",
+   "lines": [
+    {
+     "kind": "Product",
+     "product": "MYP-16PRO",
+     "label": "myPhone 16 Pro",
+     "quantity": 10.0,
+     "unit": "Units",
+     "price": 5499.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "sequence": 10
+    },
+    {
+     "kind": "Product",
+     "product": "MYA-PODS",
+     "label": "myPods Pro",
+     "quantity": 10.0,
+     "unit": "Units",
+     "price": 1099.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "sequence": 20
+    }
+   ]
+  },
+  {
+   "key": "RINV-GGR-88231",
+   "type": "Customer Credit Note",
+   "status": "Posted",
+   "partner": "ggr",
+   "invoice_date_offset": -250,
+   "accounting_date_offset": -250,
+   "due_offset": -220,
+   "payment_terms": "30 Days",
+   "journal": "Sales",
+   "numbered": true,
+   "customer_reference": "RINV-GGR-88231",
+   "payment_reference": null,
+   "delivery_address": null,
+   "delivery_date_offset": null,
+   "tax_mode": "Tax Excluded",
+   "demonstrates": "the one credit note; the Sales journal has a Dedicated Credit Note Sequence, so its Number takes the RINV prefix",
+   "lines": [
+    {
+     "kind": "Product",
+     "product": "MYA-HUB",
+     "label": "USB-C hub — returned, packaging damaged",
+     "quantity": 6.0,
+     "unit": "Units",
+     "price": 289.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "sequence": 10
+    }
+   ]
+  },
+  {
+   "key": "BILL-SINAR-20261",
+   "type": "Vendor Bill",
+   "status": "Posted",
+   "partner": "sinar",
+   "invoice_date_offset": -300,
+   "accounting_date_offset": -300,
+   "due_offset": -270,
+   "payment_terms": "30 Days",
+   "journal": "Purchases",
+   "numbered": true,
+   "customer_reference": "SINAR-INV-20261",
+   "payment_reference": null,
+   "delivery_address": null,
+   "delivery_date_offset": null,
+   "tax_mode": "Tax Excluded",
+   "demonstrates": "stock purchase from the main distributor",
+   "lines": [
+    {
+     "kind": "Product",
+     "product": "MYB-AIR13-256-SLV",
+     "label": "myBook Air 13\" (256GB · Silver)",
+     "quantity": 30.0,
+     "unit": "Units",
+     "price": 3550.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "sequence": 10
+    },
+    {
+     "kind": "Product",
+     "product": "MYP-16-128-BLK",
+     "label": "myPhone 16 (128GB · Black)",
+     "quantity": 40.0,
+     "unit": "Units",
+     "price": 3320.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "sequence": 20
+    },
+    {
+     "kind": "Product",
+     "product": "MYA-HUB",
+     "label": "USB-C hub",
+     "quantity": 100.0,
+     "unit": "Units",
+     "price": 195.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "sequence": 30
+    }
+   ]
+  },
+  {
+   "key": "BILL-SINAR-20444",
+   "type": "Vendor Bill",
+   "status": "Posted",
+   "partner": "sinar",
+   "invoice_date_offset": -150,
+   "accounting_date_offset": -150,
+   "due_offset": -120,
+   "payment_terms": "30 Days",
+   "journal": "Purchases",
+   "numbered": true,
+   "customer_reference": "SINAR-INV-20444",
+   "payment_reference": null,
+   "delivery_address": null,
+   "delivery_date_offset": null,
+   "tax_mode": "Tax Excluded",
+   "demonstrates": "second distributor bill",
+   "lines": [
+    {
+     "kind": "Product",
+     "product": "MYPAD-P13",
+     "label": "myPad Pro 13\"",
+     "quantity": 40.0,
+     "unit": "Units",
+     "price": 4420.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "sequence": 10
+    },
+    {
+     "kind": "Product",
+     "product": "MYA-PENCIL",
+     "label": "myPencil Pro",
+     "quantity": 60.0,
+     "unit": "Units",
+     "price": 465.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "sequence": 20
+    }
+   ]
+  },
+  {
+   "key": "BILL-LOGISTIK-7741",
+   "type": "Vendor Bill",
+   "status": "Posted",
+   "partner": "logistik",
+   "invoice_date_offset": -30,
+   "accounting_date_offset": -30,
+   "due_offset": -15,
+   "payment_terms": "15 Days",
+   "journal": "Purchases",
+   "numbered": true,
+   "customer_reference": "LOG-7741",
+   "payment_reference": null,
+   "delivery_address": null,
+   "delivery_date_offset": null,
+   "tax_mode": "Tax Excluded",
+   "demonstrates": "OVERDUE vendor bill (15 days)",
+   "lines": [
+    {
+     "kind": "Product",
+     "product": "MYS-ONSITE",
+     "label": "Inland freight, three consignments",
+     "quantity": 3.0,
+     "unit": "Days",
+     "price": 420.0,
+     "discount": 0.0,
+     "taxes": [
+      "8% S"
+     ],
+     "sequence": 10
+    },
+    {
+     "kind": "Product",
+     "product": "MYS-SETUP",
+     "label": "Pallet handling and wrapping",
+     "quantity": 2.0,
+     "unit": "Units",
+     "price": 180.0,
+     "discount": 0.0,
+     "taxes": [
+      "8% S"
+     ],
+     "sequence": 20
+    }
+   ]
+  },
+  {
+   "key": "BILL-SAUJANA-0926",
+   "type": "Vendor Bill",
+   "status": "Draft",
+   "partner": "saujana",
+   "invoice_date_offset": -2,
+   "accounting_date_offset": -2,
+   "due_offset": 13,
+   "payment_terms": "15 Days",
+   "journal": "Purchases",
+   "numbered": false,
+   "customer_reference": "SAUJANA-0926",
+   "payment_reference": null,
+   "delivery_address": null,
+   "delivery_date_offset": null,
+   "tax_mode": "Tax Excluded",
+   "demonstrates": "draft vendor bill",
+   "lines": [
+    {
+     "kind": "Product",
+     "product": "MYS-ONSITE",
+     "label": "Office rent, current month",
+     "quantity": 1.0,
+     "unit": "Days",
+     "price": 8500.0,
+     "discount": 0.0,
+     "taxes": [
+      "8% S"
+     ],
+     "sequence": 10
+    },
+    {
+     "kind": "Product",
+     "product": "MYS-SETUP",
+     "label": "Service charge and car park",
+     "quantity": 1.0,
+     "unit": "Units",
+     "price": 1250.0,
+     "discount": 0.0,
+     "taxes": [
+      "8% S"
+     ],
+     "sequence": 20
+    }
+   ]
+  },
+  {
+   "key": "BILL-SINAR-20509",
+   "type": "Vendor Bill",
+   "status": "Cancelled",
+   "partner": "sinar",
+   "invoice_date_offset": -100,
+   "accounting_date_offset": -100,
+   "due_offset": -70,
+   "payment_terms": "30 Days",
+   "journal": "Purchases",
+   "numbered": true,
+   "customer_reference": "SINAR-INV-20509",
+   "payment_reference": null,
+   "delivery_address": null,
+   "delivery_date_offset": null,
+   "tax_mode": "Tax Excluded",
+   "demonstrates": "cancelled vendor bill (wrong distributor price list)",
+   "lines": [
+    {
+     "kind": "Product",
+     "product": "MYM-MINI",
+     "label": "myMac mini",
+     "quantity": 10.0,
+     "unit": "Units",
+     "price": 2350.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "sequence": 10
+    },
+    {
+     "kind": "Product",
+     "product": "MYA-KB",
+     "label": "myKeyboard",
+     "quantity": 20.0,
+     "unit": "Units",
+     "price": 385.0,
+     "discount": 0.0,
+     "taxes": [
+      "10% G"
+     ],
+     "sequence": 20
+    }
+   ]
+  }
+ ]
+}
