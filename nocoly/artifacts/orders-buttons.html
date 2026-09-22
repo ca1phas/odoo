@@ -128,9 +128,10 @@ footer{margin-top:44px;padding-top:24px;border-top:1px solid var(--rule);
     <div class="row"><div class="no">—</div><div>
       <h3>Invoicing Closed</h3>
       <p class="odoo">invoicing_closed · boolean · stored · “Manually Closed For Invoicing”</p>
-      <p class="does">A checkbox on Orders. Without it, <b>neither Close Invoicing nor Reopen Invoicing means anything</b> — they are the only two things that read or write it.</p>
-      <p class="odoo">6ab10089e54d2a34fa4e88c4 · switch 36 · perm 100</p>
-    </div><div class="cell-s"><span class="chip c-go">built</span><span class="sub">unblocks 12, 20</span></div></div>
+      <p class="does">A switch on Orders. It was built read-only for the Close and Reopen Invoicing buttons to drive; on 22 Sep those were set aside, so <b>a person now flips it directly</b>, as with Locked.</p>
+      <p class="odoo">6ab10089e54d2a34fa4e88c4 · switch 36 · perm 110 (editable, off the create form)</p>
+      <p class="does">A rule shows it only on a Sales Order — the one thing the buttons used to guard. It rides on the Expiration rule, which hangs on the same condition.</p>
+    </div><div class="cell-s"><span class="chip c-go">built</span><span class="sub">now a plain switch</span></div></div>
     <div class="row"><div class="no">—</div><div>
       <h3>Signature · Signed By · Signed On</h3>
       <p class="odoo">signature binary · signed_by char · signed_on datetime · all stored</p>
