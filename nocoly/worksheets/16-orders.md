@@ -135,12 +135,14 @@ The three-way split is **the same as Invoice Lines**: `display_type` is **`line_
 | 16 | Total | `price_total` | Formula, read-only | subtotal plus its taxes, as 07's Total is |
 
 **A blank operand counts as 0** in Subtotal, Tax Amount and Total (`advancedSetting.nullzero "1"`, `orderlines.py
-defaults`, 22 Sep 2026). With 07's `"0"` a type 31 Formula computes **nothing** when any operand is blank: probed
+defaults`, 22 Sep 2026). With the `"0"` these were copied with — the server's own default for a type 31 control, and
+07's setting at the time — a Formula computes **nothing** when any operand is blank: probed
 through the API on S00017's line, Discount written blank stored Subtotal, Tax Amount and Total empty (both read
 paths), and the order's totals with them. With `"1"` the same write stored 68.00 / 6.80 / 74.80, and Quantity 2 with
 Discount blank stored 136.00 / 13.60 / 149.60. The static defaults only fill a new line in the form; `nullzero`
 covers a cleared Discount and an API write. A blank Quantity or Unit Price now stores Subtotal 0.00 rather than
-nothing, which is Odoo's figure. **Invoice Lines still carries `"0"`** and has the same defect.
+nothing, which is Odoo's figure. **Invoice Lines had the same defect and was fixed on 23 Sep 2026**
+(`invlines.py nullzero`, `07-invoice-lines.md` §1), so `orderlines.py`'s reference shape now expects `"1"` there.
 
 ### Interaction rules — grouped by action
 

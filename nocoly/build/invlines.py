@@ -18,6 +18,8 @@ helpers: common.py. Run from the repo root with the CLI's interpreter:
                                                                #    the invoice: Number, Accounting Date, Status
     ~/.hap-venv/bin/python nocoly/build/invlines.py layout     # 5. places, aliases, help, required, read-only,
                                                                #    defaults, decimals and the title field
+    ~/.hap-venv/bin/python nocoly/build/invlines.py nullzero   # 5b. a blank operand counts as 0 in Subtotal and
+                                                               #    Total — one version-pinned save
     ~/.hap-venv/bin/python nocoly/build/invlines.py rules      # 6. a section or a note carries no figures
     ~/.hap-venv/bin/python nocoly/build/invlines.py views      # 7. Lines: columns, three-level sort, quick filter
     ~/.hap-venv/bin/python nocoly/build/invlines.py rollup     # 8. the two workflows that write 06's amounts
@@ -184,12 +186,33 @@ DESC = {  # Odoo's help where it reads well for a user, else plain words — onl
     'Tax rate': "The combined percentage of this line's taxes.",
     'Total': 'Subtotal plus tax, rounded to two decimals.',
 }
+# ── a blank operand counts as 0 ─────────────────────────────────────────────
+#
+# A number Formula (type 31) carrying `advancedSetting.nullzero "0"` — the server's own default for a formula
+# control, which is what these two were created with — **computes nothing at all when any operand is blank**.
+# Proved through the API on 23 Sep 2026 on the TEST roll-up line of MISC/2026/00001 (5 × 100.00 − 10%): Discount
+# written blank stored **Subtotal and Total both empty**, on both read paths, and the invoice's own amounts fell
+# with them — Untaxed 450.00 → 0.00, Total 450.00 → 0.00, Amount Due 450.00 → 0.00. `nullzero "1"` is HAP's "treat
+# a blank operand as 0" (the form's 空值视为0): the same write then stores Subtotal 500.00 and the invoice follows.
+# Order Lines was fixed the same way on 22 Sep 2026 (`orderlines.py defaults`, BLANK_IS_ZERO); this is the same
+# defect on the worksheet Order Lines copied its Formula shape from. On a workflow formula node the same flag is
+# `nullZero: true` (BUILDING.md).
+#
+# It covers what a default cannot: the static defaults below (Quantity 1, Unit Price 0, Discount (%) 0 — Odoo's
+# own `quantity` 1.0 and `discount` 0.0 on account.move.line) only fill a **new line in the form**, while a person
+# can clear Discount later and the API applies no defaults at all. A blank **Quantity** now reads as 0 and stores
+# Subtotal and Total 0.00 rather than nothing — probed the same way, and Odoo's own figure for a line with no
+# quantity; a blank Unit Price is the same operand in the same expression.
+BLANK_IS_ZERO = {'nullzero': '1'}
+BLANK_ZERO_FORMULAS = ('Subtotal', 'Total')        # every type 31 Formula on this worksheet
 ADVANCED = {  # advancedSetting keys this script owns
     'Sequence': {'defsource': C.static_default(10)},
     'Display Type': {'defsource': C.static_default(PRODUCT_LINE)},
     'Quantity': {'defsource': C.static_default(1)},
     'Unit Price': {'defsource': C.static_default(0)},
     'Discount (%)': {'defsource': C.static_default(0), 'suffix': '%'},
+    'Subtotal': dict(BLANK_IS_ZERO),               # so `layout` and `check` carry it too, and no re-run reverts it
+    'Total': dict(BLANK_IS_ZERO),
 }
 DOT = {'Sequence': 0, 'Quantity': 2, 'Unit Price': 2, 'Discount (%)': 2, 'Subtotal': 2, 'Total': 2,
        'Tax rate': 4}                              # Odoo's amount is float(16, 4), so their sum is too
@@ -593,6 +616,50 @@ def step_layout():
         C.remember('controls', KEY + c['controlName'], c['controlId'])
     place_subtable()                                # Subtotal exists by now: give the subtable its last column
     C.show(ws())
+
+
+# ── 5b · a blank operand counts as 0 in Subtotal and Total ──────────────────
+
+def step_nullzero():
+    """`advancedSetting.nullzero "1"` on Subtotal and Total — one **version-pinned** save that changes those two
+    controls and nothing else (`common.pinned_write`, the `products.py step_perms` pattern).
+
+    Why it is a step of its own and not left to `layout`: `layout` is a full, unpinned `SaveWorksheetControls`, and
+    this worksheet is one the owner opens in the browser. The fix is two `advancedSetting` keys, so it goes in
+    pinned to the version it read — a save the owner makes in between refuses this one (code 10, 数据过时) instead
+    of overwriting their work — with a signature diff proving nothing else moved. `layout` carries the same two
+    keys in ADVANCED so a later full run cannot put "0" back; this step is what puts them there today.
+
+    The two **defaults** that go with it — Quantity 1 and Discount (%) 0, as Order Lines has them and as Odoo's
+    `account.move.line` declares them — were already on this worksheet from the first build (ADVANCED, written by
+    `layout`, read back by `check`), so there is nothing for this step to write there. Nothing else on Invoice Lines
+    computes: the two Formulas above are the only type 31 controls, and Tax rate is a 汇总 the server computes."""
+    guard()
+    f = C.fields(ws())
+    missing = [n for n in BLANK_ZERO_FORMULAS if n not in f]
+    if missing:
+        sys.exit(f'{missing} are not on {WORKSHEET} — run `computed` (Subtotal) and taxes.py `lines` (Total) first')
+    wrong = {n: f[n]['type'] for n in BLANK_ZERO_FORMULAS if f[n]['type'] != FORMULA_NUMBER}
+    if wrong:
+        sys.exit(f'{json.dumps(wrong)} are not Formulas (t{FORMULA_NUMBER}) — `nullzero` means nothing on a '
+                 'control that does not compute; read the worksheet before writing to it')
+    # Every type 31 control on the worksheet, so a formula added later cannot quietly keep the server's "0".
+    formulas = sorted(c['controlName'] for c in hap.controls(ws()) if c['type'] == FORMULA_NUMBER)
+    if formulas != sorted(BLANK_ZERO_FORMULAS):
+        sys.exit(f'{WORKSHEET} carries the Formulas {formulas}, and this step names {sorted(BLANK_ZERO_FORMULAS)} '
+                 '— the owner has added or removed one; read it before writing')
+    spec = {f[n]['controlId']: {f'advancedSetting.{k}': v for k, v in BLANK_IS_ZERO.items()}
+            for n in BLANK_ZERO_FORMULAS}
+    before_others, before_invoices = signatures(), invoices_controls()
+    saved = C.pinned_write(ws(), spec, 'invlines_controls_pre_nullzero', 'nullzero')
+    if saved:
+        check_untouched(before_others)
+        check_invoices(before_invoices, allow_new=(LINES_FIELD,))
+    f = C.fields(ws())
+    for n in BLANK_ZERO_FORMULAS:
+        print(f"  OK  {n} t{f[n]['type']} {f[n]['controlId']} advancedSetting="
+              f"{json.dumps(f[n].get('advancedSetting'), ensure_ascii=False, sort_keys=True)}")
+    return saved
 
 
 # ── 6 · the rule ────────────────────────────────────────────────────────────
@@ -1442,6 +1509,20 @@ def step_check():
     want_formula = subtotal_expression(f)
     if f.get('Subtotal', {}).get('dataSource') != want_formula:
         problems.append(f"Subtotal is {f.get('Subtotal', {}).get('dataSource')!r}, want {want_formula!r}")
+    # **A blank operand counts as 0** on every Formula. `layout_differences` above compares the same key, but this
+    # is named on its own because it is the whole of the 23 Sep 2026 fix: with "0" a blank Discount stored no
+    # Subtotal and no Total and took the invoice's amounts with it. Also checked over the **live** type 31 controls,
+    # so a formula added later that kept the server's "0" is reported rather than passed over.
+    live_formulas = sorted(c['controlName'] for c in ctrls if c['type'] == FORMULA_NUMBER)
+    if live_formulas != sorted(BLANK_ZERO_FORMULAS):
+        problems.append(f'the Formulas are {live_formulas}, this spec names {sorted(BLANK_ZERO_FORMULAS)}')
+    for name in live_formulas:
+        got = (f[name].get('advancedSetting') or {}).get('nullzero')
+        if got != BLANK_IS_ZERO['nullzero']:
+            problems.append(f'{name} nullzero {got!r}, want {BLANK_IS_ZERO["nullzero"]!r} — a blank operand would '
+                            'leave it empty and blank the invoice with it; run `nullzero`')
+        else:
+            print(f'  OK  {name} t{FORMULA_NUMBER} nullzero {got!r} — a blank operand counts as 0')
     source = C.fields(INVOICES)
     for name, field in LOOKUPS:
         c = f.get(name, {})
@@ -1525,7 +1606,7 @@ def step_check():
 
 
 def step_all():
-    for name in ('create', 'fields', 'mount', 'computed', 'layout', 'rules', 'views', 'rollup', 'seed',
+    for name in ('create', 'fields', 'mount', 'computed', 'layout', 'nullzero', 'rules', 'views', 'rollup', 'seed',
                  'amounts'):
         print(f'\n── {name} ' + '─' * 60)
         STEPS[name]()
@@ -1543,6 +1624,7 @@ STEPS = {
     'mount': step_mount,
     'computed': step_computed,
     'layout': step_layout,
+    'nullzero': step_nullzero,
     'rules': step_rules,
     'views': step_views,
     'rollup': step_rollup,

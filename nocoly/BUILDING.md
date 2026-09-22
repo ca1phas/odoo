@@ -376,6 +376,16 @@ What decides is **whether the value being compared is in the write**.
 
 ### Formulas and lookups
 
+- **A number formula (control type 31) computes *nothing* when any operand is blank, unless you say otherwise.**
+  `advancedSetting.nullzero` is the field editor's *空值视为0*; the server creates the control with **"0"**, which
+  means *do not* treat a blank as 0, and one empty operand then stores the whole expression empty — no error, no
+  warning, both read paths blank. A roll-up or a workflow reading that field takes the blank as 0.00 and writes 0.00
+  into the parent. Send **`nullzero: "1"`** on every number formula that can meet an empty field, and check it back:
+  a blank Discount on a line emptied Subtotal, Tax Amount and Total on Order Lines (22 Sep 2026) and Subtotal and
+  Total on Invoice Lines (23 Sep 2026), and each time the document's own untaxed, tax and total fell to 0.00. A
+  static default on the operand is not a substitute — it only fills a **new record in the form**, while the field
+  can be cleared later and the API applies no defaults at all. The same flag on a workflow formula node is
+  `nullZero: true` (below).
 - **Functions need a `c` prefix** in a *number* formula's stored expression — `cMIN`, `cINT`, `cROUNDUP`, `cABS`.
   Written as `MIN(…)` the formula saves and computes empty. Plain arithmetic needs no prefix; a number formula has no IF.
 - **IF lives in function formulas** (control type 53). The expression is stored as JSON —

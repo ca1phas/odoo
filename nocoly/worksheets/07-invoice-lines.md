@@ -38,6 +38,21 @@ Labels are Odoo 19.4's, taken from the invoice form's line columns; aliases are 
 
 **The three lookups went from "101" to "100" on 21 Sep 2026** (`15-ui-conformance.md` §1): they say nothing on a line that does not exist yet, and Odoo's line editor has no Number, Accounting Date or Status column at all. **Subtotal and Total stay "101"** — visible and read-only — because they are figures a person watches while typing a line, and Odoo shows its Amount live as the quantity and price are entered. "011" would have been wrong for all five: a hidden field never shows as a table column either, and the Lines view carries every one of them.
 
+**A blank operand counts as 0** in Subtotal and Total (`advancedSetting.nullzero "1"`, `invlines.py nullzero`,
+23 Sep 2026). With the server's own default `"0"` a type 31 Formula computes **nothing** when any operand is
+blank, and stores nothing: probed through the API on this worksheet's `TEST roll-up line` (5 × 100.00 − 10%),
+Discount written blank stored Subtotal **and** Total empty on both read paths, and MISC/2026/00001's own amounts
+fell with them — Untaxed 450.00 → 0.00, Total 450.00 → 0.00, Amount Due 450.00 → 0.00. With `"1"` the same write
+stores 500.00 / 500.00 and the invoice reads 500.00, and a blank **Quantity** stores 0.00 rather than nothing,
+which is Odoo's own figure for a line with no quantity. The defaults in the table above (Quantity 1, Unit Price 0,
+Discount 0 — Odoo's `quantity` 1.0 and `discount` 0.0) only fill a **new line in the form**; `nullzero` is what
+covers a field cleared later and an API write, which applies no defaults at all. Order Lines was fixed the same
+way a day earlier (`16-orders.md` §2) and copies its Formula shape from here, so the two now agree.
+
+Two **TEST section** rows (`TEST B section`, `TEST B2 section`) still store an empty Subtotal and Total from
+before the fix: a formula recomputes only when the row is next written, and a section carries no figures and is
+excluded from the roll-up either way.
+
 **Added since by bundles:** **Account** (`account_id`), a relation to Chart of Accounts after Label — on the form, on the Lines view and in the Invoices subtable — hidden on a section or a note by the rule below and filled by automation B — bundle 2, `09-chart-of-accounts.md`.
 
 `account.move.line` has **no `active` field** either, so — like Invoices — there is no Active checkbox, no Archived
@@ -151,8 +166,10 @@ the Product Variants bundle, and 04 is out for review.
 
 ## 2 · Build
 
-Built by `nocoly/build/invlines.py` — steps `create → fields → mount → computed → layout → rules → views →
-rollup → seed → amounts`, or `all` for every one of them followed by `check`. Each step reads the live state
+Built by `nocoly/build/invlines.py` — steps `create → fields → mount → computed → layout → nullzero → rules →
+views → rollup → seed → amounts`, or `all` for every one of them followed by `check`. `nullzero` (23 Sep 2026) is
+the one step that does **not** go through `layout`'s full save: it is a narrow, version-pinned
+`SaveWorksheetControls` of the two Formulas, because the owner has this worksheet open in the browser. Each step reads the live state
 first, refuses to run unless the profile reaches ERP Master › Invoicing and the worksheet holds only this
 script's own work, reads back what it wrote, and is safe to re-run: a second `all` created, added, renamed and
 updated nothing, wrote no record and re-published no workflow. Helpers: `check` reads controls, options,
@@ -443,6 +460,14 @@ all, and three things settled.
 
 ### Found while building
 
+- **A number Formula ignores a blank operand by default — it computes nothing at all** (23 Sep 2026).
+  `advancedSetting.nullzero` is the form's *空值视为0*, and the server creates a type 31 control with **"0"**,
+  which means *do not treat a blank as 0*: one blank operand and the whole expression stores empty, with no error
+  anywhere. Both of this worksheet's Formulas were built that way, so a blank Discount (%) emptied Subtotal and
+  Total, and the roll-up then wrote 0.00 into the invoice's Untaxed Amount, Total and Amount Due. `"1"` fixes it;
+  `invlines.py nullzero` writes it in one version-pinned save and `check` reads it back over **every** live type 31
+  control, so a formula added later cannot quietly keep the default. The same flag on a workflow formula node is
+  `nullZero: true` (BUILDING.md), and `units.py` has passed `"1"` on its two formulas since it was written.
 - **A worksheet mounted as a 子表 keeps its own sidebar entry, its own views and its own records.**
   `hap worksheet mount-subtable <parent> <child> --name … --back-relate-name …` does both halves of the UI's
   *已有关联* handshake: the 子表 on the parent, then the back-relation on the child carrying the **placeholder

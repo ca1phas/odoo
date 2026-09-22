@@ -422,7 +422,10 @@ SHAPE_KEYS = ('type', 'enumDefault', 'enumDefault2', 'fieldPermission', 'dot')
 # What Invoice Lines' two Formulas must still carry for this step to copy them. Checked against the live controls
 # rather than written onto them: a drift on 07 stops this build instead of being propagated to it.
 WANT_SHAPE = {'type': FORMULA, 'enumDefault': 0, 'enumDefault2': 0, 'fieldPermission': '101', 'dot': 2}
-WANT_SETTING = {'roundtype': '2', 'sorttype': 'zh', 'nullzero': '0'}
+# `nullzero` read "0" on both worksheets until 22–23 Sep 2026, and that was the bug `defaults` below describes:
+# Invoice Lines' two Formulas were given "1" on 23 Sep (`invlines.py nullzero`), so the reference now carries what
+# this worksheet carries and the two cannot drift apart again.
+WANT_SETTING = {'roundtype': '2', 'sorttype': 'zh', 'nullzero': '1'}
 # A Formula has no currency and no default of its own, so these go. `showformat`, `prefix` and `suffix` are the
 # rest of HAP's money formatting; `defaulttype` and `defaultfunc` are the function default that did not work.
 DROPPED = ('currency', 'currencynames', 'showformat', 'prefix', 'suffix', 'defaulttype', 'defaultfunc')
@@ -527,7 +530,8 @@ def formula_spec(f, shape, setting, templates):
     ops = operands(f)
     expression = {'Subtotal': fill(templates['Subtotal'], ops), 'Tax Amount': fill(TAX_TEMPLATE, ops),
                   'Total': fill(templates['Total'], ops)}
-    setting = {**setting, **BLANK_IS_ZERO}         # the one key Order Lines does not copy from 07 — see `defaults`
+    setting = {**setting, **BLANK_IS_ZERO}         # 07 now carries it too, and this keeps `formulas` from ever
+                                                   # copying a "0" back in — see `defaults`
     return {n: {**shape, 'dataSource': expression[n],
                 **{f'advancedSetting.{k}': v for k, v in setting.items()}} for n in CONVERT}
 
@@ -625,21 +629,21 @@ def check_subtotal(f):
 # ── 3b · a blank Quantity or Discount no longer blanks a line ───────────────
 #
 # Subtotal is `Quantity × Unit Price × (1 − Discount ÷ 100)`, and a type 31 Formula carrying
-# `advancedSetting.nullzero "0"` — Invoice Lines' shape, copied by `formulas` — **computes nothing when an operand is
-# blank**: probed on 22 Sep 2026 through the API on S00017's one line, Discount written '' stored Subtotal, Tax
-# Amount and Total **all empty** (both read paths), and the order's roll-ups with them. `nullzero "1"` is HAP's
-# "treat a blank operand as 0" — the form's 空值视为0 — and the same probe with it set stores 68.00 / 6.80 / 74.80.
-# (The same flag on a workflow formula node is `nullZero: true`, BUILDING.md.)
+# `advancedSetting.nullzero "0"` — Invoice Lines' shape as it was then, copied by `formulas` — **computes nothing
+# when an operand is blank**: probed on 22 Sep 2026 through the API on S00017's one line, Discount written '' stored
+# Subtotal, Tax Amount and Total **all empty** (both read paths), and the order's roll-ups with them.
+# `nullzero "1"` is HAP's "treat a blank operand as 0" — the form's 空值视为0 — and the same probe with it set stores
+# 68.00 / 6.80 / 74.80. (The same flag on a workflow formula node is `nullZero: true`, BUILDING.md.)
 #
 # Two parts, both owned here:
-#   * **static defaults** Quantity 1 and Discount 0 — Invoice Lines' own (`invlines.py` DEFAULTS), and Odoo's
+#   * **static defaults** Quantity 1 and Discount 0 — Invoice Lines' own (`invlines.py` ADVANCED), and Odoo's
 #     `product_uom_qty` default 1.0 and `discount` default 0.0 — so a line typed in the form starts filled;
 #   * **nullzero "1"** on Subtotal, Tax Amount and Total, because a default covers only a new line in the form:
 #     someone can still clear Discount later, and the API applies no defaults at all (BUILDING.md). With it, a blank
 #     Discount is no discount, as in Odoo, and a blank Tax rate (no percentage tax) is no tax.
 # A blank **Quantity** or **Unit Price** now also reads as 0 and stores Subtotal 0.00 rather than nothing — Odoo's
-# own figure for a line with no quantity. That is not a divergence from Odoo, so no `desc` carries it; it is one
-# from Invoice Lines, which still carries "0" and has the same defect (16-orders.md §2).
+# own figure for a line with no quantity. That is not a divergence from Odoo, so no `desc` carries it, and it is no
+# longer one from Invoice Lines either: 07's two Formulas were given "1" on 23 Sep 2026 (`invlines.py nullzero`).
 DEFAULTS = {'Quantity': 1, 'Discount': 0}
 BLANK_IS_ZERO = {'nullzero': '1'}
 

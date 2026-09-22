@@ -1476,8 +1476,11 @@ def step_lines():
               f"through {LINE_TAXES}, filtered {COMPUTATION} is Percentage)")
     if LINE_TOTAL not in lf:
         row, col, size = L.PLACE[LINE_TOTAL]
+        # `nullzero "1"`: the server's default for a Formula is "0", and with it a blank Subtotal or Tax rate makes
+        # Total store **nothing** (invlines.py BLANK_IS_ZERO, proved 23 Sep 2026). `L.step_layout()` below carries
+        # the same key, so a Total created before the fix is corrected rather than left.
         c = C.control('FORMULA_NUMBER', LINE_TOTAL, (row, col, size), alias=L.ALIAS[LINE_TOTAL], hint='',
-                      desc=L.DESC[LINE_TOTAL], readonly=True,
+                      desc=L.DESC[LINE_TOTAL], readonly=True, advanced_setting=dict(L.BLANK_IS_ZERO),
                       extra={'dot': L.DOT[LINE_TOTAL], 'dataSource': total_expression(lf)})
         before = snap()
         C.add_fields(L.ws(), [c])
