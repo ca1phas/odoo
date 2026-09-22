@@ -672,13 +672,41 @@ def step_rules():
     21 Sep 2026, so the blocker is gone (§7.2 item 6)."""
     f = guard()
     reference_rule()
-    C.upsert_rules(ws(), rule_specs(f), 'orderlines_rules_pre_rules')
+    names = {c['controlId']: c['controlName'] for c in hap.controls(ws())}
+    live = {r['name']: r for r in hap.listing('worksheet', 'rules', ws())}
+    # Only a rule whose live state differs is sent: `save-rule` re-sends the whole payload, and a rule nobody is
+    # changing has no business being written — the same filter `orders.py step_rules` has.
+    specs = [spec for spec in rule_specs(f) if rule_state(spec, names) != live_rule_state(live.get(spec[0]), names)]
+    if specs:
+        C.upsert_rules(ws(), specs, 'orderlines_rules_pre_rules')
+    else:
+        print(f'  {RULE_FIGURES!r} is already as specified; nothing saved')
     live = {r['name']: r for r in hap.listing('worksheet', 'rules', ws())}
     if RULE_FIGURES not in live:
         sys.exit(f'rule {RULE_FIGURES!r} did not come back from the worksheet')
     C.remember('rules', KEY + RULE_FIGURES, live[RULE_FIGURES]['ruleId'])
+    spec = next(sp for sp in rule_specs(f) if sp[0] == RULE_FIGURES)
+    if rule_state(spec, names) != live_rule_state(live[RULE_FIGURES], names):
+        sys.exit(f'rule {RULE_FIGURES!r} reads back {live_rule_state(live[RULE_FIGURES], names)}, wanted '
+                 f'{rule_state(spec, names)}')
     print(f'  {len(live)} rules on {WORKSHEET}; the one above is this builder\'s')
-    return True
+    return bool(specs)
+
+
+def rule_state(spec, names):
+    """A rule spec in comparable form: (type, disabled, condition, actions). `check` compares the same thing."""
+    _name, kind, filters, items, _opts = spec
+    return (kind, False, condition_state(filters, names),
+            [(i['type'], sorted(names.get(c['controlId'], c['controlId']) for c in i['controls'])) for i in items])
+
+
+def live_rule_state(r, names):
+    """The same, off a live rule; None when it does not exist."""
+    if r is None:
+        return None
+    return (r['type'], r['disabled'], condition_state(r['filters'], names),
+            [(i['type'], sorted(names.get(c['controlId'], c['controlId']) for c in i['controls']))
+             for i in r['ruleItems']])
 
 
 # ── 5 · the Odoo field names ────────────────────────────────────────────────
@@ -1044,12 +1072,8 @@ def step_check():
             if r is None:
                 problems.append(f'rule {name!r} missing — run `rules`')
                 continue
-            want = (kind, False, condition_state(rfilters, names),
-                    [(i['type'], sorted(names.get(c['controlId'], c['controlId']) for c in i['controls']))
-                     for i in items])
-            got = (r['type'], r['disabled'], condition_state(r['filters'], names),
-                   [(i['type'], sorted(names.get(c['controlId'], c['controlId']) for c in i['controls']))
-                    for i in r['ruleItems']])
+            want = rule_state((name, kind, rfilters, items, _opts), names)
+            got = live_rule_state(r, names)
             if got != want:
                 problems.append(f'rule {name!r}:\n    want {want}\n    got  {got}')
             else:

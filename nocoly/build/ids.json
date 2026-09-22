@@ -65,7 +65,9 @@
   "Orders: Confirm": "6ab10707886e6e7c8b386eb3",
   "Orders: Cancel": "6ab1070a94093ab76bcc899e",
   "Orders: Set to Quotation": "6ab1070d789584ded32f15e7",
-  "Orders: Mark as Sent": "6ab10711a2c872a5c1305bae"
+  "Orders: Mark as Sent": "6ab10711a2c872a5c1305bae",
+  "Orders: Deliver": "6ab218bea2c872a5c138c9ca",
+  "Orders: Deliver: one product line": "6ab218c1a2c872a5c138ca18"
  },
  "buttons": {
   "Archive": "6aa8a5654720c515252bda3d",
@@ -91,7 +93,8 @@
   "Orders: Confirm": "6ab10707e43d174ab3753de1",
   "Orders: Cancel": "6ab1070abd43f55762c78d2d",
   "Orders: Set to Quotation": "6ab1070dbd43f55762c78d2f",
-  "Orders: Mark as Sent": "6ab10711e54d2a34fa4e89ab"
+  "Orders: Mark as Sent": "6ab10711e54d2a34fa4e89ab",
+  "Orders: Deliver": "6ab218bee43d174ab3754894"
  },
  "views": {
   "Units & Packagings: Units & Packagings": "6aa8d14d4a73a3142152d3fa",

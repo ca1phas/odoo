@@ -26,12 +26,16 @@ owner approved — deliberately nothing else.
     ~/.hap-venv/bin/python nocoly/build/orders.py buttons  # 13. Part 2 of the button build: Confirm · Cancel ·
                                                            #     Set to Quotation · Mark as Sent, their
                                                            #     workflows, and Odoo's missing-product guard
-                                                           #     on Confirm
+                                                           #     on Confirm; and Part 3, Deliver, with its
+                                                           #     get-multiple and per-line sub-process
     ~/.hap-venv/bin/python nocoly/build/orders.py selfcheck# 13b. press all four through the CLI on one tenant
                                                            #     order and put it back, and prove the guard
                                                            #     refuses the order whose lines have no Product
+    ~/.hap-venv/bin/python nocoly/build/orders.py selfdeliver# 13b2. press Deliver on one Sales Order through the CLI,
+                                                           #     read every line back both ways, restore it, and
+                                                           #     ask the server where the button is offered
     ~/.hap-venv/bin/python nocoly/build/orders.py check    # read rules, Expiration, the roll-ups, the two new
-                                                           #    controls, the views, the four buttons with their
+                                                           #    controls, the views, the five buttons with their
                                                            #    workflows and the seed back, and report drift
     ~/.hap-venv/bin/python nocoly/build/orders.py show     # the live controls and rules
 
@@ -1825,7 +1829,7 @@ def step_figures():
     return diffs
 
 
-# ── 13 · the four state buttons, and Confirm's guard ────────────────────────
+# ── 13 · the four state buttons, Confirm's guard, and Deliver ───────────────
 #
 # **Part 2 of the Orders button build** — 16-orders.md §3's twenty actions. Part 1 (§6b) appended the four
 # controls these buttons write; these are the ones that are **nothing but a state change**, plus the one guard
@@ -1848,6 +1852,7 @@ def step_figures():
 # | Cancel             | Status is Quotation, Quotation Sent or Sales Order, **and Locked is not ticked** | Status → Cancelled | no |
 # | Set to Quotation   | Status is Cancelled or Quotation Sent          | Status → Quotation, **and Signature, Signed By and Signed On cleared** | no |
 # | Mark as Sent       | Status is Quotation                            | Status → Quotation Sent | yes |
+# | Deliver            | Status is Sales Order (our judgment — see *Deliver* below) | each product line's Quantity Delivered → its own Quantity, through a sub-process | yes |
 #
 # `isBatch` mirrors each Odoo action's own `binding_view_types`: *Confirm Orders* (502) and *Mark as Sent* (501)
 # are bound to the **list**, so their singular twins here carry batch and HAP gives us the batch form for free.
@@ -2262,6 +2267,266 @@ def ensure_product_guard(f):
     return changed
 
 
+# ── Deliver: Part 3, the fifth button ───────────────────────────────────────
+#
+# Odoo's server action 504, `deliver_sold_quantity`, bound to the form and the list: it sets **each order line's
+# Delivered quantity to that line's own Quantity** — the shortcut for an order that never passes through
+# Inventory. The method is Enterprise/saas-only and is not in the 19.0 Community checkout, so its own guard cannot
+# be read; the button here is **enabled when Status is Sales Order**, which is **our judgment, not Odoo's arch**
+# (a quotation has nothing to deliver, a cancelled order must not be delivered).
+#
+# **The value differs per line**, so this is not one constant written to a set of records: a HAP update step over
+# a get-multiple set writes the same value into every record, and there is no "this record's own field" among the
+# values it can take. What HAP does have is the **sub-process (子流程, flowNodeType 16)**: it runs a child workflow
+# once per record of a get-multiple set, and inside the child that record *is* the trigger — so an update step on
+# the child's trigger can take the value from the child's trigger:
+#
+#     Trigger by button (on an order; isBatch, so once per selected order)
+#       → This order's product lines        get-multiple (13 / 400) over Order Lines: Orders is this order,
+#                                           Display Type is Product — sections, subsections and notes excluded
+#       → Deliver each product line         sub-process (16) over that set, one line at a time (executeType 2),
+#                                           the parent waiting for it (nextExecute)
+#            └ child workflow "Deliver: one product line"
+#                Trigger: one Order Line     (the record the sub-process hands in)
+#                  → Delivered = Quantity    update the trigger line: Quantity Delivered ← the trigger line's
+#                                            own Quantity
+#
+# Quantity Delivered is `101` read-only on the form; a workflow writes it regardless (CLAUDE.md). Nothing is
+# written to Orders itself. The child workflow is published before the parent, as hap-cli's app creator does.
+DELIVER = 'Deliver'
+DELIVER_LINES = "This order's product lines"
+DELIVER_EACH = 'Deliver each product line'
+DELIVER_INNER = 'Deliver: one product line'
+DELIVER_STEP = 'Delivered = Quantity'
+DELIVER_STEPS = (DELIVER_LINES, DELIVER_EACH)
+SUB_PROCESS, GET_MANY = 16, 13                  # flowNodeType
+FROM_WORKSHEET, FROM_RECORD = '400', '401'      # get-multiple actionId · a value taken from the sub-process's record
+SEQUENTIAL = 2                                  # a sub-process's executeType: 1 parallel · 2 one at a time
+DELIVER_DESC = ("Set every product line's Quantity Delivered to its own Quantity — for an order that is not "
+                'delivered through Inventory. Offered on a Sales Order only (our judgment: Odoo\'s own guard for '
+                'this action is not in the Community source).')
+# (2) Proved by `selfdeliver` on this order: a Sales Order whose product lines carry different Quantities and
+# no Delivered.
+DELIVER_ORDER = 'S00006'
+DELIVER_REFUSED_ON = 'S00013'                   # a Quotation: the button must be offered disabled there
+
+
+def deliver_spec(f):
+    return {'name': DELIVER, 'type': 'triggerWorkflow', 'desc': DELIVER_DESC, 'isBatch': True,
+            'enableWhen': status_when(f, ['Sales Order'])}
+
+
+def lines_filter(pid, node_id, trigger_id):
+    """The get-multiple step's `filters`, in the shape the server stores for Confirm's count (read off it on
+    22 Sep 2026): the line's Orders relation equals the triggering order's Record ID (conditionId 33), and its
+    Display Type is any of Product (conditionId 1, the option as a value object). `batch-add` sends a search
+    step's filter as `operateCondition`, which is not what the node keeps (BUILDING.md), so it is saved here."""
+    base = {'nodeId': node_id, 'nodeType': GET_MANY, 'actionId': FROM_WORKSHEET, 'sourceType': 0}
+    return [{'spliceType': 1, 'conditions': [[
+        dict(base, filedId=LINES_ORDERS, filedValue='Orders', filedTypeId=RELATION, enumDefault=1,
+             conditionId=RELATION_EQ, sourceType=33,
+             conditionValues=[{'nodeId': trigger_id, 'controlId': 'rowid'}]),
+        dict(base, filedId=CHILD['Display Type'], filedValue='Display Type', filedTypeId=DROPDOWN, enumDefault=0,
+             conditionId=IS_ANY_OF,
+             conditionValues=[{'value': {'key': PRODUCT_LINE, 'value': 'Product', 'isDeleted': False,
+                                         'score': None, 'index': None}}]),
+    ]]}]
+
+
+def lines_filter_state(filters):
+    """(field, conditionId, compared with) per condition — what `check` and the step compare."""
+    return [(c.get('filedId'), c.get('conditionId'),
+             [v.get('controlId') or (v.get('value') or {}).get('key') for v in c.get('conditionValues') or []],
+             [v.get('nodeId') or '' for v in c.get('conditionValues') or []])
+            for flt in filters or [] for g in flt.get('conditions') or [] for c in g]
+
+
+def deliver_write(inner_start):
+    """The child's one field write: Quantity Delivered (a number, type 6) from the child trigger's Quantity."""
+    return dict(patch(CHILD['Quantity Delivered'], NUMBER, node=inner_start, source=CHILD['Quantity']),
+                nodeActionId=FROM_RECORD)
+
+
+def deliver_nodes():
+    """The two parent steps and the child's one, for `batch-add` on an empty button workflow."""
+    return [
+        {'nodeAlias': 'lines', 'nodeType': 'get_multiple', 'name': DELIVER_LINES,
+         'config': {'worksheet': LINES_WS, 'filter': {'logic': 'and', 'items': [
+             {'left': {'node': {'nodeAlias': 'trigger'}, 'fieldId': LINES_ORDERS, '_filedTypeId': RELATION},
+              'op': RELATION_EQ, 'right': {'kind': 'field', 'node': {'nodeAlias': 'trigger'}, 'fieldId': 'rowid'}},
+             {'left': {'node': {'nodeAlias': 'trigger'}, 'fieldId': CHILD['Display Type'],
+                       '_filedTypeId': DROPDOWN},
+              'op': IS_ANY_OF, 'right': {'kind': 'literal',
+                                         'values': [{'key': PRODUCT_LINE, 'value': 'Product', 'isDeleted': False}]}},
+         ]}}},
+        {'nodeAlias': 'each', 'nodeType': 'sub_process', 'name': DELIVER_EACH,
+         'config': {'target': {'kind': 'record', 'node': {'nodeAlias': 'lines'}},
+                    'process': {'name': DELIVER_INNER, 'nodes': [
+                        {'nodeAlias': 'deliver', 'nodeType': 'update_record', 'name': DELIVER_STEP,
+                         'config': {'worksheet': LINES_WS, 'target': {'node': {'nodeAlias': 'sub_trigger'}},
+                                    'fields': [{'fieldId': CHILD['Quantity Delivered'], 'type': NUMBER,
+                                                'valueRef': {'node': {'nodeAlias': 'sub_trigger'},
+                                                             'fieldId': CHILD['Quantity']}}]}}]},
+                    'execution': {'mode': 'sequential_each', 'continueAfterComplete': True}}},
+    ]
+
+
+def deliver_inner(pid, proc=None):
+    """(the child workflow's id, its node list) — read off the sub-process step's `subProcessId`."""
+    proc, byname = nodes_by_name(pid) if proc is None else (proc, {n['name']: n for n in proc['flowNodeMap'].values()})
+    node = byname.get(DELIVER_EACH)
+    if not node:
+        return '', None
+    inner = read_node(pid, node['id']).get('subProcessId') or ''
+    return inner, (hap.run('workflow', 'node', 'list', inner) if inner else None)
+
+
+def ensure_deliver_button(f):
+    """The button itself: created once by name (`create-custom-action` ignores `--btn-id` and would add a
+    duplicate), its workflow id recorded. Returns (workflow id, True when created)."""
+    live = {b['name']: b for b in hap.listing('worksheet', 'custom-actions', ws())}
+    key = KEY + DELIVER
+    if DELIVER in live:
+        pid = hap.ids().get('workflows', {}).get(key)
+        if not pid:
+            sys.exit(f'{DELIVER} exists ({live[DELIVER]["btnId"]}) but ids.json has no workflow for it — read '
+                     f'its processId off the button before building')
+        return pid, False
+    hap.backup('orders_buttons_pre_deliver', list(live.values()))
+    out = hap.run('worksheet', 'create-custom-action', ws(), '-a', APP, '--action-spec',
+                  json.dumps(deliver_spec(f), ensure_ascii=False))
+    data = out.get('data', out) if isinstance(out, dict) else {}
+    pid = data.get('processId')
+    if not pid:
+        sys.exit(f'{DELIVER}: no processId in create-custom-action output: {out}')
+    C.remember('workflows', key, pid)
+    btn = next((b for b in hap.listing('worksheet', 'custom-actions', ws()) if b['name'] == DELIVER), None)
+    if not btn:
+        sys.exit(f'{DELIVER}: created, but it does not come back from custom-actions')
+    C.remember('buttons', key, btn['btnId'])
+    return pid, True
+
+
+def ensure_deliver(f):
+    """Build or repair Deliver's workflow and its child. Returns True when something was written. Re-runnable:
+    the steps are added only to an empty workflow, the filter and the child's write are compared before they are
+    saved, and the two workflows are published only when something changed."""
+    pid, changed = ensure_deliver_button(f)
+    proc, byname = nodes_by_name(pid)
+    trigger = proc['startEventId']
+    if proc['flowNodeMap'][trigger].get('nextId') in (None, '', '99'):
+        hap.run('workflow', 'node', 'batch-add', pid, '--nodes', json.dumps(deliver_nodes(), ensure_ascii=False),
+                '--trigger-node-id', trigger, '--trigger-alias', 'trigger')
+        proc, byname = nodes_by_name(pid)
+        changed = True
+    missing = [n for n in DELIVER_STEPS if n not in byname]
+    if missing:
+        sys.exit(f'{DELIVER} workflow {pid}: {missing} missing ({sorted(byname)}) — it has steps this builder did '
+                 f'not make; read it before writing')
+    print('  backup:', hap.backup('orders_deliver_workflow', proc))
+    lines = byname[DELIVER_LINES]
+    got = read_node(pid, lines['id'])
+    want = lines_filter(pid, lines['id'], trigger)
+    if lines_filter_state(got.get('filters')) != lines_filter_state(want) or got.get('appId') != LINES_WS:
+        hap.run('workflow', 'node', 'save', pid, lines['id'], '--type', str(GET_MANY), '-n', DELIVER_LINES,
+                '-c', json.dumps({'actionId': FROM_WORKSHEET, 'appId': LINES_WS, 'appType': 1,
+                                  'selectNodeId': '', 'filters': want, 'operateCondition': [],
+                                  'execute': got.get('execute', False)}, ensure_ascii=False))
+        back = read_node(pid, lines['id'])
+        if lines_filter_state(back.get('filters')) != lines_filter_state(want):
+            sys.exit(f'{DELIVER_LINES}: filter reads back {lines_filter_state(back.get("filters"))}, wanted '
+                     f'{lines_filter_state(want)} — `hap workflow rollback {pid} -y` restores the published one')
+        changed = True
+    each = read_node(pid, byname[DELIVER_EACH]['id'])
+    if (each.get('selectNodeId'), each.get('executeType')) != (lines['id'], SEQUENTIAL):
+        sys.exit(f'{DELIVER_EACH}: runs over {each.get("selectNodeId")!r} with executeType '
+                 f'{each.get("executeType")!r}, wanted {lines["id"]!r} one line at a time')
+    inner, iproc = deliver_inner(pid, proc)
+    if not inner:
+        sys.exit(f'{DELIVER_EACH}: no child workflow (subProcessId empty)')
+    C.remember('workflows', KEY + DELIVER_INNER, inner)
+    ibyname = {n['name']: n for n in iproc['flowNodeMap'].values()}
+    if DELIVER_STEP not in ibyname:
+        sys.exit(f'{DELIVER_INNER} {inner}: no {DELIVER_STEP!r} ({sorted(ibyname)})')
+    istart, step = iproc['startEventId'], ibyname[DELIVER_STEP]
+    want_write = [write_state(deliver_write(istart))]
+    d = read_node(inner, step['id'])
+    inner_changed = False
+    if [write_state(x) for x in d.get('fields') or []] != want_write or d.get('selectNodeId') != istart:
+        hap.run('workflow', 'node', 'save', inner, step['id'], '--type', str(UPDATE_NODE), '-n', DELIVER_STEP,
+                '-c', json.dumps({'actionId': '2', 'appId': LINES_WS, 'appType': 1, 'selectNodeId': istart,
+                                  'fields': [deliver_write(istart)]}, ensure_ascii=False))
+        inner_changed = True
+    back = read_node(inner, step['id'])
+    if back.get('isException') or [write_state(x) for x in back.get('fields') or []] != want_write:
+        sys.exit(f'{DELIVER_STEP}: reads back exception={back.get("isException")} '
+                 f'{[write_state(x) for x in back.get("fields") or []]}, wanted {want_write}')
+    if changed or inner_changed:
+        print(f'  {DELIVER_INNER}: {C.publish(inner)}')
+        print(f'  {DELIVER}: {C.publish(pid)}')
+    else:
+        print(f'  {DELIVER}: already built; not re-published')
+    return changed or inner_changed
+
+
+def deliver_problems():
+    """Deliver read back: the button, the parent's two steps and filter, the sub-process, the child's write."""
+    problems = []
+    f = hap.by_name(c for c in hap.controls(ws()) if c['type'] != C.TAB)
+    b = next((x for x in hap.listing('worksheet', 'custom-actions', ws()) if x['name'] == DELIVER), None)
+    if b is None:
+        return [f'the {DELIVER!r} button is missing — run `buttons`']
+    if button_state(b) != button_wanted(deliver_spec(f)):
+        return [f'{DELIVER}: stored {button_state(b)}, wanted {button_wanted(deliver_spec(f))} — run `buttons`']
+    pid = hap.ids().get('workflows', {}).get(KEY + DELIVER)
+    if not pid:
+        return [f'{DELIVER}: no workflow id in ids.json — run `buttons`']
+    proc, byname = nodes_by_name(pid)
+    steps = [n['name'] for n in proc['flowNodeMap'].values() if n.get('typeId') not in (None, 0, 100) and n.get('prveId')]
+    if sorted(steps) != sorted(DELIVER_STEPS):
+        return [f'{DELIVER}: workflow holds {steps}, wanted {list(DELIVER_STEPS)} — run `buttons`']
+    fm, trigger = proc['flowNodeMap'], proc['startEventId']
+    lines, each = byname[DELIVER_LINES], byname[DELIVER_EACH]
+    if fm[trigger].get('nextId') != lines['id'] or lines.get('nextId') != each['id'] or \
+            each.get('nextId') not in (None, '', '99'):
+        problems.append(f'{DELIVER}: the chain is not trigger → {DELIVER_LINES!r} → {DELIVER_EACH!r} → end')
+    got = read_node(pid, lines['id'])
+    want = lines_filter(pid, lines['id'], trigger)
+    if (got.get('actionId'), got.get('appId')) != (FROM_WORKSHEET, LINES_WS) or \
+            lines_filter_state(got.get('filters')) != lines_filter_state(want):
+        problems.append(f'{DELIVER_LINES}: {got.get("actionId")}/{got.get("appId")} '
+                        f'{lines_filter_state(got.get("filters"))}, wanted {lines_filter_state(want)}')
+    sub = read_node(pid, each['id'])
+    if (sub.get('selectNodeId'), sub.get('executeType')) != (lines['id'], SEQUENTIAL):
+        problems.append(f'{DELIVER_EACH}: over {sub.get("selectNodeId")!r} executeType {sub.get("executeType")!r}')
+    inner, iproc = deliver_inner(pid, proc)
+    istep = next((n for n in (iproc or {}).get('flowNodeMap', {}).values() if n['name'] == DELIVER_STEP), None)
+    if not istep:
+        problems.append(f'{DELIVER_INNER} {inner!r}: no {DELIVER_STEP!r}')
+    else:
+        d = read_node(inner, istep['id'])
+        live = [write_state(x) for x in d.get('fields') or []]
+        if d.get('isException') or live != [write_state(deliver_write(iproc['startEventId']))] or \
+                d.get('selectNodeId') != iproc['startEventId']:
+            problems.append(f'{DELIVER_STEP}: exception={d.get("isException")} {live}')
+    if not problems:
+        print(f"  OK  {DELIVER:<17} btnId={b['btnId']} isBatch={bool(b.get('isBatch'))} when Status is Sales Order\n"
+              f'        then {DELIVER_LINES!r} (Orders is this order, Display Type is Product) → {DELIVER_EACH!r}, '
+              f'one at a time → child {inner}: Quantity Delivered = its own Quantity')
+    return problems
+
+
+def buttons_offered(rowid):
+    """{button name: offered?} for one order, **evaluated by the server**: `GetWorksheetBtns` with a `rowId`
+    answers each button's `disabled` against that record's own values — the same call the record page makes, so it
+    tests `enableWhen` without a browser (22 Sep 2026)."""
+    from hap_cli.core.session import Session
+    got = Session.load(None).api_call('Worksheet', 'GetWorksheetBtns',
+                                      {'appId': APP, 'worksheetId': ws(), 'rowId': rowid, 'viewId': ''})
+    got = got.get('data', got) if isinstance(got, dict) else got
+    return {b['name']: not b.get('disabled') for b in got or []}
+
+
 # ── what the owner owns, compared before and after ──────────────────────────
 
 def owners_button_state():
@@ -2323,7 +2588,8 @@ def button_wanted(spec):
 
 
 def step_buttons():
-    """Odoo's four state buttons, their one-step workflows, and the product guard in front of Confirm.
+    """Odoo's four state buttons, their one-step workflows, and the product guard in front of Confirm; and
+    Deliver (Part 3) with its get-multiple, its per-line sub-process and the child workflow — `ensure_deliver`.
 
     Writes **no control, no rule and no view**, and nothing at all on Order Lines: the whole of it is custom
     actions and their own workflows. The owner's *Send Quotation* button, its workflow and their
@@ -2357,16 +2623,19 @@ def step_buttons():
         if live != [write_state(x) for x in wanted[name]]:
             trouble.append(f'{name}: {step!r} stored {json.dumps(live, ensure_ascii=False)}, wanted '
                            f'{json.dumps([write_state(x) for x in wanted[name]], ensure_ascii=False)}')
+    ensure_deliver(f)
+    specs_by_name = dict({s['name']: s for s, _, _ in specs}, **{DELIVER: deliver_spec(f)})
     for b in hap.listing('worksheet', 'custom-actions', ws()):
-        if b['name'] not in BUTTONS:
+        if b['name'] not in specs_by_name:
             continue
-        spec = next(s for s, _, _ in specs if s['name'] == b['name'])
+        spec = specs_by_name[b['name']]
         if button_state(b) != button_wanted(spec):
             trouble.append(f'{b["name"]}: stored {button_state(b)}, wanted {button_wanted(spec)}')
+    trouble += deliver_problems()
     compare_untouched(before)
     if trouble:
         sys.exit('  ' + '\n  '.join(trouble))
-    for name in BUTTONS:
+    for name in BUTTONS + (DELIVER, DELIVER_INNER):
         print(C.structure(hap.ids()['workflows'][KEY + name]))
     return True
 
@@ -2390,7 +2659,8 @@ def step_buttons():
 # started from. `check` no longer compares the fields a button owns (Status, Quotation/Order Date and §6b's four)
 # against the seed, because after a real Confirm they legitimately differ from it — see `step_seed`.
 #
-# It is the one step here that writes records by design; it is not part of a "saves nothing" re-run.
+# It and `selfdeliver` are the two steps here that write records by design; neither is part of a "saves
+# nothing" re-run.
 CLEAN_ORDER, GUARDED_ORDER = 'S00009', 'S00016'
 SIGNER, SIGNED_AT = 'TEST signer', '2026-09-20 10:11:12'
 
@@ -2524,6 +2794,132 @@ def step_selfcheck():
     return True
 
 
+# ── 13b2 · driving Deliver from the CLI ─────────────────────────────────────
+#
+# `selfdeliver` presses Deliver on DELIVER_ORDER through `workflow trigger`, as `selfcheck` presses the other
+# four, reads every line of every order back through **both** read paths (`record get` and the `common.records`
+# listing — neither is complete on its own, CLAUDE.md), and then **restores** each line's Quantity Delivered to
+# what it was, so `check` stays green. It also asks the server which orders the button is offered on
+# (`buttons_offered`), which is the one test of its `enableWhen` short of a browser. Like `selfcheck` it writes
+# records by design and is not part of a "saves nothing" re-run.
+LINE_FIELDS = ('Display Type', 'Quantity', 'Quantity Delivered')
+
+
+def line_cells(f_lines, rowid):
+    """Every control of one Order Line through `record get`, in `read_cell`'s comparable form."""
+    d = read_record(LINES_WS, rowid)
+    return {n: read_cell(c, d) for n, c in f_lines.items() if c['type'] in READERS}
+
+
+def listed_lines(f_lines):
+    """{line rowid: {name: value}} for every Order Line through the `common.records` listing."""
+    out = {}
+    for r in C.records(LINES_WS, APP):
+        out[r['rowid']] = {n: READERS[c['type']](r.get(c['controlId'])) for n, c in f_lines.items()
+                           if c['type'] in READERS}
+    return out
+
+
+def lines_of(listing, order_rowid):
+    return [rid for rid, cells in listing.items() if cells.get('Orders') == [order_rowid]]
+
+
+def wait_delivered(f_lines, rowids, seconds=60):
+    for _ in range(seconds):
+        got = {r: line_cells(f_lines, r) for r in rowids}
+        if all(g['Quantity Delivered'] == g['Quantity'] for g in got.values()):
+            return got
+        time.sleep(1)
+    return {r: line_cells(f_lines, r) for r in rowids}
+
+
+def step_selfdeliver():
+    """Press Deliver on DELIVER_ORDER and prove each product line's Quantity Delivered became its own Quantity
+    and that nothing else moved; put every line back; and prove the button is offered on a Sales Order only."""
+    f = guard()
+    f_lines = hap.by_name(c for c in hap.controls(LINES_WS) if c['type'] != C.TAB)
+    rows, problems = by_number(), []
+    for number in (DELIVER_ORDER, DELIVER_REFUSED_ON):
+        if number not in rows:
+            sys.exit(f'{number} is not on {WORKSHEET} — this step drives the tenant orders and creates none')
+    order = rows[DELIVER_ORDER]
+
+    # ── where the button is offered, by the server's own evaluation ──
+    for number, rowid in sorted(rows.items()):
+        status = status_label(order_state(f, rowid)['Status'])
+        offered = buttons_offered(rowid).get(DELIVER)
+        if offered is None:
+            problems.append(f'{DELIVER} is not among the buttons of {number}')
+        elif offered != (status == 'Sales Order'):
+            problems.append(f'{DELIVER} is {"offered" if offered else "not offered"} on {number} ({status})')
+    quotation = status_label(order_state(f, rows[DELIVER_REFUSED_ON])['Status'])
+    if quotation != 'Quotation':
+        sys.exit(f'{DELIVER_REFUSED_ON} is {quotation}, expected a Quotation')
+    if not problems:
+        print(f'  OK    {DELIVER} is offered on every Sales Order and on nothing else — disabled on '
+              f'{DELIVER_REFUSED_ON} ({quotation}), per GetWorksheetBtns with its rowId')
+
+    # ── before ──
+    before_list = listed_lines(f_lines)
+    mine = lines_of(before_list, order)
+    before = {r: line_cells(f_lines, r) for r in mine}
+    product = [r for r in mine if before[r]['Display Type'] == [PRODUCT_LINE]]
+    if len(product) < 2 or any(before[r]['Quantity Delivered'] not in (0, None) for r in product):
+        sys.exit(f'{DELIVER_ORDER} has {len(product)} product line(s) with Delivered '
+                 f'{[before[r]["Quantity Delivered"] for r in product]} — it needs two or more at 0')
+    if status_label(order_state(f, order)['Status']) != 'Sales Order':
+        sys.exit(f'{DELIVER_ORDER} is not a Sales Order')
+    order_before = read_record(ws(), order)
+    print(f'  {DELIVER_ORDER} before ({len(mine)} lines, {len(product)} product):')
+    for r in mine:
+        print(f"    {r}  {before[r]['Display Type']}  Quantity {before[r]['Quantity']}  "
+              f"Delivered {before[r]['Quantity Delivered']} (listing: {before_list[r]['Quantity Delivered']})")
+
+    # ── press ──
+    press(DELIVER, order)
+    after = wait_delivered(f_lines, product)
+    after_list = listed_lines(f_lines)
+    for r in mine:
+        a, al = line_cells(f_lines, r), after_list.get(r, {})
+        want = a['Quantity'] if r in product else before[r]['Quantity Delivered']
+        ok = a['Quantity Delivered'] == want and al.get('Quantity Delivered') == want
+        print(f"  {'OK  ' if ok else 'FAIL'}  {r}  Quantity {a['Quantity']}  Delivered {before[r]['Quantity Delivered']}"
+              f" -> {a['Quantity Delivered']} (record get) / {al.get('Quantity Delivered')} (listing)")
+        if not ok:
+            problems.append(f'{r}: Delivered {a["Quantity Delivered"]}/{al.get("Quantity Delivered")}, wanted {want}')
+        moved = sorted(n for n in before[r] if n != 'Quantity Delivered' and a[n] != before[r][n])
+        if moved:
+            problems.append(f'{r}: {moved} moved as well')
+    others = sorted(r for r in before_list if r not in mine and before_list[r] != after_list.get(r))
+    if others:
+        problems.append(f'{len(others)} line(s) of other orders moved: {others}')
+    else:
+        print(f'  OK    none of the other {len(before_list) - len(mine)} Order Lines moved (listing, every field)')
+    order_after = read_record(ws(), order)
+    if {k: v for k, v in order_after.items() if k not in ('utime', 'uaid')} != \
+            {k: v for k, v in order_before.items() if k not in ('utime', 'uaid')}:
+        print(f'  note: the {DELIVER_ORDER} record itself reads differently after the run — only its roll-ups '
+              f'should; compare: {sorted(k for k in order_after if order_after.get(k) != order_before.get(k))}')
+
+    # ── put every line back ──
+    for r in product:
+        hap.run('worksheet', 'record', 'update', LINES_WS, r, '-a', APP, '--fields-json',
+                json.dumps([{'id': CHILD['Quantity Delivered'], 'value': before[r]['Quantity Delivered'] or 0}]))
+    back_list = listed_lines(f_lines)
+    for r in mine:
+        back = line_cells(f_lines, r)
+        if back != before[r] or back_list.get(r) != before_list[r]:
+            problems.append(f'{r} was not restored: {before[r]} -> {back} (listing {back_list.get(r)})')
+    if not any('not restored' in p for p in problems):
+        print(f'  OK    restored: every line of {DELIVER_ORDER} reads as before through both paths')
+    if problems:
+        print('  selfdeliver: ' + '\n               '.join(problems))
+        sys.exit(1)
+    print(f'  selfdeliver: OK — {DELIVER} set {len(product)} product lines of {DELIVER_ORDER} to their own '
+          f'Quantity, moved nothing else, and is offered on Sales Orders only')
+    return True
+
+
 # ── 13c · reading the four buttons and the guard back ───────────────────────
 
 def button_problems():
@@ -2575,6 +2971,7 @@ def button_problems():
                 problems.append(f'{name}: workflow holds {steps}, wanted only [{step!r}] — Odoo checks nothing '
                                 f'else on it')
     problems += guard_problems()
+    problems += deliver_problems()
     # The owner's, never touched by this builder: read both back so `check` fails if either has gone.
     b = live.get(OWNERS_BUTTON)
     if not b or b['btnId'] != OWNERS_BUTTON_ID:
@@ -2593,7 +2990,7 @@ def button_problems():
     else:
         print(f"  the owner's {OWNERS_CONTROL!r} {OWNERS_CONTROL_ID} t{c['type']} at r{c.get('row')}"
               f"c{c.get('col')}s{c.get('size')} — untouched")
-    for name in BUTTONS:
+    for name in BUTTONS + (DELIVER,):
         if live.get(name):
             C.remember('buttons', KEY + name, live[name]['btnId'])
     return problems
@@ -2880,7 +3277,7 @@ def step_check():
           f'decimals, the {len(SUBTABLE_COLUMNS)} subtable columns, {INVOICING_STATUS} at '
           f'{READ_ONLY_PERMISSION}, the {len(PART1)} controls of §6b at '
           f'{[PART1_PERMISSION[n] for n in PART1]}, '
-          f'{len(VIEW_ROWS)} views returning exactly the orders their filters name and the {len(BUTTONS)} buttons of '
+          f'{len(VIEW_ROWS)} views returning exactly the orders their filters name and the {len(BUTTONS) + 1} buttons of '
           f"§13 with their workflows (the owner's {OWNERS_BUTTON!r} and {OWNERS_CONTROL!r} untouched)")
 
 
@@ -2910,7 +3307,7 @@ STEPS = {'rules': step_rules, 'retire': step_retire, 'expiry': step_expiry, 'tot
          'dots': step_dots, 'controls': step_controls, 'part1': step_part1, 'customer': step_customer,
          'invstatus': step_invstatus, 'views': step_views,
          'wipe': step_wipe, 'seed': step_seed, 'figures': step_figures, 'buttons': step_buttons,
-         'selfcheck': step_selfcheck, 'check': step_check, 'show': step_show}
+         'selfcheck': step_selfcheck, 'selfdeliver': step_selfdeliver, 'check': step_check, 'show': step_show}
 
 if __name__ == '__main__':
     if len(sys.argv) < 2 or sys.argv[1] not in STEPS:

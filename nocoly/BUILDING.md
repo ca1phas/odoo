@@ -1135,3 +1135,18 @@ is `100` and survives both, so permission alone does not explain it.
 **So: never conclude a field is empty from a single read.** During this build that mistake produced two wrong
 conclusions — "no tax carries an Amount" and "Prepayment was never seeded" — and one wrong entry in this file,
 which this section replaces.
+
+### Writing a different value into each record from a workflow (22 Sep 2026, Orders' Deliver)
+
+An update step over a set of records writes **one value to all of them**. To write a value that differs per
+record — each order line's Delivered from its own Quantity — use a **sub-process (子流程) node**: the parent
+gets the records (a get-multiple step), then runs a small **child workflow once per record**. Inside the child,
+the record is the trigger, so its update step can read the record's own fields. The parent waits for the
+children. Built in `orders.py` §13 (`Deliver`), and proved on four lines of S00006.
+
+Two smaller findings from the same build:
+
+- **`GetWorksheetBtns` called with a record's `rowId` returns each button's `disabled` for that record** — the
+  same per-record check the record page uses. It tests a button's enable condition without a browser.
+- A child workflow's field write reads `nodeActionId` back as **"400" when "401" was sent**. Leave that key out
+  of any comparison, or the step re-saves on every run.
