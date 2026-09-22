@@ -548,6 +548,14 @@ What decides is **whether the value being compared is in the write**.
   AND group into the wire's condition list with `spliceType` 1 on each, so a second child *is* the AND. Orders'
   Cancel (Status is any of three **and** Locked is not ticked) and its two invoicing buttons are built that way,
   and read back as sent — one filterType **51** condition beside a checkbox's 6 or 2 (21 Sep 2026).
+- **A button's condition mixes AND and OR only as groups**, and a Date's *on or after today* is `filterType` **34**
+  (DATE_GTE 晚于等于) with `dateRange` **1** (今天), not hap-cli's `ge` (the number comparison 14). The filter
+  dialog reads a list whose first entry `isGroup` as groups throughout: `[{isGroup: true, spliceType: <between
+  groups>, groupFilters: [<conditions, each carrying the relation inside the group>]}, …]`. `translate_filter_group`
+  lowers a nested group to that shape but carries no `dateRange`, so the date condition is written by hand. Orders'
+  *Share for Signature* stores `(Status · Online Signature · Signature) AND (Expiration is empty OR Expiration ≥
+  today)` that way, and `GetWorksheetBtns` evaluates it per record, the Expiration day included (22 Sep 2026,
+  `orders.sign_filters`).
 - A button's condition **hides** it on a full-page record — a posted Invoices document shows Reset to Draft and
   neither Confirm nor Cancel — and **greys it out in the pop-up record** a table row opens: Payment Terms' Unarchive
   reads disabled beside Archive in the pop-up and is absent from the same record's own page (bundle 3). Write the test

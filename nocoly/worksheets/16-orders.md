@@ -784,12 +784,13 @@ below was read back.
 | | |
 |---|---|
 | Control | **Signing Link** `6ab27eaae54d2a34faaa9765` — Text, alias `access_url` (Odoo has no field for the link; `portal.mixin`'s `access_url` is the nearest), permission `100`, draws the URL as a link (`analysislink`). Description: *Copy this link and send it to the customer so they can sign and accept the quotation online.* **Parked at row 9999 for the owner to place**; intended (7, 0, 12), its own row under Signature, Signed By and Signed On |
-| Button | **Share for Signature** `6ab27f107d58b0f4498fcb8e` — not batch, no confirmation. Offered while **Status is Quotation or Quotation Sent, Online Signature is ticked and Signature is empty**. Description: *Create the link the customer opens to sign and accept this quotation online, and put it in Signing Link. The link works once, and not after the Expiration date.* |
+| Button | **Share for Signature** `6ab27f107d58b0f4498fcb8e` — not batch, no confirmation. Offered while **Status is Quotation or Quotation Sent, Online Signature is ticked, Signature is empty, and Expiration is empty or today or later** — all of `_has_to_be_signed`, expiry included since 22 Sep 2026 (below). Description: *Create the link the customer opens to sign and accept this quotation online, and put it in Signing Link. The link works once, and not after the Expiration date.* |
 | Its workflow | `6ab27f10789584ded342675d` (ids.json › `Orders: Share for Signature`) |
 | Second workflow | **Signed: confirm the order** `6ab28144e606b26d2601895f` (ids.json › `Orders: Signed: confirm the order`) |
 
 ```
-Share for Signature
+Share for Signature   offered while (Status is Quotation or Quotation Sent AND Online Signature is ticked AND
+                      Signature is empty) AND (Expiration is empty OR Expiration is on or after today)
   Trigger by button
     → Does the quotation expire?
         Expiration is set   (Expiration is not empty)
@@ -840,7 +841,49 @@ fails the trigger's condition, so no run starts at all.
   whose Expiration is **today**, at 21:45 on that day. That rules out the start of the day and the editor's 08:00
   default. That S00021 dies at 23:59 is for tomorrow.
 - **The server offers the button exactly where it should** (`GetWorksheetBtns` per order): on the Quotations and
-  Quotation Sents with Online Signature ticked and no signature, and on nothing else.
+  Quotation Sents with Online Signature ticked, no signature and no Expiration in the past, and on nothing else.
+
+**Not offered once the quotation has expired (added 22 Sep 2026, 22:13).** Odoo's `_has_to_be_signed` includes
+`not is_expired`, and `is_expired` is `validity_date < today` (19.0 source), so the Expiration day itself still
+counts. The button used to be offered on an expired quotation and make a link that was already dead. Its condition
+is now two groups joined by AND:
+
+| Group | Joined by | Conditions |
+|---|---|---|
+| 1 | AND | Status is any of Quotation, Quotation Sent · Online Signature is ticked · Signature is empty |
+| 2 | OR | Expiration is empty · Expiration is **on or after today** |
+
+- **The date shape comes from pd-openweb**, not a guess. `WorkSheetFilter/enum.js` gives *on or after* (晚于等于) as
+  `FILTER_CONDITION_TYPE.DATE_GTE` **34** and *today* (今天) as `DATE_OPTIONS` value **1**, stored as the condition's
+  `dateRange`. `components/contents/Date.jsx` clears `dateRangeType` when *today* is picked. The server stored
+  exactly `filterType 34, dateRange 1, dateRangeType 0`, as the editor would. hap-cli's `ge` operator lowers to the
+  number comparison 14, and its translator carries no `dateRange`, so `sign_filters` writes the second group by hand.
+- **Groups, because a mix of AND and OR has no other shape.** The button's filter dialog (`ShowBtnFilterDialog`)
+  opens `FilterConfig` with `supportGroup`. It reads a list whose first entry `isGroup` as groups throughout, with
+  one relation between the groups and one inside each (`model.formatForSave`). The first group is hap-cli's own
+  lowering of the three old conditions, unchanged.
+- **Written in place**, as `send` turned Send Quotation's batch flag on: `Worksheet/SaveWorksheetBtn` with the
+  button's `btnId` and everything the button editor sends, as read, with only `filters` replaced. Every other key
+  of the button read back unchanged, and so did the other seven buttons and the whole control set. Backup:
+  `backups/orders_buttons_pre_sign_expiry_20260922-221345.json`. A second `sign` saved nothing.
+- **Greyed out or hidden is the page's choice, not a setting.** The button has no hide-or-grey option: its editor
+  offers only *always* or *when the filter matches* (`showType`). pd-openweb's `CustomButtons` hides a disabled
+  button where the record is opened without a view (`hideDisabled = type === 'iconText' || !viewId`) and greys it
+  everywhere else, so it greys out in the pop-up record like the other Orders buttons. That matches BUILDING.md's
+  note under *Buttons*.
+- **Proved by the server**, `GetWorksheetBtns` with each order's rowId, at 22:13 on 22 Sep 2026:
+
+  | Order | Status | Expiration | Before | After |
+  |---|---|---|---|---|
+  | S00021 | Quotation, unsigned | 22 Sep (today) | offered | **offered** |
+  | S00022 | Quotation, unsigned | 21 Sep (yesterday) | offered | **disabled** |
+  | S00023 | Quotation, unsigned | none | offered | **offered** |
+  | S00008 | Quotation Sent, unsigned | 20 Sep | offered | **disabled**, expired too (a seeded order) |
+  | S00009 · S00013 · S00014 · S00016 | Quotation / Quotation Sent, unsigned | 27 Sep – 14 Oct | offered | offered |
+  | the other ten | signed, confirmed, cancelled, or Online Signature off | — | disabled | disabled |
+
+  `check` asserts this per order through both read paths. It compares against this machine's date (+08:00). The
+  server's "today" is the app's, the same date while both are in +08:00. From 23 Sep, S00021 is disabled too.
 - **Downstream of the link, all of it runs** (`selfsign`, on S00020, its own TEST order). An API write of Signature
   and Signed By is the worksheet event the link is expected to cause:
 
@@ -887,7 +930,9 @@ Reference and recorded in `ids.json` › records. None has been sent anywhere.
 5. **S00019's link:** the same, but the order **stays a Quotation**, with 【Quotation signed, payment due】.
 6. **S00023's link** (no Expiration) opens like the others. You may leave it unsigned.
 7. **S00022's link** should say the link has expired. **S00021's link** should open today and say "expired" after
-   midnight. That is where the cutoff is.
+   midnight. That is where the cutoff is. On S00022 (and, from 23 Sep, S00021), **Share for Signature** should be
+   greyed out in the pop-up record and absent from the full-page record. On S00023 (no Expiration) it should be
+   offered.
 8. Optional: on a signed test order, *Set to Quotation* should clear the three signature fields and start no run
    of *Signed: confirm the order*.
 

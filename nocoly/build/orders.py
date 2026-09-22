@@ -93,7 +93,7 @@ Requirements: nocoly/worksheets/16-orders.md (§7.1 for what `totals` does). Ord
 is `orderlines.py`'s — run its `fields` step before `totals`, so the columns the subtable names all exist.
 Generic helpers: common.py.
 """
-import json, os, re, shutil, sys, time, zipfile
+import datetime, json, os, re, shutil, sys, time, zipfile
 from xml.etree import ElementTree
 
 import common as C
@@ -1213,10 +1213,15 @@ def view_filter(f, labels):
                                        'children': [status_is(f, labels), not_a_template(f)]})
 
 
-def filter_state(filters):
-    """A stored or wanted filter in comparable form: the server fills in keys neither the translator nor the view
-    editor sends (`minValue`, `emptyRule`, `advancedSetting` …) and returns an option list in the options' own
-    order, so a filter is compared by what it *means* — never byte for byte."""
+def view_filter_state(filters):
+    """A stored or wanted **view or button** filter (`controlId`, `filterType`, `values` per condition) in
+    comparable form: the server fills in keys neither the translator nor the view editor sends (`minValue`,
+    `emptyRule`, `advancedSetting` …) and returns an option list in the options' own order, so a filter is compared
+    by what it *means* — never byte for byte.
+
+    **Not `filter_state`.** Until 22 Sep 2026 this and §14's workflow-filter reader were both called that, and the
+    later `def` replaced this one before anything ran: every view and button comparison read both sides as [] and
+    agreed whatever was stored. `wf_filter_state` is the other one."""
     return [(c.get('controlId'), c.get('dataType'), c.get('spliceType'), c.get('filterType'),
              tuple(sorted(c.get('values') or []))) for c in filters or []]
 
@@ -1290,15 +1295,15 @@ def step_views():
     for name in FILTERED_VIEWS:
         vid, want = live[name], view_filter(f, VIEW_STATES[name])
         info = C.view_info(ws(), APP, vid)
-        if filter_state(info.get('filters')) == filter_state(want):
+        if view_filter_state(info.get('filters')) == view_filter_state(want):
             print(f"  {name}: already filtered to Status is any of {list(VIEW_STATES[name])} and "
                   f'{IS_TEMPLATE} not ticked; nothing saved')
         else:
             edit_view(vid, 'filters', want)
             back = C.view_info(ws(), APP, vid)
-            if filter_state(back.get('filters')) != filter_state(want):
-                sys.exit(f'{name}: the filter read back as {filter_state(back.get("filters"))}, wanted '
-                         f'{filter_state(want)} — the save did not store')
+            if view_filter_state(back.get('filters')) != view_filter_state(want):
+                sys.exit(f'{name}: the filter read back as {view_filter_state(back.get("filters"))}, wanted '
+                         f'{view_filter_state(want)} — the save did not store')
             print(f"  {name}: filtered to Status is any of {list(VIEW_STATES[name])} and {IS_TEMPLATE} not "
                   f'ticked ({vid})')
             wrote = True
@@ -2598,7 +2603,7 @@ def button_state(b):
     thing is written: the spec adapter sends 二次确认 as `clickType` 2, and the server stores it as `clickType`
     **1** with `enableConfirm` true — which is exactly what the owner's own *Send Quotation* carries. Comparing
     `clickType` alone would make this step's verification fail on every run."""
-    return (filter_state(b.get('filters')), bool(b.get('isBatch')),
+    return (view_filter_state(b.get('filters')), bool(b.get('isBatch')),
             bool(b.get('enableConfirm')) or b.get('clickType') == 2,
             b.get('workflowType'), b.get('confirmMsg') or '', b.get('sureName') or '',
             b.get('cancelName') or '')
@@ -3576,8 +3581,10 @@ def filters_of(*conds):
     return [{'spliceType': 1, 'conditions': [list(conds)]}]
 
 
-def filter_state(filters_):
-    """(field, conditionId, compared with) per condition — what the builder and `check` compare."""
+def wf_filter_state(filters_):
+    """A **workflow step's** `filters` (`filedId`, `conditionId`, `conditionValues`) as (field, conditionId, compared
+    with) per condition — what the builder and `check` compare. A view's or button's filter is `view_filter_state`;
+    this one reads such a filter as []."""
     out = []
     for flt in filters_ or []:
         for g in flt.get('conditions') or []:
@@ -3596,12 +3603,12 @@ def sync_search(pid, node, worksheet, filters_, kind, action, execute_type=None,
     """A get-single (7) or get-multiple (13) step's worksheet, `filters`, not-found behaviour and fetch mode.
     `batch-add` writes a search step's filter as `operateCondition`, which is not what the step reads."""
     got = read_node(pid, node['id'])
-    same = filter_state(got.get('filters')) == filter_state(filters_) and got.get('appId') == worksheet and \
+    same = wf_filter_state(got.get('filters')) == wf_filter_state(filters_) and got.get('appId') == worksheet and \
         (execute_type is None or got.get('executeType') == execute_type) and \
         (execute is None or bool(got.get('execute')) == execute)
     if same:
         return False
-    if drifted(f"{node['name']}: filter {filter_state(got.get('filters'))} on {got.get('appId')} "
+    if drifted(f"{node['name']}: filter {wf_filter_state(got.get('filters'))} on {got.get('appId')} "
                f"executeType={got.get('executeType')} execute={got.get('execute')}"):
         return True
     cfg = {'actionId': action, 'appId': worksheet, 'appType': 1, 'selectNodeId': '', 'filters': filters_,
@@ -3614,9 +3621,9 @@ def sync_search(pid, node, worksheet, filters_, kind, action, execute_type=None,
     hap.run('workflow', 'node', 'save', pid, node['id'], '--type', str(kind), '-n', node['name'],
             '-c', json.dumps(cfg, ensure_ascii=False))
     back = read_node(pid, node['id'])
-    if filter_state(back.get('filters')) != filter_state(filters_) or back.get('appId') != worksheet:
-        sys.exit(f"{node['name']}: filter reads back {filter_state(back.get('filters'))}, wanted "
-                 f'{filter_state(filters_)} — `hap workflow rollback {pid} -y` restores the published version')
+    if wf_filter_state(back.get('filters')) != wf_filter_state(filters_) or back.get('appId') != worksheet:
+        sys.exit(f"{node['name']}: filter reads back {wf_filter_state(back.get('filters'))}, wanted "
+                 f'{wf_filter_state(filters_)} — `hap workflow rollback {pid} -y` restores the published version')
     return True
 
 
@@ -3675,17 +3682,20 @@ def sync_total(pid, node, filters_, field):
     """A worksheet-total step (9 / 107): the sum of `field` over the lines `filters_` names."""
     got = read_node(pid, node['id'])
     want = {'reportControlId': field, 'reportType': 3, 'appId': LINES_WS}
-    if all(got.get(k) == v for k, v in want.items()) and filter_state(got.get('filters')) == filter_state(filters_):
+    same = wf_filter_state(got.get('filters')) == wf_filter_state(filters_)
+    if same and all(got.get(k) == v for k, v in want.items()):
         return False
-    if drifted(f"{node['name']}: {({k: got.get(k) for k in want})} {filter_state(got.get('filters'))}"):
+    if drifted(f"{node['name']}: {({k: got.get(k) for k in want})} {wf_filter_state(got.get('filters'))}"):
         return True
     hap.run('workflow', 'node', 'save', pid, node['id'], '--type', str(FORMULA_NODE), '-n', node['name'],
             '-c', json.dumps({'actionId': WORKSHEET_TOTAL_NODE, 'appId': LINES_WS, 'appType': 1, 'execute': True,
                               'reportControlId': field, 'reportType': 3, 'filters': filters_,
                               'number': 2, 'nullZero': True}, ensure_ascii=False))
     back = read_node(pid, node['id'])
-    if any(back.get(k) != v for k, v in want.items()) or filter_state(back.get('filters')) != filter_state(filters_):
-        sys.exit(f"{node['name']}: reads back {({k: back.get(k) for k in want})} {filter_state(back.get('filters'))}")
+    if any(back.get(k) != v for k, v in want.items()) or \
+            wf_filter_state(back.get('filters')) != wf_filter_state(filters_):
+        sys.exit(f"{node['name']}: reads back {({k: back.get(k) for k in want})} "
+                 f"{wf_filter_state(back.get('filters'))}")
     return True
 
 
@@ -5595,7 +5605,7 @@ def step_sendreach():
 # `typeId 15, appType 13` and no action (CreateNodeDialog.jsx).
 #
 #     Share for Signature (button, one order; offered while Status is Quotation or Quotation Sent, Online Signature
-#     is ticked and Signature is empty)
+#     is ticked, Signature is empty and Expiration is empty or today or later)
 #       Trigger by button
 #         → Does the quotation expire?                        branch on Expiration
 #              Expiration is set  → Signing link until the expiration date     Get Link, ends at 23:59 that day
@@ -5720,6 +5730,11 @@ LAST_MINUTE = '23:59'                           # dayTime on a Date: the link la
 VIEW, EDIT, REQUIRED, HIDDEN = 1, 2, 3, 4       # a formProperties entry's `property`
 DATE = 15
 NOT_EMPTY_WF = '7'                              # a workflow condition's 不为空 (a Date's; a Signature's is 31)
+# The button's own filter (pd-openweb WorkSheetFilter/enum.js): FILTER_CONDITION_TYPE.DATE_GTE 晚于等于, and
+# DATE_OPTIONS' 今天 as its `dateRange`. The filter editor writes a Date's *on or after today* as exactly this pair;
+# the number comparison GTE 14, which hap-cli's `ge` lowers to, is not the date one.
+DATE_GTE, TODAY_RANGE = 34, 1
+SPLICE_AND, SPLICE_OR = 1, 2                    # FILTER_RELATION_TYPE
 # What the customer sees on the link, read-only — Odoo's portal page shows the same: the header, the customer and
 # its two addresses, the dates, the payment terms, the lines, the totals and the terms (sale_portal_templates.xml).
 # The *Order Lines* here is the subtable; its tab (TERMS_TAB) is shown with it.
@@ -5731,21 +5746,55 @@ SIGN_EDIT = (SIGNATURE_FIELD, SIGNED_BY)        # the two the customer fills in,
 # Other Info tab and all it holds — is hidden, and a control added later is hidden too (`addNotAllowView`).
 
 
+def not_expired(f):
+    """*Expiration is empty, or on or after today* — the two wire conditions, OR-ed. Odoo's `is_expired` is
+    `validity_date < today`, so a quotation can still be signed on its Expiration day; the link it creates lasts until
+    23:59 that day (`LAST_MINUTE`)."""
+    c = f['Expiration']
+    base = {'controlId': c['controlId'], 'dataType': c['type'], 'spliceType': SPLICE_OR, 'dateRange': 0,
+            'isDynamicsource': False, 'dynamicSource': []}
+    return [dict(base, filterType=C.EMPTY),
+            dict(base, filterType=DATE_GTE, dateRange=TODAY_RANGE, values=[])]
+
+
+def sign_filters(f):
+    """The button's wire `filters`: two groups AND-ed — (Status is Quotation or Quotation Sent **and** Online
+    Signature is ticked **and** Signature is empty) **and** (Expiration is empty **or** on or after today). That is
+    `_has_to_be_signed` whole.
+
+    Groups, because a button's condition mixes AND and OR only that way: the filter editor (pd-openweb
+    `FilterConfig` with `supportGroup`, which the button's `ShowBtnFilterDialog` passes) reads a list whose first
+    entry `isGroup` as groups throughout, one relation between them and one inside each (`model.formatForSave`).
+    The first group is hap-cli's own lowering of the three conditions, unchanged; the second is `not_expired`, built
+    by hand because the translator has no date comparison and no `dateRange`."""
+    from hap_cli.core import filter_translator as flt
+    wire = flt.translate_filter_group({'type': 'group', 'logic': 'AND', 'children': [{
+        'type': 'group', 'logic': 'AND', 'children': [
+            status_is(f, list(SIGN_STATES)),
+            switch_when(f, 'Online Signature', True),
+            {'field': f[SIGNATURE_FIELD]['controlId'], 'dataType': SIGN_PAD, 'operator': 'isempty'}]}]})
+    return wire + [dict(wire[0], groupFilters=not_expired(f))]
+
+
 def sign_spec(f):
-    """Offered while Status is Quotation or Quotation Sent, Online Signature is ticked and Signature is empty —
-    `_has_to_be_signed` without its expiry, which the link itself carries."""
+    """Offered while Status is Quotation or Quotation Sent, Online Signature is ticked, Signature is empty and the
+    quotation has not expired — `_has_to_be_signed`, expiry included (`sign_filters`)."""
     return {'name': SIGN, 'type': 'triggerWorkflow', 'desc': SIGN_DESC, 'isBatch': False,
-            'enableWhen': {'type': 'group', 'logic': 'AND', 'children': [
-                status_is(f, list(SIGN_STATES)),
-                switch_when(f, 'Online Signature', True),
-                {'field': f[SIGNATURE_FIELD]['controlId'], 'dataType': SIGN_PAD, 'operator': 'isempty'}]}}
+            'enableWhen': sign_filters(f)}
 
 
 def btn_conditions(filters):
-    """A button's stored condition in comparable form: (control, filterType, sorted values) per condition. Not
-    `filter_state`, which is §14's workflow-filter reader by the time anything runs (a later `def` of the same name
-    replaces §9's) and reads a button's filters as []."""
-    return [(c.get('controlId'), c.get('filterType'), sorted(c.get('values') or [])) for c in filters or []]
+    """A button's stored condition in comparable form: (control, relation, filterType, dateRange, sorted values) per
+    condition, and ('group', relation, its conditions) per group — a group's own `controlId` is empty, so reading only
+    the top level would call any two groups equal."""
+    out = []
+    for c in filters or []:
+        if c.get('isGroup'):
+            out.append(('group', c.get('spliceType'), btn_conditions(c.get('groupFilters'))))
+        else:
+            out.append((c.get('controlId'), c.get('spliceType'), c.get('filterType'), c.get('dateRange') or 0,
+                        sorted(c.get('values') or [])))
+    return out
 
 
 def sign_button_problems(f, b):
@@ -5759,6 +5808,37 @@ def sign_button_problems(f, b):
         problems.append(f"{SIGN}: isBatch={b.get('isBatch')} workflowType={b.get('workflowType')} "
                         f"desc={b.get('desc')!r}")
     return problems
+
+
+def ensure_sign_when(f):
+    """The live button's condition brought to `sign_filters`, **and nothing else about it changed**: a
+    `SaveWorksheetBtn` sending back exactly what the button editor sends, as read, with only `filters` replaced —
+    `ensure_send_batch`'s pattern. Every other key is compared before and after. Returns True when it wrote."""
+    from hap_cli.core.session import Session
+    live = [b for b in hap.listing('worksheet', 'custom-actions', ws()) if b['name'] == SIGN]
+    if len(live) != 1:
+        sys.exit(f'{len(live)} buttons are called {SIGN!r} — read the worksheet before writing')
+    b, want = live[0], sign_filters(f)
+    if btn_conditions(b.get('filters')) == btn_conditions(want):
+        return False
+    if drifted(f'{SIGN}: offered when {btn_conditions(b.get("filters"))}, wanted {btn_conditions(want)}'):
+        return True
+    print('  backup:', hap.backup('orders_buttons_pre_sign_expiry', b))
+    params = {'btnId': b['btnId'], 'name': b['name'], 'worksheetId': ws(), 'filters': want,
+              'confirmMsg': b.get('confirmMsg') or '', 'sureName': b.get('sureName') or '',
+              'cancelName': b.get('cancelName') or '', 'workflowId': b.get('workflowId') or '',
+              'desc': b.get('desc') or '', 'appId': APP, 'addRelationControlId': b.get('addRelationControl') or '',
+              **{k: b.get(k) for k in BTN_SAVE_KEYS}}
+    got = Session.load(None).api_call('Worksheet', 'SaveWorksheetBtn', params)
+    after = next((x for x in hap.listing('worksheet', 'custom-actions', ws()) if x['btnId'] == b['btnId']), {})
+    moved = sorted(k for k in set(b) | set(after)
+                   if k not in ('filters', 'updateTime', 'updateAccountId') and b.get(k) != after.get(k))
+    if btn_conditions(after.get('filters')) != btn_conditions(want) or moved:
+        sys.exit(f'{SIGN}: SaveWorksheetBtn answered {got!r}; the condition reads back '
+                 f'{btn_conditions(after.get("filters"))}, wanted {btn_conditions(want)}, and {moved} changed with it '
+                 f'— the button as it was is in backups/orders_buttons_pre_sign_expiry_*.json')
+    print(f'  {SIGN}: condition now {btn_conditions(after.get("filters"))}; every other key read back unchanged')
+    return True
 
 
 def ensure_sign_button(f):
@@ -6032,8 +6112,9 @@ def workflow_published(pid, label):
 
 
 def sign_offered():
-    """{order number: (offered?, Status, Online Signature ticked?, signed?)}, the button as the server evaluates it on
-    each order (`buttons_offered`), and the three cells its condition reads through **both** read paths."""
+    """{order number: (offered?, Status, Online Signature ticked?, signed?, Expiration)}, the button as the server
+    evaluates it on each order (`buttons_offered`), and the four cells its condition reads through **both** read
+    paths."""
     f = C.fields(ws())
     out = {}
     for r in C.records(ws(), APP):
@@ -6041,10 +6122,18 @@ def sign_offered():
         ticked = '1' in (READERS[CHECKBOX](r.get(f['Online Signature']['controlId'])),
                          read_cell(f['Online Signature'], d))
         signed = bool(r.get(f[SIGNATURE_FIELD]['controlId']) or read_cell(f[SIGNATURE_FIELD], d))
+        expires = (r.get(f['Expiration']['controlId']) or read_cell(f['Expiration'], d) or '')[:10]
         out[r.get(f['Number']['controlId'])] = (buttons_offered(r['rowid']).get(SIGN),
                                                 status_label(json_keys(r.get(f['Status']['controlId']))),
-                                                ticked, signed)
+                                                ticked, signed, expires)
     return out
+
+
+def sign_expected(v, today):
+    """Whether the button should be offered on an order read by `sign_offered`: `_has_to_be_signed`. `today` is this
+    machine's date; the server's "today" is the app's — the same while both run in +08:00."""
+    _offered, status, ticked, signed, expires = v
+    return status in SIGN_STATES and ticked and not signed and (not expires or expires >= today)
 
 
 def sign_share_problems(f):
@@ -6069,14 +6158,16 @@ def sign_share_problems(f):
     finally:
         DRIFT = None
     problems += workflow_published(pid, SIGN)
-    offered = sign_offered()
-    wrong = {n: v for n, v in offered.items() if bool(v[0]) != (v[1] in SIGN_STATES and v[2] and not v[3])}
+    offered, today = sign_offered(), datetime.date.today().isoformat()
+    wrong = {n: v for n, v in offered.items() if bool(v[0]) != sign_expected(v, today)}
     if wrong:
-        problems.append(f'{SIGN}: offered wrongly on {wrong} — (offered, Status, Online Signature, signed)')
+        problems.append(f'{SIGN}: offered wrongly on {wrong} — (offered, Status, Online Signature, signed, '
+                        f'Expiration), today {today}')
     if not problems:
         print(f"  OK  {SIGN:<19} btnId={b['btnId']} isBatch=False when Status is Quotation or Quotation Sent, "
-              f'Online Signature is ticked and Signature is empty (server: offered on '
-              f"{sorted(n for n, v in offered.items() if v[0])})\n"
+              f'Online Signature is ticked, Signature is empty and Expiration is empty or {today} or later '
+              f"(server: offered on {sorted(n for n, v in offered.items() if v[0])}; expired, so not: "
+              f"{sorted(n for n, v in offered.items() if v[4] and v[4] < today and v[1] in SIGN_STATES)})\n"
               f'        then {L_BRANCH} [{L_DATED_PATH}: {L_DATED} (ends {LAST_MINUTE} on Expiration) → '
               f'{L_SAVE_DATED} | {L_OPEN_PATH}: {L_OPEN} → {L_SAVE_OPEN}] — fill-in, "{SUBMIT_TEXT}", '
               f'{", ".join(SIGN_EDIT)} required, single use; published')
@@ -6369,6 +6460,8 @@ def step_sign():
     before = sign_untouched()
     pid = ensure_sign_button(f)
     C.remember('workflows', KEY + SIGN, pid)
+    if not ensure_sign_when(f):
+        print(f'  {SIGN}: condition already as built; not saved')
     print('  backup:', hap.backup('orders_sign_share_pre_sign', hap.run('workflow', 'node', 'list', pid)))
     wrote = sync_sign_share(f, pid)
     problems, _ = sign_share_structure(pid)
@@ -6803,7 +6896,7 @@ def button_problems():
             problems.append(f'{name}: stored {button_state(b)}, wanted {button_wanted(spec)} — run `buttons`')
             continue
         conds = [(names.get(cid, cid), ftype, [label.get(v, v) for v in vals])
-                 for cid, _dt, _sp, ftype, vals in filter_state(b.get('filters'))]
+                 for cid, _dt, _sp, ftype, vals in view_filter_state(b.get('filters'))]
         print(f"  OK  {name:<17} btnId={b['btnId']} isBatch={bool(b.get('isBatch'))} "
               f"clickType={b.get('clickType')} confirm={b.get('confirmMsg') or ''!r}\n"
               f"        when {conds}")
@@ -7092,9 +7185,9 @@ def step_check():
             continue
         info = C.view_info(ws(), APP, views[name])
         want = view_filter(f, VIEW_STATES[name])
-        if filter_state(info.get('filters')) != filter_state(want):
-            problems.append(f"the owner's {name!r} view filters {filter_state(info.get('filters'))}, wanted "
-                            f'{filter_state(want)} — run `views`')
+        if view_filter_state(info.get('filters')) != view_filter_state(want):
+            problems.append(f"the owner's {name!r} view filters {view_filter_state(info.get('filters'))}, wanted "
+                            f'{view_filter_state(want)} — run `views`')
         else:
             print(f'  OK  {name} filters Status is any of {list(VIEW_STATES[name])} and {IS_TEMPLATE} not '
                   f'ticked ({views[name]})')

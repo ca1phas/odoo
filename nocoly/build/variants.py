@@ -987,10 +987,6 @@ REVERSE_COLUMNS = ('Display Name', 'Sales Price', 'Cost', 'Barcode', 'Unit')
 LIST_FILTER = None
 
 
-def products_ws():
-    return hap.ids()['worksheets'][PRODUCTS]
-
-
 def reverse_columns():
     """REVERSE_COLUMNS as controlIds on Product Variants — the target worksheet, whose ids the list names."""
     f = C.fields(ws())
