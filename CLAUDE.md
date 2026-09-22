@@ -32,8 +32,10 @@ below, then read **only** the specific functions the index points at.
   store nothing, or store a malformed value.
 - `hap.backup(...)` anything you replace. Backups go to `nocoly/build/backups/` and are not committed.
 - Record every id in `nocoly/build/ids.json`. Keys are namespaced `"<Worksheet>: <name>"`. Never rename one.
-- Aliases are **Odoo field names**; control names are Odoo's English labels. A deliberate divergence goes in
-  the control's `desc` so it is traceable from the app.
+- Aliases are **Odoo field names**; control names are Odoo's English labels.
+- **Descriptions are for the app's users, not for us** (owner's rule, 22 Sep 2026). A control's or button's
+  `desc`/`hint` says only what it does, in plain words. No Odoo, no field or model names, no divergences, no
+  build notes. Divergences and reasoning go in `nocoly/worksheets/NN-name.md` and `nocoly/DECISIONS.md`.
 - Test records are named `TEST …`.
 
 ## Saving controls
