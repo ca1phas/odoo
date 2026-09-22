@@ -108,7 +108,7 @@ footer{margin-top:44px;padding-top:24px;border-top:1px solid var(--rule);
 <div class="tally">
   <div class="g"><b>6</b><span>ALREADY STANDING<br>native or solved</span></div>
   <div class="g"><b>7</b><span>BUILT &amp; VERIFIED<br>parts 2, 3, 5 · discount</span></div>
-  <div class="y"><b>2</b><span>TO BUILD<br>parts 4 and 6</span></div>
+  <div class="y"><b>2</b><span>TO FINISH<br>Send needs credits · Sign &amp; Accept</span></div>
   <div class="h"><b>2</b><span>SET ASIDE<br>close · reopen invoicing</span></div>
   <div class="h"><b>3</b><span>OUT OF REACH<br>blocked or later phase</span></div>
   <div class="g"><b>4</b><span>CONTROLS BUILT<br>part 1 · 21 Sep</span></div>
@@ -216,7 +216,7 @@ footer{margin-top:44px;padding-top:24px;border-top:1px solid var(--rule);
 <section class="part">
   <div class="ph"><div class="pn">4</div><div class="pt">
     <h2>Send</h2>
-    <p><b>Next, now Download is done</b> — the email carries the printed quotation. The one that leaves the building. Treated as unbuilt — an earlier version exists but does not work materially yet.</p>
+    <p><b>Built 22 Sep, blocked on credits.</b> A live press on S00014 stopped at the PDF step: the organisation has no Nocoly credits, and both the PDF and the email spend them. The one that leaves the building. Treated as unbuilt — an earlier version exists but does not work materially yet.</p>
   </div></div>
   <div class="rows">
     <div class="row"><div class="no">01</div><div>
@@ -224,7 +224,9 @@ footer{margin-top:44px;padding-top:24px;border-top:1px solid var(--rule);
       <p class="odoo">action_quotation_send · Quotation, Quotation Sent, Sales Order</p>
       <p class="does">Odoo opens a mail composer with the quotation attached; sending marks the order Quotation Sent. Here: a workflow with an email node, then the status write.</p>
       <p class="does">Its batch twin, <b>Send an email</b> (server action 505), comes free — a Nocoly custom action already runs over a selection.</p>
-    </div><div class="cell-s"><span class="chip c-you">rebuild</span><span class="sub">workflow</span></div></div>
+      <p class="does"><b>Built on your Send Quotation button, 22 Sep.</b> Finds the customer, refuses without one or without an email, makes the PDF from “Quotation / Order”, emails it (quotation or order-confirmation wording), and moves a Quotation to Quotation Sent. Batch on; greyed on Cancelled orders.</p>
+      <span class="guard"><b>Blocked</b>Nocoly credits. The PDF and the email both spend organisation credits and there are none, so the live test failed at the PDF step and sent nothing. Until then the manual path stands: print, email it yourself, press Mark as Sent.</span>
+    </div><div class="cell-s"><span class="chip c-you">built</span><span class="sub">needs credits</span></div></div>
   </div>
 </section>
 
