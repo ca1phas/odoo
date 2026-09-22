@@ -200,7 +200,7 @@ The rule for the last column: **prefer a Nocoly native feature over a built work
 
 | # | Button | Odoo behaviour | Here |
 |---|---|---|---|
-| 1 | **Send** | mail composer; sending marks the order Quotation Sent | **workflow** — send-email node, then set Status. Not yet working |
+| 1 | **Send** | mail composer; sending marks the order Quotation Sent | **button + workflow** — the owner's *Send Quotation*, rewired: refuses without a customer email, attaches the order's PDF from *Quotation / Order*, sends Odoo's quotation or confirmation email, Quotation → Quotation Sent. **Built 22 Sep 2026, §10 — published, not yet pressed** |
 | 2 | **Download** | `sale.action_report_saleorder`, the quotation PDF | **System Print** with a print template — native, no workflow. **Built 22 Sep 2026, §9** |
 | 3 | **Confirm** | guards, then Status → Sales Order and **Quotation/Order Date → now** | **button + workflow** (the guard is a branch) |
 | 4 | **Preview** | `act_url` to `get_portal_url()` — the customer-facing page | **Public Sharing** — native, effectively already there |
@@ -658,6 +658,114 @@ Order* from the record's print menu and look at the page itself — the fill is 
 Quotation-only and Order-only templates as well if you want them (the worksheet's form settings, print templates,
 new Word template), and if the general one should not be offered in some state, give it a filter there.
 
+
+## 10 · Send — built 22 Sep 2026 (`orders.py` §16)
+
+Odoo's *Send* is `action_quotation_send` (19.0 source, `addons/sale/models/sale_order.py:1069`): it opens the mail
+composer on the order, addressed to the customer, loaded with the template `_find_mail_template` (:1125) picks —
+*Sales: Send Quotation* (`email_template_edi_sale`) unless the order is a sale, *Sales: Order Confirmation*
+(`mail_template_sale_confirmation`) once it is — and both templates attach the quotation / order report
+(`report_template_ids`, `sale.action_report_saleorder`, file name `Quotation - S00017` / `Order - S00017` by its
+`print_report_name`). Posting with `mark_so_as_sent` (`message_post`, :1716) moves **only a Quotation** to Quotation
+Sent. The form shows Send while `state == 'draft'` and again while `state in ('sent', 'sale')`
+(`sale_order_views.xml`, `quotation_send_primary` and `quotation_send`) — every state but Cancelled. *Send an email*
+(server action 505) is the batch form.
+
+**The owner's button, rewired rather than replaced.** *Send Quotation* `6ab0aac1e54d2a34fa4e7c1b` and its workflow
+`6ab0aac1789584ded3230fe1` were built by hand on 21 Sep 2026 (one run, on S00004, to a TEST contact). Its email had
+placeholder text (*[Total Amount: TO BE ADD]*), no attachment and no guard. Kept as the owner left it: id, name,
+description, the confirmation dialog, the condition (Status is Quotation, Quotation Sent or Sales Order — already
+Odoo's), and **every node of theirs** — nothing was deleted. Changed: **batch on**, and the workflow below.
+
+| | |
+|---|---|
+| Button | *Send Quotation* `6ab0aac1e54d2a34fa4e7c1b` — `ids.json` › buttons › `Orders: Send Quotation` |
+| Workflow | `6ab0aac1789584ded3230fe1` — `ids.json` › workflows › `Orders: Send Quotation` (new key) |
+| Offered | Status is Quotation, Quotation Sent or Sales Order — the server's own evaluation (`GetWorksheetBtns` per order) offers it on all ten such orders and on neither Cancelled one |
+| Batch | **on** — one run per selected order |
+| Confirmation | the owner's: *Email this quotation (or, for a confirmed order, the order confirmation) to the customer, with the PDF attached?* — buttons *Send* / *Discord* (sic, see below) |
+
+```
+Trigger by button (once per selected order)
+  → Get Customer                         the owner's: the record the Customer relation points at
+  → (found / not found)                  the owner's result branch
+      not found → Missing customer                    notification to whoever pressed — the run ends
+      found     → Amount and signature                code block: Total as "RM 1,234.50"; "--" and the Salesperson
+                → Quotation or order?                 the owner's branch (was "Branch"), three paths
+                    Quotation         Status Quotation or Quotation Sent, and the customer has an email
+                        → Quotation file              print file: "Quotation / Order", PDF, "Quotation - S00017"
+                        → Email quotation             the owner's step, rewritten
+                        → Set Status: Quotation Sent  the owner's step
+                    Order             Status Sales Order, and the customer has an email
+                        → Order file                  "Order - S00017"
+                        → Email order confirmation
+                    No email address  the customer's Email is empty
+                        → Missing email address       notification to whoever pressed — the run ends
+```
+
+**The emails.** To the customer's Email (through Get Customer), no cc or bcc, plain text, sender name *casimir*
+(the company name the print template heads its page with), no reply address, the PDF attached. `<Number>` is the
+order's, `<amount>` its Total formatted by the code block, `<signature>` "--" and the Salesperson's name (empty with
+no salesperson).
+
+| | Subject | Body |
+|---|---|---|
+| Quotation, Quotation Sent | `casimir Quotation (Ref <Number>)` | Hello,<br><br>Your quotation `<Number>` amounting in `<amount>` is ready for review.<br><br>Do not hesitate to contact us if you have any questions.<br>`<signature>` |
+| Sales Order | `casimir Order (Ref <Number>)` | Hello,<br><br>Your order `<Number>` amounting in `<amount>` has been confirmed.<br>Thank you for your trust!<br><br>Do not hesitate to contact us if you have any questions.<br>`<signature>` |
+
+**The refusals.** A notification reads 【heading】message: **【Missing customer】** *S00013 was not sent: it has no
+customer. Choose the customer, then send it again.* · **【Missing email address】** *S000xx was not sent: the customer
+has no email address. Add one to the customer's contact, then send it again.* Nothing is written to the order.
+*Missing email address* is Odoo's own label for a mail that could not go out.
+
+**Proved without sending anything** (`send`, then `check`, 22 Sep 2026): every node read back — the two print-file
+steps on the trigger order with template `6ab258cd7903a53029f5ade7`, PDF on, their file names; both emails' recipient,
+subject, body, sender name and attachment (each its own file step's **pdf** output); the three path conditions; both
+notices' text and recipient (the person who pressed); Get Customer and the status write as the owner built them; no
+abort node; every path's chain exact. The code block's formatting is proved by `codeTest`, which runs only the code:
+`1,234` / no salesperson → *RM 1,234.00* and no signature; `74.8` / a plain name → *RM 74.80*; `271743.5` / a member
+as JSON → *RM 271,743.50*. The workflow published with no warnings; a second `send` saved and published nothing; the
+workflow's run list still holds only the owner's run of 21 Sep. The other six buttons, the whole control set and
+*Sign & Accept* read back byte for byte unchanged. **Not UI-tested, and never pressed.**
+
+**Whose inbox a press reaches** (`sendreach`, read-only). All eight contacts carry an email. Orders on which the button
+is offered and would email someone: S00007 → *Sunway Construction Group*; S00010 and S00017 → *Klinik Kesihatan
+Damansara*; S00012 → *Sarawak Timber Logistics*; S00014 and S00016 → *Casimir*. Those three company addresses are on
+real-looking domains. S00006, S00008, S00009 and S00013 have no customer (their seed contacts are not in the app) and
+are refused. S00011 and S00015 are Cancelled and not offered.
+
+**Divergences** (DECISIONS.md, *Orders · Send*): no editable composer — the text is fixed and goes on the click; the
+batch press sends each order its own templated email and marks each Quotation sent (Odoo's *Send an email* opens one
+mass-mail composer with no template and marks nothing); nothing is logged on the order the way Odoo posts the mail
+in its chatter; Odoo's *(with reference: …)* line and product-document list are not carried; sent from the
+platform's mailer with the name *casimir*, not from the salesperson's address; on a Quotation Sent the status write
+re-writes the same value. The refusal still draws the green *Operation completed* toast (15 §6.7, as Confirm).
+
+**For the owner.** The dialog's cancel label reads **Discord** — presumably *Discard*; it is the owner's text and
+was left as is. Each send makes a **PDF, which the platform charges to the organisation's credits** — set
+`SEND_PDF = False` in `orders.py` and re-run `send` to attach the Word file instead. No reply address is set, so a
+customer's reply goes to the platform's sender, not to the salesperson.
+
+**Left for the browser — the live test** (only with the owner's approval; every press sends real email):
+
+1. **Quotation path** on **S00014** (Quotation, customer *Casimir*): the dialog shows the owner's text; after *Send*,
+   the mail arrives with subject *casimir Quotation (Ref S00014)*, the amount as *RM 1,120.90* and "--" /
+   *Casimir Chiong Ming Yuan* under the text, and **one** attachment, *Quotation - S00014.pdf*, headed *Quotation #
+   S00014* — open it; Status then reads **Quotation Sent**. Look at the sender's name and address, and where *Reply*
+   goes.
+2. **Again on S00016** (already Quotation Sent): the same email; Status stays Quotation Sent.
+3. **Order path**: no Sales Order has a safe customer — confirm a TEST order for *Casimir* (or point one at a TEST
+   contact) and send it: *casimir Order (Ref …)*, *…has been confirmed. Thank you for your trust!*, *Order - ….pdf*
+   headed *Sales Order # …*; Status unchanged.
+4. **Guards**: S00013 (no customer) → no mail, 【Missing customer】 in the notification centre, Status unchanged.
+   *Missing email address* needs a customer with no email — every contact has one; a TEST contact without one would.
+5. **Offered**: absent or greyed on S00011 / S00015 (Cancelled); present on the other ten.
+6. **Batch**: select S00014 and S00013 in the list and press it once — one mail, one notification.
+7. The run history (`hap approval history --process-id 6ab0aac1789584ded3230fe1`) shows the path each run took;
+   the code block's `seen` output holds what Total and Salesperson actually arrived as, which `codeTest` could not
+   show. Check the organisation's credit balance for the PDF charge.
+
+Keep clear of S00007, S00010, S00012 and S00017 — they email the three company addresses above.
 
 ## Descriptions rewritten for the app's users (22 Sep 2026)
 

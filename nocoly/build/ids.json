@@ -70,7 +70,8 @@
   "Orders: Deliver: one product line": "6ab218c1a2c872a5c138ca18",
   "Orders: Apply Discount": "6ab235f0a2c872a5c13a8b06",
   "Orders: Apply Discount: one product line": "6ab23689e606b26d26fe5ebb",
-  "Orders: Apply Discount: one tax group": "6ab23692e606b26d26fe5f0c"
+  "Orders: Apply Discount: one tax group": "6ab23692e606b26d26fe5f0c",
+  "Orders: Send Quotation": "6ab0aac1789584ded3230fe1"
  },
  "buttons": {
   "Archive": "6aa8a5654720c515252bda3d",

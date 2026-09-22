@@ -51,11 +51,17 @@ owner approved — deliberately nothing else.
                                                            #     'Quotation / Order' on Orders
     ~/.hap-venv/bin/python nocoly/build/orders.py selfprint# 15d. fill it for one order through the CLI, with and
                                                            #     without a TEST Terms value; put the order back
+    ~/.hap-venv/bin/python nocoly/build/orders.py send     # 16. rewire the owner's Send Quotation: batch on the
+                                                           #     button, and its workflow — the customer's email
+                                                           #     guard, the order's file from 'Quotation / Order',
+                                                           #     Odoo's email with it attached, Quotation → Quotation
+                                                           #     Sent. Publishes; **never presses it** (real email)
+    ~/.hap-venv/bin/python nocoly/build/orders.py sendreach# 16b. read-only: whose inbox each order's Send reaches
     ~/.hap-venv/bin/python nocoly/build/orders.py check    # read rules, Expiration, the roll-ups, the two new
                                                            #    controls, the views, the five buttons with their
                                                            #    workflows and the seed back, and report drift;
                                                            #    since §14 also the Discount product, the two
-                                                           #    discount fields and Apply Discount
+                                                           #    discount fields and Apply Discount; since §16 Send
     ~/.hap-venv/bin/python nocoly/build/orders.py show     # the live controls and rules
 
 **There is no `fields` or `layout` step, and there must not be one** — `views` writes one view of its own,
@@ -1935,9 +1941,10 @@ SET_TO_QUOTATION, MARK_AS_SENT = 'Set to Quotation', 'Mark as Sent'
 # Close Invoicing and Reopen Invoicing were deleted by the owner on 22 Sep 2026 — see the section head.
 BUTTONS = (CONFIRM, CANCEL, SET_TO_QUOTATION, MARK_AS_SENT)
 
-# The owner's, and never this builder's: their *Send Quotation* button with its own workflow, and their
-# *Sign & Accept* SEARCH_BTN control. `step_buttons` compares both, byte for byte, before and after everything it
-# writes. The control was named *Sign & Acccept*, three c's, until the owner had the typo fixed on 22 Sep 2026 —
+# The owner's: their *Send Quotation* button with its own workflow, and their *Sign & Accept* SEARCH_BTN control.
+# `step_buttons` compares both, byte for byte, before and after everything it writes — `buttons` writes neither.
+# *Send Quotation* is rewired by its own step, `send` (§16), at the owner's request of 22 Sep 2026: same button,
+# same workflow, their nodes kept. The control was named *Sign & Acccept*, three c's, until the owner had the typo fixed on 22 Sep 2026 —
 # a one-attribute version-pinned save of its `controlName` (16-orders.md, foot); no ids.json key carries it.
 OWNERS_BUTTON = 'Send Quotation'
 OWNERS_BUTTON_ID = '6ab0aac1e54d2a34fa4e7c1b'
@@ -4774,6 +4781,793 @@ def step_selfprint():
           f'order is back as it was (Terms and conditions empty on both read paths)')
 
 
+# ── 16 · Send: the owner's Send Quotation, rewired ──────────────────────────
+#
+# Odoo's *Send* (`action_quotation_send`, addons/sale/models/sale_order.py:1069, 19.0 source) opens the mail
+# composer on the order, addressed to the customer, with the template `_find_mail_template` (:1125) picks: *Sales:
+# Send Quotation* (`email_template_edi_sale`) while the order is not a sale, *Sales: Order Confirmation*
+# (`mail_template_sale_confirmation`) once it is (data/mail_template_data.xml). Both attach the quotation / order
+# report (`report_template_ids` → `sale.action_report_saleorder`, named `Quotation - S00017` / `Order - S00017` by its
+# `print_report_name`). Posting the message with `mark_so_as_sent` (`message_post`, :1716) writes **Quotation →
+# Quotation Sent** and nothing else: `self.filtered(lambda o: o.state == 'draft')`. The form's two Send buttons are
+# `invisible="state != 'draft'"` and `invisible="state not in ('sent', 'sale')"` (views/sale_order_views.xml
+# 288–296, 336–342) — together, **every state but Cancelled**. *Send an email* (server action 505,
+# `model_sale_order_send_mail`, bound to list, kanban and form) is the batch form.
+#
+# The owner built *Send Quotation* and a first workflow by hand on 21 Sep 2026 (it ran once, on S00004, to a TEST
+# contact). It is **rewired, not replaced**: the button keeps its id, name, description, confirmation and condition
+# (Status is Quotation, Quotation Sent or Sales Order — already Odoo's), and gains `isBatch`. **No node of theirs is
+# deleted**: Get Customer, its found / not-found branch, their two-path branch, *Email quotation* and *Set Status:
+# Quotation Sent* all stay, and the new steps are inserted around them:
+#
+#     Trigger by button (isBatch: once per selected order)
+#       → Get Customer                         the owner's: the record the Customer relation points at
+#       → (found / not found)                  the owner's result branch on it
+#           not found → Missing customer                   站内通知 to the presser — the path ends
+#           found     → Amount and signature               code block: Total as "RM 1,234.50"; "--" + Salesperson
+#                     → Quotation or order?                the owner's branch (was *Branch*), exclusive, three paths
+#                          Quotation         Status is Quotation or Quotation Sent, and the Email is not empty
+#                              → Quotation file              获取记录打印文件: "Quotation / Order", "Quotation - S00017"
+#                              → Email quotation             the owner's, rewritten to Odoo's quotation template
+#                              → Set Status: Quotation Sent  the owner's
+#                          Order             Status is Sales Order, and the Email is not empty
+#                              → Order file                  "Order - S00017"
+#                              → Email order confirmation    Odoo's confirmation template
+#                          No email address  the Email is empty
+#                              → Missing email address       站内通知 to the presser — the path ends
+#
+# **The status write sits on the Quotation path, which also carries Quotation Sent.** Writing Quotation Sent over
+# Quotation Sent leaves it as it is, so the result is Odoo's "only a Quotation moves"; no workflow on Orders
+# listens to Status (the app's worksheet-event workflows were read on 22 Sep 2026: none on Orders), so the
+# same-value write starts nothing. A Sales Order runs the Order path, which writes nothing.
+#
+# **Two templates, two email steps.** Odoo's quotation template has a sale branch of its own, but the template that
+# is actually used for a sales order is the confirmation template, so each path carries the text of the template
+# Odoo would pick. The subject is Odoo's `{company} Quotation|Order (Ref {number})`; the company is **casimir**, the
+# name the print template heads its page with (there are no company settings in this app). Odoo's optional
+# *(with reference: …)* for a Source Document and its product-document list are not carried.
+#
+# **The amount is formatted by a code block** because a workflow text template inserts a number as stored; Odoo
+# writes `format_amount(amount_total, currency)`, "RM 271,743.50". The same block turns the Salesperson into Odoo's
+# signature ("--" and the salesperson's name, or nothing when there is none). Its logic is proved by `codeTest`,
+# which only runs the code (no email): the three cases in SEND_CODE_TESTS must answer exactly as listed.
+#
+# **Nothing here sends email.** The step builds, publishes and reads back; it never triggers the workflow.
+SEND = OWNERS_BUTTON
+COMPANY = 'casimir'                          # print-templates/quotation_order_template.docx heads its page with it
+CONTACTS_WS = CONTACTS[0]
+CONTACT_EMAIL, CONTACT_NAME = '6aa8a452f363582dd37a50d9', '6aa8a3b34a22ad87b728c4ff'
+# the steps, by name — the owner's names are kept where the node is theirs
+S_CUSTOMER = 'Get Customer'                  # the owner's
+S_CODE = 'Amount and signature'
+S_KIND = 'Quotation or order?'
+S_KIND_WAS = 'Branch'                        # the owner's name for it, renamed on the first run
+S_PRINT_Q, S_PRINT_O = 'Quotation file', 'Order file'
+S_EMAIL_Q = 'Email quotation'                # the owner's
+S_EMAIL_O = 'Email order confirmation'
+S_STATUS = 'Set Status: Quotation Sent'      # the owner's
+# A 站内通知 reads 【<node name>】<content> in the notification centre, so these two names are user-facing headings.
+# *Missing email address* is Odoo's own label for a mail that could not go out for want of an address.
+S_NO_CUSTOMER = 'Missing customer'
+S_NO_EMAIL = 'Missing email address'
+P_QUOTATION, P_ORDER, P_NO_EMAIL = 'Quotation', 'Order', 'No email address'
+SEND_STEPS = (S_CUSTOMER, S_CODE, S_KIND, S_PRINT_Q, S_EMAIL_Q, S_STATUS, S_PRINT_O, S_EMAIL_O, S_NO_EMAIL,
+              S_NO_CUSTOMER)
+GATEWAY, FILE_NODE, EMAIL_NODE = 1, 18, 11   # flowNodeType: 分支 · 获取记录打印文件 · 发送邮件
+FILE_APP, EMAIL_APP = 14, 3                  # the appType the editor adds those two with (CreateNodeDialog.jsx)
+SEND_EMAIL, RELATED_RECORD = '202', '20'
+FOUND, NOT_FOUND = 3, 4                      # a result branch's paths: 有数据 · 无数据
+PLAIN_TEXT = 1                               # an email step's emailContentType: 1 text · 2 rich text · 3 MJML
+NOT_EMPTY = '7'
+# A PDF costs organisation credits per file on nocoly.com ("生成PDF文件的费用将自动从组织信用点中扣除",
+# pd-openweb Detail/File) and needs the platform's conversion service (`wpsConfig`); see `send_pdf`.
+SEND_PDF = True
+MSG_NO_CUSTOMER = '{number} was not sent: it has no customer. Choose the customer, then send it again.'
+MSG_NO_EMAIL = ("{number} was not sent: the customer has no email address. Add one to the customer's contact, then "
+                'send it again.')
+SEND_CODE_OUT = ('amount', 'signature')
+
+
+def send_texts(trigger, code, f):
+    """{step name: what it carries} — the two emails' subject and body, the two files' names, the two notices'
+    messages. `$<node>-<field>$` is a workflow template: the trigger order's Number, the code block's outputs."""
+    number = f"${trigger}-{f['Number']['controlId']}$"
+    amount, sign = f'${code}-amount$', f'${code}-signature$'
+    closing = f'Do not hesitate to contact us if you have any questions.\n{sign}'
+    return {
+        S_EMAIL_Q: (f'{COMPANY} Quotation (Ref {number})',
+                    f'Hello,\n\nYour quotation {number} amounting in {amount} is ready for review.\n\n{closing}'),
+        S_EMAIL_O: (f'{COMPANY} Order (Ref {number})',
+                    f'Hello,\n\nYour order {number} amounting in {amount} has been confirmed.\n'
+                    f'Thank you for your trust!\n\n{closing}'),
+        S_PRINT_Q: f'Quotation - {number}',
+        S_PRINT_O: f'Order - {number}',
+        S_NO_CUSTOMER: MSG_NO_CUSTOMER.format(number=number),
+        S_NO_EMAIL: MSG_NO_EMAIL.format(number=number),
+    }
+
+
+def send_code():
+    """The code block: `amount` is the Total as Odoo's `format_amount` writes it for RM, "RM 271,743.50"; `signature`
+    is "--" and the Salesperson's name on the next line, or empty with no salesperson — Odoo prints the salesperson's
+    signature under the text only when there is one. A Member reaches a code block as JSON or as a name, so both are
+    read; `seen` keeps the raw inputs for the run history."""
+    return r"""function text(v) { return v === undefined || v === null ? '' : String(v).trim(); }
+function money(v) {
+  var s = text(v), n = parseFloat(s.replace(/[^0-9.\-]/g, ''));
+  if (!s || isNaN(n)) return s;
+  var parts = Math.abs(n).toFixed(2).split('.');
+  return 'RM ' + (n < 0 ? '-' : '') + parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '.' + parts[1];
+}
+function people(v) {
+  var s = text(v);
+  if (!s) return '';
+  try {
+    var j = JSON.parse(s);
+    if (!Array.isArray(j)) j = [j];
+    return j.map(function (x) {
+      return x && typeof x === 'object' ? text(x.fullname || x.fullName || x.name) : text(x);
+    }).filter(function (x) { return x; }).join(', ');
+  } catch (e) { return s; }
+}
+var who = people(input.salesperson);
+output = {
+  amount: money(input.total),
+  signature: who ? '--\n' + who : '',
+  seen: JSON.stringify({total: input.total, salesperson: input.salesperson})
+};
+"""
+
+
+def send_code_inputs(trigger, f):
+    return [{'name': 'total', 'value': f"${trigger}-{f['Total']['controlId']}$"},
+            {'name': 'salesperson', 'value': f"${trigger}-{f['Salesperson']['controlId']}$"}]
+
+
+# (inputs, the outputs they must give). The last case runs last, so it is the one whose outputs are registered.
+SEND_CODE_TESTS = [
+    ({'total': '1,234', 'salesperson': ''}, {'amount': 'RM 1,234.00', 'signature': ''}),
+    ({'total': '74.8', 'salesperson': 'Casimir Chiong Ming Yuan'},
+     {'amount': 'RM 74.80', 'signature': '--\nCasimir Chiong Ming Yuan'}),
+    ({'total': '271743.5', 'salesperson': '[{"accountId":"TEST","fullname":"Casimir Chiong Ming Yuan"}]'},
+     {'amount': 'RM 271,743.50', 'signature': '--\nCasimir Chiong Ming Yuan'}),
+]
+
+
+# ── the button ──────────────────────────────────────────────────────────────
+
+# What the button editor sends back on a save besides the name and texts (pd-openweb CreateCustomBtn.jsx).
+BTN_SAVE_KEYS = ('isAllView', 'color', 'icon', 'writeControls', 'relationControl', 'writeType', 'writeObject',
+                 'clickType', 'showType', 'advancedSetting', 'enableConfirm', 'verifyPwd', 'workflowType', 'isBatch')
+BTN_VOLATILE = ('isBatch', 'updateTime', 'updateAccountId')
+SEND_STATES = ('Quotation', 'Quotation Sent', 'Sales Order')
+
+
+def send_button():
+    live = [b for b in hap.listing('worksheet', 'custom-actions', ws()) if b['btnId'] == OWNERS_BUTTON_ID]
+    if len(live) != 1 or live[0]['name'] != SEND:
+        sys.exit(f'{OWNERS_BUTTON_ID} is not the one {SEND!r} button — read the worksheet before writing')
+    return live[0]
+
+
+def send_button_problems(b):
+    """The button against what §16 needs: Odoo's states, batch, a workflow run, the confirmation kept."""
+    label = {v: k for k, v in STATUS_KEYS.items()}
+    conds = [(c.get('controlId'), c.get('filterType'), sorted(label.get(v, v) for v in c.get('values') or []))
+             for c in b.get('filters') or []]
+    want = [(CONTROLS['Status'], C.EQ, sorted(SEND_STATES))]
+    problems = []
+    if conds != want and [(cid, ft if ft != 51 else C.EQ, v) for cid, ft, v in conds] != want:
+        problems.append(f'{SEND}: offered when {conds}, wanted Status is any of {list(SEND_STATES)}')
+    if not b.get('isBatch'):
+        problems.append(f'{SEND}: not usable on a selection (isBatch false) — run `send`')
+    if b.get('workflowType') != 1 or b.get('showType') != 2 or not b.get('enableConfirm'):
+        problems.append(f"{SEND}: workflowType={b.get('workflowType')} showType={b.get('showType')} "
+                        f"enableConfirm={b.get('enableConfirm')}")
+    return problems
+
+
+def ensure_send_batch():
+    """`isBatch` on, and nothing else about the owner's button changed: the save sends back exactly what the button
+    editor sends, as read, and every key but `isBatch` is compared before and after."""
+    from hap_cli.core.session import Session
+    b = send_button()
+    if b.get('isBatch'):
+        return False
+    if drifted(f'{SEND}: isBatch is off'):
+        return True
+    params = {'btnId': b['btnId'], 'name': b['name'], 'worksheetId': ws(), 'filters': b.get('filters') or [],
+              'confirmMsg': b.get('confirmMsg') or '', 'sureName': b.get('sureName') or '',
+              'cancelName': b.get('cancelName') or '', 'workflowId': b.get('workflowId') or '',
+              'desc': b.get('desc') or '', 'appId': APP, 'addRelationControlId': b.get('addRelationControl') or '',
+              **{k: b.get(k) for k in BTN_SAVE_KEYS}}
+    params['isBatch'] = True
+    got = Session.load(None).api_call('Worksheet', 'SaveWorksheetBtn', params)
+    after = send_button()
+    moved = sorted(k for k in set(b) | set(after) if k not in BTN_VOLATILE and b.get(k) != after.get(k))
+    if not after.get('isBatch') or moved:
+        sys.exit(f'{SEND}: SaveWorksheetBtn answered {got!r}; isBatch={after.get("isBatch")}, and {moved} changed '
+                 f'with it — the button as it was is in backups/orders_send_pre_rebuild_*.json')
+    print(f'  {SEND}: isBatch on; every other key of the button read back unchanged')
+    return True
+
+
+# ── the workflow, found by position ─────────────────────────────────────────
+
+def chain(fm, start):
+    """The node ids that follow `start` along `nextId`, up to the end of its path."""
+    out, nid = [], fm[start].get('nextId')
+    while nid not in (None, '', '99') and nid in fm and nid not in out:
+        out.append(nid)
+        nid = fm[nid].get('nextId')
+    return out
+
+
+def send_graph(pid):
+    """The workflow's nodes by role. The owner left the result branch and its paths unnamed, so they are found by
+    position: the step after the trigger is Get Customer, the gateway after it is its found / not-found branch, and
+    the found path runs (through the code block, once it exists) into the second gateway."""
+    proc = hap.run('workflow', 'node', 'list', pid)
+    fm = proc['flowNodeMap']
+    g = {'fm': fm, 'trigger': proc['startEventId']}
+    cust = fm.get(fm[g['trigger']].get('nextId')) or {}
+    if (cust.get('typeId'), str(cust.get('actionId')), cust.get('name')) != (UPDATE_NODE, RELATED_RECORD, S_CUSTOMER):
+        sys.exit(f"{SEND}: the step after the trigger is {cust.get('name')!r} (type {cust.get('typeId')}), not the "
+                 f'owner\'s {S_CUSTOMER!r} — read workflow {pid} before writing')
+    g['customer'] = cust['id']
+    gw = fm.get(cust.get('nextId')) or {}
+    paths = {fm[p].get('resultTypeId'): p for p in gw.get('flowIds') or [] if p in fm}
+    if gw.get('typeId') != GATEWAY or set(paths) != {FOUND, NOT_FOUND}:
+        sys.exit(f'{SEND}: {S_CUSTOMER!r} is not followed by its found / not-found branch ({gw.get("typeId")}, '
+                 f'{sorted(paths)})')
+    g['result'], g['found'], g['none'] = gw['id'], paths[FOUND], paths[NOT_FOUND]
+    nxt = fm.get(fm[g['found']].get('nextId')) or {}
+    g['code'] = ''
+    if nxt.get('typeId') == CODE_NODE:
+        g['code'] = nxt['id']
+        nxt = fm.get(nxt.get('nextId')) or {}
+    if nxt.get('typeId') != GATEWAY or nxt.get('name') not in (S_KIND, S_KIND_WAS):
+        sys.exit(f"{SEND}: the found path runs into {nxt.get('name')!r} (type {nxt.get('typeId')}), not the "
+                 f'owner\'s branch')
+    g['kind'] = nxt['id']
+    ids = [p for p in nxt.get('flowIds') or [] if p in fm]
+    # The owner's two paths come first, in the gateway's own order (Quotation · Order); the third is added after.
+    g['paths'] = dict(zip((P_QUOTATION, P_ORDER, P_NO_EMAIL), ids))
+    return g
+
+
+def add_step(pid, prev_id, name, type_id, action='', app_type=None):
+    """The step `name` directly after `prev_id`, inserted there when it is not (the path's next step then follows
+    it). Returns (its id, True when added). A step of that name anywhere else stops the run."""
+    from hap_cli.core import flow_node
+    from hap_cli.core.session import Session
+    fm = hap.run('workflow', 'node', 'list', pid)['flowNodeMap']
+    old = fm[prev_id].get('nextId') or ''
+    if old in fm and fm[old].get('name') == name:
+        if fm[old].get('typeId') != type_id:
+            sys.exit(f'{name!r} after {prev_id} is a type {fm[old].get("typeId")}, not {type_id}')
+        return old, False
+    elsewhere = [n['id'] for n in fm.values() if n.get('name') == name]
+    if elsewhere:
+        sys.exit(f'{name!r} is in workflow {pid} ({elsewhere}) but not after {fm[prev_id].get("name") or prev_id!r}'
+                 ' — read it before writing')
+    if drifted(f'{name!r} is missing after {fm[prev_id].get("name") or prev_id!r}'):
+        return None, True
+    flow_node.add_node(Session.load(None), pid, type_id, prev_id, name=name, action_id=action,
+                       extra={'appType': app_type} if app_type is not None else None)
+    fm = hap.run('workflow', 'node', 'list', pid)['flowNodeMap']
+    new = fm[prev_id].get('nextId') or ''
+    if new not in fm or fm[new].get('name') != name or fm[new].get('typeId') != type_id or \
+            (fm[new].get('nextId') or '') not in ({old} if old else {'', '99'}):
+        sys.exit(f'{name!r}: added after {prev_id}, but the chain reads {prev_id} → {new} '
+                 f'({fm.get(new, {}).get("name")!r}) → {fm.get(new, {}).get("nextId")!r}, wanted → {old!r} — '
+                 f'`hap workflow rollback {pid} -y` restores the published version')
+    print(f'  {name!r}: added after {fm[prev_id].get("name") or prev_id!r} ({new})')
+    return new, True
+
+
+def add_path(pid, gateway_id):
+    """A third path on the gateway (the editor's + on a branch: flowNode/add, typeId 2, prveId the gateway)."""
+    from hap_cli.core import flow_node
+    from hap_cli.core.session import Session
+    fm = hap.run('workflow', 'node', 'list', pid)['flowNodeMap']
+    before = list(fm[gateway_id].get('flowIds') or [])
+    if drifted(f'{S_KIND!r} has {len(before)} paths, wanted 3'):
+        return None
+    flow_node.add_node(Session.load(None), pid, BRANCH_PATH, gateway_id)
+    fm = hap.run('workflow', 'node', 'list', pid)['flowNodeMap']
+    after = list(fm[gateway_id].get('flowIds') or [])
+    added = [p for p in after if p not in before]
+    if len(added) != 1 or after[:len(before)] != before:
+        sys.exit(f'{S_KIND}: paths {before} became {after} — `hap workflow rollback {pid} -y` restores the '
+                 f'published version')
+    print(f'  {S_KIND!r}: third path added ({added[0]})')
+    return added[0]
+
+
+# ── the steps' configuration, compared before it is written ─────────────────
+
+def cond(node_id, node_type, app_type, action, field, name, type_id, condition, values=()):
+    """One branch-path condition, as `node save --type 2` takes it in `operateCondition`."""
+    return {'nodeId': node_id, 'nodeType': node_type, 'appType': app_type, 'actionId': action, 'filedId': field,
+            'filedValue': name, 'filedTypeId': type_id, 'enumDefault': 0, 'conditionId': condition,
+            'sourceType': 0, 'conditionValues': list(values)}
+
+
+def send_conditions(g):
+    """{path name: its OR-of-AND condition groups} for the branch *Quotation or order?*."""
+    status = lambda labels: cond(g['trigger'], 0, 8, '', CONTROLS['Status'], 'Status', DROPDOWN, IS_ANY_OF, [
+        {'value': {'key': STATUS_KEYS[x], 'value': x, 'isDeleted': False, 'score': None, 'index': None}}
+        for x in labels])
+    email = lambda op: cond(g['customer'], UPDATE_NODE, 1, RELATED_RECORD, CONTACT_EMAIL, 'Email', 5, op)
+    return {P_QUOTATION: [[status(['Quotation', 'Quotation Sent']), email(NOT_EMPTY)]],
+            P_ORDER: [[status(['Sales Order']), email(NOT_EMPTY)]],
+            P_NO_EMAIL: [[email(EMPTY)]]}
+
+
+def cond_state(groups):
+    return [[(c.get('nodeId'), c.get('filedId'), str(c.get('conditionId')),
+              sorted(((v.get('value') or {}).get('key') if isinstance(v.get('value'), dict) else v.get('value'))
+                     or '' for v in c.get('conditionValues') or []))
+             for c in g] for g in groups or []]
+
+
+def sync_path(pid, path_id, name, groups):
+    """A path's name and condition groups; True when written."""
+    got = read_node(pid, path_id)
+    fm = hap.run('workflow', 'node', 'list', pid)['flowNodeMap']
+    changed = False
+    if cond_state(got.get('conditions')) != cond_state(groups):
+        if drifted(f'path {name!r}: {cond_state(got.get("conditions"))}, wanted {cond_state(groups)}'):
+            return True
+        hap.run('workflow', 'node', 'save', pid, path_id, '--type', str(BRANCH_PATH),
+                '-c', json.dumps({'operateCondition': groups}, ensure_ascii=False), '-n', name)
+        back = read_node(pid, path_id)
+        if cond_state(back.get('conditions')) != cond_state(groups):
+            sys.exit(f'path {name!r}: condition reads back {cond_state(back.get("conditions"))}, wanted '
+                     f'{cond_state(groups)} — `hap workflow rollback {pid} -y` restores the published version')
+        changed = True
+    if fm[path_id].get('name') != name:
+        if drifted(f'path {fm[path_id].get("name")!r} should be named {name!r}'):
+            return True
+        hap.run('workflow', 'node', 'rename', pid, path_id, '-n', name)
+        changed = True
+    return changed
+
+
+def sync_name(pid, node_id, name):
+    fm = hap.run('workflow', 'node', 'list', pid)['flowNodeMap']
+    if fm[node_id].get('name') == name:
+        return False
+    if drifted(f'{fm[node_id].get("name")!r} should be named {name!r}'):
+        return True
+    hap.run('workflow', 'node', 'rename', pid, node_id, '-n', name)
+    return True
+
+
+def sync_send_code(pid, node_id, trigger, f):
+    """The code block's inputs and code, then codeTest — which runs only the code — on every case of
+    SEND_CODE_TESTS; each must answer exactly as listed, and the last registers the outputs."""
+    import base64
+    from hap_cli.core import flow_node
+    from hap_cli.core.session import Session
+    b64 = lambda text: base64.b64encode(text.encode('utf-8')).decode('ascii')
+    code, inputs = send_code(), send_code_inputs(trigger, f)
+    got = read_node(pid, node_id)
+    live_inputs = [(x.get('name'), x.get('value')) for x in got.get('inputDatas') or [] if x.get('name')]
+    outputs = {c.get('controlId') for c in got.get('controls') or []}
+    stale = (got.get('code') or '').strip() != code.strip() or \
+        live_inputs != [(x['name'], x['value']) for x in inputs] or str(got.get('actionId')) != JAVASCRIPT
+    if not stale and set(SEND_CODE_OUT) <= outputs:
+        return False
+    if drifted(f'{S_CODE}: code, inputs {live_inputs} or outputs {sorted(outputs)} differ'):
+        return True
+    if stale:
+        flow_node.save_node(Session.load(None), pid, node_id, CODE_NODE,
+                            {'actionId': JAVASCRIPT, 'inputDatas': inputs, 'code': b64(code),
+                             'testMap': got.get('testMap') or {}, 'version': got.get('version') or '',
+                             'maxRetries': got.get('maxRetries', 1)}, name=S_CODE)
+        got = read_node(pid, node_id)
+        if (got.get('code') or '').strip() != code.strip():
+            sys.exit(f'{S_CODE}: the code did not store')
+    for case, want in SEND_CODE_TESTS:
+        test = flow_node.test_code(Session.load(None), pid, node_id, b64(code),
+                                   [{**x, 'value': case[x['name']]} for x in inputs],
+                                   action_id=JAVASCRIPT, version=got.get('version') or '')
+        answer = code_answer(test)
+        if {k: answer.get(k) for k in want} != want:
+            sys.exit(f'{S_CODE}: codeTest on {case} answered {answer} ({json.dumps(test, ensure_ascii=False)[:500]}),'
+                     f' wanted {want}')
+        print(f'  codeTest {case} → {({k: answer.get(k) for k in want})}')
+    got = read_node(pid, node_id)
+    if not set(SEND_CODE_OUT) <= {c.get('controlId') for c in got.get('controls') or []}:
+        sys.exit(f'{S_CODE}: codeTest registered {[c.get("controlId") for c in got.get("controls") or []]}, '
+                 f'wanted {list(SEND_CODE_OUT)}')
+    return True
+
+
+def code_answer(test):
+    """{output key: value} out of a codeTest answer, whichever of its shapes it comes in."""
+    data = test.get('data', test) if isinstance(test, dict) else test
+    for key in ('controls', 'outputs', 'output'):
+        if isinstance(data, dict) and key in data:
+            data = data[key]
+            break
+    if isinstance(data, list):
+        return {c.get('controlId') or c.get('name'): c.get('value') for c in data if isinstance(c, dict)}
+    if isinstance(data, str):
+        try:
+            data = json.loads(data)
+        except ValueError:
+            return {}
+    return data if isinstance(data, dict) else {}
+
+
+def send_pdf(pid, node_id):
+    """Whether the file steps also make a PDF: SEND_PDF, and only where the platform has the conversion service."""
+    return SEND_PDF and bool(read_node(pid, node_id).get('wpsConfig'))
+
+
+def sync_file(pid, node_id, name, select, file_name, pdf):
+    """A 获取记录打印文件 step: the record (the trigger order), the System Print template, the file name, PDF."""
+    from hap_cli.core import flow_node
+    from hap_cli.core.session import Session
+    template = hap.ids()['prints'][PRINT_KEY]
+    got = read_node(pid, node_id)
+    state = lambda d: (d.get('selectNodeId'), d.get('appId'), d.get('fileName'), bool(d.get('pdf')))
+    want = (select, template, file_name, pdf)
+    if state(got) == want:
+        return False
+    if drifted(f'{name}: {state(got)}, wanted {want}'):
+        return True
+    # The templates on offer depend on the record chosen, so they are read as the editor reads them once the
+    # record is picked: getNodeDetail with that `selectNodeId` (pd-openweb Detail/File `getNodeDetail(props, sId)`).
+    offered = Session.load(None).workflow_call('flowNode/getNodeDetail', {
+        'processId': pid, 'nodeId': node_id, 'flowNodeType': FILE_NODE, 'selectNodeId': select}, method='GET')
+    offered = (offered.get('data', offered) if isinstance(offered, dict) else {}).get('appList') or []
+    if template not in {a.get('id') for a in offered}:
+        sys.exit(f'{name}: {PRINT_NAME!r} {template} is not among the templates this step offers '
+                 f'({[(a.get("id"), a.get("name")) for a in offered]})')
+    flow_node.save_node(Session.load(None), pid, node_id, FILE_NODE,
+                        {'selectNodeId': select, 'appId': template, 'fileName': file_name, 'pdf': pdf}, name=name)
+    back = read_node(pid, node_id)
+    if state(back) != want:
+        sys.exit(f'{name}: reads back {state(back)}, wanted {want} — `hap workflow rollback {pid} -y` restores '
+                 f'the published version')
+    return True
+
+
+def file_output(pid, email_id, file_id, pdf):
+    """The file step's output an email can attach: what the email step's attachment picker offers from it."""
+    from hap_cli.core.session import Session
+    dtos = Session.load(None).workflow_call('flowNode/getFlowNodeAppDtos', {
+        'processId': pid, 'nodeId': email_id, 'type': 14, 'enumDefault': 0}, method='GET')
+    dtos = dtos.get('data', dtos) if isinstance(dtos, dict) else dtos
+    entry = next((d for d in dtos or [] if d.get('nodeId') == file_id), None)
+    controls = [c for c in (entry or {}).get('controls') or [] if c.get('type') == 14]
+    pick = [c for c in controls if ('pdf' in (c.get('controlName') or '').lower()) == pdf]
+    if len(pick) != 1:
+        sys.exit(f'{file_id}: the attachment picker offers {[(c.get("controlId"), c.get("controlName")) for c in controls]}'
+                 f' from it — wanted one {"PDF" if pdf else "Word"} file')
+    return pick[0]
+
+
+def email_account(g):
+    """The customer's Email, reached through Get Customer — the recipient the owner's step already carries."""
+    return {'type': 6, 'entityId': g['customer'], 'entityName': S_CUSTOMER, 'roleId': CONTACT_EMAIL,
+            'roleTypeId': 0, 'roleName': 'Email', 'avatar': '', 'count': 0, 'controlType': 5,
+            'flowNodeType': UPDATE_NODE, 'actionId': RELATED_RECORD, 'appType': 1}
+
+
+def email_state(d):
+    fields = {x.get('fieldId'): x for x in d.get('fields') or []}
+    value = lambda k: (fields.get(k) or {}).get('fieldValue') or ''
+    attach = fields.get('attachments') or {}
+    return {'subject': value('subject'), 'content': value('content'), 'sender_name': value('sender_name'),
+            'reply_email': value('reply_email'), 'attachment': (attach.get('nodeId') or '', attach.get('fieldValueId') or ''),
+            'to': [(a.get('type'), a.get('entityId'), a.get('roleId')) for a in d.get('accounts') or []],
+            'cc': len(d.get('ccAccounts') or []), 'bcc': len(d.get('bcAccounts') or []),
+            'contentType': d.get('emailContentType'), 'exception': bool(d.get('isException'))}
+
+
+def sync_email(pid, node_id, name, subject, body, account, attach):
+    """An email step: to the customer's Email, the subject and body, the company as sender name, the file step's
+    output attached, no reply address, cc or bcc, plain text."""
+    from hap_cli.core import flow_node
+    from hap_cli.core.session import Session
+    got = read_node(pid, node_id)
+    want = {'subject': subject, 'content': body, 'sender_name': COMPANY, 'reply_email': '',
+            'attachment': (attach['nodeId'], attach['controlId']), 'to': [(6, account['entityId'], CONTACT_EMAIL)],
+            'cc': 0, 'bcc': 0, 'contentType': PLAIN_TEXT, 'exception': False}
+    if email_state(got) == want:
+        return False
+    if drifted(f'{name}: {email_state(got)}, wanted {want}'):
+        return True
+    fields = [dict(x) for x in got.get('fields') or []]
+    by = {x.get('fieldId'): x for x in fields}
+    missing = {'subject', 'content', 'sender_name', 'reply_email', 'attachments'} - set(by)
+    if missing:
+        sys.exit(f'{name}: the step carries no {sorted(missing)} field')
+    for key, value in (('subject', subject), ('content', body), ('sender_name', COMPANY), ('reply_email', '')):
+        by[key].update(fieldValue=value, nodeId='', fieldValueId='', isClear=False)
+    by['attachments'].update(fieldValue='', nodeId=attach['nodeId'], sureNodeId=attach['nodeId'],
+                             fieldValueId=attach['controlId'], nodeTypeId=FILE_NODE, nodeAppType=FILE_APP,
+                             isClear=False)
+    flow_node.save_node(Session.load(None), pid, node_id, EMAIL_NODE, {
+        'fields': fields, 'actionId': SEND_EMAIL, 'appType': EMAIL_APP, 'accounts': [account], 'ccAccounts': [],
+        'bcAccounts': [], 'emailContentType': PLAIN_TEXT, 'mjmlValue': '', 'mjmlHtml': ''}, name=name)
+    back = email_state(read_node(pid, node_id))
+    if back != want:
+        sys.exit(f'{name}: reads back {back}, wanted {want} — `hap workflow rollback {pid} -y` restores the '
+                 f'published version')
+    return True
+
+
+def sync_notice(pid, node_id, name, content):
+    """A 站内通知 to the person who pressed the button — Confirm's guard (`save_notice`), compared first."""
+    got = read_node(pid, node_id)
+    key = lambda a: (a.get('type'), a.get('entityId'), a.get('roleId'))
+    channel = got.get('flowNodeMap') or {}
+    named = '106' not in channel or (channel['106'] or {}).get('name') == name
+    if got.get('sendContent') == content and named and \
+            [key(a) for a in got.get('accounts') or []] == [key(TRIGGER_USER)]:
+        return False
+    if drifted(f'{name}: message {got.get("sendContent")!r} to {[key(a) for a in got.get("accounts") or []]}'):
+        return True
+    return save_notice(pid, {'id': node_id, 'name': name}, content, dict(TRIGGER_USER))
+
+
+def status_write_problems(pid, node_id, trigger):
+    d = read_node(pid, node_id)
+    live = [write_state(x) for x in d.get('fields') or []]
+    want = [write_state(patch(CONTROLS['Status'], DROPDOWN, value=STATUS_KEYS['Quotation Sent']))]
+    if (str(d.get('actionId')), d.get('selectNodeId'), live, bool(d.get('isException'))) != ('2', trigger, want, False):
+        return [f'{S_STATUS}: actionId={d.get("actionId")} on {d.get("selectNodeId")} writes {live} '
+                f'exception={d.get("isException")}, wanted Status = Quotation Sent on the trigger order']
+    return []
+
+
+def sync_send(f, pid):
+    """Bring every step of the Send workflow to what §16 says. Returns True when something was written; under
+    DRIFT (`check`) it writes nothing and records each difference."""
+    changed = False
+    g = send_graph(pid)
+    code, hit = add_step(pid, g['found'], S_CODE, CODE_NODE, action=JAVASCRIPT)
+    changed |= hit
+    if code is None:
+        return True
+    changed |= sync_name(pid, g['kind'], S_KIND)
+    g = send_graph(pid)
+    if len(g['paths']) == 2:
+        if add_path(pid, g['kind']) is None:
+            return True
+        changed = True
+        g = send_graph(pid)
+    if len(g['paths']) != 3:
+        sys.exit(f'{S_KIND}: {len(g["paths"])} paths — this builder knows the owner\'s two and its own third')
+    fm = g['fm']
+    q_names = [fm[n].get('name') for n in chain(fm, g['paths'][P_QUOTATION])]
+    if S_EMAIL_Q not in q_names or S_STATUS not in q_names:
+        sys.exit(f'{S_KIND}: its first path runs {q_names}, not the owner\'s {S_EMAIL_Q!r} → {S_STATUS!r}')
+    texts = send_texts(g['trigger'], code, f)
+    changed |= sync_send_code(pid, code, g['trigger'], f)
+    for name, groups in send_conditions(g).items():
+        changed |= sync_path(pid, g['paths'][name], name, groups)
+    steps = {}
+    for name, prev, type_id, action, app_type in (
+            (S_PRINT_Q, g['paths'][P_QUOTATION], FILE_NODE, '', FILE_APP),
+            (S_PRINT_O, g['paths'][P_ORDER], FILE_NODE, '', FILE_APP),
+            (S_EMAIL_O, S_PRINT_O, EMAIL_NODE, SEND_EMAIL, EMAIL_APP),
+            (S_NO_EMAIL, g['paths'][P_NO_EMAIL], NOTICE, '', None),
+            (S_NO_CUSTOMER, g['none'], NOTICE, '', None)):
+        steps[name], hit = add_step(pid, steps.get(prev, prev), name, type_id, action=action, app_type=app_type)
+        changed |= hit
+        if steps[name] is None:
+            return True
+    g = send_graph(pid)
+    fm = g['fm']
+    steps[S_EMAIL_Q] = next(n for n in chain(fm, g['paths'][P_QUOTATION]) if fm[n].get('name') == S_EMAIL_Q)
+    pdf = send_pdf(pid, steps[S_PRINT_Q])
+    for name in (S_PRINT_Q, S_PRINT_O):
+        changed |= sync_file(pid, steps[name], name, g['trigger'], texts[name], pdf)
+    account = email_account(g)
+    for name, file_step in ((S_EMAIL_Q, S_PRINT_Q), (S_EMAIL_O, S_PRINT_O)):
+        subject, body = texts[name]
+        attach = dict(file_output(pid, steps[name], steps[file_step], pdf), nodeId=steps[file_step])
+        changed |= sync_email(pid, steps[name], name, subject, body, account, attach)
+    for name in (S_NO_EMAIL, S_NO_CUSTOMER):
+        changed |= sync_notice(pid, steps[name], name, texts[name])
+    return changed
+
+
+def send_structure(f, pid):
+    """What `sync_send` leaves to position, read back: every path's chain, exactly, and that nothing follows a
+    gateway or a notice; the owner's Get Customer and status write as they must be; no abort node. Returns
+    (problems, the graph)."""
+    g = send_graph(pid)
+    fm, problems = g['fm'], []
+    names = lambda start: [fm[n].get('name') for n in chain(fm, start)]
+    want = {'the trigger': (g['trigger'], [S_CUSTOMER]),
+            'found': (g['found'], [S_CODE, S_KIND]),
+            'not found': (g['none'], [S_NO_CUSTOMER]),
+            P_QUOTATION: (g['paths'].get(P_QUOTATION), [S_PRINT_Q, S_EMAIL_Q, S_STATUS]),
+            P_ORDER: (g['paths'].get(P_ORDER), [S_PRINT_O, S_EMAIL_O]),
+            P_NO_EMAIL: (g['paths'].get(P_NO_EMAIL), [S_NO_EMAIL])}
+    for label, (start, steps) in want.items():
+        got = names(start) if start else None
+        if label == 'the trigger':
+            got = got[:1] if got else got
+            if fm[g['result']].get('nextId') not in (None, '', '99'):
+                problems.append(f"the found / not-found branch runs into {fm[fm[g['result']]['nextId']].get('name')!r}")
+        if got != steps:
+            problems.append(f'{label}: runs {got}, wanted {steps}')
+    if fm[g['kind']].get('nextId') not in (None, '', '99'):
+        problems.append(f'{S_KIND!r} runs into {fm[fm[g["kind"]]["nextId"]].get("name")!r} — nothing may follow it')
+    if [fm[p].get('name') for p in fm[g['kind']].get('flowIds') or []] != [P_QUOTATION, P_ORDER, P_NO_EMAIL]:
+        problems.append(f'{S_KIND}: paths {[fm[p].get("name") for p in fm[g["kind"]].get("flowIds") or []]}')
+    aborts = [n.get('name') for n in fm.values() if n.get('typeId') == ABORT]
+    if aborts:
+        problems.append(f'abort node(s) {aborts} — an aborted run draws HAP\'s untranslated 中止 toast')
+    extra = sorted(n.get('name') for n in fm.values() if n.get('typeId') not in (None, 0, 100, BRANCH_PATH, GATEWAY)
+                   and n.get('prveId') and n.get('name') not in SEND_STEPS)
+    if extra:
+        problems.append(f'steps this builder does not know: {extra}')
+    cust = read_node(pid, g['customer'])
+    fields = [x.get('fieldId') for x in cust.get('fields') or []]
+    if (str(cust.get('actionId')), cust.get('selectNodeId'), fields) != (RELATED_RECORD, g['trigger'],
+                                                                          [CONTROLS['Customer']]):
+        problems.append(f"{S_CUSTOMER}: actionId={cust.get('actionId')} from {cust.get('selectNodeId')} over "
+                        f'{fields}, wanted the trigger order\'s Customer')
+    status = next((n for n in chain(fm, g['paths'].get(P_QUOTATION) or g['found']) if fm[n].get('name') == S_STATUS),
+                  None)
+    problems += status_write_problems(pid, status, g['trigger']) if status else [f'{S_STATUS!r} is missing']
+    return problems, g
+
+
+def send_published(pid):
+    got = hap.run('workflow', 'get', pid)
+    got = got.get('data', got) if isinstance(got, dict) else {}
+    if not got.get('enabled') or got.get('publishStatus') != 2:
+        return [f'workflow {pid}: enabled={got.get("enabled")} publishStatus={got.get("publishStatus")} — '
+                'unpublished changes; run `send`']
+    return []
+
+
+def send_offered():
+    """{order number: offered?} as the server evaluates the button on each order (GetWorksheetBtns with a rowId —
+    what the record page asks; no workflow runs)."""
+    f = C.fields(ws())
+    out = {}
+    for r in C.records(ws(), APP):
+        out[r.get(f['Number']['controlId'])] = (buttons_offered(r['rowid']).get(SEND),
+                                                status_label(json_keys(r.get(f['Status']['controlId']))))
+    return out
+
+
+def json_keys(raw):
+    try:
+        raw = json.loads(raw) if isinstance(raw, str) else raw
+    except ValueError:
+        return [raw]
+    return [x.get('key') if isinstance(x, dict) else x for x in raw or []]
+
+
+def send_problems(f):
+    """The Send button and workflow read back: the button, the structure, every step's configuration compared
+    without writing, the enabled states as the server evaluates them, and that the workflow is published."""
+    global DRIFT
+    b = send_button()
+    problems = send_button_problems(b)
+    pid = hap.ids().get('workflows', {}).get(KEY + SEND)
+    if pid != OWNERS_WORKFLOW:
+        return problems + [f'{SEND}: ids.json holds workflow {pid!r}, not {OWNERS_WORKFLOW} — run `send`']
+    found, g = send_structure(f, pid)
+    problems += found
+    if found:
+        return problems
+    DRIFT = []
+    try:
+        sync_send(f, pid)
+        problems += [f'{SEND}: {d}' for d in DRIFT]
+    finally:
+        DRIFT = None
+    problems += send_published(pid)
+    offered = send_offered()
+    wrong = {n: (on, st) for n, (on, st) in offered.items() if bool(on) != (st in SEND_STATES)}
+    if wrong:
+        problems.append(f'{SEND}: offered wrongly on {wrong} — it must be offered exactly on {list(SEND_STATES)}')
+    if not problems:
+        print(f"  OK  {SEND:<17} btnId={b['btnId']} isBatch={bool(b.get('isBatch'))} when Status is any of "
+              f'{list(SEND_STATES)} (server: offered on '
+              f"{sorted(n for n, (on, _) in offered.items() if on)}, not on "
+              f"{sorted(n for n, (on, _) in offered.items() if not on)})\n"
+              f'        then {S_CUSTOMER} → not found: {S_NO_CUSTOMER!r} | found: {S_CODE} → {S_KIND} '
+              f'[{P_QUOTATION}: {S_PRINT_Q} → {S_EMAIL_Q} → {S_STATUS} | {P_ORDER}: {S_PRINT_O} → {S_EMAIL_O} | '
+              f'{P_NO_EMAIL}: {S_NO_EMAIL!r}] — published, nothing sent')
+    return problems
+
+
+def send_untouched():
+    """What `send` must not move: every other button, the whole control set, the owner's Sign & Accept."""
+    others = sorted((b for b in hap.listing('worksheet', 'custom-actions', ws()) if b['btnId'] != OWNERS_BUTTON_ID),
+                    key=lambda b: b['btnId'])
+    return {'the other buttons': json.dumps(others, ensure_ascii=False, sort_keys=True, default=str),
+            "the owner's " + OWNERS_CONTROL: owners_control_state(),
+            'the control set': json.dumps(signature(hap.controls(ws())), ensure_ascii=False, sort_keys=True,
+                                          default=str)}
+
+
+def step_send():
+    """§16: rewire the owner's *Send Quotation* — `isBatch` on the button, then the workflow brought to §16's
+    shape around the owner's own steps. Publishes only when something changed; **never triggers it** — pressing it
+    emails a real customer. Re-runnable: every step is found by position or name and compared before it is
+    written; a second run saves and publishes nothing."""
+    f = guard()
+    for name in ('Number', 'Total', 'Salesperson', 'Customer', 'Status'):
+        if name not in f:
+            sys.exit(f'{name} is not on {WORKSHEET}; the Send workflow reads it')
+    if hap.ids().get('prints', {}).get(PRINT_KEY) is None or print_problems():
+        sys.exit(f'System Print {PRINT_NAME!r} is not in place — run `print` first; {SEND} attaches it')
+    before = send_untouched()
+    pid = OWNERS_WORKFLOW
+    proc = hap.run('workflow', 'node', 'list', pid)
+    if read_node(pid, proc['startEventId']).get('triggerId') != OWNERS_BUTTON_ID:
+        sys.exit(f'workflow {pid} is not started by {SEND} {OWNERS_BUTTON_ID}')
+    C.remember('workflows', KEY + SEND, pid)
+    C.remember('buttons', KEY + SEND, OWNERS_BUTTON_ID)
+    print('  backup:', hap.backup('orders_send_pre_rebuild', {
+        'button': send_button(), 'workflow': proc,
+        'nodes': {nid: {k: v for k, v in read_node(pid, nid).items()
+                        if k not in ('flowNodeList', 'flowNodeAppDtos', 'controls', 'appList')}
+                  for nid, n in proc['flowNodeMap'].items() if n.get('typeId') not in (None, 100)}}))
+    changed = ensure_send_batch()
+    wrote = sync_send(f, pid)
+    problems, g = send_structure(f, pid)
+    if problems:
+        sys.exit('  not published:\n  ' + '\n  '.join(problems) +
+                 f'\n  `hap workflow rollback {pid} -y` restores the published version')
+    if wrote or send_published(pid):
+        res = C.publish(pid)
+        print(f'  {SEND}: {res}')
+        if not res.get('isPublish') or res.get('processWarnings') or res.get('errorNodeIds'):
+            sys.exit(f'{SEND}: publish answered {res} — the draft stays unpublished; '
+                     f'`hap workflow rollback {pid} -y` restores the published version')
+    else:
+        print(f'  {SEND}: already built; not re-published')
+    after = send_untouched()
+    moved = sorted(k for k in before if before[k] != after[k])
+    if moved:
+        sys.exit(f'{WORKSHEET}: {moved} changed while {SEND} was rebuilt — `send` writes none of them')
+    print(f'  untouched, byte for byte: {sorted(before)}')
+    problems = send_problems(f)
+    if problems:
+        sys.exit('  ' + '\n  '.join(problems))
+    print(C.structure(pid))
+    return changed or wrote
+
+
+def step_sendreach():
+    """Read-only: whose inbox each order's Send would reach — every order, its state, whether the server offers
+    the button on it, its customer and whether that customer has an Email (both record read paths)."""
+    f = guard()
+    emails = {}
+    for r in C.records(CONTACTS_WS, APP):
+        listed = r.get(CONTACT_EMAIL) or ''
+        got = read_record(CONTACTS_WS, r['rowid'])
+        emails[r['rowid']] = (r.get(CONTACT_NAME), listed or got.get('email') or got.get(CONTACT_EMAIL) or '')
+    offered = send_offered()
+    for r in sorted(C.records(ws(), APP), key=lambda r: r.get(f['Number']['controlId']) or ''):
+        number = r.get(f['Number']['controlId'])
+        cust = [x.get('sid') for x in json.loads(r.get(f['Customer']['controlId']) or '[]')] \
+            if isinstance(r.get(f['Customer']['controlId']), str) else \
+            [x.get('sid') for x in r.get(f['Customer']['controlId']) or []]
+        who = [emails.get(c, ('?', '')) for c in cust]
+        on, state = offered.get(number, (None, '?'))
+        print(f"  {number}  {state:<15} {'offered' if on else 'not offered':<12} "
+              + (', '.join(f"{n}: {'has an email' if e else 'no email'}" for n, e in who) or 'no customer'))
+    print('  contacts with an email: ' + ', '.join(sorted(n for n, e in emails.values() if e)))
+
+
 # ── 13c · reading the four buttons and the guard back ───────────────────────
 
 def button_problems():
@@ -4827,17 +5621,12 @@ def button_problems():
     problems += guard_problems()
     problems += deliver_problems()
     problems += apply_problems(f)
-    # The owner's, never touched by this builder: read both back so `check` fails if either has gone.
+    # The owner's: their Send Quotation is rewired by `send` (§16) and read back in full by `send_problems`; here
+    # only that it is still there. Their Sign & Accept is never touched by this builder.
     b = live.get(OWNERS_BUTTON)
     if not b or b['btnId'] != OWNERS_BUTTON_ID:
         problems.append(f"the owner's {OWNERS_BUTTON!r} button {OWNERS_BUTTON_ID} is gone — this builder must "
                         f'never delete it')
-    else:
-        proc = hap.run('workflow', 'node', 'list', OWNERS_WORKFLOW)
-        steps = [n['name'] for n in proc['flowNodeMap'].values()
-                 if n.get('typeId') not in (None, 0, 100) and n.get('prveId')]
-        print(f"  the owner's {OWNERS_BUTTON!r} {b['btnId']} / workflow {OWNERS_WORKFLOW}: {len(steps)} step(s) "
-              f'{steps} — left exactly as it is')
     c = next((x for x in hap.controls(ws()) if x['controlId'] == OWNERS_CONTROL_ID), None)
     if c is None or c['controlName'] != OWNERS_CONTROL or c['type'] != SEARCH_BTN:
         problems.append(f"the owner's {OWNERS_CONTROL!r} {OWNERS_CONTROL_ID} (t{SEARCH_BTN}) is gone — this "
@@ -5131,6 +5920,8 @@ def step_check():
               + ('' if all(f[n].get('row') != 9999 for n in DISCOUNT_FIELDS)
                  else ' — still parked at row 9999, for the owner to place'))
     problems += button_problems()
+    # §16: the owner's Send Quotation, rewired
+    problems += send_problems(f)
     # §15: Terms and conditions, the three templates on disk, and the System Print template on Orders
     found = terms_problems(f)
     problems += found
@@ -5173,7 +5964,8 @@ def step_check():
           f'{READ_ONLY_PERMISSION}, the {len(PART1)} controls of §6b at '
           f'{[PART1_PERMISSION[n] for n in PART1]}, '
           f'{len(VIEW_ROWS)} views returning exactly the orders their filters name, the {len(BUTTONS) + 2} buttons of '
-          f"§13 and §14 with their workflows (the owner's {OWNERS_BUTTON!r} and {OWNERS_CONTROL!r} untouched), "
+          f"§13 and §14 with their workflows ({OWNERS_CONTROL!r} untouched), the owner's {OWNERS_BUTTON!r} rewired "
+          f'(§16, published, never pressed), '
           f'the {DISCOUNT_PRODUCT} product and variant, the {len(DISCOUNT_FIELDS)} discount fields, {TERMS}, the '
           f'{len(TEMPLATE_FILES)} templates and System Print {PRINT_NAME!r}')
 
@@ -5208,7 +6000,7 @@ STEPS = {'rules': step_rules, 'retire': step_retire, 'expiry': step_expiry, 'tot
          'discountproduct': step_discountproduct, 'discountline': step_discountline,
          'discountfields': step_discountfields, 'selfdiscount': step_selfdiscount,
          'terms': step_terms, 'templates': step_templates, 'print': step_print, 'selfprint': step_selfprint,
-         'check': step_check, 'show': step_show}
+         'send': step_send, 'sendreach': step_sendreach, 'check': step_check, 'show': step_show}
 
 if __name__ == '__main__':
     if len(sys.argv) < 2 or sys.argv[1] not in STEPS:

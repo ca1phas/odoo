@@ -1200,3 +1200,33 @@ line's Subtotal; not found → create it. A second sub-process then prices each 
 - A Word placeholder is `#{<control id>}`, `#{<relation>.<control>}` into a related record or a subtable's lines,
   optionally with a trailing `[S]`. A rich-text value prints as formatted text: `<p>…<strong>…</strong></p><p>…</p>`
   came out as two paragraphs with no tag showing (Orders' Terms and conditions, 22 Sep 2026).
+
+### Print files and email in a workflow (22 Sep 2026, Orders' Send)
+
+- **获取记录打印文件 is flowNodeType 18**, added with `flowNode/add {typeId: 18, appType: 14, prveId}` (pd-openweb
+  `EditFlow/components/CreateNodeDialog.jsx`) and saved with `saveNode {selectNodeId, appId: <print template id>,
+  fileName, pdf}` (`Detail/File/index.jsx`). Only **custom Word or Excel** templates can be chosen, and the list of them
+  (`appList`) is empty until a record is picked: read it with `flowNode/getNodeDetail {processId, nodeId,
+  flowNodeType: 18, selectNodeId}` (GET). `fileName` takes `$node-field$` templates. `wpsConfig` true means the
+  platform can also make a PDF — **charged to the organisation's credits** on nocoly.com. The step outputs two
+  attachment fields, **`word`** and **`pdf`**.
+- **An email step attaches a file step's output** as its `attachments` field `{nodeId: <file step>, fieldValueId:
+  "pdf" | "word", fieldValue: ""}`. What the picker offers is `flowNode/getFlowNodeAppDtos {processId, nodeId: <the
+  email step>, type: 14, enumDefault: 0}` (GET) — only steps upstream on the same path appear. An email step is
+  `typeId 11, actionId "202", appType 3`; its `fields` are `subject`, `content`, `sender_name`, `reply_email`,
+  `attachments`, text fields taking `$node-field$`; the recipient is an `accounts` entry `{type: 6, entityId: <a step
+  holding the record>, roleId: <its Email control>, controlType: 5}`. Pressing a button that runs one **sends real
+  email** — build and read back; never trigger it to test.
+- **A new path on an existing gateway** is `flowNode/add {typeId: 2, prveId: <the gateway>}` (the editor's + on a
+  branch); it is appended to the gateway's `flowIds`. A **found / not-found branch** on a search or get-related step
+  has paths with `resultTypeId` 3 and 4 and no conditions, and no path can be added to it.
+- **`flowNode/add` with a `prveId` whose `nextId` is set inserts in between**: the new step's `nextId` is the old
+  one's, including right after a branch path — so a step can go in front of an existing one without a move.
+- **A button can be edited in place** with `Worksheet/SaveWorksheetBtn` carrying its `btnId` and what the button editor
+  sends (pd-openweb `CreateCustomBtn.jsx`: name, filters as read, confirmMsg / sureName / cancelName, workflowId, desc,
+  appId, and isAllView · color · icon · writeControls · relationControl · writeType · writeObject · clickType ·
+  showType · advancedSetting · enableConfirm · verifyPwd · workflowType · isBatch). Turning `isBatch` on this way left
+  every other key, and the button's workflow, as they were (`orders.ensure_send_batch`).
+- **A `get related record` step (6 / actionId 20) from a button's trigger does publish and run** — the owner's *Get
+  Customer* on Orders ran on 21 Sep and published again on 22 Sep with no warning — so the Buttons note above about
+  warningType 103 / 200 is not general.
