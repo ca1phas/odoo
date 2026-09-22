@@ -23,7 +23,9 @@
   "States": "6aace374805aef7032869ec9",
   "Taxes": "6aad1034805aef703286ac2f",
   "Orders": "6ab09897e43d174ab3752d7b",
-  "Order Lines": "6ab0c740e43d174ab37535b2"
+  "Order Lines": "6ab0c740e43d174ab37535b2",
+  "Incoterms": "6ab28ec1e43d174ab3cd760a",
+  "Contact Tags": "6ab29232e54d2a34faaa98bb"
  },
  "workflows": {
   "Archive": "6aa8a565e589b8933dd4cc6d",
@@ -73,7 +75,9 @@
   "Orders: Apply Discount: one tax group": "6ab23692e606b26d26fe5f0c",
   "Orders: Send Quotation": "6ab0aac1789584ded3230fe1",
   "Orders: Share for Signature": "6ab27f10789584ded342675d",
-  "Orders: Signed: confirm the order": "6ab28144e606b26d2601895f"
+  "Orders: Signed: confirm the order": "6ab28144e606b26d2601895f",
+  "Incoterms: Archive": "6ab28f71a2c872a5c13e59cb",
+  "Incoterms: Unarchive": "6ab28f73789584ded3432c2d"
  },
  "buttons": {
   "Archive": "6aa8a5654720c515252bda3d",
@@ -102,7 +106,9 @@
   "Orders: Mark as Sent": "6ab10711e54d2a34fa4e89ab",
   "Orders: Deliver": "6ab218bee43d174ab3754894",
   "Orders: Apply Discount": "6ab235f07d58b0f44939500c",
-  "Orders: Share for Signature": "6ab27f107d58b0f4498fcb8e"
+  "Orders: Share for Signature": "6ab27f107d58b0f4498fcb8e",
+  "Incoterms: Archive": "6ab28f70805aef7032e32838",
+  "Incoterms: Unarchive": "6ab28f73e43d174ab3cd7627"
  },
  "views": {
   "Units & Packagings: Units & Packagings": "6aa8d14d4a73a3142152d3fa",
@@ -132,7 +138,12 @@
   "Taxes: Duplicate names": "6aad11e77d58b0f449314258",
   "Orders: Templates": "6ab0e816e43d174ab3753a42",
   "Orders: Quotations": "6ab0de5dbd43f55762c78833",
-  "Orders: Orders": "6ab0df017d58b0f449316f4e"
+  "Orders: Orders": "6ab0df017d58b0f449316f4e",
+  "Incoterms: All": "6ab28ec1e43d174ab3cd760e",
+  "Incoterms: Archived": "6ab28f2c805aef7032e32833",
+  "Contact Tags: All": "6ab29232e54d2a34faaa98bf",
+  "Contact Tags: By Category": "6ab2929c805aef7032e3286b",
+  "Contact Tags: Archived": "6ab2929dbd43f55762240055"
  },
  "controls": {
   "Journals: Journal Name": "6aa8f6c81204328eb1af1676",
@@ -351,7 +362,19 @@
   "Journals: About Journal Entries": "6aa9e869e54d2a34fa4dfe42",
   "Journals: About Advanced Settings": "6aa9e869e54d2a34fa4dfe43",
   "Orders: Terms and conditions": "6ab2587bbd43f5576223fb06",
-  "Orders: Signing Link": "6ab27eaae54d2a34faaa9765"
+  "Orders: Signing Link": "6ab27eaae54d2a34faaa9765",
+  "Incoterms: Name": "6ab28ec1e43d174ab3cd760b",
+  "Incoterms: Code": "6ab28ed6e43d174ab3cd7614",
+  "Incoterms: Display Name": "6ab28ed6e43d174ab3cd7615",
+  "Incoterms: Active": "6ab28ed6e43d174ab3cd7616",
+  "Incoterms: Code length": "6ab28ed6e43d174ab3cd7617",
+  "Contact Tags: Name": "6ab29232e54d2a34faaa98bc",
+  "Contact Tags: Color": "6ab29240805aef7032e32857",
+  "Contact Tags: Category": "6ab29240805aef7032e32858",
+  "Contact Tags: Active": "6ab29240805aef7032e3285a",
+  "Contact Tags: Complete Name": "6ab29240805aef7032e3285b",
+  "Contact Tags: Child Tags": "6ab29240805aef7032e32859",
+  "Contact Tags: Parent Complete Name": "6ab29241e54d2a34faaa98c5"
  },
  "rules": {
   "Journals: Payment Communications only for Sales": "6aa9dae5e54d2a34fa4dfde2",
@@ -399,7 +422,8 @@
   "Order Lines: A section or a note carries no figures": "6ab0d4e0e43d174ab375378c",
   "Orders: Tax Mode is fixed once the quotation is confirmed": "6ab0d518e54d2a34fa4e8326",
   "Orders: A quotation needs a customer, a template does not": "6ab0e7fe7d58b0f449317067",
-  "Orders: Template Name is for templates": "6ab0e7fe805aef703286dcd5"
+  "Orders: Template Name is for templates": "6ab0e7fe805aef703286dcd5",
+  "Incoterms: Code has at most three characters": "6ab28f04bd43f55762240042"
  },
  "records": {
   "Invoices: customer Sunway Construction Group": "a4935a3f-0262-4d68-9b3b-6049d32e390b",
@@ -960,7 +984,22 @@
   "Orders: TEST Sign & Accept, expires today": "7bafa36e-b886-4251-be5d-70a9be64c376",
   "Orders: TEST Sign & Accept, expired yesterday": "fc695e91-2964-49df-96ec-5d80f9d06045",
   "Orders: TEST Sign & Accept, no expiration": "9af2c0ae-5ee3-4e0f-8ed4-802c9ef08d93",
-  "Orders: TEST Sign & Accept, CLI run": "8aa92a30-1a0c-4ee5-973d-1a141d81d849"
+  "Orders: TEST Sign & Accept, CLI run": "8aa92a30-1a0c-4ee5-973d-1a141d81d849",
+  "Incoterms: EXW": "97bf7e4f-1e0b-4b72-b71a-28e83241f4b8",
+  "Incoterms: FCA": "ec6693f1-190f-4570-a12c-68c3864bce65",
+  "Incoterms: FAS": "45ad138c-c82a-4a4f-b308-19def3847eb6",
+  "Incoterms: FOB": "9a309eda-4d2a-4c5e-b965-7c96b5967ede",
+  "Incoterms: CFR": "28f0ff53-aa97-4880-b2a4-3095af488825",
+  "Incoterms: CIF": "55b945e7-e273-4a60-ab02-7df724492414",
+  "Incoterms: CPT": "da843f69-045d-4ce0-bd33-5d2fb1be7c09",
+  "Incoterms: CIP": "eea04d73-f7d4-4308-a915-19677329a160",
+  "Incoterms: DPU": "41a518b0-a12c-44db-ae09-bd3761ffc926",
+  "Incoterms: DAP": "477a9041-4d9e-4fd0-9242-6c268ebf5cee",
+  "Incoterms: DDP": "745605c7-7ee6-4d1a-b392-0b092051e579",
+  "Incoterms: TEST Incoterm": "9028ae01-b6dc-4cd5-8cd7-329789e53707",
+  "Contact Tags: TEST Parent Tag": "e38e6c41-be3f-4eaf-86f9-19c2b0e05d26",
+  "Contact Tags: TEST Child Tag": "6f49f1b3-2c04-4cca-8519-6c2f6ef6f9c5",
+  "Contact Tags: TEST Grandchild Tag": "a2c8dcfa-c5f5-4384-9cb2-02cbfabc7199"
  },
  "roles": {
   "Administrator": "25ef76ef-5538-4779-a5e6-ab1fbce9dcfe",

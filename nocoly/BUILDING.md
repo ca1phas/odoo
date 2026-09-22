@@ -1276,3 +1276,21 @@ line's Subtotal; not found → create it. A second sub-process then prices each 
 - **A notice to a Member control of the record** is the account `{type: 6, entityId: <the node holding the record>,
   roleId: <the Member control>, controlType: 26}`. A run's detail (`approval history-detail`) carries each notice as
   sent, templates filled, in its work item's `opinion`, with the recipient — a check of the text without the inbox.
+
+### Four from Incoterms and Contact Tags (22 Sep 2026)
+
+- **A function formula (type 53) has no `LEN()`.** A text or a number formula over `LEN(TRIM($code$))` computed
+  **empty** on every record, with no error on save. `MID(text, start, length)` exists and counts **from 1**
+  (`MID("EXW",2,1)` is "X"). Incoterms' hidden *Code length* counts characters with nested `IF(ISBLANK(MID(…,n,1)),
+  n-1, …)` instead. A **number** result is `enumDefault2` **6** (with `dot` 0) and computes; text is 2.
+- **Changing a formula recomputes every existing record** — the eleven Incoterms read the new expression's value
+  seconds after a pinned control save, with no record write.
+- **A validation rule over a formula of the field being written is not enforced on the API**, check type 1 or not:
+  *Code is not empty and Code length > 3* let `record update` store a four-character Code (Code length then read 4).
+  The rule is the form's; seeds and imports check the limit themselves.
+- **Dropdown option colours show only with `enumDefault2` 1** on the control (the owner's Orders Status carries it;
+  every builder-made dropdown carried 0). And a **table view is grouped** by `advancedSetting.groupsetting`
+  `[{"controlId": …, "filterType": 11}]` for a Relation, with `groupshow` "0", `groupsorts` / `groupcustom` /
+  `groupopen` "" and `groupfilters` "[]" — the shape the view editor stored on the Sales app (13 Sep); written with
+  `--edit-attrs advancedSetting --edit-ad-keys …` it reads back as sent (Contact Tags' *By Category*). hap-cli's
+  view-spec `group` key writes `viewControl` instead, which is the kanban's. Both still for the browser.

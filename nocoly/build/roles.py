@@ -22,7 +22,11 @@ Two things:
      shape of `account.account` in the same file — `account.group_account_manager` reads, writes, creates and
      deletes, every other group reads — so Accounting Administrator is full and the other three view
      (13-taxes.md §1 › Roles). No field of it is hidden from a role: the two Odoo puts behind a group are one
-     that is not built (`analytic`) and one that is developer mode (`is_base_affected`).
+     that is not built (`analytic`) and one that is developer mode (`is_base_affected`). On 22 Sep 2026
+     **Incoterms** joined like Payment Terms (Accounting Administrator full, the other three view —
+     account.group_account_manager alone writes account.incoterms) and **Contact Tags** like Countries (view for
+     all four; only the app Administrator edits), both through `plan` then `create` (19-incoterms.md,
+     20-contact-tags.md).
 
 Run from the repo root with the CLI's interpreter:
 
@@ -31,6 +35,8 @@ Run from the repo root with the CLI's interpreter:
                                                            #    one's description, per-worksheet scopes and export
                                                            #    right — which is also how a worksheet built after
                                                            #    the roles (a bundle) joins them
+    ~/.hap-venv/bin/python nocoly/build/roles.py plan      # what `create` would write, role by role — writes
+                                                           #    nothing
     ~/.hap-venv/bin/python nocoly/build/roles.py all       # both, then check
     ~/.hap-venv/bin/python nocoly/build/roles.py check     # read every role back against this spec
     ~/.hap-venv/bin/python nocoly/build/roles.py show      # the live roles, with their per-worksheet scopes
@@ -72,16 +78,20 @@ STOCK = [  # (English name, the Chinese name HAP ships, roleType)
 
 FULL, EDIT, VIEW = 'full', 'view · add · edit', 'view'
 
-ORDER = ['Contacts', 'Countries', 'States', 'Units & Packagings', 'Products', 'Product Variants',
+ORDER = ['Contacts', 'Contact Tags', 'Countries', 'States', 'Units & Packagings', 'Products', 'Product Variants',
          'Product Categories', 'Chart of Accounts', 'Taxes', 'Journals', 'Payment Terms', 'Payment Term Lines',
-         'Invoices', 'Invoice Lines']
+         'Incoterms', 'Invoices', 'Invoice Lines']
 
 # Worksheets no business role may write, whatever its accounting level: Odoo keeps them behind a group none of
 # the four stands for. Countries is the first and, so far, the only one (base.group_system writes res.country;
 # everybody else reads it). **States is deliberately not here**: Odoo writes res.country.state from
 # base.group_partner_manager, a contact manager, so each role has the same cell on States that it has on
 # Contacts (owner, 18 Sep 2026; 12-states.md §1 › Roles).
-VIEW_ONLY = {'Countries'}
+# **Contact Tags** joined on 22 Sep 2026 as the brief asked — "an administrator configuration table, like Countries":
+# Odoo's menu Contacts › Configuration is behind base.group_system. Odoo's *access list* is wider — it writes
+# res.partner.category from base.group_partner_manager, as it does res.country.state — so the States precedent
+# would give each role its Contacts cell instead; recorded in 20-contact-tags.md for the owner to settle.
+VIEW_ONLY = {'Countries', 'Contact Tags'}
 
 ROLES = {
     'Accounting Administrator': (
@@ -95,20 +105,20 @@ ROLES = {
     'Accountant': (
         'Odoo group account.group_account_user — "Show Full Accounting Features". The accountant: can do '
         'everything except advanced configuration.',
-        {'Contacts': EDIT, 'Countries': VIEW, 'States': EDIT, 'Units & Packagings': VIEW, 'Products': VIEW,
-         'Product Variants': VIEW,
+        {'Contacts': EDIT, 'Contact Tags': VIEW, 'Countries': VIEW, 'States': EDIT, 'Units & Packagings': VIEW,
+         'Products': VIEW, 'Product Variants': VIEW,
          'Product Categories': VIEW, 'Chart of Accounts': VIEW, 'Taxes': VIEW, 'Journals': EDIT,
          'Payment Terms': VIEW,
-         'Payment Term Lines': VIEW, 'Invoices': EDIT, 'Invoice Lines': EDIT},
+         'Payment Term Lines': VIEW, 'Incoterms': VIEW, 'Invoices': EDIT, 'Invoice Lines': EDIT},
     ),
     'Invoicing': (
         'Odoo group account.group_account_invoice — "Invoicing". Invoices, payments and basic invoice '
         'reporting; cannot see accounting configuration, so Journals is read-only.',
-        {'Contacts': EDIT, 'Countries': VIEW, 'States': EDIT, 'Units & Packagings': VIEW, 'Products': VIEW,
-         'Product Variants': VIEW,
+        {'Contacts': EDIT, 'Contact Tags': VIEW, 'Countries': VIEW, 'States': EDIT, 'Units & Packagings': VIEW,
+         'Products': VIEW, 'Product Variants': VIEW,
          'Product Categories': VIEW, 'Chart of Accounts': VIEW, 'Taxes': VIEW, 'Journals': VIEW,
          'Payment Terms': VIEW,
-         'Payment Term Lines': VIEW, 'Invoices': EDIT, 'Invoice Lines': EDIT},
+         'Payment Term Lines': VIEW, 'Incoterms': VIEW, 'Invoices': EDIT, 'Invoice Lines': EDIT},
     ),
     'Accounting Read-only': (
         'Odoo group account.group_account_readonly — "Show Accounting Features - Readonly". Can see (and '
@@ -340,7 +350,7 @@ def save_role_model(role_id, model):
                                        {'appId': APP, 'roleId': role_id, 'appRoleModel': model})
 
 
-def reconcile(name, role_id, description, matrix):
+def reconcile(name, role_id, description, matrix, dry=False):
     """Bring an existing business role's description, export right and per-worksheet scopes up to this spec,
     and nothing else.
 
@@ -389,6 +399,8 @@ def reconcile(name, role_id, description, matrix):
                 if bool(field.get(key)) != hide:
                     field[key] = hide
                     changed.append(f'{worksheet}.{field["fieldName"]}.{key}')
+    if dry:                                       # `plan`: what would be written, and nothing written
+        return changed
     if not changed:
         return False
     save_role_model(role_id, model)
@@ -410,6 +422,25 @@ def reconcile(name, role_id, description, matrix):
         sys.exit(f'{name}: read back {json.dumps(wrong, ensure_ascii=False)}')
     print(f'  {name}: wrote {sorted(set(changed))}')
     return True
+
+
+def step_plan():
+    """What `create` would write, role by role, **without writing it**: {role: {worksheet names}} — 'description' for
+    a role's description, and a note for a role that would be created. A builder adding a worksheet runs this first
+    and runs `create` only when every change is on its own worksheet (incoterms.py, contacttags.py)."""
+    guard()
+    live = by_name()
+    plan = {}
+    for name, (description, matrix) in ROLES.items():
+        if name not in live:
+            plan[name] = {'(the role would be created)'}
+        else:
+            changed = reconcile(name, live[name]['roleId'], description, matrix, dry=True)
+            plan[name] = {'description' if c == 'description' else c.split('.')[0] for c in changed}
+            for entry in sorted(changed):
+                print(f'  plan: {name} / {entry}')
+        print(f"  plan: {name}: {sorted(plan[name]) or 'nothing to write'}")
+    return plan
 
 
 def step_create():
@@ -573,6 +604,7 @@ def step_all():
 STEPS = {
     'rename': step_rename,
     'create': step_create,
+    'plan': step_plan,
     'all': step_all,
     'check': step_check,
     'show': step_show,
