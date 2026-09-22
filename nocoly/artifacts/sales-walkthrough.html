@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Selling in ERP Master</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Public+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --paper:#FAFAF7; --card:#FFFFFF; --sunk:#F1F0EA; --ink:#181B1A; --ink2:#4E534F; --ink3:#828881;
+  --rule:#E2E1D9; --rule2:#C8C7BC;
+  --accent:#0B6B62; --accent-bg:#DDEFEB;
+  --warn:#8A5A12; --warn-bg:#F6EBD6;
+  --shadow:0 1px 2px rgba(24,27,26,.05), 0 12px 28px -20px rgba(24,27,26,.38);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#121413; --card:#1B1E1D; --sunk:#232625; --ink:#EFEFEA; --ink2:#B2B7B2; --ink3:#848A85;
+  --rule:#2B2F2D; --rule2:#414744;
+  --accent:#54C6B7; --accent-bg:#0E2F2B;
+  --warn:#C9973B; --warn-bg:#2E2410;
+  --shadow:0 1px 2px rgba(0,0,0,.5), 0 12px 28px -20px rgba(0,0,0,.85);
+}}
+:root[data-theme="dark"]{
+  --paper:#121413; --card:#1B1E1D; --sunk:#232625; --ink:#EFEFEA; --ink2:#B2B7B2; --ink3:#848A85;
+  --rule:#2B2F2D; --rule2:#414744;
+  --accent:#54C6B7; --accent-bg:#0E2F2B;
+  --warn:#C9973B; --warn-bg:#2E2410;
+  --shadow:0 1px 2px rgba(0,0,0,.5), 0 12px 28px -20px rgba(0,0,0,.85);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:"Public Sans",system-ui,sans-serif;
+  font-size:16.5px;line-height:1.62;-webkit-font-smoothing:antialiased}
+.wrap{max-width:860px;margin:0 auto;padding:0 20px 96px}
+h1,h2,h3,.eyebrow,.num,.chip{font-family:Fraunces,Georgia,serif}
+code,.mono{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.85em}
+code{background:var(--sunk);border:1px solid var(--rule);border-radius:3px;padding:.08em .36em;white-space:nowrap}
+a{color:var(--accent)}
+header.mast{padding:64px 0 28px;border-bottom:2px solid var(--ink)}
+.eyebrow{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--accent);margin:0 0 18px}
+h1{font-size:clamp(38px,7vw,64px);line-height:1.02;letter-spacing:-.02em;font-weight:700;margin:0 0 16px;text-wrap:balance}
+.lede{font-size:clamp(16.5px,2vw,19px);color:var(--ink2);margin:0;max-width:60ch}
+.byline{margin-top:22px;font-family:"JetBrains Mono",monospace;font-size:11.5px;color:var(--ink3);
+  display:flex;flex-wrap:wrap;gap:6px 18px}
+nav.toc{margin:28px 0 8px;padding:18px 20px;background:var(--card);border:1px solid var(--rule2);box-shadow:var(--shadow)}
+nav.toc h2{font-size:12px;font-family:"JetBrains Mono",monospace;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--ink3);margin:0 0 12px;font-weight:500}
+nav.toc ol{margin:0;padding-left:20px;columns:2;column-gap:28px}
+nav.toc li{margin:0 0 6px;font-size:15px}
+@media (max-width:620px){nav.toc ol{columns:1}}
+section.step{margin-top:44px}
+.head{display:grid;grid-template-columns:52px 1fr;gap:16px;align-items:start}
+.num{width:52px;height:52px;border-radius:50%;background:var(--ink);color:var(--paper);display:flex;
+  align-items:center;justify-content:center;font-weight:700;font-size:20px}
+h2{font-size:26px;line-height:1.16;letter-spacing:-.012em;margin:8px 0 6px;text-wrap:balance}
+.head p{margin:0;color:var(--ink2);font-size:15.5px}
+.body{margin-left:68px}
+@media (max-width:620px){.body{margin-left:0}.head{grid-template-columns:40px 1fr;gap:12px}
+  .num{width:40px;height:40px;font-size:16px}}
+h3{font-size:17px;margin:26px 0 8px;letter-spacing:-.005em}
+p{margin:0 0 12px}
+ul,ol.steps{margin:0 0 14px;padding-left:22px}
+li{margin:0 0 7px}
+.chip{display:inline-block;background:var(--accent-bg);color:var(--accent);border-radius:3px;
+  padding:1px 8px;font-size:14px;font-weight:500;white-space:nowrap}
+table{width:100%;border-collapse:collapse;margin:14px 0 18px;font-size:15px}
+.scroll{overflow-x:auto}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--ink3);font-weight:500;border-bottom:1px solid var(--rule2)}
+td:first-child{white-space:nowrap}
+.note{background:var(--sunk);border-left:3px solid var(--rule2);padding:12px 16px;margin:16px 0;font-size:15px;color:var(--ink2)}
+.note b{color:var(--ink)}
+.note.warn{background:var(--warn-bg);border-left-color:var(--warn)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .note.warn{background:#2E2410;border-left-color:#C9973B}}
+:root[data-theme="dark"] .note.warn{background:#2E2410;border-left-color:#C9973B}
+footer{margin-top:64px;padding-top:22px;border-top:1px solid var(--rule);font-family:"JetBrains Mono",monospace;
+  font-size:11.5px;color:var(--ink3);line-height:1.9}
+</style>
+
+<div class="wrap">
+<header class="mast">
+  <p class="eyebrow">ERP Master · a walkthrough for the people using it</p>
+  <h1>Selling in ERP&nbsp;Master</h1>
+  <p class="lede">From a blank quotation to a posted invoice: what to press, what the app fills in for you, and the few places it will stop you.</p>
+  <div class="byline"><span>23 September 2026</span><span>Sales · Orders</span></div>
+</header>
+
+<nav class="toc">
+  <h2>What this covers</h2>
+  <ol>
+    <li><a href="#s1">Finding your way</a></li>
+    <li><a href="#s2">Writing a quotation</a></li>
+    <li><a href="#s3">Lines, taxes and totals</a></li>
+    <li><a href="#s4">Discounts</a></li>
+    <li><a href="#s5">Printing it</a></li>
+    <li><a href="#s6">Sending it</a></li>
+    <li><a href="#s7">Letting the customer sign</a></li>
+    <li><a href="#s8">Confirming, cancelling, reopening</a></li>
+    <li><a href="#s9">Delivering</a></li>
+    <li><a href="#s10">Invoicing</a></li>
+    <li><a href="#s11">Templates and repeat orders</a></li>
+    <li><a href="#s12">The lists you work from</a></li>
+    <li><a href="#s13">What it won't do yet</a></li>
+  </ol>
+</nav>
+
+<section class="step" id="s1">
+  <div class="head"><div class="num">1</div><div>
+    <h2>Finding your way</h2>
+    <p>Everything for selling sits under <b>Sales</b> in the left sidebar.</p>
+  </div></div>
+  <div class="body">
+    <ul>
+      <li><b>Orders</b> — quotations and sales orders. This is where you spend your day.</li>
+      <li><b>Order Lines</b> — every line of every order, when you want to search across orders rather than open one.</li>
+    </ul>
+    <p>Customers live under <b>Contacts</b>, what you sell under <b>Products</b>, and invoices under <b>Invoicing</b>. A quotation and a sales order are the same record at different stages, so nothing moves between lists as it progresses — only its status changes.</p>
+  </div>
+</section>
+
+<section class="step" id="s2">
+  <div class="head"><div class="num">2</div><div>
+    <h2>Writing a quotation</h2>
+    <p>Open <b>Orders</b> and press <span class="chip">+ Record</span>.</p>
+  </div></div>
+  <div class="body">
+    <ol class="steps">
+      <li><b>Customer</b> is the only thing you must fill in. Picking one fills the invoice address, the delivery address and the payment terms from that customer's own record.</li>
+      <li><b>Expiration</b> is set a month ahead. It is the date the quotation stops being signable.</li>
+      <li>Add your lines (next section), then <b>Submit</b>.</li>
+    </ol>
+    <p>The number — S00001, S00002 and so on — is given when you save, and never changes afterwards.</p>
+    <div class="note"><b>Two dates, one field.</b> <b>Quotation/Order Date</b> is the day you wrote the quotation, and it is rewritten to the moment you press Confirm. That is deliberate: a confirmed order is dated when it became an order.</div>
+  </div>
+</section>
+
+<section class="step" id="s3">
+  <div class="head"><div class="num">3</div><div>
+    <h2>Lines, taxes and totals</h2>
+    <p>The <b>Order Lines</b> tab holds what you are selling.</p>
+  </div></div>
+  <div class="body">
+    <p>Press <b>Add a row</b>. Each row has a <b>Display Type</b>, which decides what the row is:</p>
+    <div class="scroll"><table>
+      <tr><th>Display type</th><th>What it is</th></tr>
+      <tr><td><b>Product</b></td><td>Something you are charging for. Picking the product fills the description, price, unit and taxes.</td></tr>
+      <tr><td><b>Section</b></td><td>A heading that groups the rows under it. Carries no figures.</td></tr>
+      <tr><td><b>Subsection</b></td><td>A heading inside a section.</td></tr>
+      <tr><td><b>Note</b></td><td>A line of explanation for the customer. Carries no figures.</td></tr>
+    </table></div>
+    <p>Quantity starts at 1 and Discount at 0. <b>Subtotal</b>, <b>Tax Amount</b> and <b>Total</b> work themselves out, and the three figures at the foot of the tab — Untaxed Amount, Tax, Total — add up the lines.</p>
+    <p><b>Tax Mode</b>, above the lines, says whether your prices exclude or include tax. It is fixed once the quotation is confirmed.</p>
+    <div class="note"><b>Changing many lines at once.</b> Tick the rows, press <b>Batch Operation → Edit</b>, and set a field on all of them — a discount on every line, say. The change only lands when you save the order.</div>
+  </div>
+</section>
+
+<section class="step" id="s4">
+  <div class="head"><div class="num">4</div><div>
+    <h2>Discounts</h2>
+    <p>Two ways, depending on whether the discount belongs to a line or to the whole order.</p>
+  </div></div>
+  <div class="body">
+    <h3>A discount on one line</h3>
+    <p>Type a percentage into that line's <b>Discount</b>. The line's subtotal follows immediately.</p>
+    <h3>A discount on the whole order</h3>
+    <ol class="steps">
+      <li>Set <b>Discount Type</b> — <b>Global Discount</b> for a percentage off, <b>Fixed Amount</b> for an amount in RM off the total including tax.</li>
+      <li>Put the number in <b>Discount Value</b>: <code>10</code> for 10%, or <code>500</code> for RM 500.</li>
+      <li>Press <span class="chip">Apply Discount</span>.</li>
+    </ol>
+    <p>A discount line appears at the foot of the order — one per tax rate, so the tax comes off correctly. Change the value and press again, and the lines are rewritten. Set the value to 0 and press, and they go.</p>
+    <div class="note warn"><b>Apply Discount owns those lines.</b> Every discount line on the order is replaced each time you press it, including one you added by hand.</div>
+  </div>
+</section>
+
+<section class="step" id="s5">
+  <div class="head"><div class="num">5</div><div>
+    <h2>Printing it</h2>
+    <p>The printer icon at the top right of a record.</p>
+  </div></div>
+  <div class="body">
+    <p>You are offered the layout that suits the record:</p>
+    <div class="scroll"><table>
+      <tr><th>Layout</th><th>When it appears</th></tr>
+      <tr><td><b>Quotation</b></td><td>While the order is a quotation or has been sent</td></tr>
+      <tr><td><b>Sales Order</b></td><td>Once it is confirmed</td></tr>
+      <tr><td><b>Quotation / Order</b></td><td>Always — the same page with the status in its heading</td></tr>
+    </table></div>
+    <p>Each prints your company heading, the customer and both addresses, the dates, the lines with their taxes, the three totals, the terms and the payment terms. You can print it or download it as a Word file.</p>
+    <div class="note"><b>Terms and conditions</b> sits under the lines. Whatever you type there prints at the foot of the page. It starts empty on every order.</div>
+  </div>
+</section>
+
+<section class="step" id="s6">
+  <div class="head"><div class="num">6</div><div>
+    <h2>Sending it</h2>
+    <p><span class="chip">Send Quotation</span> emails the customer.</p>
+  </div></div>
+  <div class="body">
+    <p>It attaches the printed quotation, and moves the order to <b>Quotation Sent</b>. On a confirmed order it sends an order confirmation instead. If the customer has no email address, nothing is sent and you get a notice instead.</p>
+    <p>Sent it yourself, by your own email or by hand? Press <span class="chip">Mark as Sent</span>, which moves the status without sending anything.</p>
+    <div class="note warn"><b>Sending needs credits on the account.</b> Until they are topped up, Send Quotation stops partway and no email leaves. Print the quotation and send it yourself, then press Mark as Sent.</div>
+  </div>
+</section>
+
+<section class="step" id="s7">
+  <div class="head"><div class="num">7</div><div>
+    <h2>Letting the customer sign</h2>
+    <p>A link they open, sign, and that confirms the order.</p>
+  </div></div>
+  <div class="body">
+    <ol class="steps">
+      <li>On the quotation, tick <b>Online Signature</b> (Other Info → Confirmation) if it is not ticked already.</li>
+      <li>Press <span class="chip">Share for Signature</span>. A link appears in <b>Signing Link</b>, under the signature fields.</li>
+      <li>Copy it to the customer however you like — email, WhatsApp, a message.</li>
+    </ol>
+    <p>The customer opens it without logging in and sees the quotation: customer, dates, lines, totals and terms, all read-only. They draw a signature, type their name and press <b>Accept &amp; Sign</b>.</p>
+    <p>The order then records the signature, the name and the moment, and <b>confirms itself</b> — status Sales Order, dated now. You get a notice in the app.</p>
+    <div class="scroll"><table>
+      <tr><th>Detail</th><th>Behaviour</th></tr>
+      <tr><td>Used twice</td><td>The link works once. Afterwards it only says "Submitted".</td></tr>
+      <tr><td>Expired quotation</td><td>The link stops working on the Expiration date, and the button is not offered.</td></tr>
+      <tr><td>Online Payment ticked</td><td>The order keeps the signature but stays a quotation, waiting for payment.</td></tr>
+      <tr><td>Passed on to someone else</td><td>Anyone holding the link can sign. Send it to the person who should.</td></tr>
+    </table></div>
+  </div>
+</section>
+
+<section class="step" id="s8">
+  <div class="head"><div class="num">8</div><div>
+    <h2>Confirming, cancelling, reopening</h2>
+    <p>The buttons across the top of a record change with its status.</p>
+  </div></div>
+  <div class="body">
+    <div class="scroll"><table>
+      <tr><th>Button</th><th>What it does</th><th>When you can press it</th></tr>
+      <tr><td><span class="chip">Confirm</span></td><td>Turns the quotation into a sales order and dates it now</td><td>A quotation, sent or not, with a product on every line</td></tr>
+      <tr><td><span class="chip">Cancel</span></td><td>Cancels the order</td><td>Anything not locked</td></tr>
+      <tr><td><span class="chip">Set to Quotation</span></td><td>Puts it back to a plain quotation and clears the signature</td><td>A cancelled or already-sent order</td></tr>
+      <tr><td><span class="chip">Mark as Sent</span></td><td>Marks it sent without emailing</td><td>A quotation</td></tr>
+    </table></div>
+    <p>A greyed button means that action does not apply to this record — hover it and the app says why.</p>
+    <div class="note warn"><b>Confirm refuses a line with no product.</b> Every line that is not a section, subsection or note needs one. The message names the problem, but the screen also shows a green "Operation completed" — trust the message, not the green.</div>
+    <h3>Locked</h3>
+    <p>Tick <b>Locked</b> on an order you want left alone. A locked order cannot be cancelled until you untick it. It can still be delivered and invoiced.</p>
+  </div>
+</section>
+
+<section class="step" id="s9">
+  <div class="head"><div class="num">9</div><div>
+    <h2>Delivering</h2>
+    <p><span class="chip">Deliver</span> on a sales order.</p>
+  </div></div>
+  <div class="body">
+    <p>It sets every product line's <b>Quantity Delivered</b> to its Quantity — the shortcut for an order that went out in full. For a part delivery, type the figures into the lines yourself instead.</p>
+  </div>
+</section>
+
+<section class="step" id="s10">
+  <div class="head"><div class="num">10</div><div>
+    <h2>Invoicing</h2>
+    <p><span class="chip">Create Invoice</span> makes the invoice from the order.</p>
+  </div></div>
+  <div class="body">
+    <p>It makes a <b>draft</b> invoice for everything not yet invoiced, carrying the customer, the addresses, the terms and the lines. The order's <b>Invoices</b> list and the invoice's <b>Sales Orders</b> list then point at each other.</p>
+    <ol class="steps">
+      <li>Press <b>Create Invoice</b> — on one order, or over several you have ticked.</li>
+      <li>Open the draft, check it, and press <b>Confirm</b> to post it. That is when it gets its number.</li>
+      <li>Invoice something later — a second delivery, say — by pressing Create Invoice again. Only what is left is invoiced.</li>
+    </ol>
+    <p><b>Invoice Status</b> on the order keeps itself up to date:</p>
+    <div class="scroll"><table>
+      <tr><th>Status</th><th>Meaning</th></tr>
+      <tr><td><b>Nothing to Invoice</b></td><td>Nothing outstanding — often because nothing has been delivered yet</td></tr>
+      <tr><td><b>To Invoice</b></td><td>There is something to bill; the order shows in the To Invoice list</td></tr>
+      <tr><td><b>Fully Invoiced</b></td><td>Everything on the order has been billed</td></tr>
+      <tr><td><b>Upselling Opportunity</b></td><td>More was delivered than ordered — worth a call before you bill</td></tr>
+    </table></div>
+    <div class="note"><b>Done with an order that will never be fully billed?</b> Tick <b>Invoicing Closed</b> and it stops appearing in To Invoice. Untick it to bring it back.</div>
+  </div>
+</section>
+
+<section class="step" id="s11">
+  <div class="head"><div class="num">11</div><div>
+    <h2>Templates and repeat orders</h2>
+    <p>For the quotation you write over and over.</p>
+  </div></div>
+  <div class="body">
+    <ol class="steps">
+      <li>Write it once with its lines, tick <b>Is Template</b> and give it a <b>Template Name</b>. It leaves the quotation lists and appears under <b>Templates</b>.</li>
+      <li>To use it, open it, then choose <b>Recreate</b> from the record menu (<b>···</b>).</li>
+      <li>You get a fresh quotation with the lines already in it. Untick Is Template on the copy, set the customer, and carry on.</li>
+    </ol>
+    <div class="note warn"><b>Recreate, not Copy.</b> Copy duplicates the heading and leaves the lines behind. Recreate brings the lines.</div>
+  </div>
+</section>
+
+<section class="step" id="s12">
+  <div class="head"><div class="num">12</div><div>
+    <h2>The lists you work from</h2>
+    <p>The tabs across the top of Orders.</p>
+  </div></div>
+  <div class="body">
+    <div class="scroll"><table>
+      <tr><th>List</th><th>What it holds</th></tr>
+      <tr><td><b>Quotations</b></td><td>Everything not yet confirmed — your pipeline</td></tr>
+      <tr><td><b>Orders</b></td><td>Confirmed sales orders</td></tr>
+      <tr><td><b>To Invoice</b></td><td>Sales orders with something left to bill</td></tr>
+      <tr><td><b>To Upsell</b></td><td>Sales orders where more went out than was ordered</td></tr>
+      <tr><td><b>Templates</b></td><td>Your saved starting points</td></tr>
+      <tr><td><b>All</b></td><td>Everything, templates included</td></tr>
+    </table></div>
+    <p>Any list can be narrowed further with the filter icon, and sorted by clicking a column. The Orders list also has an <b>Invoice Status</b> filter at the top for a quick slice.</p>
+  </div>
+</section>
+
+<section class="step" id="s13">
+  <div class="head"><div class="num">13</div><div>
+    <h2>What it won't do yet</h2>
+    <p>Worth knowing before someone asks in a demo.</p>
+  </div></div>
+  <div class="body">
+    <ul>
+      <li><b>Emails and PDFs need credits</b> on the account. Printing to Word and everything else works without them.</li>
+      <li><b>Deposits and down payments</b> are not built. Invoice the order in full, or invoice what has been delivered.</li>
+      <li><b>Prices are typed, not priced by rule.</b> There are no price lists yet, so a customer's special pricing is applied by hand.</li>
+      <li><b>Stock is not tracked.</b> Delivered quantities are recorded on the order, not drawn from a warehouse.</li>
+      <li><b>Taxes on an invoice line</b> come from the product, not from the order line, so check them if an order used unusual taxes.</li>
+      <li><b>No product picker grid.</b> Add lines one at a time.</li>
+    </ul>
+  </div>
+</section>
+
+<footer>
+  ERP Master · Sales · written for the people using the app, not for the people building it.<br>
+  Buttons, statuses and lists described here were each pressed and read back on the live app.
+</footer>
+</div>
+</html>
