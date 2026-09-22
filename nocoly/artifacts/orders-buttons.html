@@ -106,16 +106,17 @@ footer{margin-top:44px;padding-top:24px;border-top:1px solid var(--rule);
 </header>
 
 <div class="tally">
-  <div class="g"><b>6</b><span>ALREADY STANDING<br>native or solved</span></div>
-  <div class="g"><b>6</b><span>BUILT &amp; VERIFIED<br>part 2 · 21 Sep</span></div>
-  <div class="y"><b>5</b><span>TO BUILD<br>parts 3–6</span></div>
+  <div class="g"><b>7</b><span>ALREADY STANDING<br>native or solved</span></div>
+  <div class="g"><b>4</b><span>BUILT &amp; VERIFIED<br>part 2 · 21 Sep</span></div>
+  <div class="y"><b>4</b><span>TO BUILD<br>parts 3–6</span></div>
+  <div class="h"><b>2</b><span>SET ASIDE<br>close · reopen invoicing</span></div>
   <div class="h"><b>3</b><span>OUT OF REACH<br>blocked or later phase</span></div>
   <div class="g"><b>4</b><span>CONTROLS BUILT<br>part 1 · 21 Sep</span></div>
 </div>
 
 <div class="callout">
   <p><b>Where the twenty live.</b> Eleven in <code>&lt;header&gt;</code>. Four as <code>&lt;control&gt;</code> elements inside the lines list — they are not <code>&lt;button&gt;</code> tags at all. One wizard below the lines. Eight as <code>ir.actions.server</code> bound to <code>sale.order</code>, reached from the cog menu. And <b>Sign &amp; Accept is on the customer portal</b>, not in the back office.</p>
-  <p><b>The rule for the right-hand column:</b> prefer a Nocoly native feature over a built workflow. Six of the twenty need nothing built at all because the platform already does them.</p>
+  <p><b>The rule for the right-hand column:</b> prefer a Nocoly native feature over a built workflow. Seven of the twenty need nothing built at all because the platform already does them — Discount joined them on 22 Sep.</p>
 </div>
 
 <section class="part">
@@ -147,7 +148,7 @@ footer{margin-top:44px;padding-top:24px;border-top:1px solid var(--rule);
 
 <section class="part">
   <div class="ph"><div class="pn">2</div><div class="pt">
-    <h2>Six status buttons</h2>
+    <h2>Four status buttons, and two set aside</h2>
     <p><b>Done, 21 Sep — every one pressed in the browser and read back.</b> All the same shape — a custom action filtered on the record's state, writing one or two fields. Two of them carry a guard that is a real validation, not decoration.</p>
   </div></div>
   <div class="rows">
@@ -178,26 +179,29 @@ footer{margin-top:44px;padding-top:24px;border-top:1px solid var(--rule);
       <h3>Close Invoicing</h3>
       <p class="odoo">server action 506 · action_close_invoicing · form, list</p>
       <p class="does">Ticks <b>Invoicing Closed</b>. Says “stop asking me to invoice this”, without cancelling the order.</p>
-    </div><div class="cell-s"><span class="chip c-go">verified</span><span class="sub">needs part 1</span></div></div>
+    
+      <p class="does"><b>Set aside, 22 Sep.</b> Built and verified, then removed: like Locked, it only flipped one independent flag. Invoicing Closed is now an editable switch, shown only on a Sales Order by a rule.</p></div><div class="cell-s"><span class="chip c-halt">set aside</span><span class="sub">deleted 22 Sep</span></div></div>
     <div class="row"><div class="no">12</div><div>
       <h3>Reopen Invoicing</h3>
       <p class="odoo">action_reopen_order · hidden unless closed and Status is Sales Order</p>
       <p class="does">Clears it again. The exact inverse, and the reason the control has to be a stored field rather than a rule.</p>
-    </div><div class="cell-s"><span class="chip c-go">verified</span><span class="sub">needs part 1</span></div></div>
+    
+      <p class="does"><b>Set aside, 22 Sep</b> — the inverse of Close Invoicing, gone with it.</p></div><div class="cell-s"><span class="chip c-halt">set aside</span><span class="sub">deleted 22 Sep</span></div></div>
   </div>
 </section>
 
 <section class="part">
   <div class="ph"><div class="pn">3</div><div class="pt">
-    <h2>Two that walk the lines</h2>
-    <p><b>Next.</b> Both iterate the Order Lines subtable and write every row. Same machinery, different sum — worth building together.</p>
+    <h2>Deliver — the one that walks the lines</h2>
+    <p><b>Next.</b> Discount turned out not to need building. Deliver does: it copies each line's own Quantity, a different value per row, which a batch edit cannot express.</p>
   </div></div>
   <div class="rows">
     <div class="row"><div class="no">09</div><div>
       <h3>Discount</h3>
       <p class="odoo">action_open_discount_wizard · below the lines · hidden when Locked or Cancelled</p>
       <p class="does">Odoo opens a wizard and applies a percentage across every line. Here: a button that writes Discount on each row.</p>
-    </div><div class="cell-s"><span class="chip c-you">build</span><span class="sub">workflow over lines</span></div></div>
+    
+      <p class="does"><b>Not built — tested 22 Sep.</b> The Order Lines subtable's own <b>Batch Operation → Edit → Discount</b> sets the same percentage on every selected line; saving the order recomputes every line and the three totals. That covers Odoo's default mode, <em>On All Order Lines</em>. <em>Global Discount</em> and <em>Fixed Amount</em> add a discount line and need a discount product — deferred until asked for.</p></div><div class="cell-s"><span class="chip c-go">native</span><span class="sub">Batch Operation</span></div></div>
     <div class="row"><div class="no">11</div><div>
       <h3>Deliver</h3>
       <p class="odoo">server action 504 · deliver_sold_quantity · form, list</p>
