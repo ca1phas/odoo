@@ -951,3 +951,192 @@ Ranked by how much of the bundle falls over if it is wrong.
 **The three things to prove before writing a line of the build**, each on one TEST record, each reversible:
 the 多↔多 pair, the filtered 汇총 over a type-53 result, and the create-node binding. They decide the shape of
 §4, §6 and §5 respectively, and all three are cheap to test.
+
+---
+
+## 14 · Build results — 23 Sep 2026
+
+Built by `nocoly/build/o2i.py`, steps 1–10 of §10. Every step reads live state first, re-running saves
+nothing (proved: a second run of all ten prints only *nothing saved / already built*), every control save is
+version-pinned and proved by signature diff, and `o2i.py check` is the read-only verification.
+
+### 14.1 The three unproven things of §13
+
+| Unknown | Outcome |
+|---|---|
+| A **多 ↔ 多** two-way Relation pair | **It holds, first try.** Order Lines' *Invoice Lines* (`enumDefault` 2) pairs with Invoice Lines' *Sales Order Lines* through the documented handshake (the reserved `sourceControlId`, `sourceControlType` 6, `enumDefault` 2) — the reverse half of that handshake is always multiple, so the only new thing was the forward side. Writing either half makes the other read it back, and **the reverse half is writable**, which is what lets Create Invoice write the link inside the create as Odoo does. §4.1's one-to-many fallback was not needed |
+| A **filtered 汇총 over a type-53 function formula's numeric result** | **It works**, once the formula has actually computed (below). All five counts on Orders read correctly, `dataType` **6** — a function formula is read by the filter editors as its *result* type |
+| Whether a **`create_record` node's own record can be bound by a later node** | **It can.** The sub-process node's own `flowNodeList` lists *Make the invoice* (type 6) among the nodes it may reference, and a parameter bound to `$<create node>-rowid$` stores and reads back. **Node 5 was kept anyway**: it re-reads the invoice from the worksheet, so the loop cannot attach lines to a header that failed to store, and its `executeType` 0 stops the run if it is not there. Switching is a one-line change in `create_nodes` |
+
+### 14.2 Three platform findings this build paid for
+
+1. **A lookup is only *stored* when `strDefault` is `"00"`.** hap-cli's SHEET_FIELD default is `"10"`, a *display*
+   lookup: the value renders in the form and `record get` answers with it, but nothing is written into the
+   record's own column, so **a 汇총's filter over it matches nothing and computes 0.00 with no error anywhere.**
+   Measured: *Document Type* as `"10"`, *is Customer Invoice* on an invoice line that plainly was one summed
+   0.00; *is not Customer Invoice* on the same line summed 3.00. Invoice Lines' own three lookups carry `"00"`
+   (`invlines.py:546` already names it) and filter correctly.
+2. **A function formula (type 53) added with `add-fields` computes nothing until a full save changes it.** Both
+   §6.1 formulas were appended carrying their final expression, read back exactly as sent, and stored empty on
+   all 41 lines; the first pinned save that *changed* the expression filled every one within seconds. A **汇총**
+   appended the same way computes at once (*Product lines* did). `o2i.py` therefore appends a function formula
+   carrying the placeholder `0` and always writes the real expression in the pinned save, and `nudge_formula`
+   proves it computed before the step returns.
+3. **A workflow search step's filter cannot express an OR.** `batch-add --nodes` refuses an OR-of-AND outright
+   (`flowNode/batchAdd` answers `筛选条件配置不正确`, because it sends the filter as `operateCondition`, a single
+   AND list). `node save --type 13` *accepts* two groups and then does not mean it: the `filters` wrapper's
+   **`spliceType` joins every condition it holds**, so 2 OR-ed the conditions themselves. Sent that way,
+   Create Invoice's get-multiple returned **every order line in the app** instead of this order's (see §14.5).
+   The working examples on this app all carry `spliceType` **1**. Consequence for anything else reading a
+   search step back: a two-condition filter saved with `spliceType` 2 is an OR — *Find the invoice just made*
+   was briefly "this order's Source Document **or** any draft".
+
+### 14.3 What was built
+
+| Worksheet | Control | Id | Type |
+|---|---|---|---|
+| Invoice Lines | Document Type (`move_type`, hidden) | `6ab2cb9ae54d2a34faaa9b98` | 30 |
+| Order Lines | Order Status (`state`, hidden) | `6ab2cb9d805aef7032e32a68` | 30 |
+| Order Lines | Invoice Lines (`invoice_lines`, hidden, **multiple**) | `6ab2cbdfbd43f55762240234` | 29 |
+| Invoice Lines | Sales Order Lines (`sale_line_ids`, hidden, multiple) | `6ab2cbdfbd43f55762240235` | 29 |
+| Orders | Invoices (`invoice_ids`, read-only, multiple) | `6ab2cbf2e43d174ab3cd77aa` | 29 |
+| Invoices | Sales Orders (no alias, read-only, multiple) | `6ab2cbf2e43d174ab3cd77ab` | 29 |
+| Orders | Invoice Count (`invoice_count`) | `6ab2cc19e54d2a34faaa9b9f` | 37 |
+| Invoices | Sales Order Count (`sale_order_count`) | `6ab2cc4a805aef7032e32a7c` | 37 |
+| Order Lines | Qty on invoices (hidden) | `6ab2ce11e54d2a34faaa9ba7` | 37 |
+| Order Lines | Qty on credit notes (hidden) | `6ab2ce11e54d2a34faaa9ba8` | 37 |
+| Order Lines | **Quantity Invoiced** (`qty_invoiced`) — **converted in place, 6 → 31** | `6ab0c864e43d174ab37535fc` | 31 |
+| Order Lines | Quantity To Invoice (`qty_to_invoice`) | `6ab2d06fe43d174ab3cd77d2` | 53 |
+| Order Lines | Line Invoice Status (`invoice_status`, hidden) | `6ab2d0727d58b0f4498fcf93` | 53 |
+| Order Lines | **Invoiceable line** (hidden, no alias) — *not in §6, see §14.4* | `6ab2dbc2805aef7032e32ae3` | 53 |
+| Orders | Lines to invoice / not to invoice / invoiced / upselling / Product lines (all hidden) | `…9bbb` `…9bbc` `…9bbd` `…9bbe` `…9bbf` | 37 |
+
+Orders' **Invoice Status** already carried the alias `invoice_status` (the brief's *what changed*), so step 5
+wrote none. **Quantity To Invoice was added to the Orders subtable grid**, right after Quantity Invoiced, in the
+same pinned save that extended `advancedSetting.controlssorts`.
+
+| Workflow / button / view | Id |
+|---|---|
+| Orders: Invoice Status follows the order's own Status (Orders, 新增或更新, narrowed to Status) | `6ab2d2c0a2c872a5c14057fc` |
+| Orders: Invoice Status follows its lines (Order Lines, 新增或更新, narrowed to Orders · Display Type · Quantity · Quantity Delivered · Invoice Lines) | `6ab2d2df94093ab76bdda713` |
+| Orders: Invoice Status when a line is deleted (Order Lines, 删除) | `6ab2d2fe94093ab76bddae2f` |
+| Orders: Create Invoice (button, batch on) | button `6ab2d6a07d58b0f4498fcfa3`, workflow `6ab2d6a0a2c872a5c1408ae6` |
+| Orders: Create Invoice: one order line (the child flow) | `6ab2d7f5789584ded345986f` |
+| Orders view **To Invoice** / **To Upsell** (after Orders, so the default view is unchanged) | `6ab2d48dbd43f5576224026a` / `6ab2d48ee54d2a34faaa9bd1` |
+
+**Invoicing Closed is not a trigger field** of the status workflows, against §6.4's wording: Odoo's
+`invoicing_closed` is not in `_compute_invoice_status` at all, so it cannot change the answer, and an extra
+trigger field only costs runs. It is in the button's condition, where §6.4 puts it.
+
+### 14.4 Two divergences this build added to §12
+
+| # | Odoo 19.0 | Here | Why |
+|---|---|---|---|
+| 21 | `_get_invoiceable_lines` decides per line, in Python | an extra hidden type-53 formula **Invoiceable line** on Order Lines decides it, and the loop's filter is a flat AND on it | a workflow search step's filter cannot express an OR (§14.2 item 3). It also makes §12.4's section behaviour one editable expression |
+| 22 | the invoice line's taxes are the **order line's** | still the **product's** | §14.6: gating the account automation needs more than a filter, so it was not touched |
+
+`Accounting Date` and `Auto-post` are written on the new invoice although `_prepare_invoice` does not carry
+them: both are `account.move`'s own **field defaults** (`date = fields.Date.context_today`,
+`auto_post` default `'no'`), which Odoo's create applies anyway, and both are **required** here — an invoice
+without them is one a person could not save from the form.
+
+### 14.5 The wrong run, and what is left of it
+
+The first press of Create Invoice ran with the OR-shaped filter of §14.2 item 3 and made **one invoice with 41
+lines — one per order line in the whole app**, each linked back to its order line. Repaired the same minute:
+the invoice was **cancelled** (which takes it out of both quantity 汇총) and **renamed**
+*TEST o2i - WRONG RUN 23 Sep, cancelled and unlinked, safe to delete*, and all 41 lines had their *Sales Order
+Lines* emptied. Verified afterwards: **every order line in the app reads Quantity Invoiced 0.00 and no invoice
+link** except the TEST chair line, which legitimately keeps the fixture's one; every order's Invoice Status
+agrees with its own five counts. **Nothing was deleted.**
+
+What is left for the owner to decide:
+
+* invoice `8749c45a-d4a9-4616-900c-6121c99c36fe` and its **41 orphan invoice lines** — cancelled, unlinked,
+  named; 06 has no Archive, so only a deletion clears them;
+* the app's own orders' **Invoice Status is now computed**, not seeded. Every value agrees with its counts, but
+  the tenant's seeded values have been overwritten where they differed.
+
+### 14.6 Step 7, and what was deliberately not done
+
+*Invoices: Payment Terms follow the Customer / Vendor* (`6aab8f1016473257ad5c91e0`) **was gated**, with no node
+added, removed or re-pointed and no field write touched:
+
+* the two paths *Customer document — the contact's Customer Payment Terms* and *Vendor document — …* each gained
+  one condition, **Payment Terms is empty** (conditionId 8) on the trigger record;
+* the else path *Otherwise — the Payment Terms are left as they are* gained two OR-groups — customer types with
+  Payment Terms **not** empty, and vendor types likewise — because a run that matches no path of an exclusive
+  gateway stops there (`causeMsg` 未通过分支) and would have taken the Due Date chain down with it.
+
+Proved at runtime on two TEST invoices for the same customer (whose default is *30 Days*): one created carrying
+*Immediate Payment* kept it and got Due Date 2026-09-23; one created with no term got *30 Days* and Due Date
+2026-10-23. **Side effect to record**: a later change of Customer / Vendor no longer re-derives a term the
+invoice already has. Odoo's compute is `partner.property_payment_term_id or move.invoice_payment_term_id`
+(`account/models/account_move.py:1081-1089`) with `precompute=True`, so it does overwrite on a partner change —
+that half is lost.
+
+*Invoice Lines: fill the account of a new line* (`6aab44254f2a99acac0f026f`) **was not touched.** §3.4 says one
+step carries the Taxes entry; read live, **four** do — every step that takes an account from a product or a
+category also writes that product's Sales or Purchase Taxes:
+
+| Step | Id |
+|---|---|
+| Take the product's Income Account | `6aab44334f2a99acac0f0456` |
+| Take the category's Income Account | `6aab44334f2a99acac0f047b` |
+| Take the product's Expense Account | `6aab44344f2a99acac0f04ef` |
+| Take the category's Expense Account | `6aab44358e75db182e835375` |
+
+Gating those on *Taxes is empty* is not a filter: each of the four paths would have to split into "the line
+already carries taxes" and "it does not" — four gateways, eight paths and four duplicate update steps inside a
+built, reviewed workflow. Two smaller options for the owner to choose between:
+
+* **a) additive**: append three nodes after the existing gateway — get the line's Sales Order Lines, a branch on
+  whether it came from an order, and one update that re-writes the Taxes from the order line. Faithful to
+  `sale_order_line.py:1543`, and it touches no existing node;
+* **b) split**: remove the four Taxes entries and give Invoice Lines a second small workflow, *fill the taxes of
+  a new line*, whose **trigger condition** is Taxes is empty — a filter, but it does edit the four steps.
+
+Until then the invoice line's taxes are the product's, which is §12 divergence 6's pre-fix state.
+
+### 14.7 What the CLI proved, and what still needs a browser
+
+`o2i.py selfcheck` is green, and these were driven end to end:
+
+* the **多↔多** pair both ways, and both reverse halves written by hand;
+* Quantity Invoiced following a **draft** invoice (3.00), falling to 0.00 when it is **cancelled**, returning
+  when it is **posted** — Odoo's rule exactly (`sale_order_line.py:1007-1017`);
+* Quantity To Invoice 7.00 on a confirmed order's product line, 0.00 on a section and on an unconfirmed order;
+* Line Invoice Status **1** with something to invoice even when Quantity Delivered exceeds Quantity, which is
+  Odoo's own test order (`qty_to_invoice != 0` is tested **before** upselling);
+* the five counts on 19 orders, every one agreeing with the statuses;
+* Status → Quotation → *Nothing to Invoice*, → Sales Order → *Fully Invoiced*; a line-driven quantity change →
+  *To Invoice* and back;
+* **Create Invoice pressed**: one draft invoice, four lines in Sequence order (section · chair 7 · desk 4 ·
+  note), the order's taxes, an account on each product line, amounts 1,700.00 / 170.00 / 1,870.00, Accounting
+  Date today, Auto-post No, the order's Payment Terms surviving the gate, the Salesperson copied, Sales Orders
+  1, Source Document S00024, and `sale_line_ids` on every line — the link written **inside** the create;
+* **pressed a second time**: no invoice, and the run's own detail shows it passing *Trigger · Get the order ·
+  How many lines · Is there anything to invoice? · Nothing to invoice* and ending `status` 2 — a notice, not an
+  abort;
+* the chair's Quantity raised by 2 → *To Invoice* → pressed → a second invoice with **that one line at
+  quantity 2** (plus the section and the note, §12.4);
+* `repair` on a deliberately emptied Invoices list: rebuilt from the lines, and the second run reported nothing.
+
+Still needs the browser, because a CLI cannot see it:
+
+* the **notice** as the user meets it — *【Nothing to invoice】* in the notification list, and the button
+  reporting "Operation completed" all the same;
+* the two new views and the Invoice Status quick filter as lists;
+* Quantity To Invoice as a **column** of the order-line grid, and that none of the hidden controls appears in
+  either grid;
+* the **placement** of the 18 controls still at row 9999 — that is the owner's, and `o2i.py check` prints each
+  one's intended place;
+* deleting a line from a TEST order, which would exercise *Invoice Status when a line is deleted* — its body is
+  identical to the create-or-update one, which is proved, but the brief forbade deleting any record, so the
+  delete trigger itself has never fired.
+
+### 14.8 Not built
+
+§6.1 items 7 and 8 (*Untaxed Invoiced*, *Untaxed To Invoice*) and §6.2 items 15 and 16 (*Already invoiced*,
+*Un-invoiced Balance*) are the untaxed amount figures. §10's ten steps do not place them in any step, and they
+are not in this bundle. Down payments (§7) are not built, as §7.3 recommends.
