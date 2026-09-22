@@ -1140,3 +1140,77 @@ Still needs the browser, because a CLI cannot see it:
 §6.1 items 7 and 8 (*Untaxed Invoiced*, *Untaxed To Invoice*) and §6.2 items 15 and 16 (*Already invoiced*,
 *Un-invoiced Balance*) are the untaxed amount figures. §10's ten steps do not place them in any step, and they
 are not in this bundle. Down payments (§7) are not built, as §7.3 recommends.
+
+### 14.9 The Journal — a defect found in the browser, and fixed
+
+Reported after the first hand-off: the invoice Create Invoice makes **had no Journal**, and Journal is required on
+Invoices, so the document could not be confirmed. The header write did copy the order's Journal — the TEST order
+the build was proved on had one — but **the fallback was missing**, and the order pressed in the browser had
+none.
+
+Odoo, read again: `_prepare_invoice` sets `journal_id` **only when the order has one**
+(`sale/models/sale_order.py:1449-1450`). Everything else gets it from `account.move._compute_journal_id` →
+`_search_default_journal` (`account/models/account_move.py:898-938`), which searches `account.journal` for a
+valid type — `sale` for an `out_invoice` — and takes the **first** in the model's own order,
+`_order = 'sequence, type, code'` (`account/models/account_journal.py:45`). Archived journals are excluded, as
+they are from any Odoo search.
+
+Built as three nodes inserted **between** *Find the invoice just made* and *The lines to invoice* — that order
+matters, because 07's account automation reads the invoice's journal for its last fallback (*Take the journal's
+Default Account*), so the journal has to be there before the lines are:
+
+| Step | What it is |
+|---|---|
+| *The sales journal to fall back on* | `get_single` on Journals, **Type is Sales** and **Active ticked**, sorted **Sequence** then **Sequence Prefix** ascending, `executeType` 2 (carry on when there is none). Shaped exactly like 06's own *Get the journal* — a `get_single` whose filter goes in as `filters` with `node save --type 7` |
+| *Does the order name a journal?* | a branch: the **No** path is conditioned on the order's Journal being empty, the **Yes** path carries nothing, and the gateway converges on *The lines to invoice* |
+| *Take the company's sales journal* | updates the invoice just made, writing Journal from that search |
+
+Odoo raises a `UserError` when no journal exists; here the search carries on and the Journal is left empty,
+because a button workflow cannot put an error in front of a user (§12.17).
+
+**Proved.** `fixture` now builds a second TEST order, *TEST o2i order without a journal* (S00025,
+`031e983f-97a9-4548-b9f2-02dc72853789`), whose own Journal is never filled — `ensure_record` fills only cells
+that are empty, so re-running the fixture leaves it alone. Pressing Create Invoice on it made invoice
+`3f1d167c-3b77-4aac-9e4d-73fd56111ee8`, **Journal Sales** (and its Journal Type lookup reading *Sales*),
+Accounting Date today, Auto-post No, the order's Payment Terms, Source Document S00025, amounts 300.00 / 330.00.
+`o2i.py check` now asserts the chain, its position, the search's worksheet, sorts, filter and not-found
+behaviour, the path condition, the field write, and that every invoice these presses made carries a Journal.
+
+### 14.10 A separate defect this uncovered — 06's numbering issues no Number
+
+With the Journal in place the invoice **can** be confirmed: Confirm posts it, fills the Invoice Date and writes
+the Due Date. But **the Number comes back empty**, and the Payment Reference with it. Reproduced on two fresh
+TEST invoices; both were reset to Draft afterwards. This is bundle 06, not this one, and it was **not touched**.
+
+Every node of `Invoices: Confirm`'s numbering chain runs with status 2, and `approval history-detail` gives the
+intermediate results:
+
+    Get the journal                     -> 73347dda-…  (Sales)
+    The number's prefix and year        -> 'INV/2026/'
+    How many documents already carry it -> '11'
+    The highest number already used     -> fd955285-…  (Number 'INV/2026/00011', a Draft)
+    The next number                     -> ''                <-- empty
+    Post the document                   -> Status Posted, Number ''
+
+So `number_formula` computes empty whenever the **highest** branch is taken. Every number the app holds
+(TEST-SEQ-1..7, TEST PT Confirm, TEST PT once Confirm) was issued through the **count** branch, before
+`invoices.py` added the *highest number already used* search. Now that a document carries `INV/2026/00011` the
+highest branch is always taken, so **no new document can be numbered**. The prime suspect is
+`SUM(RIGHT($highest-Number$, 5), 1)` on a text operand: BUILDING.md's note that `SUM()` forces a numeric context
+was established for `"00005" + 1`, not for a `RIGHT()` slice inside `SUM`. Raised as its own task.
+
+### 14.11 Placement, as the owner left it
+
+Read live after the owner's pass, 23 Sep 2026 — no step of this script writes a row, a column or a
+`showControls`, so none of it is at risk from a re-run:
+
+| Worksheet | Control | Row |
+|---|---|---|
+| Orders | Invoices · Invoice Count | 9 (Other Info › Invoicing), `showControls` Status · Number · Invoice Date · Total |
+| Invoices | Sales Orders · Sales Order Count | 18 (Other Info › Invoice), `showControls` Number · Status · Quotation/Order Date · Total |
+| Orders | Lines to invoice · Lines not to invoice · Lines invoiced · Lines upselling · Product lines | 10–12, hidden (`011`), so they never render |
+| Order Lines | Order Status · Invoice Lines · Qty on invoices · Qty on credit notes · Quantity To Invoice · Line Invoice Status · Invoiceable line | 9999 |
+| Invoice Lines | Document Type · Sales Order Lines | 9999 |
+
+Quantity To Invoice is the only one of the 9999 set a person sees: it is a **column of the Orders subtable**,
+which this script does own and did write, and a subtable column does not need the control placed on the form.

@@ -1044,7 +1044,10 @@
   "o2i: TEST o2i gate no term": "07a61793-982e-4d47-bddf-35a1c34ba175",
   "o2i: TEST o2i WRONG RUN invoice": "8749c45a-d4a9-4616-900c-6121c99c36fe",
   "o2i: TEST o2i invoice from Create Invoice": "89ca8dbb-6f96-45dd-a8ef-2818575abbf8",
-  "o2i: TEST o2i second invoice from Create Invoice": "d4b36b84-2607-4842-b4d5-b3bf15d78e0e"
+  "o2i: TEST o2i second invoice from Create Invoice": "d4b36b84-2607-4842-b4d5-b3bf15d78e0e",
+  "o2i: TEST o2i order without a journal": "031e983f-97a9-4548-b9f2-02dc72853789",
+  "o2i: TEST o2i no-journal line": "dd4c2abb-4ba4-4f25-b152-91753aeaaa6b",
+  "o2i: TEST o2i invoice from an order with no journal": "3f1d167c-3b77-4aac-9e4d-73fd56111ee8"
  },
  "roles": {
   "Administrator": "25ef76ef-5538-4779-a5e6-ab1fbce9dcfe",

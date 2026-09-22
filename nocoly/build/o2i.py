@@ -101,10 +101,13 @@ PLACE = {
     ORDER_STATE: (9999, 0, 6, 'hidden — not a column of the order line grid'),
     OL_INVOICE_LINES: (9999, 0, 12, 'hidden — a link, not a figure a person reads in the grid'),
     IL_ORDER_LINES: (9999, 0, 12, 'hidden — not a column of the invoice line grid'),
-    O_INVOICES: (9999, 0, 6, 'Other Info › Invoicing, after Journal (divider 6ab0c459805aef703286d784)'),
-    O_INVOICE_COUNT: (9999, 0, 6, 'Other Info › Invoicing, beside Invoices'),
-    I_ORDERS: (9999, 0, 6, 'Other Info › Invoice'),
-    I_ORDER_COUNT: (9999, 0, 6, 'Other Info › Invoice, beside Sales Orders'),
+    # The owner placed these four on 23 Sep 2026 and set their `showControls` so the lists show real columns.
+    # No step of this script writes a row, a column or a `showControls` on any of them: `count_spec` compares
+    # only the keys it owns, and the relations themselves are compared not at all once they exist.
+    O_INVOICES: (9999, 0, 6, 'placed by the owner — Other Info › Invoicing'),
+    O_INVOICE_COUNT: (9999, 0, 6, 'placed by the owner — beside Invoices'),
+    I_ORDERS: (9999, 0, 6, 'placed by the owner — Other Info › Invoice'),
+    I_ORDER_COUNT: (9999, 0, 6, 'placed by the owner — beside Sales Orders'),
     QTY_INVOICES: (9999, 0, 6, 'hidden — a working figure'),
     QTY_REFUNDS: (9999, 0, 6, 'hidden — a working figure'),
     QTY_TO_INVOICE: (9999, 0, 6, 'the subtable grid, right after Quantity Invoiced'),
@@ -456,6 +459,10 @@ TEST_DESK = 'TEST o2i desk'
 TEST_NOTE = 'TEST o2i note'
 TEST_PROBE_LINE = 'TEST o2i probe line'
 TEST_ORDER_LINES = (TEST_SECTION, TEST_CHAIR, TEST_DESK, TEST_NOTE)
+# A second order that names **no Journal**, for the fallback of §14.9. Its own Journal is never filled, so
+# `fixture` must not top it up — `order_want(journal=False)` leaves the key out altogether.
+TEST_ORDER_NO_JOURNAL = 'TEST o2i order without a journal'
+TEST_NJ_LINE = 'TEST o2i no-journal line'
 RKEY = 'o2i: '                                    # ids.json `records` prefix for this bundle
 
 
@@ -538,9 +545,9 @@ CUSTOMER = 'Invoices: customer Sunway Construction Group'
 TERM_45 = 'Payment Terms: 45 Days'
 
 
-def order_want(f, today):
+def order_want(f, today, reference=TEST_ORDER, journal=True):
     ids = hap.ids()['records']
-    return {
+    want = {
         'Status': [option_key(ORDERS, 'Status', 'Sales Order')],
         'Quotation/Order Date': f'{today} 09:00:00',
         'Tax Mode': [option_key(ORDERS, 'Tax Mode', 'Tax Excluded')],
@@ -548,12 +555,14 @@ def order_want(f, today):
         'Invoice Address': [ids[CUSTOMER]],
         'Delivery Address': [ids[CUSTOMER]],
         'Payment Terms': [ids[TERM_45]],
-        'Journal': [sales_journal()],
-        'Customer Reference': TEST_ORDER,
+        'Customer Reference': reference,
         'Terms and conditions': '<p>TEST o2i terms.</p>',
         'Incoterm Location': 'TEST o2i place',
         'Salesperson': [me()],
     }
+    if journal:
+        want['Journal'] = [sales_journal()]
+    return want
 
 
 def me():
@@ -617,6 +626,8 @@ def same(c, record, want):
     if c['type'] == DROPDOWN:
         keys = [v.get('key') for v in (got or []) if isinstance(v, dict)]
         return keys == list(want or [])
+    if c['type'] == 26:                                       # a Member cell is a list of account objects
+        return [v.get('accountId') for v in (got or []) if isinstance(v, dict)] == list(want or [])
     if c['type'] in (NUMBER, CURRENCY):
         return numeric(got) == numeric(want)
     if c['type'] == 16:                                       # a date-time comes back as the stored string
@@ -656,8 +667,17 @@ def step_fixture():
                   'Label': TEST_PROBE_LINE, 'Sequence': 10, 'Quantity': 3, 'Unit Price': 100,
                   'Discount (%)': 0}
     ensure_record(ILINES, TEST_PROBE_LINE, probe_want, title_row(ILINES, TEST_PROBE_LINE))
+    # the second order: everything the first has except a Journal
+    nj, _ = ensure_record(ORDERS, TEST_ORDER_NO_JOURNAL,
+                          order_want(of, today, reference=TEST_ORDER_NO_JOURNAL, journal=False), None)
+    ensure_record(OLINES, TEST_NJ_LINE,
+                  line_want(lf, nj, kind='Product', label=TEST_NJ_LINE, seq=10, qty=5, price=60,
+                            variant=variant, unit=unit, tax=tax),
+                  title_row(OLINES, TEST_NJ_LINE))
     print(f'  fixture: order {order} ({read_record(ORDERS, order).get("name")}), invoice {invoice}, '
           f'variant {variant_name!r}')
+    print(f'  fixture: order with no journal {nj} ({read_record(ORDERS, nj).get("name")}), '
+          f"its Journal reads {read_record(ORDERS, nj).get('journal_id')!r}")
     return order
 
 
@@ -1828,6 +1848,15 @@ TRIGGER_USER = {'type': 6, 'entityId': SYSTEM_NODE, 'entityName': 'System', 'rol
                 'appType': 100, 'actionId': ''}
 GT_ZERO = 13                                      # a view/rollup filter's "greater than"
 LINE_KINDS = ('Product', 'Section', 'Subsection', 'Note')
+JOURNALS = '6aa8f5191204328eb1af162a'
+J_TYPE = '6aa8f6c81204328eb1af1678'               # Journals / Type
+J_SEQUENCE = '6aa9dabcbd43f55762c6f430'           # Journals / Sequence
+J_PREFIX = '6aa8f6c81204328eb1af1677'             # Journals / Sequence Prefix (Odoo's `code`)
+J_ACTIVE = '6aa8f6c81204328eb1af167b'             # Journals / Active
+SALES_JOURNAL = 'The sales journal to fall back on'
+JOURNAL_BRANCH = 'Does the order name a journal?'
+SET_JOURNAL = "Take the company's sales journal"
+CHECKED_C = '29'                                  # a workflow condition on a checkbox: 选中
 
 
 def create_spec(of):
@@ -2077,6 +2106,82 @@ def create_nodes(of, lf, inf, ilf):
     ]
 
 
+def journal_nodes(found_id, order_id):
+    """The journal fallback, for one `batch-add` **after** *Find the invoice just made* — so the invoice carries
+    a journal before its lines exist, which matters because 07's account automation reads the invoice's journal
+    for its last fallback (*Take the journal's Default Account*).
+
+    Odoo's `_prepare_invoice` sets `journal_id` **only when the order has one** (`sale_order.py:1449-1450`).
+    Everything else gets it from `account.move._compute_journal_id` -> `_search_default_journal`
+    (`account/models/account_move.py:898-938`), which searches `account.journal` for a valid type — `sale` for
+    an `out_invoice` — and takes the **first** in the model's own order, `_order = 'sequence, type, code'`
+    (`account/models/account_journal.py:45`). So: the active Sales journal with the lowest Sequence, ties broken
+    by Sequence Prefix. Odoo raises a UserError when there is none; here the search carries on (`execute_type`
+    2) and the Journal is simply left empty, because a button workflow cannot put an error in front of a user.
+
+    The search is shaped exactly like 06's own *Get the journal* (`invoices.py` `step_numbering`): a `get_single`
+    on Journals whose filter goes in as `filters` with `node save --type 7`."""
+    return [
+        {'nodeAlias': 'sales_journal', 'nodeType': 'get_single', 'name': SALES_JOURNAL,
+         'config': {'worksheet': JOURNALS, 'execute_type': 2}},
+        {'nodeAlias': 'journal_branch', 'nodeType': 'branch', 'name': JOURNAL_BRANCH, 'config': {'paths': [
+            {'alias': 'no_journal', 'name': 'No', 'nodes': [
+                {'nodeAlias': 'set_journal', 'nodeType': 'update_record', 'name': SET_JOURNAL,
+                 'config': {'worksheet': INVOICES, 'target': {'node': {'nodeId': found_id}}, 'fields': []}}]},
+            {'alias': 'has_journal', 'name': 'Yes'}]}},
+    ]
+
+
+def sales_journal_filter(node_id):
+    """Type is Sales, and Active ticked — Odoo's search excludes archived records, so an archived journal is
+    not a candidate."""
+    return [
+        {'nodeId': node_id, 'nodeType': GET_ONE, 'actionId': FROM_SHEET_ONE, 'filedId': J_TYPE,
+         'filedValue': 'Type', 'filedTypeId': DROPDOWN, 'enumDefault': 0, 'conditionId': IS_ANY_OF,
+         'sourceType': 0, 'conditionValues': option_values(fields(JOURNALS)['Type'], ['Sales'])},
+        {'nodeId': node_id, 'nodeType': GET_ONE, 'actionId': FROM_SHEET_ONE, 'filedId': J_ACTIVE,
+         'filedValue': 'Active', 'filedTypeId': SWITCH, 'enumDefault': 0, 'conditionId': CHECKED_C,
+         'sourceType': 0, 'conditionValues': []},
+    ]
+
+
+def ensure_journal_fallback(pid, of, inf, proc, byname):
+    """Add and configure the journal fallback; True when anything was written."""
+    changed = SALES_JOURNAL not in byname
+    if changed:
+        # `batch-add` inserts after the node named, and the rest of the chain becomes what the branch converges
+        # on (BUILDING.md, and orders.ensure_product_guard) — so the two nodes land between *Find the invoice
+        # just made* and *The lines to invoice*.
+        hap.run('workflow', 'node', 'batch-add', pid, '--nodes',
+                json.dumps(journal_nodes(byname[FIND_INVOICE]['id'], byname[GET_ORDER_NOW]['id']),
+                           ensure_ascii=False),
+                '--trigger-node-id', byname[FIND_INVOICE]['id'], '--trigger-alias', 'found')
+        proc, byname = nodes_by_name(pid)
+        for name in (SALES_JOURNAL, JOURNAL_BRANCH, SET_JOURNAL):
+            if name not in byname:
+                sys.exit(f'{name!r} is not in the workflow after batch-add: {sorted(byname)}')
+    changed |= sync_search(pid, byname[SALES_JOURNAL], JOURNALS,
+                           sales_journal_filter(byname[SALES_JOURNAL]['id']), execute_type=2,
+                           sorts=[{'controlId': J_SEQUENCE, 'controlType': NUMBER, 'isAsc': True},
+                                  {'controlId': J_PREFIX, 'controlType': TEXT, 'isAsc': True}])
+    no, yes = None, None
+    for path in paths_of(proc, byname[JOURNAL_BRANCH]['id']):
+        nxt = proc['flowNodeMap'].get(path.get('nextId') or '', {}).get('name')
+        if nxt == SET_JOURNAL:
+            no = path
+        else:
+            yes = path
+    if not no or not yes:
+        sys.exit(f'{JOURNAL_BRANCH}: could not tell the two paths apart')
+    changed |= save_path(pid, no, 'No', [[cond(byname[GET_ORDER_NOW]['id'], of['Journal'], EMPTY_C)]])
+    changed |= save_path(pid, yes, 'Yes', [])
+    changed |= set_entries(pid, byname[SET_JOURNAL],
+                          [patch(inf['Journal']['controlId'], RELATION,
+                                 node=byname[SALES_JOURNAL]['id'], source='rowid')],
+                          byname[FIND_INVOICE]['id'], INVOICES)
+    return changed
+
+
 def sub_params(pid, node):
     """{parameter name: its controlId} of a sub-process step, and the value it passes."""
     d = read_node(pid, node['id'])
@@ -2180,6 +2285,9 @@ def step_create():
     # the header write, re-asserted in place (batch-add stores a create step's fields, but a text entry comes
     # back as a template and a Relation as nodeId+fieldValueId, so it is compared on `write_state`)
     changed |= set_entries(pid, byname[MAKE_INVOICE], header_entries(of, inf, byname), None, INVOICES)
+    # the journal fallback for an order that names none
+    changed |= ensure_journal_fallback(pid, of, inf, proc, byname)
+    proc, byname = nodes_by_name(pid)
     # the inner flow
     inner_pid = inner_process_id(pid, byname[EACH_LINE])
     if not inner_pid:
@@ -2537,6 +2645,68 @@ ALL_CONTROLS = (DOC_TYPE, ORDER_STATE, OL_INVOICE_LINES, IL_ORDER_LINES, O_INVOI
                 INVOICEABLE, N_TO_INVOICE, N_NOTHING, N_INVOICED, N_UPSELLING, N_PRODUCT)
 
 
+def check_journal_fallback(live):
+    """The invoice **must** carry a Journal: it is required on Invoices, so without one the document cannot be
+    confirmed from the form (found in the browser on 23 Sep 2026). Asserted three ways — the chain is there, it
+    is configured as Odoo picks the journal, and every invoice this bundle's presses made carries one."""
+    of, inf = live[ORDERS], live[INVOICES]
+    pid = hap.ids()['workflows'][KEY[ORDERS] + CREATE_BUTTON]
+    proc, byname = nodes_by_name(pid)
+    problems = []
+    print('  the journal fallback')
+    for name in (SALES_JOURNAL, JOURNAL_BRANCH, SET_JOURNAL):
+        if name not in byname:
+            problems.append(f'{CREATE_BUTTON} has no step {name!r}')
+    if problems:
+        print('    missing: ' + ', '.join(problems))
+        return problems
+    # it sits between the invoice and its lines, so 07's account automation can read the journal
+    after_found = proc['flowNodeMap'][byname[FIND_INVOICE]['id']].get('nextId')
+    if after_found != byname[SALES_JOURNAL]['id']:
+        problems.append(f'{SALES_JOURNAL!r} does not follow {FIND_INVOICE!r}')
+    converges = proc['flowNodeMap'][byname[JOURNAL_BRANCH]['id']].get('nextId')
+    if converges != byname[LINES_TO_INVOICE]['id']:
+        problems.append(f'{JOURNAL_BRANCH!r} does not converge on {LINES_TO_INVOICE!r}')
+    s = read_node(pid, byname[SALES_JOURNAL]['id'])
+    got = (s.get('appId'), s.get('executeType'),
+           [(x.get('controlId'), bool(x.get('isAsc'))) for x in s.get('sorts') or []],
+           [f.get('spliceType') for f in s.get('filters') or []],
+           wf_filter_state(s.get('filters')))
+    want = (JOURNALS, 2, [(J_SEQUENCE, True), (J_PREFIX, True)], [1],
+            wf_filter_state([{'conditions': [sales_journal_filter(byname[SALES_JOURNAL]['id'])]}]))
+    print(f'    {SALES_JOURNAL}: worksheet Journals, Type is Sales and Active ticked, '
+          f'sorted Sequence then Sequence Prefix ascending, carry on when there is none')
+    if got != want:
+        problems.append(f'{SALES_JOURNAL}: reads back {got}, wanted {want}')
+    # the branch writes only when the order names no journal
+    no = next((p for p in paths_of(proc, byname[JOURNAL_BRANCH]['id'])
+               if proc['flowNodeMap'].get(p.get('nextId') or '', {}).get('name') == SET_JOURNAL), None)
+    if no is None:
+        problems.append(f'{JOURNAL_BRANCH}: no path runs into {SET_JOURNAL!r}')
+    else:
+        want_path = [condition_state([cond(byname[GET_ORDER_NOW]['id'], of['Journal'], EMPTY_C)])]
+        if path_state(read_node(pid, no['id'])) != want_path:
+            problems.append(f'the {SET_JOURNAL!r} path is not conditioned on the order\'s Journal being empty')
+    u = read_node(pid, byname[SET_JOURNAL]['id'])
+    entry = next((x for x in u.get('fields') or [] if x.get('fieldId') == inf['Journal']['controlId']), None)
+    if not entry or entry.get('nodeId') != byname[SALES_JOURNAL]['id'] or entry.get('fieldValueId') != 'rowid':
+        problems.append(f'{SET_JOURNAL} does not write Invoices / Journal from {SALES_JOURNAL!r}')
+    if u.get('selectNodeId') != byname[FIND_INVOICE]['id']:
+        problems.append(f'{SET_JOURNAL} updates {u.get("selectNodeId")}, wanted the invoice it just made')
+    # and the invoices the presses actually made
+    for key in ('TEST o2i invoice from Create Invoice', 'TEST o2i second invoice from Create Invoice',
+                'TEST o2i invoice from an order with no journal'):
+        rowid = record_id(key)
+        if not rowid:
+            continue
+        d = read_record(INVOICES, rowid)
+        journal = [x.get('name') for x in (d.get('journal_id') or []) if isinstance(x, dict)]
+        print(f'    {key}: Journal {journal}')
+        if not journal:
+            problems.append(f'{key} ({rowid}) carries no Journal')
+    return problems
+
+
 def step_check():
     """Every control, workflow, view and button this bundle owns, read off the app. Writes nothing."""
     live = guard()
@@ -2588,6 +2758,7 @@ def step_check():
               f"enabled={w.get('enabled')} nodes={len(proc['flowNodeMap'])}")
         if w.get('publishStatus') != 2:
             problems.append(f'{name}: publishStatus {w.get("publishStatus")}, wanted 2')
+    problems += check_journal_fallback(live)
     print('  the gated automations')
     for label, pid in ((PT_WORKFLOW, PT_PID), (ACCOUNT_WORKFLOW, ACCOUNT_PID)):
         w = hap.run('workflow', 'get', pid)
