@@ -107,8 +107,8 @@ footer{margin-top:44px;padding-top:24px;border-top:1px solid var(--rule);
 
 <div class="tally">
   <div class="g"><b>7</b><span>ALREADY STANDING<br>native or solved</span></div>
-  <div class="g"><b>4</b><span>BUILT &amp; VERIFIED<br>part 2 · 21 Sep</span></div>
-  <div class="y"><b>4</b><span>TO BUILD<br>parts 3–6</span></div>
+  <div class="g"><b>5</b><span>BUILT &amp; VERIFIED<br>parts 2–3</span></div>
+  <div class="y"><b>3</b><span>TO BUILD<br>parts 4–6</span></div>
   <div class="h"><b>2</b><span>SET ASIDE<br>close · reopen invoicing</span></div>
   <div class="h"><b>3</b><span>OUT OF REACH<br>blocked or later phase</span></div>
   <div class="g"><b>4</b><span>CONTROLS BUILT<br>part 1 · 21 Sep</span></div>
@@ -194,7 +194,7 @@ footer{margin-top:44px;padding-top:24px;border-top:1px solid var(--rule);
 <section class="part">
   <div class="ph"><div class="pn">3</div><div class="pt">
     <h2>Deliver — the one that walks the lines</h2>
-    <p><b>Next.</b> Discount turned out not to need building. Deliver does: it copies each line's own Quantity, a different value per row, which a batch edit cannot express.</p>
+    <p><b>Done, 22 Sep — pressed in the browser and read back.</b> Discount turned out not to need building. Deliver does: it copies each line's own Quantity, a different value per row, which a batch edit cannot express.</p>
   </div></div>
   <div class="rows">
     <div class="row"><div class="no">09</div><div>
@@ -207,14 +207,15 @@ footer{margin-top:44px;padding-top:24px;border-top:1px solid var(--rule);
       <h3>Deliver</h3>
       <p class="odoo">server action 504 · deliver_sold_quantity · form, list</p>
       <p class="does">Sets each line's <b>Delivered = Quantity</b>. <code>qty_delivered</code> is writable, so this is the shortcut for orders that never touch Inventory.</p>
-    </div><div class="cell-s"><span class="chip c-you">build</span><span class="sub">workflow over lines</span></div></div>
+    
+      <p class="does"><b>Built as a sub-process:</b> the button collects this order's product lines, and a small child workflow runs once per line, copying that line's own Quantity. Enabled on Sales Orders only. On S00006 it delivered 12 · 25 · 50 · 25, then was restored; greyed on Cancelled and Quotation Sent orders.</p></div><div class="cell-s"><span class="chip c-go">verified</span><span class="sub">sub-process</span></div></div>
   </div>
 </section>
 
 <section class="part">
   <div class="ph"><div class="pn">4</div><div class="pt">
     <h2>Send</h2>
-    <p>The one that leaves the building. Treated as unbuilt — an earlier version exists but does not work materially yet.</p>
+    <p><b>Next.</b> The one that leaves the building. Treated as unbuilt — an earlier version exists but does not work materially yet.</p>
   </div></div>
   <div class="rows">
     <div class="row"><div class="no">01</div><div>
