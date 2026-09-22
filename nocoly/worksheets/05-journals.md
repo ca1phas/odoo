@@ -519,3 +519,15 @@ Journals beside TEST Journal.
 
 All four are to be removed after sign-off, with the owner's approval, and so is the `TEST draft guard` document on
 Invoices. Tests 10–12 left nothing behind: their forms were closed without saving.
+
+
+## Descriptions rewritten for the app's users (22 Sep 2026)
+
+The owner's rule of 22 Sep 2026: a description in the app says only what the field or button does, for the people using it — no Odoo, no field or model names, no divergences, no build notes. The texts below were rewritten or emptied on the live app and in the builder's constants. The old text is kept here, word for word, because it carried the Odoo references and build reasoning that are no longer in the app.
+
+| Control | Key | Before | After |
+|---|---|---|---|
+| Communication Standard | desc | You can choose different models for each type of reference. The default one is the Odoo reference. | The format of the payment reference on customer invoices. |
+| Active | desc | Set active to false to hide the Journal without removing it. | Untick to hide the journal without deleting it. |
+| Sequence | desc | Used to order Journals in the dashboard view. A HAP table has no drag handle, so a journal is moved up or down the list by changing this number. Odoo gives every new journal 10. | Journals are listed by this number, lowest first. Change it to move a journal up or down the list. |
+| Default Account | desc | Odoo labels this Bank Account on a Bank journal, Cash Account on Cash, Journal Account on Credit Card, Default Income Account on Sales, Default Expense Account on Purchase, and Default Account on Miscellaneous, where it is used to automatically balance entries. | The journal's main account: the income account on a sales journal, the expense account on a purchase journal, and the account the money is held in on a bank, cash or credit card journal. On a miscellaneous journal it is used to balance entries automatically. |

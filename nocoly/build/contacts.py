@@ -88,7 +88,7 @@ PLACE = {
 }
 TABS = {'Contacts': 11, 'Sales & Purchase': 13, 'Invoicing': 19, 'Notes': 21}
 HINTS = {'Name': 'Name (company or person)', 'Company': 'Company Employer', 'Email': 'Email', 'Phone': 'Phone',
-         'Job Position': 'e.g. Sales Director', 'Website': 'e.g. https://www.odoo.com', 'Tax ID': 'Tax ID',
+         'Job Position': 'e.g. Sales Director', 'Website': 'e.g. https://www.example.com', 'Tax ID': 'Tax ID',
          'Company ID': 'Company ID', 'DUNS': 'DUNS', 'Street': 'Street...', 'Street 2': 'Street 2...',
          'City': 'City', 'ZIP': 'ZIP', 'Image': 'Upload an image',
          'Salesperson': 'Salesperson', 'Reference': 'Reference', 'Notes': 'Internal notes...'}
@@ -196,14 +196,13 @@ def step_layout():
 
 DISPLAYED_TYPES = ['Invoice', 'Delivery', 'Other']   # res.partner _complete_name_displayed_types
 DESC = {
-    'Parent name': "The Company's Name, a stored lookup read by Display Name. Odoo parent_name.",
+    'Parent name': "The name of the contact's company.",
     'Display Name': 'How this contact appears in lists and pickers: the Company\'s name, a comma and the Name — '
                     'or the Address Type for a nameless address.',
     # The Chart of Accounts bundle's two accounts (09 §1; Odoo has no help on either field). accounts.py writes
     # and checks them; `display` and `layout` here never rewrite a description.
-    'Account Receivable': "Odoo reads the company's default, 124000 Account Receivable, until a contact is given "
-                          'its own.',
-    'Account Payable': "Odoo reads the company's default, 221100 Account Payable, until a contact is given its own.",
+    'Account Receivable': "The account this contact's customer invoices are recorded on.",
+    'Account Payable': "The account this contact's vendor bills are recorded on.",
     # The Payment Terms bundle's two terms (10 §1; Odoo has no help on either). payterms.py writes and checks them.
     'Customer Payment Terms': "A customer invoice for this contact takes these terms. A contact given a company takes "
                               "the company's; a company's change reaches all its contacts.",

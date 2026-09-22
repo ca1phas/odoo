@@ -42,18 +42,16 @@ PLACE = {
     'Parent Path': (5, 0, 6), 'Reference Parent Path': (5, 1, 6),
 }
 HINTS = {'Reference Unit': 'Reference Unit'}        # every other control gets no placeholder, as in Odoo
-DESC = {  # Odoo field help where it has one; how a hidden helper is computed otherwise
-    'Contains': 'How much bigger or smaller this unit is compared to the reference UoM for this unit',
-    'Active': 'Uncheck the active field to disable a unit of measure without deleting it.',
-    'Absolute Quantity': "Contains × the Reference Unit's Absolute Quantity, down the whole chain; "
-                         'a unit without a Reference Unit has its own Contains. Odoo uom.uom factor.',
-    'Sequence': 'min(int(Contains × 100), 1000) — Odoo _compute_sequence. Views sort on it.',
-    'Reference Absolute Quantity': "The Reference Unit's Absolute Quantity (a stored lookup) for the "
-                                   'Absolute Quantity formula.',
-    'Related UoMs': 'The units whose Reference Unit is this one — Odoo related_uom_ids.',
-    'Parent Path': "The record ids from the top of the chain down to this unit, each followed by '/' — "
-                   'Odoo parent_path. The recursion check reads it.',
-    'Reference Parent Path': "The Reference Unit's Parent Path (a stored lookup).",
+DESC = {  # Odoo's help where it reads well for a user, else plain words — only what the field does
+    # (owner's rule, 22 Sep 2026). Build notes and Odoo references: worksheets/02-units-and-packagings.md, foot.
+    'Contains': 'How many of the Reference Unit this unit equals, e.g. 12 for a dozen.',
+    'Active': 'Untick to hide the unit without deleting it.',
+    'Absolute Quantity': 'The size of this unit in terms of the unit at the top of its chain.',
+    'Sequence': '',
+    'Reference Absolute Quantity': '',
+    'Related UoMs': 'The units whose Reference Unit is this one.',
+    'Parent Path': '',
+    'Reference Parent Path': '',
 }
 HIDDEN = ['Absolute Quantity', 'Sequence', 'Reference Absolute Quantity', 'Active', 'Related UoMs',
           'Parent Path', 'Reference Parent Path']

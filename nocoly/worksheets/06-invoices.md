@@ -752,3 +752,29 @@ tenant invoices (SCG-PO-88213, KKD-2026-009, STL-2026-0042, and bundle 7's TEST 
 S00021) and the **four** customers in Contacts are real records and stay; `verify` confirms all five unchanged
 after the test. **INV/2026/00002 is one of the five, not a test record** — the words "TEST demo run - delete me"
 are the tenant's own Customer Reference on it, copied as read.
+
+
+## Descriptions rewritten for the app's users (22 Sep 2026)
+
+The owner's rule of 22 Sep 2026: a description in the app says only what the field or button does, for the people using it — no Odoo, no field or model names, no divergences, no build notes. The texts below were rewritten or emptied on the live app and in the builder's constants. The old text is kept here, word for word, because it carried the Odoo references and build reasoning that are no longer in the app.
+
+| Control | Key | Before | After |
+|---|---|---|---|
+| Customer / Vendor | desc | Odoo labels the one field Customer on a customer document and Vendor on a vendor one; HAP cannot rename a field from a rule, so it carries both words. | The customer on a customer document, the vendor on a vendor bill or vendor credit note. |
+| Invoice Date | desc | Odoo labels it Bill Date on a vendor document, where it is required. Confirm fills it with today when it is empty. | The date of the invoice or bill. Required on a bill. Confirm fills in today's date if it is left blank. |
+| Due Date | desc | Odoo shows the Due Date or the Payment Terms: setting terms computes the date. | When payment is due. Choosing Payment Terms works it out. |
+| Customer Reference | desc | Odoo shows the same field as Bill Reference in the main group of a vendor document. | The customer's reference for this invoice, or the vendor's reference on a bill. |
+| Recipient Bank | desc | A stand-in: Odoo points at a res.partner.bank record, and bank accounts are not in Phase 1. Odoo's help: "Bank Account Number to which the invoice will be paid. A Company bank account if this is a Customer Invoice or Vendor Credit Note, otherwise a Partner bank account number." | The bank account the invoice will be paid into: the company's account on a customer invoice or vendor credit note, otherwise the partner's. |
+| Number | desc | Written by Confirm from the Journal's Sequence Prefix and the year of the Accounting Date — INV/2026/00001. A draft holds the word "Draft" until then, as Odoo shows it. | Given when the document is confirmed, from the journal's Sequence Prefix and the year of the Accounting Date, e.g. INV/2026/00001. Shows "Draft" until then. |
+| Type | desc | One model holds every accounting document; the Type decides which one it is. Odoo's menus — Invoices, Credit Notes, Bills, Refunds, Journal Entries — are filtered views of this one table. | The kind of document: an invoice, credit note, bill, receipt or journal entry. |
+| Status | desc | Draft until Confirm posts the document; Cancel makes it Cancelled, Reset to Draft takes it back. Odoo's header status bar. | Draft until Confirm posts the document. Cancel makes it Cancelled, and Reset to Draft takes it back. |
+| Tax mode | desc | Whether a line's Amount is its subtotal or its total. Odoo requires it on every invoice, credit note and receipt: "The document tax mode must be set." | Whether the line prices exclude or include tax. |
+| Terms and Conditions | desc | Odoo's placeholder here is "Terms and Conditions"; HAP never shows a Rich text field's placeholder, so it is said here instead. | *(empty)* |
+| Untaxed Amount | desc | Seeded from the tenant and read-only; 07 Invoice Lines makes it a roll-up of the lines. | The sum of the lines' subtotals, before tax. |
+| Tax | desc | Seeded from the tenant and read-only; 07 Invoice Lines makes it a roll-up of the lines. | The tax on the lines. |
+| Total | desc | Seeded from the tenant and read-only; 07 Invoice Lines makes it a roll-up of the lines. | The amount to pay, tax included. |
+| Amount Due | desc | Seeded from the tenant and read-only; it equals the Total until the Payments bundle can settle a document. | What is still to be paid on this document. |
+| Delivery Address | desc | The delivery address will be used in the computation of the fiscal position. | The address the goods or services are delivered to. |
+| Journal | desc | The book the entry is written in. Its Sequence Prefix is what Confirm numbers the document with, so it cannot be changed once the document is numbered. | The journal the document is recorded in. Its Sequence Prefix numbers the document, so it cannot be changed once the document has a number. |
+| Lines | desc | Odoo's Invoice Lines tab. The worksheet Invoice Lines, mounted here: the same rows are also a list of their own in the sidebar, and the invoice sums them into Untaxed Amount. | The products, sections and notes on this document. |
+| Journal Type | desc | The Journal's own Type, read through the Journal relation and stored here. Odoo has no such field — it reads journal_id.type directly — but a HAP business rule can only compare a control of its own worksheet, and this is what the two journal checks stand on: Odoo's @api.constrains('journal_id', 'move_type') _check_journal_move_type, which refuses a sale document in a non-sale journal and a purchase document in a non-purchase journal. | The type of the selected journal. |

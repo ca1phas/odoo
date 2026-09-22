@@ -632,3 +632,26 @@ on the `TEST …` line named in them.
 Tests 8–15 add `TEST UI line`, `TEST UI inline` and `TEST UI section`; the first two are deleted by tests 13 and
 14 as part of the test. Everything still named `TEST …` afterwards is to be removed after sign-off, with the
 owner's approval. The eight tenant lines and the three documents they belong to are real records and stay.
+
+
+## Descriptions rewritten for the app's users (22 Sep 2026)
+
+The owner's rule of 22 Sep 2026: a description in the app says only what the field or button does, for the people using it — no Odoo, no field or model names, no divergences, no build notes. The texts below were rewritten or emptied on the live app and in the builder's constants. The old text is kept here, word for word, because it carried the Odoo references and build reasoning that are no longer in the app.
+
+| Control | Key | Before | After |
+|---|---|---|---|
+| Label | desc | Odoo fills it from the product's display name and its sales description when a product is chosen, on two lines. Here it is typed or seeded; on a section or a note it *is* the text. | The line's description. On a section or note, it is the text shown. |
+| Sequence | desc | Orders the lines within one invoice. Odoo reorders them by dragging a handle, which a HAP subtable has no equivalent for, so the number is the only way to move a line. | Lines are listed by this number, lowest first. Change it to move a line. |
+| Display Type | desc | Odoo's *Add a line*, *Add a section* and *Add a note*. A section, a subsection and a note carry no figures: the rule hides Product, Account, Quantity, Unit, Unit Price, Discount (%) and Subtotal. The tax, payment-term, rounding and early-payment-discount lines Odoo writes itself are not built. | A product line, a section or subsection heading, or a note. Headings and notes carry no amounts. |
+| Product | desc | The **variant**, never the template: every Odoo order line, stock move and invoice line points at product.product. Odoo also filters it by the document — sale_ok on a customer document, purchase_ok on a vendor one. | The product sold or bought on this line. |
+| Unit | desc | Odoo offers only the product's own unit and its packagings (allowed_uom_ids); every unit is offered here, because that domain needs a lookup of a relation, which HAP stores as a title. | The unit the quantity is in. |
+| Discount (%) | desc | Odoo's optional *Disc.%* column, hidden by default on the invoice form and used on five of the tenant's lines. | The percentage taken off the line's price. |
+| Invoice | desc | The document this line belongs to — Odoo labels it Journal Entry. It is also the link the subtable on the invoice is built on, so a line opened from inside an invoice carries it already. | The document this line belongs to. |
+| Subtotal | desc | Quantity × Unit Price × (1 − Discount ÷ 100). Odoo shows this in its *Amount* column while the document is Tax Excluded, and the tax-inclusive total when it is Tax Included — which needs the Taxes bundle, so only the subtotal is built. The sum of these is the invoice Untaxed Amount. | Quantity × Unit Price, less the discount, before tax. |
+| Number | desc | The invoice's Number, so the standalone list can show which document a line belongs to. | The number of the document this line belongs to. |
+| Accounting Date | desc | The invoice's Accounting Date. Odoo stores it on the line and sorts the Journal Items list on it. | The document's Accounting Date. |
+| Status | desc | The invoice's Status. Odoo's Journal Items views filter Posted / Unposted on it. | The document's Status. |
+| Account | desc | The account the line posts to. A product line saved without one is given it, and a change of Product gives it again: the product's Income Account, else its category's — the Expense Accounts on a vendor document. The journal's Default Account fills it only when it is still empty, and is the only source on a journal entry. A section, a subsection and a note carry none. | The account this line is recorded on. Filled in from the product or its category, or from the journal's Default Account. Sections and notes have none. |
+| Taxes | desc | The taxes on this line — Odoo tax_ids. Unfiltered, as Odoo's own field is: its context turns active_test off, so its picker offers archived taxes too, and it carries no Tax Type domain. A line takes whatever the product put there. | The taxes applied to this line. |
+| Tax rate | desc | The sum of the Amounts of this line's Taxes, counting only the ones whose Tax Computation is Percentage — so a Fixed or Custom Formula tax cannot add its amount as if it were a rate. A roll-up (汇总) over the Taxes relation; hidden and read-only, and Total is computed from it. | The combined percentage of this line's taxes. |
+| Total | desc | Subtotal plus this line's tax — Odoo price_total. Subtotal × (1 + Tax rate ÷ 100), rounded to two decimals, which is what the company's round-per-line setting does. The sum of these is the invoice's Total, and the difference from the sum of the Subtotals is its Tax. | Subtotal plus tax, rounded to two decimals. |

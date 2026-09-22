@@ -224,3 +224,15 @@ rerun's, with the first run's in brackets. Test records are named `TEST …`.
 
 TEST QA Trading Sdn Bhd · TEST Person One · TEST Person Two · TEST Person Three · a nameless Delivery and a nameless
 Invoice address under the company · TEST Solo Trading. Left for the reviewer to inspect; remove them after sign-off.
+
+
+## Descriptions rewritten for the app's users (22 Sep 2026)
+
+The owner's rule of 22 Sep 2026: a description in the app says only what the field or button does, for the people using it — no Odoo, no field or model names, no divergences, no build notes. The texts below were rewritten or emptied on the live app and in the builder's constants. The old text is kept here, word for word, because it carried the Odoo references and build reasoning that are no longer in the app.
+
+| Control | Key | Before | After |
+|---|---|---|---|
+| Website | hint | e.g. https://www.odoo.com | e.g. https://www.example.com |
+| Parent name | desc | The Company's Name, a stored lookup read by Display Name. Odoo parent_name. | The name of the contact's company. |
+| Account Receivable | desc | Odoo reads the company's default, 124000 Account Receivable, until a contact is given its own. | The account this contact's customer invoices are recorded on. |
+| Account Payable | desc | Odoo reads the company's default, 221100 Account Payable, until a contact is given its own. | The account this contact's vendor bills are recorded on. |

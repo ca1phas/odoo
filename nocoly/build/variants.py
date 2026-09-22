@@ -61,29 +61,25 @@ PLACE = {  # field name -> (row, col, size, tab)
     'Weight': (11, 0, 6, INVENTORY), 'Volume': (11, 1, 6, INVENTORY),
     'Active': (12, 0, 6, None), 'Name': (12, 1, 6, None),
 }
-FROM_PRODUCT = 'Copied from the product — edit it there. Read-only on the variant while each product has one variant.'
-DESC = {  # Odoo field help (product_product.py, 19.4 fields_get), and where a value comes from
-    'Product': 'The product this is a variant of. Set when the variant is created with its product; read-only, '
-               'as on the Odoo variant form. Odoo product_tmpl_id.',
+FROM_PRODUCT = 'Copied from the product. Edit it on the product.'
+DESC = {  # Odoo's help where it reads well for a user, else plain words — only what the field does
+    # (owner's rule, 22 Sep 2026). Build notes and Odoo references: worksheets/04-product-variants.md, foot.
+    'Product': 'The product this is a variant of.',
     'Internal Reference': FROM_PRODUCT,
     'Barcode': 'International Article Number used for product identification.',
-    'Cost': 'Value of the product (automatically computed in AVCO).\n'
-            'Used to value the product when the purchase cost is not known (e.g. inventory adjustment).\n'
-            'Used to compute margins on sale orders.\n' + FROM_PRODUCT,
+    'Cost': 'What this product costs the company. ' + FROM_PRODUCT,
     'Weight': FROM_PRODUCT, 'Volume': FROM_PRODUCT,
     'Extra Packagings': 'Variant-specific additional packagings for this product which can be used for sales',
-    'Active': 'If unchecked, it will allow you to hide the product without removing it.',
-    'Name': "The product's Name, a stored lookup read by Display Name and the views' sort.",
+    'Active': 'Untick to hide the product without deleting it.',
+    'Name': "The product's name.",
     'Product Type': "The product's Product Type — edit it on the product.",
     'Unit': "The product's Unit — edit it on the product.",
     'Sales': "The product's Sales flag — edit it on the product.",
     'Purchase': "The product's Purchase flag — edit it on the product.",
-    'Sales Price': "The product's Sales Price — edit it on the product. Price extras per attribute value come with "
-                   'the Product Variants bundle.',
+    'Sales Price': "The product's Sales Price — edit it on the product.",
     'Display Name': 'How this variant appears in lists and pickers: [Internal Reference] Name, or the Name alone '
-                    'when there is no Internal Reference. Odoo display_name.',
-    'Favorite': "The product's Favorite — edit it on the product. Odoo relates the two "
-                "(is_favorite = product_tmpl_id.is_favorite).",
+                    'when there is no Internal Reference.',
+    'Favorite': "The product's Favorite. Edit it on the product.",
 }
 READONLY = ['Product', 'Internal Reference', 'Cost', 'Weight', 'Volume', 'Favorite']   # the product is their master
 HIDDEN = ['Active', 'Name']
@@ -956,9 +952,8 @@ def product_differences(v, p):
 
 REVERSE, VARIANT_COUNT = 'Variants', '# Variants'
 REVERSE_PLACE, COUNT_PLACE = (19, 0, 12), (3, 1, 6)
-REVERSE_DESC = ('The variants of this product. Odoo product_variant_ids — read-only here, as it is there: a '
-                'variant says which product it belongs to.')
-COUNT_DESC = "The number on Odoo's Variants smart button (product_variant_count)."
+REVERSE_DESC = 'The variants of this product.'
+COUNT_DESC = 'The number of variants of this product.'
 
 # The columns the Variants list shows. A `showtype` "2" Relation draws as a **tab at the foot of the record**, and
 # a list with no `showControls` shows its row count over the words *No visible fields* (BUILDING.md) — which is

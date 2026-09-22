@@ -437,3 +437,12 @@ fixed during the test** — test 23 was run later the same day, once role debugg
 **TEST Country** (code ZZZ) on Countries, the build's own self-check record — and note that its three-character
 code is what proved difference *the API does not enforce the length*. On Contacts, **TEST UI Country Person**
 under TEST QA Trading Sdn Bhd, from test 19. Both go after sign-off, with the owner's approval.
+
+
+## Descriptions rewritten for the app's users (22 Sep 2026)
+
+The owner's rule of 22 Sep 2026: a description in the app says only what the field or button does, for the people using it — no Odoo, no field or model names, no divergences, no build notes. The texts below were rewritten or emptied on the live app and in the builder's constants. The old text is kept here, word for word, because it carried the Odoo references and build reasoning that are no longer in the app.
+
+| Control | Key | Before | After |
+|---|---|---|---|
+| States | desc | The states of this country — Odoo state_ids, the reverse of Country on States. Set the country on the state. | The states of this country. To add one, set its Country on the state. |

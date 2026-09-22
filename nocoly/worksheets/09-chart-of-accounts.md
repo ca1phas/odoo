@@ -1416,3 +1416,15 @@ run.**
 - **Products:** TEST Product's own accounts were set for the checks and cleared again.
 
 All go after sign-off, with the owner's approval. The 87 accounts and every seeded reference are the tenant's and stay.
+
+
+## Descriptions rewritten for the app's users (22 Sep 2026)
+
+The owner's rule of 22 Sep 2026: a description in the app says only what the field or button does, for the people using it — no Odoo, no field or model names, no divergences, no build notes. The texts below were rewritten or emptied on the live app and in the builder's constants. The old text is kept here, word for word, because it carried the Odoo references and build reasoning that are no longer in the app.
+
+| Control | Key | Before | After |
+|---|---|---|---|
+| Child Accounts | desc | The accounts whose Parent Account is this one — Odoo child_ids. Hidden: Odoo shows an account's children only by indenting its list. | The accounts under this one. |
+| Display Name | desc | The Code, a space and the Account Name — Odoo display_name, as an accounting user sees it. It is the title: what every list, card and picker shows. | The code followed by the account name, as shown in lists and pickers. |
+| Internal Group | desc | Asset, Liability, Equity, Income, Expense or Off Balance, from the Type — Odoo internal_group. Odoo keeps it out of sight and filters on it; here a view can show it and filter on it. | Asset, Liability, Equity, Income, Expense or Off Balance, set from the Type. |
+| Default Taxes | desc | Default taxes for this account — Odoo tax_ids, on the Accounting tab of its form. Not one of this tenant's accounts has any, so the field is here and empty. | Default taxes for this account. |

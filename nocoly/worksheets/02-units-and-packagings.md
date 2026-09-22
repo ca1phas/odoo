@@ -190,3 +190,19 @@ Run in the Nocoly UI in Chrome on 15 Sep 2026; stored values read back with
 
 TEST Box of 10 (Contains 12, Reference Unit Pack of 6) · TEST Crate (Contains 5, Reference Unit TEST Box of 10) ·
 TEST Half (Contains 0.5, Reference Unit Units). Left for the reviewer to inspect; remove them after sign-off.
+
+
+## Descriptions rewritten for the app's users (22 Sep 2026)
+
+The owner's rule of 22 Sep 2026: a description in the app says only what the field or button does, for the people using it — no Odoo, no field or model names, no divergences, no build notes. The texts below were rewritten or emptied on the live app and in the builder's constants. The old text is kept here, word for word, because it carried the Odoo references and build reasoning that are no longer in the app.
+
+| Control | Key | Before | After |
+|---|---|---|---|
+| Contains | desc | How much bigger or smaller this unit is compared to the reference UoM for this unit | How many of the Reference Unit this unit equals, e.g. 12 for a dozen. |
+| Active | desc | Uncheck the active field to disable a unit of measure without deleting it. | Untick to hide the unit without deleting it. |
+| Related UoMs | desc | The units whose Reference Unit is this one — Odoo related_uom_ids. | The units whose Reference Unit is this one. |
+| Sequence | desc | min(int(Contains × 100), 1000) — Odoo _compute_sequence. Views sort on it. | *(empty)* |
+| Absolute Quantity | desc | Contains × the Reference Unit's Absolute Quantity, down the whole chain; a unit without a Reference Unit has its own Contains. Odoo uom.uom factor. | The size of this unit in terms of the unit at the top of its chain. |
+| Reference Absolute Quantity | desc | The Reference Unit's Absolute Quantity (a stored lookup) for the Absolute Quantity formula. | *(empty)* |
+| Parent Path | desc | The record ids from the top of the chain down to this unit, each followed by '/' — Odoo parent_path. The recursion check reads it. | *(empty)* |
+| Reference Parent Path | desc | The Reference Unit's Parent Path (a stored lookup). | *(empty)* |

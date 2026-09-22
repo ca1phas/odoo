@@ -161,48 +161,28 @@ HIDDEN = set()
 # hidden field never shows as a table column either, and the Lines view carries every one of them.
 PERMISSION = {'Tax rate': '001',                   # hidden **and** read-only: nobody types a roll-up
               'Number': '100', 'Accounting Date': '100', 'Status': '100'}
-DESC = {  # Odoo field help, verbatim where Odoo has one (addons/account/models/account_move_line.py)
-    'Invoice': 'The document this line belongs to — Odoo labels it Journal Entry. It is also the link the '
-               'subtable on the invoice is built on, so a line opened from inside an invoice carries it already.',
-    'Sequence': 'Orders the lines within one invoice. Odoo reorders them by dragging a handle, which a HAP '
-                'subtable has no equivalent for, so the number is the only way to move a line.',
-    'Display Type': "Odoo's *Add a line*, *Add a section* and *Add a note*. A section, a subsection and a note "
-                    'carry no figures: the rule hides Product, Account, Quantity, Unit, Unit Price, Discount (%) and '
-                    'Subtotal. The tax, payment-term, rounding and early-payment-discount lines Odoo writes '
-                    'itself are not built.',
-    'Product': 'The **variant**, never the template: every Odoo order line, stock move and invoice line points '
-               'at product.product. Odoo also filters it by the document — sale_ok on a customer document, '
-               'purchase_ok on a vendor one.',
-    'Label': "Odoo fills it from the product's display name and its sales description when a product is chosen, "
-             'on two lines. Here it is typed or seeded; on a section or a note it *is* the text.',
+DESC = {  # Odoo's help where it reads well for a user, else plain words — only what the field does
+    # (owner's rule, 22 Sep 2026). Build notes and Odoo references: worksheets/07-invoice-lines.md, foot.
+    'Invoice': 'The document this line belongs to.',
+    'Sequence': 'Lines are listed by this number, lowest first. Change it to move a line.',
+    'Display Type': 'A product line, a section or subsection heading, or a note. Headings and notes carry no amounts.',
+    'Product': 'The product sold or bought on this line.',
+    'Label': "The line's description. On a section or note, it is the text shown.",
     # Odoo has no help on account_id; this says what fills it (automation B, 09 §1)
-    'Account': 'The account the line posts to. A product line saved without one is given it, and a change of '
-               "Product gives it again: the product's Income Account, else its category's — the Expense Accounts on "
-               "a vendor document. The journal's Default Account fills it only when it is still empty, and is the "
-               'only source on a journal entry. A section, a subsection and a note carry none.',
+    'Account': 'The account this line is recorded on. Filled in from the product or its category, or from the '
+               "journal's Default Account. Sections and notes have none.",
     'Quantity': 'The optional quantity expressed by this line, eg: number of product sold.',
-    'Unit': "Odoo offers only the product's own unit and its packagings (allowed_uom_ids); every unit is offered "
-            'here, because that domain needs a lookup of a relation, which HAP stores as a title.',
+    'Unit': 'The unit the quantity is in.',
     'Unit Price': '',
-    'Discount (%)': "Odoo's optional *Disc.%* column, hidden by default on the invoice form and used on five of "
-                    "the tenant's lines.",
-    'Subtotal': 'Quantity × Unit Price × (1 − Discount ÷ 100). Odoo shows this in its *Amount* column while the '
-                'document is Tax Excluded, and the tax-inclusive total when it is Tax Included — which needs the '
-                'Taxes bundle, so only the subtotal is built. The sum of these is the invoice Untaxed Amount.',
-    'Number': "The invoice's Number, so the standalone list can show which document a line belongs to.",
-    'Accounting Date': "The invoice's Accounting Date. Odoo stores it on the line and sorts the Journal Items "
-                       'list on it.',
-    'Status': "The invoice's Status. Odoo's Journal Items views filter Posted / Unposted on it.",
+    'Discount (%)': "The percentage taken off the line's price.",
+    'Subtotal': 'Quantity × Unit Price, less the discount, before tax.',
+    'Number': 'The number of the document this line belongs to.',
+    'Accounting Date': "The document's Accounting Date.",
+    'Status': "The document's Status.",
     # the Taxes bundle (13-taxes.md §1 › What this bundle changes on Invoice Lines)
-    'Taxes': 'The taxes on this line — Odoo tax_ids. Unfiltered, as Odoo\'s own field is: its context turns '
-             'active_test off, so its picker offers archived taxes too, and it carries no Tax Type domain. A '
-             'line takes whatever the product put there.',
-    'Tax rate': 'The sum of the Amounts of this line\'s Taxes, counting only the ones whose Tax Computation is '
-                'Percentage — so a Fixed or Custom Formula tax cannot add its amount as if it were a rate. A '
-                'roll-up (汇总) over the Taxes relation; hidden and read-only, and Total is computed from it.',
-    'Total': 'Subtotal plus this line\'s tax — Odoo price_total. Subtotal × (1 + Tax rate ÷ 100), rounded to '
-             'two decimals, which is what the company\'s round-per-line setting does. The sum of these is the '
-             "invoice's Total, and the difference from the sum of the Subtotals is its Tax.",
+    'Taxes': 'The taxes applied to this line.',
+    'Tax rate': "The combined percentage of this line's taxes.",
+    'Total': 'Subtotal plus tax, rounded to two decimals.',
 }
 ADVANCED = {  # advancedSetting keys this script owns
     'Sequence': {'defsource': C.static_default(10)},
@@ -460,8 +440,7 @@ def step_mount():
     C.show(INVOICES)
 
 
-SUBTABLE_DESC = ("Odoo's Invoice Lines tab. The worksheet Invoice Lines, mounted here: the same rows are also a "
-                 'list of their own in the sidebar, and the invoice sums them into Untaxed Amount.')
+SUBTABLE_DESC = 'The products, sections and notes on this document.'
 
 
 def place_subtable():

@@ -935,3 +935,18 @@ OK  0g. the roll-up with TEST Percent 3: 100.00 at 3.0%, total 103.00; the invoi
 | Taxes | `TEST Duplicate Probe` ×2 — one with its key, one marked | Test 13. The marked one is what the *Duplicate names* view is for; deleting it needs the owner's approval |
 | Taxes | `TEST Fixed 7`, `TEST Percent 3` | The build's own `measure` probes for §1's two roll-up questions |
 | Invoice Lines | `TEST B category account` | Test 19 put *10% G* on it and **took it off again**; the line and its invoice read exactly as bundle 2 left them (110.00 / 0.00 / 110.00 — the Tax was blank before, see difference 3) |
+
+
+## Descriptions rewritten for the app's users (22 Sep 2026)
+
+The owner's rule of 22 Sep 2026: a description in the app says only what the field or button does, for the people using it — no Odoo, no field or model names, no divergences, no build notes. The texts below were rewritten or emptied on the live app and in the builder's constants. The old text is kept here, word for word, because it carried the Odoo references and build reasoning that are no longer in the app.
+
+| Control | Key | Before | After |
+|---|---|---|---|
+| Description | desc | The short line Odoo shows beside the name — *SST 10%*, *Not Applicable*. Odoo's is a rich-text field; here it is plain text, because it is a list column and a rich-text cell is unreadable. | A short line shown beside the tax name, e.g. SST 10%. |
+| Formula | desc | Compute the amount of the tax.  :param base: float, actual amount on which the tax is applied :param price_unit: float :param quantity: float :param product: A object representing the product  | The formula that computes the tax amount when Tax Computation is Custom Formula. |
+| Label on Invoices | desc | What prints on the document. Odoo falls back to the Tax Name when it is empty. | The name of the tax as printed on invoices. |
+| Tax Group | desc | Odoo's is a relation to account.tax.group. The tenant's ten groups differ only in the name — same country, same sequence, same SST Payable and SST Receivable — so a dropdown of the ten names carries everything that varies. | The group this tax is reported under. |
+| Active | desc | Set active to false to hide the tax without removing it. | Untick to hide the tax without deleting it. |
+| Duplicate name | desc | Another tax of the same country, type and scope already has this Tax Name. Ticked by the workflow "Taxes: the key and the duplicate check" — Odoo refuses such a record outright (unique(company, name, type_tax_use, tax_scope, country_id)); HAP runs its workflow after the save, so here the duplicate is created and named. | Ticked when another tax of the same country, type and scope already has this Tax Name. |
+| Tax key | desc | Odoo's five-way uniqueness constraint as one field: the country's code, the Tax Type, the Tax Scope and the Tax Name, separated by bars — "MY\|sale\|consu\|10% G". Hidden and read-only, and written only by the workflow "Taxes: the key and the duplicate check", which writes it after proving no other tax holds it. No duplicates on this control refuses an API write of a key another tax already has (resultCode 11) and is not applied to a workflow's own write, so it is a backstop on imports rather than what keeps the key unique. | *(empty)* |

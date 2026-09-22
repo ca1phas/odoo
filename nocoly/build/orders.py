@@ -788,8 +788,8 @@ def step_dots():
 #
 # **Neither is an Odoo field.** `sale.order` has no `is_template` and no `template_name`: Odoo keeps a quotation
 # template in a model of its own, `sale.order.template`, and this app instead marks an *order* as the thing to
-# recreate from (the owner's decision, relayed 21 Sep 2026). Both are this app's own invention and their `desc`
-# says so.
+# recreate from (the owner's decision, relayed 21 Sep 2026). Both are this app's own invention; their `desc`
+# says only what they do, for the app's users (owner's rule, 22 Sep 2026), so that is recorded here and in 16.
 #
 # They are **appended** with `common.append_controls` — `AddWorksheetControls` with no client-side id, so the
 # server mints real ones and not one of the owner's thirty-five controls is re-sent. `add-fields` parks a new
@@ -803,11 +803,9 @@ NEW_TYPE = {IS_TEMPLATE: CHECKBOX, TEMPLATE_NAME: TEXT}
 NEW_PLACE = {IS_TEMPLATE: (23, 0, 6), TEMPLATE_NAME: (23, 1, 6)}
 NEW_ALIAS = {IS_TEMPLATE: 'is_template', TEMPLATE_NAME: 'template_name'}
 NEW_DESC = {
-    IS_TEMPLATE: 'A template is a quotation kept to be recreated from, not sent to a customer. Use the record '
-                 "menu's Recreate to start a real quotation from it — Recreate copies the order lines, Copy "
-                 'does not. Not an Odoo field: `sale.order` has no `is_template`.',
-    TEMPLATE_NAME: 'What this template is called in the Templates view. Not an Odoo field: `sale.order` has no '
-                   '`template_name`.',
+    IS_TEMPLATE: 'Tick to keep this quotation as a template instead of sending it. Recreate from the record menu to '
+                 'start a quotation from this template: Recreate copies the order lines, Copy does not.',
+    TEMPLATE_NAME: 'The name shown for this template in the Templates view.',
 }
 
 
@@ -901,7 +899,7 @@ def step_controls():
 # **Naming.** The control is *Invoicing Closed*, not Odoo's own label *Manually Closed For Invoicing*, and that
 # divergence is deliberate: the label is never shown on Odoo's own form — the field appears only inside the
 # Reopen button's `invisible` condition — and the short name matches the two buttons that drive it. Odoo's label
-# is recorded in the control's `desc` so the divergence stays traceable from the app itself.
+# is recorded in ODOO_INVOICING_CLOSED_LABEL and 16-orders.md; a `desc` in this app never names Odoo.
 #
 # **Permissions.** All four carry `fieldPermission` **"100"** — read-only and hidden on create, which is
 # **Status**' own permission and for the same reason: a button or a workflow writes them and nobody types them.
@@ -952,16 +950,10 @@ PART1_DESC = {
     # The owner's own text, 22 Sep 2026. It no longer names Odoo's label (ODOO_INVOICING_CLOSED_LABEL), so the
     # name divergence is traceable from here and from 16-orders.md, not from the app.
     INVOICING_CLOSED: 'Stop asking for this order to be invoiced, without cancelling it',
-    SIGNATURE_FIELD: 'The signature the customer drew when they accepted this quotation on a shared page. '
-                     'Written by Sign & Accept and cleared by Set to Quotation — never typed, which is why it '
-                     'is read-only and hidden on create. The Online Signature checkbox is only a request for a '
-                     'signature and stores nothing; this is where the signature itself lands.',
-    SIGNED_BY: 'The name the customer gave when they accepted this quotation on a shared page. Written by Sign '
-               '& Accept and cleared by Set to Quotation — never typed, which is why it is read-only and hidden '
-               'on create. Online Signature is only the request; this is who signed.',
-    SIGNED_ON: 'When the customer accepted this quotation on a shared page. Written by Sign & Accept and '
-               'cleared by Set to Quotation — never typed, which is why it is read-only and hidden on create. '
-               'Online Signature is only the request; this is when the signature arrived.',
+    SIGNATURE_FIELD: 'The signature the customer drew when accepting the quotation online. Filled in automatically '
+                     'and cleared by Set to Quotation.',
+    SIGNED_BY: 'The name the customer gave when accepting the quotation online. Filled in automatically.',
+    SIGNED_ON: 'When the customer accepted the quotation online. Filled in automatically.',
 }
 
 
@@ -1995,10 +1987,9 @@ def switch_when(f, field, ticked):
 
 
 BUTTON_DESC = {
-    CONFIRM: 'Confirm this quotation as a sales order, and stamp Quotation/Order Date with the confirmation '
-             'time. Refused, with a notification, while any product line has no Product.',
-    CANCEL: 'Cancel this order. Not offered on a locked order — untick Locked first, as Odoo asks you to '
-            'unlock it.',
+    CONFIRM: 'Confirm this quotation as a sales order and set the Quotation/Order Date to now. Not possible while a '
+             'product line has no product.',
+    CANCEL: 'Cancel this order. Not available on a locked order: untick Locked first.',
     SET_TO_QUOTATION: 'Put a cancelled or already-sent order back to a plain quotation, clearing the '
                       'signature the customer left.',
     MARK_AS_SENT: 'Mark this quotation as sent without emailing it — for a quotation sent some other way.',
@@ -2315,9 +2306,7 @@ DELIVER_STEPS = (DELIVER_LINES, DELIVER_EACH)
 SUB_PROCESS, GET_MANY = 16, 13                  # flowNodeType
 FROM_WORKSHEET, FROM_RECORD = '400', '401'      # get-multiple actionId · a value taken from the sub-process's record
 SEQUENTIAL = 2                                  # a sub-process's executeType: 1 parallel · 2 one at a time
-DELIVER_DESC = ("Set every product line's Quantity Delivered to its own Quantity — for an order that is not "
-                'delivered through Inventory. Offered on a Sales Order only (our judgment: Odoo\'s own guard for '
-                'this action is not in the Community source).')
+DELIVER_DESC = "Set every product line's Quantity Delivered to its Quantity. Available on a sales order only."
 # (2) Proved by `selfdeliver` on this order: a Sales Order whose product lines carry different Quantities and
 # no Delivered.
 DELIVER_ORDER = 'S00006'
@@ -3162,14 +3151,12 @@ DISCOUNT_ALIAS = {DISCOUNT_TYPE: 'discount_type', DISCOUNT_VALUE: 'discount_valu
 DISCOUNT_PLACE = {DISCOUNT_TYPE: (30, 0, 6), DISCOUNT_VALUE: (30, 1, 6)}   # intent: side by side, above the
                                                                            # totals; only `size` survives
 DISCOUNT_DESC = {
-    DISCOUNT_TYPE: "Stands in for Odoo's discount wizard (sale.order.discount), which is a dialog and not part of "
-                   'the order. Global Discount: Discount Value is a percentage of each tax group\'s subtotal. '
-                   'Fixed Amount: Discount Value in RM, shared over the tax groups in proportion to their '
-                   "subtotals. Press Apply Discount to write the discount lines. Odoo's third mode, On All Order "
-                   "Lines, is the lines' own Discount % — use the subtable's Batch Operation.",
-    DISCOUNT_VALUE: "Stands in for the wizard's Percentage and Amount (discount_percentage, discount_amount) as one "
-                    'number: the percentage for Global Discount (10 = 10%), the amount in RM for Fixed Amount. '
-                    'Empty or 0, Apply Discount removes the discount lines — which is how a discount is taken off.',
+    DISCOUNT_TYPE: 'Global Discount takes Discount Value as a percentage off the order. Fixed Amount takes it as an '
+                   'amount in RM off the order total, tax included. Press Apply Discount to add the discount lines. '
+                   "To discount single lines, use the lines' Discount instead.",
+    # The owner's own text, typed in the designer on 22 Sep 2026 — kept exactly as stored (typos included) so
+    # `check` does not fail on it and no step writes over it. A corrected wording is the owner's to choose.
+    DISCOUNT_VALUE: 'EIther % (e.g. 10%) or Whole Amound (e.g. 100)',
 }
 
 
@@ -3295,11 +3282,8 @@ def step_discountfields():
 #   * the wizard's lines carry `extra_tax_data` so their tax is the exact complement of the order's; here each
 #     discount line's tax is its own Subtotal × rate, like every other line.
 APPLY = 'Apply Discount'
-APPLY_DESC = ("Odoo's Discount button (the sale.order.discount wizard), named Apply Discount here so it is not "
-              "confused with the lines' Discount % column. Writes the discount set in Discount Type and Discount "
-              'Value as Discount lines, one per tax combination, as Odoo does — replacing any this order already '
-              'has, so it can be pressed again. With Discount Value empty or 0 it removes them. Not offered on a '
-              'locked or cancelled order.')
+APPLY_DESC = ('Add discount lines for the Discount Type and Discount Value, replacing any discount lines already on '
+              'the order. With Discount Value empty or 0, removes them. Not available on a locked or cancelled order.')
 # the parent's steps
 A_VARIANT = 'The Discount product'
 A_OLD = "This order's discount lines"

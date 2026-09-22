@@ -204,7 +204,8 @@ ALIASES = {NAME: 'name', TYPE: 'type_tax_use', SCOPE: 'tax_scope', COMPUTATION: 
            DUPLICATE: 'duplicate_name',             # not an Odoo field
            TAX_KEY: 'tax_key'}                      # nor is this
 HINTS = {PRICE_INC: 'Default'}                      # Odoo's placeholder on price_include_override; no other has one
-DESC = {  # Odoo's field help verbatim where it has one (addons/account/models/account_tax.py, 19.4 wording)
+DESC = {  # Odoo's help where it reads well for a user, else plain words — only what the field does
+    # (owner's rule, 22 Sep 2026). Build notes and Odoo references: worksheets/13-taxes.md, foot.
     TYPE: "Determines where the tax is selectable. Note: 'None' means a tax can't be used by itself, however it "
           'can still be used in a group.',
     COMPUTATION: '- Group of Taxes: The tax is a set of sub taxes.\n'
@@ -212,34 +213,19 @@ DESC = {  # Odoo's field help verbatim where it has one (addons/account/models/a
                  '- Percentage: The tax amount is a % of the price.\n'
                  '- Percentage Tax Included: The tax amount is a division of the price.\n'
                  '- Custom Formula: the Formula below computes the amount.',
-    FORMULA: 'Compute the amount of the tax.\n\n'
-             ':param base: float, actual amount on which the tax is applied\n'
-             ':param price_unit: float\n'
-             ':param quantity: float\n'
-             ':param product: A object representing the product\n',
-    DESCRIPTION: "The short line Odoo shows beside the name — *SST 10%*, *Not Applicable*. Odoo's is a rich-text "
-                 'field; here it is plain text, because it is a list column and a rich-text cell is unreadable.',
-    LABEL: 'What prints on the document. Odoo falls back to the Tax Name when it is empty.',
-    GROUP: "Odoo's is a relation to account.tax.group. The tenant's ten groups differ only in the name — same "
-           'country, same sequence, same SST Payable and SST Receivable — so a dropdown of the ten names '
-           'carries everything that varies.',
+    FORMULA: 'The formula that computes the tax amount when Tax Computation is Custom Formula.',
+    DESCRIPTION: 'A short line shown beside the tax name, e.g. SST 10%.',
+    LABEL: 'The name of the tax as printed on invoices.',
+    GROUP: 'The group this tax is reported under.',
     COUNTRY: 'The country for which this tax is applicable.',
     PRICE_INC: "Overrides the Company's default on whether the price you use on the product and invoices "
                'includes this tax.',
     AFFECT: 'If set, taxes with a higher sequence than this one will be affected by it, provided they accept it.',
     AFFECTED: 'If set, taxes with a lower sequence might affect this one, provided they try to do it.',
-    ACTIVE: 'Set active to false to hide the tax without removing it.',
+    ACTIVE: 'Untick to hide the tax without deleting it.',
     SEQUENCE: 'The sequence field is used to define order in which the tax lines are applied.',
-    DUPLICATE: 'Another tax of the same country, type and scope already has this Tax Name. Ticked by the '
-               'workflow "Taxes: the key and the duplicate check" — Odoo refuses such a record outright '
-               '(unique(company, name, type_tax_use, tax_scope, country_id)); HAP runs its workflow after the '
-               'save, so here the duplicate is created and named.',
-    TAX_KEY: "Odoo's five-way uniqueness constraint as one field: the country's code, the Tax Type, the Tax "
-             'Scope and the Tax Name, separated by bars — "MY|sale|consu|10% G". Hidden and read-only, and '
-             'written only by the workflow "Taxes: the key and the duplicate check", which writes it after '
-             'proving no other tax holds it. No duplicates on this control refuses an API write of a key '
-             'another tax already has (resultCode 11) and is not applied to a workflow\'s own write, so it is '
-             'a backstop on imports rather than what keeps the key unique.',
+    DUPLICATE: 'Ticked when another tax of the same country, type and scope already has this Tax Name.',
+    TAX_KEY: '',
 }
 REQUIRED = {NAME, TYPE, COMPUTATION, AMOUNT, COUNTRY, SEQUENCE}   # **not** Tax Group: a rule hides it (BUILDING.md)
 UNIQUE = {TAX_KEY}                                  # §1 › Rules; and *not* Tax Name
@@ -1595,10 +1581,8 @@ SALES_TAXES, PURCHASE_TAXES = 'Sales Taxes', 'Purchase Taxes'
 PRODUCT_TAXES = {SALES_TAXES: ('taxes_id', 'Sales', 12),
                  PURCHASE_TAXES: ('supplier_taxes_id', 'Purchases', 12)}
 PRODUCT_DESC = {
-    SALES_TAXES: 'Default taxes used when selling the product — Odoo taxes_id. The picker offers the taxes '
-                 "whose Tax Type is Sales, which is Odoo's own domain on the field.",
-    PURCHASE_TAXES: 'Default taxes used when buying the product — Odoo supplier_taxes_id. The picker offers '
-                    'the taxes whose Tax Type is Purchases.',
+    SALES_TAXES: 'Default taxes used when selling this product.',
+    PURCHASE_TAXES: 'Default taxes used when buying this product.',
 }
 PRODUCT_AFTER = {SALES_TAXES: 'Sales Price', PURCHASE_TAXES: 'Cost'}   # the control each one follows
 PICKER_BASE = {'spliceType': 1, 'dateRange': 0, 'dateRangeType': 0, 'minValue': None, 'maxValue': None,

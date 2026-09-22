@@ -226,49 +226,38 @@ HINTS = {  # Odoo's placeholders on this form; every other field's placeholder i
     'Payment Reference': 'Standard communication',
     'Terms and Conditions': 'Terms and Conditions',
 }
-DESC = {  # Odoo field help, verbatim where Odoo has one (addons/account/models/account_move.py)
-    'Number': 'Written by Confirm from the Journal\'s Sequence Prefix and the year of the Accounting Date — '
-              'INV/2026/00001. A draft holds the word "Draft" until then, as Odoo shows it.',
-    'Type': "One model holds every accounting document; the Type decides which one it is. Odoo's menus — Invoices, "
-            'Credit Notes, Bills, Refunds, Journal Entries — are filtered views of this one table.',
-    'Status': 'Draft until Confirm posts the document; Cancel makes it Cancelled, Reset to Draft takes it back. '
-              "Odoo's header status bar.",
-    'Customer / Vendor': 'Odoo labels the one field Customer on a customer document and Vendor on a vendor one; '
-                         'HAP cannot rename a field from a rule, so it carries both words.',
-    'Delivery Address': 'The delivery address will be used in the computation of the fiscal position.',
-    'Invoice Date': 'Odoo labels it Bill Date on a vendor document, where it is required. Confirm fills it with '
-                    'today when it is empty.',
+DESC = {  # Odoo's help where it reads well for a user, else plain words — only what the field does
+    # (owner's rule, 22 Sep 2026). Build notes and Odoo references: worksheets/06-invoices.md, foot.
+    'Number': "Given when the document is confirmed, from the journal's Sequence Prefix and the year of the "
+              'Accounting Date, e.g. INV/2026/00001. Shows "Draft" until then.',
+    'Type': 'The kind of document: an invoice, credit note, bill, receipt or journal entry.',
+    'Status': 'Draft until Confirm posts the document. Cancel makes it Cancelled, and Reset to Draft takes it back.',
+    'Customer / Vendor': 'The customer on a customer document, the vendor on a vendor bill or vendor credit note.',
+    'Delivery Address': 'The address the goods or services are delivered to.',
+    'Invoice Date': "The date of the invoice or bill. Required on a bill. Confirm fills in today's date if it is "
+                    'left blank.',
     'Accounting Date': 'The date the entry is booked under, and the year the number is taken from.',
-    'Due Date': 'Odoo shows the Due Date or the Payment Terms: setting terms computes the date.',
+    'Due Date': 'When payment is due. Choosing Payment Terms works it out.',
     'Payment Terms': '',                          # Odoo's field has no help; the stand-in's description went with it
-    'Journal': 'The book the entry is written in. Its Sequence Prefix is what Confirm numbers the document with, '
-               'so it cannot be changed once the document is numbered.',
-    'Tax mode': "Whether a line's Amount is its subtotal or its total. Odoo requires it on every invoice, credit "
-                'note and receipt: "The document tax mode must be set."',
-    'Terms and Conditions': 'Odoo\'s placeholder here is "Terms and Conditions"; HAP never shows a Rich text '
-                            "field's placeholder, so it is said here instead.",
-    'Untaxed Amount': 'Seeded from the tenant and read-only; 07 Invoice Lines makes it a roll-up of the lines.',
-    'Tax': 'Seeded from the tenant and read-only; 07 Invoice Lines makes it a roll-up of the lines.',
-    'Total': 'Seeded from the tenant and read-only; 07 Invoice Lines makes it a roll-up of the lines.',
-    'Amount Due': 'Seeded from the tenant and read-only; it equals the Total until the Payments bundle can settle '
-                  'a document.',
-    'Customer Reference': "Odoo shows the same field as Bill Reference in the main group of a vendor document.",
+    'Journal': 'The journal the document is recorded in. Its Sequence Prefix numbers the document, so it cannot be '
+               'changed once the document has a number.',
+    'Tax mode': 'Whether the line prices exclude or include tax.',
+    'Terms and Conditions': '',
+    'Untaxed Amount': "The sum of the lines' subtotals, before tax.",
+    'Tax': 'The tax on the lines.',
+    'Total': 'The amount to pay, tax included.',
+    'Amount Due': 'What is still to be paid on this document.',
+    'Customer Reference': "The customer's reference for this invoice, or the vendor's reference on a bill.",
     'Salesperson': '',
-    'Recipient Bank': 'A stand-in: Odoo points at a res.partner.bank record, and bank accounts are not in Phase 1. '
-                      'Odoo\'s help: "Bank Account Number to which the invoice will be paid. A Company bank account '
-                      'if this is a Customer Invoice or Vendor Credit Note, otherwise a Partner bank account '
-                      'number."',
+    'Recipient Bank': "The bank account the invoice will be paid into: the company's account on a customer invoice "
+                      "or vendor credit note, otherwise the partner's.",
     'Payment Reference': 'The payment reference to set on journal items.',
     'Delivery Date': '',
     'Source Document': 'The document(s) that generated the invoice.',
     'Auto-post': 'Specify whether this entry is posted automatically on its accounting date, and any similar '
                  'recurring invoices.',
     'Auto-post until': 'This recurring move will be posted up to and including this date.',
-    JOURNAL_TYPE: "The Journal's own Type, read through the Journal relation and stored here. Odoo has no such "
-                  'field — it reads journal_id.type directly — but a HAP business rule can only compare a '
-                  "control of its own worksheet, and this is what the two journal checks stand on: Odoo's "
-                  "@api.constrains('journal_id', 'move_type') _check_journal_move_type, which refuses a sale "
-                  'document in a non-sale journal and a purchase document in a non-purchase journal.',
+    JOURNAL_TYPE: 'The type of the selected journal.',
     # The two dividers carry no description: HAP renders a type-22 divider's `desc` nowhere at all.
     'Invoice': '', 'Accounting': '',
 }

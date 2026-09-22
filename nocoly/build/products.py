@@ -81,24 +81,19 @@ PLACE = {  # field name -> (row, col, size, tab)
 HINTS = {'Name': 'e.g. Cheese Burger', 'Internal Notes': 'This note is only for internal purposes.',
          'Sales Description': 'This note is added to sales orders and invoices.',
          'Income Account': 'From Category', 'Expense Account': 'From Category'}   # no other placeholders, as in Odoo
-DESC = {  # Odoo field help (product_template.py)
+DESC = {  # Odoo's help where it reads well for a user, else plain words — only what the field does
+    # (owner's rule, 22 Sep 2026). Build notes and Odoo references: worksheets/03-products.md, foot.
     'Product Type': 'Goods are tangible materials and merchandise you provide.\n'
                     'A service is a non-material product you provide.',
     'Sales Price': 'Price at which the product is sold to customers.',
-    'Cost': 'Value of the product (automatically computed in AVCO).\n'
-            'Used to value the product when the purchase cost is not known (e.g. inventory adjustment).\n'
-            'Used to compute margins on sale orders.',
-    'Unit': 'Default unit of measure used for all stock operations.',
+    'Cost': 'What this product costs the company. Used to value it and to work out margins.',
+    'Unit': 'The unit this product is sold and counted in.',
     'Packagings': 'Additional packagings for this product which can be used for sales',
-    'Sales Description': 'A description of the Product that you want to communicate to your customers. This '
-                         'description will be copied to every Sales Order, Delivery Order and Customer '
-                         'Invoice/Credit Note',
-    'Active': 'If unchecked, it will allow you to hide the product without removing it.',
+    'Sales Description': 'A description of this product for your customers.',
+    'Active': 'Untick to hide the product without deleting it.',
     # the Chart of Accounts bundle (product.py, property_account_income_id / property_account_expense_id)
     'Income Account': 'Keep this field empty to use the default value from the product category.',
-    'Expense Account': 'Keep this field empty to use the default value from the product category. If anglo-saxon '
-                       'accounting with automated valuation method is configured, the expense account on the product '
-                       'category will be used.',
+    'Expense Account': 'Keep this field empty to use the default value from the product category.',
 }
 HIDDEN = ['Active']
 # Read-only, as every reverse relation and roll-up in this app is: a variant says which product it belongs

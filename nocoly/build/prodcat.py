@@ -103,19 +103,16 @@ PLACE = {
 }
 TAB_OF = {INCOME: ACCOUNTING, EXPENSE: ACCOUNTING}   # the controls that sit inside a tab
 HINTS = {NAME: 'e.g. Lamps'}                      # Odoo's placeholder; every other control gets none
-DESC = {  # Odoo's field help where it has one (product_category.py), how a helper is computed otherwise
-    COMPLETE: "The Parent Category's Complete Name, ' / ' and this name, down the whole tree — Odoo "
-              'complete_name. It is the title: what every list, card and picker shows.',
-    CHILDREN: 'The categories whose Parent Category is this one — Odoo child_id. Maintained by the children.',
-    PRODUCTS_REL: 'The products in this category — the reverse of Category on Products. Set the category on '
-                  'the product.',
+DESC = {  # Odoo's help where it reads well for a user, else plain words — only what the field does
+    # (owner's rule, 22 Sep 2026). Build notes and Odoo references: worksheets/08-product-categories.md, foot.
+    COMPLETE: 'The full path of the category, e.g. All / Saleable.',
+    CHILDREN: 'The categories under this one.',
+    PRODUCTS_REL: 'The products in this category. To add one, set its Category on the product.',
     COUNT: 'The number of products under this category (Does not consider the children categories)',
-    PARENT_COMPLETE: "The Parent Category's Complete Name (a stored lookup), which Complete Name is built on.",
+    PARENT_COMPLETE: '',
     # bundle 2: Odoo's help on property_account_income_categ_id / property_account_expense_categ_id (product.py)
     INCOME: 'This account will be used when validating a customer invoice.',
-    EXPENSE: 'The expense is accounted for when a vendor bill is validated, except in anglo-saxon accounting with '
-             'perpetual inventory valuation in which case the expense (Cost of Goods Sold account) is recognized at '
-             'the customer invoice validation.',
+    EXPENSE: 'The expense is recorded on this account when a vendor bill is confirmed.',
 }
 REQUIRED = {NAME}
 # A hidden field never shows as a table column, so Complete Name — the title, and a view column — is read-only

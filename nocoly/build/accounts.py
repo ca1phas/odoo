@@ -189,21 +189,18 @@ ALIASES = {CODE: 'code', NAME: 'name', DISPLAY: 'display_name', TYPE: 'account_t
            ACTIVE: 'active', CHILDREN: 'child_ids', DEFAULT_TAXES: 'tax_ids'}
 HINTS = {CODE: 'e.g. 101000', NAME: 'e.g. Current Assets', PARENT: 'Root account',
          DESCRIPTION: 'Enter description here...'}   # Odoo's placeholders; every other control gets none
-DESC = {  # Odoo's field help, verbatim, where it has one (19.4 labels and help); how a helper is computed otherwise
+DESC = {  # Odoo's help where it reads well for a user, else plain words — only what the field does
+    # (owner's rule, 22 Sep 2026). Build notes and Odoo references: worksheets/09-chart-of-accounts.md, foot.
     TYPE: 'Account Type is used for information purpose, to generate country-specific legal reports, and set the '
           'rules to close a fiscal year and generate opening entries.',
     RECONCILE: 'This account is used in bank reconciliation. Currency rate difference entries will be automatically '
                'created if needed.',
     NON_TRADE: 'If set, this account will belong to Non Trade Receivable/Payable in reports and filters.\n'
                'If not, this account will belong to Trade Receivable/Payable in reports and filters.',
-    DISPLAY: 'The Code, a space and the Account Name — Odoo display_name, as an accounting user sees it. It is the '
-             'title: what every list, card and picker shows.',
-    GROUP: 'Asset, Liability, Equity, Income, Expense or Off Balance, from the Type — Odoo internal_group. Odoo '
-           'keeps it out of sight and filters on it; here a view can show it and filter on it.',
-    CHILDREN: 'The accounts whose Parent Account is this one — Odoo child_ids. Hidden: Odoo shows an account\'s '
-              'children only by indenting its list.',
-    DEFAULT_TAXES: 'Default taxes for this account — Odoo tax_ids, on the Accounting tab of its form. Not one '
-                   'of this tenant\'s accounts has any, so the field is here and empty.',
+    DISPLAY: 'The code followed by the account name, as shown in lists and pickers.',
+    GROUP: 'Asset, Liability, Equity, Income, Expense or Off Balance, set from the Type.',
+    CHILDREN: 'The accounts under this one.',
+    DEFAULT_TAXES: 'Default taxes for this account.',
 }
 REQUIRED = {CODE, NAME, TYPE}
 UNIQUE = {CODE}                                     # Odoo _ensure_code_is_unique, per company = per app copy

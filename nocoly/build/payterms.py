@@ -225,22 +225,21 @@ LINE_ALIAS = {TERM: 'payment_id', DUE: 'value_amount', VALUE_F: 'value', AFTER: 
               NEXT_MONTH: 'days_next_month', LINE_TITLE: 'display_name'}
 TERM_HINT = {NAME: 'e.g. 30 days', NOTE: 'Description on invoice (e.g. Payment terms: 30 days after invoice date)'}
 LINE_HINT = {}
-TERM_DESC = {  # Odoo's help, verbatim, where it has one (addons/account/models/account_payment_term.py)
+TERM_DESC = {  # Odoo's help where it reads well for a user, else plain words — only what the field does
+    # (owner's rule, 22 Sep 2026). Build notes and Odoo references: worksheets/10-payment-terms.md, foot.
     DISC_PCT: 'Early Payment Discount granted for this payment term',
     DISC_DAYS: 'Number of days before the early payment proposition expires',
-    SEQUENCE: 'Terms are listed by this number, lowest first — Odoo sets it by dragging the term in its list.',
-    ACTIVE: 'If the active field is set to False, it will allow you to hide the payment terms without removing it.',
-    DUE_TERMS: 'When the invoice falls due: each line gives a date, and the Due Date of an invoice on this term is '
-               'the latest of them. The worksheet Payment Term Lines, mounted here.',
-    PCT_TOTAL: "The sum of Due over the Due Terms lines whose Value is Percent — Odoo's check that the "
-               'percentages add up to 100 reads it.',
-    LINE_COUNT: 'How many Due Terms lines the term has — the early discount rule reads it.',
+    SEQUENCE: 'Terms are listed by this number, lowest first.',
+    ACTIVE: 'Untick to hide these payment terms without deleting them.',
+    DUE_TERMS: "When the invoice falls due: each line gives a date, and the invoice's Due Date is the latest of them.",
+    PCT_TOTAL: 'The sum of the percentage lines. It must come to 100.',
+    LINE_COUNT: 'The number of lines in Due Terms.',
 }
 LINE_DESC = {
     DUE: 'For percent enter a ratio between 0-100.',
     VALUE_F: 'Select here the kind of valuation related to this payment terms line.',
-    TERM: 'The term this line belongs to — the link the Due Terms table on the term is built on.',
-    LINE_TITLE: 'Due, Value, After and Delay Type — how a line reads wherever HAP shows its title.',
+    TERM: 'The payment terms this line belongs to.',
+    LINE_TITLE: 'How the line reads in lists: Due, Value, After and Delay Type together.',
 }
 TERM_REQUIRED = {NAME, SEQUENCE}
 LINE_REQUIRED = {TERM, VALUE_F, DELAY_F}

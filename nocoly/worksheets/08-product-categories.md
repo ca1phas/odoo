@@ -508,3 +508,16 @@ CLI where the question is whether HAP recomputes — every value read back with 
 `TEST Product`, a test record of worksheet 03, now carries the Category `TEST UI renamed` — that is test 15's
 evidence. **The tenant's seven categories and all fourteen real products are untouched by the tests**:
 `prodcat verify` reads 0 categories differing and 0 products with the wrong category.
+
+
+## Descriptions rewritten for the app's users (22 Sep 2026)
+
+The owner's rule of 22 Sep 2026: a description in the app says only what the field or button does, for the people using it — no Odoo, no field or model names, no divergences, no build notes. The texts below were rewritten or emptied on the live app and in the builder's constants. The old text is kept here, word for word, because it carried the Odoo references and build reasoning that are no longer in the app.
+
+| Control | Key | Before | After |
+|---|---|---|---|
+| Products | desc | The products in this category — the reverse of Category on Products. Set the category on the product. | The products in this category. To add one, set its Category on the product. |
+| Child Categories | desc | The categories whose Parent Category is this one — Odoo child_id. Maintained by the children. | The categories under this one. |
+| Complete Name | desc | The Parent Category's Complete Name, ' / ' and this name, down the whole tree — Odoo complete_name. It is the title: what every list, card and picker shows. | The full path of the category, e.g. All / Saleable. |
+| Parent Complete Name | desc | The Parent Category's Complete Name (a stored lookup), which Complete Name is built on. | *(empty)* |
+| Expense Account | desc | The expense is accounted for when a vendor bill is validated, except in anglo-saxon accounting with perpetual inventory valuation in which case the expense (Cost of Goods Sold account) is recognized at the customer invoice validation. | The expense is recorded on this account when a vendor bill is confirmed. |

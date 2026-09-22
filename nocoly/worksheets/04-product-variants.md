@@ -462,3 +462,21 @@ No barcodes are set and nothing is favourite. Remove them after sign-off.
 Added on 17 Sep 2026 by the proof of the re-pointed automations (§2): **TEST Favorite Restored** (TEST-0007, rowid
 `3869dcc0-8b75-4e0a-b311-2d82f4e092a1`) and its variant **[TEST-0007] TEST Favorite Restored** (rowid
 `f826f74f-4f8e-4ca0-9577-2678503deeef`), both active, not favourite, no Weight or Volume.
+
+
+## Descriptions rewritten for the app's users (22 Sep 2026)
+
+The owner's rule of 22 Sep 2026: a description in the app says only what the field or button does, for the people using it — no Odoo, no field or model names, no divergences, no build notes. The texts below were rewritten or emptied on the live app and in the builder's constants. The old text is kept here, word for word, because it carried the Odoo references and build reasoning that are no longer in the app.
+
+| Control | Key | Before | After |
+|---|---|---|---|
+| Internal Reference | desc | Copied from the product — edit it there. Read-only on the variant while each product has one variant. | Copied from the product. Edit it on the product. |
+| Favorite | desc | The product's Favorite — edit it on the product. Odoo relates the two (is_favorite = product_tmpl_id.is_favorite). | The product's Favorite. Edit it on the product. |
+| Cost | desc | Value of the product (automatically computed in AVCO). Used to value the product when the purchase cost is not known (e.g. inventory adjustment). Used to compute margins on sale orders. Copied from the product — edit it there. Read-only on the variant while each product has one variant. | What this product costs the company. Copied from the product. Edit it on the product. |
+| Weight | desc | Copied from the product — edit it there. Read-only on the variant while each product has one variant. | Copied from the product. Edit it on the product. |
+| Volume | desc | Copied from the product — edit it there. Read-only on the variant while each product has one variant. | Copied from the product. Edit it on the product. |
+| Active | desc | If unchecked, it will allow you to hide the product without removing it. | Untick to hide the product without deleting it. |
+| Product | desc | The product this is a variant of. Set when the variant is created with its product; read-only, as on the Odoo variant form. Odoo product_tmpl_id. | The product this is a variant of. |
+| Name | desc | The product's Name, a stored lookup read by Display Name and the views' sort. | The product's name. |
+| Sales Price | desc | The product's Sales Price — edit it on the product. Price extras per attribute value come with the Product Variants bundle. | The product's Sales Price — edit it on the product. |
+| Display Name | desc | How this variant appears in lists and pickers: [Internal Reference] Name, or the Name alone when there is no Internal Reference. Odoo display_name. | How this variant appears in lists and pickers: [Internal Reference] Name, or the Name alone when there is no Internal Reference. |

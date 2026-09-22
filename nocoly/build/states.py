@@ -165,21 +165,15 @@ PLACE = {
     COUNTRY_CODE: (3, 0, 6), STATE_KEY: (3, 1, 6),
 }
 HINTS = {}                                        # Odoo's state form has no placeholder on any field
-DESC = {  # Odoo's field help where it has one (res_country.py); how a helper is computed otherwise
+DESC = {  # Odoo's help where it reads well for a user, else plain words — only what the field does
+    # (owner's rule, 22 Sep 2026). Build notes and Odoo references: worksheets/12-states.md, foot.
     NAME: 'Administrative divisions of a country. E.g. Fed. State, Department, Canton',
     CODE: 'The state code.',
-    DISPLAY: 'How this state appears in lists and pickers: the State Name and the country\'s code in brackets '
-             '— Odoo display_name, "Selangor (MY)".',
-    COUNTRY_CODE: "The Country's Country Code (a stored lookup), which Display Name is built on.",
-    STATE_KEY: "Odoo's constraint unique(country_id, code) as one field: the country's code, a bar and the "
-               'State Code — "MY|MY-10". Hidden and read-only, and written only by the workflow "States: the '
-               'key and the duplicate check", which writes it after proving no other state holds it. No '
-               'duplicates on this control refuses an API write of a key another state already has '
-               '(resultCode 11) and is not applied to a workflow\'s own write, so it is a backstop on '
-               'imports rather than what keeps the key unique.',
-    DUPLICATE: 'Another state of the same country already has this State Code. Ticked by the workflow States: '
-               "the key and the duplicate check — Odoo refuses such a record outright (unique(country_id, "
-               'code)); HAP runs its workflow after the save, so here the duplicate is created and named.',
+    DISPLAY: "How this state appears in lists and pickers: the State Name and the country's code in brackets, e.g. "
+             '"Selangor (MY)".',
+    COUNTRY_CODE: "The country's code.",
+    STATE_KEY: '',
+    DUPLICATE: 'Ticked when another state of the same country already has this State Code.',
 }
 REQUIRED = {NAME, CODE, COUNTRY}                  # Odoo: all three required on the model
 UNIQUE = {STATE_KEY}                              # §1 › Rules; nothing else, and *not* State Code
@@ -208,8 +202,7 @@ REVERSE_PLACE = (4, 0, 12)                        # under the remark block; a sh
 # PERMISSION above already carries "100" for two of this worksheet's own controls.
 REVERSE_PERMISSION = '100'
 REVERSE_COLUMNS = (NAME, CODE)                    # exactly Odoo's two columns there
-REVERSE_DESC = ('The states of this country — Odoo state_ids, the reverse of Country on States. Set the country '
-                'on the state.')
+REVERSE_DESC = 'The states of this country. To add one, set its Country on the state.'
 # Countries' remark block, whose last line §1 rewrites: the States are here now.
 NOTE_NAME = 'Country form note'
 NOTE_HTML = ("<p><strong>Also on Odoo's country form:</strong> the <strong>Currency</strong>, the country's "

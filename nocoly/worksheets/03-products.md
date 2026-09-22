@@ -249,3 +249,20 @@ sign-off.
 Added on 17 Sep 2026 by the Favorite restore's proof (§2, 04 §2): **TEST Favorite Restored** — TEST-0007, Goods, RM
 7.00 / RM 3.00, Unit Units, not favourite, no Weight or Volume (created through the API, which applies no defaults),
 rowid `3869dcc0-8b75-4e0a-b311-2d82f4e092a1`.
+
+
+## Descriptions rewritten for the app's users (22 Sep 2026)
+
+The owner's rule of 22 Sep 2026: a description in the app says only what the field or button does, for the people using it — no Odoo, no field or model names, no divergences, no build notes. The texts below were rewritten or emptied on the live app and in the builder's constants. The old text is kept here, word for word, because it carried the Odoo references and build reasoning that are no longer in the app.
+
+| Control | Key | Before | After |
+|---|---|---|---|
+| Cost | desc | Value of the product (automatically computed in AVCO). Used to value the product when the purchase cost is not known (e.g. inventory adjustment). Used to compute margins on sale orders. | What this product costs the company. Used to value it and to work out margins. |
+| Sales Description | desc | A description of the Product that you want to communicate to your customers. This description will be copied to every Sales Order, Delivery Order and Customer Invoice/Credit Note | A description of this product for your customers. |
+| Active | desc | If unchecked, it will allow you to hide the product without removing it. | Untick to hide the product without deleting it. |
+| Unit | desc | Default unit of measure used for all stock operations. | The unit this product is sold and counted in. |
+| Variants | desc | The variants of this product. Odoo product_variant_ids — read-only here, as it is there: a variant says which product it belongs to. | The variants of this product. |
+| Expense Account | desc | Keep this field empty to use the default value from the product category. If anglo-saxon accounting with automated valuation method is configured, the expense account on the product category will be used. | Keep this field empty to use the default value from the product category. |
+| Sales Taxes | desc | Default taxes used when selling the product — Odoo taxes_id. The picker offers the taxes whose Tax Type is Sales, which is Odoo's own domain on the field. | Default taxes used when selling this product. |
+| Purchase Taxes | desc | Default taxes used when buying the product — Odoo supplier_taxes_id. The picker offers the taxes whose Tax Type is Purchases. | Default taxes used when buying this product. |
+| # Variants | desc | The number on Odoo's Variants smart button (product_variant_count). | The number of variants of this product. |

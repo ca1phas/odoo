@@ -154,31 +154,30 @@ HINTS = {  # Odoo's placeholders on this form; every other field's placeholder i
     'Journal Name': 'e.g. Customer Invoices',     # Odoo computes name_placeholder from Type
     'Sequence Prefix': 'e.g. INV',
 }
-DESC = {  # Odoo field help, verbatim (addons/account/models/account_journal.py)
+DESC = {  # Odoo's help where it reads well for a user, else plain words — only what the field does
+    # (owner's rule, 22 Sep 2026). Build notes and Odoo references: worksheets/05-journals.md, foot.
     'Type': "Select 'Sale' for customer invoices journals.\n"
             "Select 'Purchase' for vendor bills journals.\n"
             "Select 'Cash', 'Bank' or 'Credit Card' for journals that are used in customer or vendor payments.\n"
             "Select 'General' for miscellaneous operations journals.",
     'Sequence Prefix': 'Shorter name used for display. The journal entries of this journal will also be named '
                        'using this prefix by default.',
-    'Sequence': 'Used to order Journals in the dashboard view.\n'
-                'A HAP table has no drag handle, so a journal is moved up or down the list by changing this '
-                'number. Odoo gives every new journal 10.',
+    'Sequence': 'Journals are listed by this number, lowest first. Change it to move a journal up or down the list.',
     'Communication Type': 'You can set here the default communication that will appear on customer invoices, once '
                           'validated, to help the customer to refer to that particular invoice when making the '
                           'payment.',
-    'Communication Standard': 'You can choose different models for each type of reference. The default one is the '
-                              'Odoo reference.',
+    'Communication Standard': 'The format of the payment reference on customer invoices.',
     'Dedicated Credit Note Sequence': "Check this box if you don't want to share the same sequence for invoices "
                                       'and credit notes made from this journal',
     'Dedicated Payment Sequence': "Check this box if you don't want to share the same sequence on payments and "
                                   'bank transactions posted on this journal',
-    'Active': 'Set active to false to hide the Journal without removing it.',
+    'Active': 'Untick to hide the journal without deleting it.',
     # The Chart of Accounts bundle's five accounts. Default Account has one label per journal type in Odoo, which a
-    # HAP field cannot change by condition, so its description says so (09 §1); the other four carry Odoo's help.
-    'Default Account': 'Odoo labels this Bank Account on a Bank journal, Cash Account on Cash, Journal Account on '
-                       'Credit Card, Default Income Account on Sales, Default Expense Account on Purchase, and Default '
-                       'Account on Miscellaneous, where it is used to automatically balance entries.',
+    # HAP field cannot change by condition, so its description says what it is on each type (09 §1); the other four
+    # carry Odoo's help.
+    'Default Account': "The journal's main account: the income account on a sales journal, the expense account on a "
+                       'purchase journal, and the account the money is held in on a bank, cash or credit card '
+                       'journal. On a miscellaneous journal it is used to balance entries automatically.',
     'Suspense Account': 'Bank statements transactions will be posted on the suspense account until the final '
                         'reconciliation allowing finding the right account.',
     'Profit Account': 'Used to register a profit when the ending balance of a cash register differs from what the '

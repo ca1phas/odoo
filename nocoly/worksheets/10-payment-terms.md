@@ -856,3 +856,25 @@ failure is answered: the two rules that stand on roll-ups are **built and disabl
 
 All go after sign-off, with the owner's approval. The tenant's ten terms, their eleven lines and every seeded
 reference stay.
+
+
+## Descriptions rewritten for the app's users (22 Sep 2026)
+
+The owner's rule of 22 Sep 2026: a description in the app says only what the field or button does, for the people using it — no Odoo, no field or model names, no divergences, no build notes. The texts below were rewritten or emptied on the live app and in the builder's constants. The old text is kept here, word for word, because it carried the Odoo references and build reasoning that are no longer in the app.
+
+**Payment Terms**
+
+| Control | Key | Before | After |
+|---|---|---|---|
+| Sequence | desc | Terms are listed by this number, lowest first — Odoo sets it by dragging the term in its list. | Terms are listed by this number, lowest first. |
+| Active | desc | If the active field is set to False, it will allow you to hide the payment terms without removing it. | Untick to hide these payment terms without deleting them. |
+| Due Terms | desc | When the invoice falls due: each line gives a date, and the Due Date of an invoice on this term is the latest of them. The worksheet Payment Term Lines, mounted here. | When the invoice falls due: each line gives a date, and the invoice's Due Date is the latest of them. |
+| Percent total | desc | The sum of Due over the Due Terms lines whose Value is Percent — Odoo's check that the percentages add up to 100 reads it. | The sum of the percentage lines. It must come to 100. |
+| Line count | desc | How many Due Terms lines the term has — the early discount rule reads it. | The number of lines in Due Terms. |
+
+**Payment Term Lines**
+
+| Control | Key | Before | After |
+|---|---|---|---|
+| Display name | desc | Due, Value, After and Delay Type — how a line reads wherever HAP shows its title. | How the line reads in lists: Due, Value, After and Delay Type together. |
+| Payment Terms | desc | The term this line belongs to — the link the Due Terms table on the term is built on. | The payment terms this line belongs to. |

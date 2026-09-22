@@ -784,3 +784,15 @@ two the *Duplicate codes* view lists; and **TEST State Duplicate Three**, which 
 test 20 mended (ZZ-03). On Contacts: **TEST State Contact** from the build. All go after sign-off, with the owner's approval; the 2 102
 states stay. *The rebuild of 18 Sep added a fourth, **TEST State Duplicate Two** (ZZ-01 as well), so Malaysia
 now reads 20; §2's table says what each one is for.*
+
+
+## Descriptions rewritten for the app's users (22 Sep 2026)
+
+The owner's rule of 22 Sep 2026: a description in the app says only what the field or button does, for the people using it — no Odoo, no field or model names, no divergences, no build notes. The texts below were rewritten or emptied on the live app and in the builder's constants. The old text is kept here, word for word, because it carried the Odoo references and build reasoning that are no longer in the app.
+
+| Control | Key | Before | After |
+|---|---|---|---|
+| Country Code | desc | The Country's Country Code (a stored lookup), which Display Name is built on. | The country's code. |
+| Display Name | desc | How this state appears in lists and pickers: the State Name and the country's code in brackets — Odoo display_name, "Selangor (MY)". | How this state appears in lists and pickers: the State Name and the country's code in brackets, e.g. "Selangor (MY)". |
+| State key | desc | Odoo's constraint unique(country_id, code) as one field: the country's code, a bar and the State Code — "MY\|MY-10". Hidden and read-only, and written only by the workflow "States: the key and the duplicate check", which writes it after proving no other state holds it. No duplicates on this control refuses an API write of a key another state already has (resultCode 11) and is not applied to a workflow's own write, so it is a backstop on imports rather than what keeps the key unique. | *(empty)* |
+| Duplicate code | desc | Another state of the same country already has this State Code. Ticked by the workflow States: the key and the duplicate check — Odoo refuses such a record outright (unique(country_id, code)); HAP runs its workflow after the save, so here the duplicate is created and named. | Ticked when another state of the same country already has this State Code. |

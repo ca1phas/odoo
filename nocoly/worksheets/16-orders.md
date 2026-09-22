@@ -576,3 +576,29 @@ and 10,200 at 8% S, untaxed 247,225.00:
 S00006 ended with no Discount line and Discount Type / Value empty. The one-combination name was proved on S00007
 (one line "Discount 10.00%", −10,460.32 on 104,603.20), then removed and the fields cleared. **Not UI-tested**:
 nothing here opened a browser.
+
+
+## Descriptions rewritten for the app's users (22 Sep 2026)
+
+The owner's rule of 22 Sep 2026: a description in the app says only what the field or button does, for the people using it — no Odoo, no field or model names, no divergences, no build notes. The texts below were rewritten or emptied on the live app and in the builder's constants. The old text is kept here, word for word, because it carried the Odoo references and build reasoning that are no longer in the app.
+
+**Orders**
+
+| Control | Key | Before | After |
+|---|---|---|---|
+| Is Template | desc | A template is a quotation kept to be recreated from, not sent to a customer. Use the record menu's Recreate to start a real quotation from it — Recreate copies the order lines, Copy does not. Not an Odoo field: `sale.order` has no `is_template`. | Tick to keep this quotation as a template instead of sending it. Recreate from the record menu to start a quotation from this template: Recreate copies the order lines, Copy does not. |
+| Template Name | desc | What this template is called in the Templates view. Not an Odoo field: `sale.order` has no `template_name`. | The name shown for this template in the Templates view. |
+| Signature | desc | The signature the customer drew when they accepted this quotation on a shared page. Written by Sign & Accept and cleared by Set to Quotation — never typed, which is why it is read-only and hidden on create. The Online Signature checkbox is only a request for a signature and stores nothing; this is where the signature itself lands. | The signature the customer drew when accepting the quotation online. Filled in automatically and cleared by Set to Quotation. |
+| Signed By | desc | The name the customer gave when they accepted this quotation on a shared page. Written by Sign & Accept and cleared by Set to Quotation — never typed, which is why it is read-only and hidden on create. Online Signature is only the request; this is who signed. | The name the customer gave when accepting the quotation online. Filled in automatically. |
+| Signed On | desc | When the customer accepted this quotation on a shared page. Written by Sign & Accept and cleared by Set to Quotation — never typed, which is why it is read-only and hidden on create. Online Signature is only the request; this is when the signature arrived. | When the customer accepted the quotation online. Filled in automatically. |
+| Discount Type | desc | Stands in for Odoo's discount wizard (sale.order.discount), which is a dialog and not part of the order. Global Discount: Discount Value is a percentage of each tax group's subtotal. Fixed Amount: Discount Value in RM, shared over the tax groups in proportion to their subtotals. Press Apply Discount to write the discount lines. Odoo's third mode, On All Order Lines, is the lines' own Discount % — use the subtable's Batch Operation. | Global Discount takes Discount Value as a percentage off the order. Fixed Amount takes it as an amount in RM off the order total, tax included. Press Apply Discount to add the discount lines. To discount single lines, use the lines' Discount instead. |
+| button Confirm | desc | Confirm this quotation as a sales order, and stamp Quotation/Order Date with the confirmation time. Refused, with a notification, while any product line has no Product. | Confirm this quotation as a sales order and set the Quotation/Order Date to now. Not possible while a product line has no product. |
+| button Cancel | desc | Cancel this order. Not offered on a locked order — untick Locked first, as Odoo asks you to unlock it. | Cancel this order. Not available on a locked order: untick Locked first. |
+| button Deliver | desc | Set every product line's Quantity Delivered to its own Quantity — for an order that is not delivered through Inventory. Offered on a Sales Order only (our judgment: Odoo's own guard for this action is not in the Community source). | Set every product line's Quantity Delivered to its Quantity. Available on a sales order only. |
+| button Apply Discount | desc | Odoo's Discount button (the sale.order.discount wizard), named Apply Discount here so it is not confused with the lines' Discount % column. Writes the discount set in Discount Type and Discount Value as Discount lines, one per tax combination, as Odoo does — replacing any this order already has, so it can be pressed again. With Discount Value empty or 0 it removes them. Not offered on a locked or cancelled order. | Add discount lines for the Discount Type and Discount Value, replacing any discount lines already on the order. With Discount Value empty or 0, removes them. Not available on a locked or cancelled order. |
+
+**Order Lines**
+
+| Control | Key | Before | After |
+|---|---|---|---|
+| Tax rate | desc | The sum of the Amounts of this line's Taxes, counting only the ones whose Tax Computation is Percentage — so a Fixed or Custom Formula tax cannot add its amount as if it were a rate. A roll-up (汇总) over the Taxes relation; hidden and read-only, and Total is computed from it. | The combined percentage of this line's taxes. |
