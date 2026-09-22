@@ -1235,6 +1235,21 @@ line's Subtotal; not found → create it. A second sub-process then prices each 
   `attachments`, text fields taking `$node-field$`; the recipient is an `accounts` entry `{type: 6, entityId: <a step
   holding the record>, roleId: <its Email control>, controlType: 5}`. Pressing a button that runs one **sends real
   email** — build and read back; never trigger it to test.
+- **A workflow formula reads a never-written field as `null`, and `null == ""` is false** (23 Sep 2026, Invoices'
+  numbering). A document that had never been numbered posted with **no number at all**: the outer
+  `IF($trigger-Number$ == "" || … == "Draft", <fresh>, $trigger-Number$)` matched neither test and returned the
+  null. A record that had once held a value and been cleared holds `""` and worked — which is why the same
+  chain numbered one confirmation and not the next, on identical inputs. **Normalise with `CONCAT(x, "")`
+  before comparing**, and test a derived value (`RIGHT(x, 5) == ""`) rather than the field itself.
+- **A changed formula does nothing until the workflow is published.** `workflow node save` stores it, and the
+  running version keeps computing the old expression — so a formula fix "not working" is usually a missing
+  `workflow publish`. Every probe below was set **and published** before triggering.
+- **Proved by probing** (each set → publish → trigger → read the node's `sourceId` in `approval history-detail`):
+  `CONCAT("a","b")` → `ab` · `RIGHT("abcdef", 3)` → `def` · `MID("INV/2026/00011", 11, 5)` → `0011` ·
+  `SUM("00011", 1)` → `12` · `SUM(RIGHT($node-Number$, 5), 1)` → `12` ·
+  `RIGHT(CONCAT("0000", …), 5)` → `00012`. So `RIGHT`, `MID`, `CONCAT` and `SUM` all exist and `SUM` does force
+  a numeric context, including on a `RIGHT()` slice. A **bare field reference as the whole formula** fails the
+  run outright (status 4).
 - **The screen knows things the API does not** (23 Sep 2026, found by clicking). Form Settings → **Print Template**
   gives each template a **Filter** — *"Set filters to show print templates only if conditions are met. And it will
   always be displayed if not set."* — so a template can be limited to the records it suits; `Worksheet/GetPrintList`

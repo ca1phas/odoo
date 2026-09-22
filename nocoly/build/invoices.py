@@ -188,15 +188,17 @@ PLACE = {  # name -> (row, col, size, tab)
     'Customer Reference': (15, 0, 6, OTHER_INFO), 'Salesperson': (15, 1, 6, OTHER_INFO),
     'Recipient Bank': (16, 0, 6, OTHER_INFO),     'Payment Reference': (16, 1, 6, OTHER_INFO),
     'Delivery Date': (17, 0, 6, OTHER_INFO),
-    'Accounting': (18, 0, 12, OTHER_INFO),       # Odoo's <group name="accounting_info_group"> heading
-    'Source Document': (19, 0, 6, OTHER_INFO),   'Auto-post': (19, 1, 6, OTHER_INFO),
-    'Auto-post until': (20, 0, 6, OTHER_INFO),
+    # Row 18 holds Sales Orders and Sales Order Count, placed 23 Sep 2026 when the order → invoice link
+    # landed, so everything from Accounting down sits one row lower than the first build put it.
+    'Accounting': (19, 0, 12, OTHER_INFO),       # Odoo's <group name="accounting_info_group"> heading
+    'Source Document': (20, 0, 6, OTHER_INFO),   'Auto-post': (20, 1, 6, OTHER_INFO),
+    'Auto-post until': (21, 0, 6, OTHER_INFO),
     # Not an Odoo field: a stored lookup of the Journal's Type, added 21 Sep 2026 so the two journal checks
     # below have something on this worksheet to compare (15 §1.3). Odoo reads `journal_id.type` straight off
     # the relation and stores nothing; a HAP rule condition can only name a control of its own worksheet.
-    JOURNAL_TYPE: (20, 1, 6, OTHER_INFO),
-    MYINVOIS: (21, 0, 12, None),
-    NOTE_MYINVOIS: (22, 0, 12, MYINVOIS),
+    JOURNAL_TYPE: (21, 1, 6, OTHER_INFO),
+    MYINVOIS: (23, 0, 12, None),
+    NOTE_MYINVOIS: (24, 0, 12, MYINVOIS),
 }
 
 # What each remark block says, as the HTML the block stores. For the app's users only (owner, 22 Sep 2026): what
@@ -1039,9 +1041,18 @@ def number_formula(f):
     # SUM(), not `+`: in a workflow formula `+` **concatenates** when either side is text ("5" + 1 is "51"), and
     # the result is then read back as an octal literal if it still has a leading zero ("00005" + 1 came out 41).
     # SUM() forces a numeric context; so would * 1 or INT(). There is no VALUE() and no LEN().
-    n = f'IF({highest} == "", SUM($count-{NUMBER_FX}$, 1), SUM(RIGHT({highest}, 5), 1))'
+    # The test is on RIGHT(...), not on the field: the search can return a record whose Number is **null**
+    # rather than "" — the document being confirmed itself, which the search cannot exclude — and `null == ""`
+    # is false, so the else branch ran on a null and computed empty. RIGHT(null, 5) is "", which this catches
+    # (23 Sep 2026: two confirmations with identical inputs, one numbered and one not).
+    suffix = f'RIGHT({highest}, 5)'
+    n = f'IF({suffix} == "", SUM($count-{NUMBER_FX}$, 1), SUM({suffix}, 1))'
     fresh = f'CONCAT($prefix-{STRING_FX}$, RIGHT(CONCAT("0000", {n}), 5))'
-    return f'IF({held} == "" || {held} == "{DRAFT}", {fresh}, {held})'
+    # `CONCAT({held}, "")` rather than `{held}`: a document that has never been numbered holds **null**, not "",
+    # and `null == ""` is false — so the else branch returned the null and the document posted with no number at
+    # all. CONCAT normalises it (23 Sep 2026; the same null explains the else branch below).
+    seen = f'CONCAT({held}, "")'
+    return f'IF({seen} == "" || {seen} == "{DRAFT}", {fresh}, {held})'
 
 
 def set_formula(pid, node, expression):
@@ -1810,8 +1821,11 @@ def step_check():
     f = hap.by_name(ctrls)
     names = {c['controlId']: c['controlName'] for c in ctrls}
     problems = []
-    if set(f) != set(PLACE) | set(INCOTERM_FIELDS):
-        problems.append(f'controls {sorted(set(f) ^ (set(PLACE) | set(INCOTERM_FIELDS)))}')
+    # o2i.py owns the two the order → invoice link added on 23 Sep 2026; this script neither writes nor places
+    # them, and their rows are the owner's (Other Info › Invoice, row 18).
+    O2I_FIELDS = {'Sales Orders', 'Sales Order Count'}
+    if set(f) != set(PLACE) | set(INCOTERM_FIELDS) | O2I_FIELDS:
+        problems.append(f'controls {sorted(set(f) ^ (set(PLACE) | set(INCOTERM_FIELDS) | O2I_FIELDS))}')
     problems += [f'{n}: {d}' for n, d in layout_differences(ctrls).items()]
     for cid, (name, _) in FIRST_BUILD.items():
         want = RENAME.get(cid, name)
