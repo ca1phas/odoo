@@ -4,10 +4,13 @@ Odoo computes `delivery_status` in `sale_stock` from the order's stock pickings.
 app, so the figure is computed from the lines' own quantities instead (owner, 23 Sep 2026; DECISIONS.md):
 
     Status is not Sales Order                               -> Nothing to Deliver
-    a Sales Order with no product line                      -> Nothing to Deliver
-    every product line's Quantity Delivered >= Quantity     -> Fully Delivered
-    some product line has Quantity Delivered > 0            -> Partially Delivered
+    a Sales Order with no goods line                        -> Nothing to Deliver
+    every goods line's Quantity Delivered >= Quantity       -> Fully Delivered
+    some goods line has Quantity Delivered > 0              -> Partially Delivered
     otherwise                                               -> Not Delivered
+
+A **goods line** is a product line whose product's Product Type is Goods (owner, 23 Sep 2026). Services, combos
+and the Discount product never hold a delivery up — in Odoo only storable goods get a picking.
 
 Over-delivery on one line never makes up for another line left undelivered: each line's shortfall is clamped at
 zero before it is summed (Left to Deliver). Odoo's `started` state needs a picking and stays out.
@@ -33,7 +36,7 @@ import common as C
 import hap
 import o2i
 from o2i import (APP, ORDERS, OLINES, NAME, DROPDOWN, NUMBER, RELATION, TEXT, ROLLUP, FUNCTION,
-                 O_SUBTABLE, OL_DISPLAY_TYPE, OL_QUANTITY, OL_QTY_DELIVERED, OL_DESCRIPTION, N_PRODUCT,
+                 O_SUBTABLE, OL_DISPLAY_TYPE, OL_QUANTITY, OL_QTY_DELIVERED, OL_DESCRIPTION,
                  EQ_SINGLE, GT_NUMBER, GET_ONE, FROM_SHEET_ONE, EQ_C, GTE_C, IS_ANY_OF, NOT_EMPTY_C,
                  CREATE_OR_UPDATE, DELETE_EVENT,
                  fields, option_key, flt, function_source, function_expression, ensure_rollups, filter_state,
@@ -51,8 +54,33 @@ LEFT = 'Left to Deliver'                             # the owner's control, hidd
 LEFT_ID = '6ab380817d58b0f4498fde44'
 LEFT_ALIAS = 'qty_to_deliver'
 
+# Goods only (owner, 23 Sep 2026). Product Type reaches the line through the variant, whose own Product Type is a
+# stored lookup of Products'. It must be **stored** here too ("00"): a display lookup ("10") is invisible to a
+# server-side function formula — it read empty whatever the comparison — while a stored lookup of a dropdown
+# renders as its label, as Order Status does for Invoice Status.
+PRODUCT_TYPE = 'Product Type'                        # Order Lines, stored lookup, hidden
+PRODUCT_TYPE_ID = '6ab39f1ee54d2a34faaab141'
+VARIANT_PRODUCT_TYPE = '6aa90c9f4a22ad87b728e9f9'    # Product Variants / Product Type (lookup of Products')
+OL_PRODUCT = '6ab0c864e43d174ab37535f8'
+GOODS_KEY = '10ef80e0-9f19-4bca-b61d-6bdaee85f238'   # Products / Product Type = Goods
+GOODS_FLAG = 'Goods line'                            # 1 on a product line of goods, else 0
+GOODS_DELIVERED = 'Goods line delivered'             # 1 on a goods line with anything delivered, else 0
 
-def left_expression():
+
+def blank_as_zero(ref):
+    return f'IF(CONCAT({ref}, "") == "", 0, {ref})'
+
+
+def goods_expression():
+    return f'IF(${OL_DISPLAY_TYPE}$ == "Product" && ${PRODUCT_TYPE_ID}$ == "Goods", 1, 0)'
+
+
+def goods_delivered_expression(lf):
+    d = f'${OL_QTY_DELIVERED}$'
+    return f"IF(${lf[GOODS_FLAG]['controlId']}$ == 1 && {blank_as_zero(d)} > 0, 1, 0)"
+
+
+def left_expression(lf=None):
     """A product line's shortfall, never below zero — so an over-delivered line cannot cancel another line's
     shortfall in the order's sum. Sections, subsections and notes carry 0. A dropdown renders its label inside a
     worksheet function formula (BUILDING.md › Formulas and lookups).
@@ -61,26 +89,58 @@ def left_expression():
     142 lines stored nothing under the plain `MAX(0, Quantity − Quantity Delivered)` (23 Sep 2026). The empty
     value is caught as text — `CONCAT(x, "") == ""` — and taken as 0."""
     q, d = f'${OL_QUANTITY}$', f'${OL_QTY_DELIVERED}$'
-    return (f'IF(${OL_DISPLAY_TYPE}$ == "Product", '
-            f'MAX(0, {q}-IF(CONCAT({d}, "") == "", 0, {d})), 0)')
+    lf = lf or fields(OLINES)
+    return (f"IF(${lf[GOODS_FLAG]['controlId']}$ == 1, "
+            f'MAX(0, {q}-{blank_as_zero(d)}), 0)')
 
 
-def left_spec():
+def left_spec(lf=None):
     return {'type': FUNCTION, 'alias': LEFT_ALIAS, 'desc': '', 'fieldPermission': '011', 'enumDefault2': 6,
-            'dot': 2, 'dataSource': function_source(left_expression())}
+            'dot': 2, 'dataSource': function_source(left_expression(lf))}
+
+
+def ensure_goods(lf):
+    """The stored Product Type lookup and the two goods flags on Order Lines. Returns the live controls."""
+    if PRODUCT_TYPE not in lf:
+        c = C.control('SHEET_FIELD', PRODUCT_TYPE, (9999, 0, 6), alias='product_type', hint='', desc='',
+                      data_source=OL_PRODUCT, source_control_id=VARIANT_PRODUCT_TYPE, extra={'dot': 0})
+        c.update(fieldPermission='011', dataSource=f'${OL_PRODUCT}$', strDefault='00')
+        lf = C.append_checked(OLINES, [c], 'delivery_olines_pre_product_type', 'goods/lookup')
+    if lf[PRODUCT_TYPE].get('strDefault') != '00':
+        C.pinned_write(OLINES, {lf[PRODUCT_TYPE]['controlId']: {'strDefault': '00'}},
+                       'delivery_olines_pre_pt_stored', 'goods/lookup stored')
+        lf = fields(OLINES)
+    for name, expr in ((GOODS_FLAG, lambda: goods_expression()),
+                       (GOODS_DELIVERED, lambda: goods_delivered_expression(lf))):
+        if name not in lf:
+            c = C.control('FORMULA_FUNC', name, (9999, 0, 6), alias='', hint='', desc='',
+                          advanced_setting={'analysislink': '1', 'sorttype': 'en'},
+                          extra={'enumDefault2': 6, 'dot': 0, 'dataSource': function_source(expr())})
+            c['fieldPermission'] = '011'
+            lf = C.append_checked(OLINES, [c], f'delivery_olines_pre_{name.replace(" ", "_").lower()}', f'goods/{name}')
+        if function_expression(lf[name]) != expr():
+            C.pinned_write(OLINES, {lf[name]['controlId']: {'dataSource': function_source(expr())}},
+                           f'delivery_olines_pre_{name.replace(" ", "_").lower()}_fx', f'goods/{name} formula')
+            lf = fields(OLINES)
+        C.remember('controls', f'Order Lines: {name}', lf[name]['controlId'])
+    C.remember('controls', f'Order Lines: {PRODUCT_TYPE}', lf[PRODUCT_TYPE]['controlId'])
+    return lf
 
 
 # ── 2 · the two roll-ups on Orders ──────────────────────────────────────────
 
-LEFT_SUM = 'Units left to deliver'                   # Σ Left to Deliver over the product lines
-DELIVERED_COUNT = 'Product lines with deliveries'    # product lines whose Quantity Delivered > 0
-ROLLUPS = (LEFT_SUM, DELIVERED_COUNT)
+LEFT_SUM = 'Units left to deliver'                   # Σ Left to Deliver (goods lines only)
+DELIVERED_COUNT = 'Product lines with deliveries'    # goods lines whose Quantity Delivered > 0 (the name predates
+                                                     # goods-only; kept, as ids.json and the workflows name it)
+GOODS_SUM = 'Goods lines'                            # how many goods lines — the workflows' "anything to deliver"
+ROLLUPS = (LEFT_SUM, DELIVERED_COUNT, GOODS_SUM)
 HIDDEN = '011'
 # `append_controls` parks a new control at row 9999 and only a full save places one, so placement is the
 # owner's. Both are hidden working figures: (row, col, size, where).
 PLACE = {
     LEFT_SUM: (9999, 0, 6, 'hidden — a working figure, beside Product lines'),
     DELIVERED_COUNT: (9999, 0, 6, 'hidden — a working figure, beside Product lines'),
+    GOODS_SUM: (9999, 0, 6, 'hidden — a working figure, beside Product lines'),
 }
 
 
@@ -99,12 +159,12 @@ register_rollups()
 
 
 def rollups_wanted():
-    product = option_key(OLINES, 'Display Type', 'Product')
-    is_product = flt(OL_DISPLAY_TYPE, DROPDOWN, EQ_SINGLE, [product])
-    delivered = flt(OL_QTY_DELIVERED, NUMBER, GT_NUMBER, ['0'], '0')
+    """Unfiltered sums of the line flags: the goods test lives on the line, where a stored lookup can see it."""
+    lf = fields(OLINES)
     return {
-        LEFT_SUM: (O_SUBTABLE, LEFT_ID, 5, [is_product], 2),                         # 5 = sum
-        DELIVERED_COUNT: (O_SUBTABLE, OL_DESCRIPTION, 6, [is_product, delivered], 0),  # 6 = count
+        LEFT_SUM: (O_SUBTABLE, LEFT_ID, 5, [], 2),                                    # 5 = sum
+        DELIVERED_COUNT: (O_SUBTABLE, lf[GOODS_DELIVERED]['controlId'], 5, [], 0),
+        GOODS_SUM: (O_SUBTABLE, lf[GOODS_FLAG]['controlId'], 5, [], 0),
     }
 
 
@@ -178,16 +238,18 @@ def guard():
 # ── 1 · helper ──────────────────────────────────────────────────────────────
 
 def step_helper():
-    """Left to Deliver clamped at zero, and the alias `qty_to_deliver` — one pinned save of that control only."""
+    """The goods lookup and flags, then Left to Deliver: a goods line's shortfall clamped at zero, alias
+    `qty_to_deliver`."""
     of, lf = guard()
+    lf = ensure_goods(lf)
     clash = [c['controlName'] for c in lf.values() if c.get('alias') == LEFT_ALIAS and c['controlId'] != LEFT_ID]
-    spec = left_spec()
+    spec = left_spec(lf)
     if clash:
         print(f'  alias {LEFT_ALIAS!r} is taken by {clash}; Left to Deliver keeps no alias')
         spec['alias'] = lf[LEFT].get('alias') or ''
     before = function_expression(lf[LEFT])
     if C.pinned_write(OLINES, {LEFT_ID: spec}, 'delivery_orderlines_pre_helper', 'helper'):
-        print(f'  {LEFT} expression:\n      was {before}\n      now {left_expression()}')
+        print(f'  {LEFT} expression:\n      was {before}\n      now {left_expression(lf)}')
         time.sleep(8)
     c = fields(OLINES)[LEFT]
     print(f"  OK  Order Lines / {LEFT} {c['controlId']} t{c['type']} alias={c.get('alias')!r} "
@@ -218,6 +280,8 @@ def line_rows():
             if a != b and not (a in (None, 0.0) and b in (None, 0.0)):
                 disagree.append((rowid, name, a, b))
             got[name] = b if b not in (None, [], '') else a
+        pt = d.get('product_type') if d.get('product_type') is not None else d.get(PRODUCT_TYPE_ID)
+        got['Goods'] = got['Display Type'] == ['Product'] and (GOODS_KEY in str(pt) or 'Goods' in cell_labels(pt))
         got['Left'] = numeric(d.get(LEFT_ALIAS) if d.get(LEFT_ALIAS) is not None else d.get(LEFT_ID))
         got['Description'] = r.get(OL_DESCRIPTION)
         out[rowid] = got
@@ -225,7 +289,7 @@ def line_rows():
 
 
 def expected_left(line):
-    if line['Display Type'] != ['Product']:
+    if not line['Goods']:
         return 0.0
     return max(0.0, round((line['Quantity'] or 0) - (line['Quantity Delivered'] or 0), 2))
 
@@ -235,7 +299,7 @@ def prove_helper(lines=None):
     lines = lines or line_rows()[0]
     wrong = [(r, l['Description'], l['Left'], expected_left(l)) for r, l in lines.items()
              if l['Left'] != expected_left(l)]
-    over = sum(1 for l in lines.values() if l['Display Type'] == ['Product']
+    over = sum(1 for l in lines.values() if l['Goods']
                and (l['Quantity Delivered'] or 0) > (l['Quantity'] or 0))
     print(f'  {LEFT}: {len(lines) - len(wrong)} of {len(lines)} lines store the clamped shortfall '
           f'({over} over-delivered product line(s) read 0)')
@@ -248,8 +312,6 @@ def prove_helper(lines=None):
 
 def step_rollups():
     of, lf = guard()
-    if N_PRODUCT not in of:
-        sys.exit(f'Orders has no {N_PRODUCT!r} — run `o2i.py toinvoice` first')
     live = ensure_rollups(ORDERS, rollups_wanted(), 'delivery_orders_pre_rollups', 'rollups')
     nudge_rollups(live)
     o2i.report_parked(list(ROLLUPS), live)
@@ -261,7 +323,7 @@ def rollup_problems(of):
     grouped = by_order(lines)
     out = []
     for rowid, o in order_rows(of).items():
-        product = [l for l in grouped.get(rowid, []) if l['Display Type'] == ['Product']]
+        product = [l for l in grouped.get(rowid, []) if l['Goods']]
         want = (round(sum(expected_left(l) for l in product), 2),
                 sum(1 for l in product if (l['Quantity Delivered'] or 0) > 0))
         got = o['rollups'][1:]
@@ -445,7 +507,7 @@ def build_workflow(name, of, lf):
         changed |= save_path(pid, has_not, 'No', [])
     order = byname[GET_ORDER]['id']
     expressions = {
-        N_PROD_STEP: f"${order}-{of[N_PRODUCT]['controlId']}$+0",
+        N_PROD_STEP: f"${order}-{of[GOODS_SUM]['controlId']}$+0",
         LEFT_STEP: f"${order}-{of[LEFT_SUM]['controlId']}$+0",
         N_DELIVERED_STEP: f"${order}-{of[DELIVERED_COUNT]['controlId']}$+0",
     }
@@ -499,7 +561,7 @@ def retire_owners_draft():
 
 def step_workflows():
     of, lf = guard()
-    missing = [n for n in (N_PRODUCT,) + ROLLUPS if n not in of]
+    missing = [n for n in ROLLUPS if n not in of]
     if missing:
         sys.exit(f'Orders has no {missing} — run `rollups` first')
     for name in WORKFLOWS:
@@ -515,7 +577,7 @@ def expected_status(order_status, lines):
     """The rule of this module's docstring, from an order's Status label and its lines (line_rows' shape)."""
     if order_status != 'Sales Order':
         return 'Nothing to Deliver'
-    product = [l for l in lines if l['Display Type'] == ['Product']]
+    product = [l for l in lines if l['Goods']]
     if not product:
         return 'Nothing to Deliver'
     if all((l['Quantity Delivered'] or 0) >= (l['Quantity'] or 0) for l in product):
@@ -551,7 +613,7 @@ def order_rows(of):
             'Status': status[0] if status else '',
             'Delivery Status': (ds_get or ds_list or [''])[0],
             'paths agree': ds_get == ds_list,
-            'rollups': tuple(d.get(of[n]['controlId']) for n in (N_PRODUCT, LEFT_SUM, DELIVERED_COUNT)
+            'rollups': tuple(d.get(of[n]['controlId']) for n in (GOODS_SUM, LEFT_SUM, DELIVERED_COUNT)
                              if n in of),
         }
     return out

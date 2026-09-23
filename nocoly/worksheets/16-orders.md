@@ -1249,3 +1249,26 @@ with their lines and with their roll-ups. **Not verified in the browser.**
   `not_empty` on a Relation in `batch-add`. `delivery.py` works around both.
 - By construction, not tested: a line moved from one order to another starts the line workflow for the **new**
   order only; the old one keeps its value until its next change. Invoice Status has the same gap.
+
+### 15.1 · Goods lines only (23 Sep 2026, owner)
+
+Only a **goods line** counts: a product line whose product's Product Type (Products) is **Goods**. Services
+("Setup & Migration", "myCare+"), combos and the Discount product never hold a delivery up, as in Odoo, where only
+storable goods get a picking.
+
+| Order Lines control | What it is |
+|---|---|
+| Product Type (`6ab39f1ee54d2a34faaab141`) | a **stored** lookup (`strDefault "00"`) of Product Variants' Product Type, itself a stored lookup of Products'. Hidden |
+| Goods line (`6ab39f6d7d58b0f4498fe6ee`) | `IF(Display Type == "Product" && Product Type == "Goods", 1, 0)`. Hidden |
+| Goods line delivered (`6ab3a0957d58b0f4498fe705`) | 1 on a goods line with anything delivered. Hidden |
+| Left to Deliver | now `IF(Goods line == 1, MAX(0, Quantity − Quantity Delivered), 0)` |
+
+Orders: *Units left to deliver* sums Left to Deliver, *Product lines with deliveries* (name kept) sums Goods line
+delivered, and a new *Goods lines* (`6ab3a101e54d2a34faaab169`) sums Goods line — the workflows' "is there anything
+to deliver" reads it instead of Product lines, which Invoice Status still uses.
+
+**The lookup had to be stored.** As a display lookup (`"10"`, hap-cli's default) the server-side formula saw it as
+empty whatever it was compared with — `== "Goods"`, a `FIND` of the option key, even `LEN` — while the form showed
+the value. Stored, it renders as its label, as Order Status does for Invoice Status. And, as before, **a function
+formula appended to a worksheet computes blank on every existing record until its definition is saved again**:
+Goods line and Goods line delivered each needed a no-op re-save of the expression.

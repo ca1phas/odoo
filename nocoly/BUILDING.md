@@ -399,6 +399,11 @@ What decides is **whether the value being compared is in the write**.
   month" (two spaces). No `TEXT()` or rounding was needed (bundle 3).
 - Stored lookups chain: saving a record updates the lookups pointing at it and the formulas built on them, level
   after level — so a self-referencing chain (Absolute Quantity down a unit chain) works without workflows.
+- **A display lookup (`strDefault` "10", hap-cli's SHEET_FIELD default) is invisible to a server-side function
+  formula**: Order Lines' Product Type as "10" read empty under `== "Goods"`, `FIND` of the key and `LEN` alike,
+  while the form showed it. Stored ("00") it renders as its label (23 Sep 2026, `delivery.py` goods lines).
+  In the form it is the other way round for a *function default*: a lookup of a dropdown is not text there
+  (Orders' Tax Mode from a template, `templates.py`), so give it a text formula to read.
 - **A stored lookup (`strDefault` "00") may read a function formula on its own worksheet**, which is how a
   recursive text field is built: Product Categories' Complete Name reads Parent Complete Name, a lookup of the
   *parent's* Complete Name. Proved three levels deep, recomputing in both directions on a record save, with no

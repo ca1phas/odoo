@@ -431,7 +431,11 @@
   "Orders: Product lines with deliveries": "6ab39411e54d2a34faaaafa2",
   "Orders: Template Tax Mode": "6ab395d4805aef7032e33acd",
   "Orders: Create": "6ab39685e54d2a34faaab04b",
-  "Orders: Tax Mode name": "6ab39982805aef7032e33b1c"
+  "Orders: Tax Mode name": "6ab39982805aef7032e33b1c",
+  "Order Lines: Product Type": "6ab39f1ee54d2a34faaab141",
+  "Order Lines: Goods line": "6ab39f6d7d58b0f4498fe6ee",
+  "Order Lines: Goods line delivered": "6ab3a0957d58b0f4498fe705",
+  "Orders: Goods lines": "6ab3a101e54d2a34faaab169"
  },
  "rules": {
   "Journals: Payment Communications only for Sales": "6aa9dae5e54d2a34fa4dfde2",
