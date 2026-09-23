@@ -1,0 +1,541 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Nocoly Parity Worklist</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,500;12..96,75..100,700;12..96,75..100,800&family=Public+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+
+<style>
+  :root {
+    --ground:      #F6F4F8;
+    --surface:     #FFFFFF;
+    --surface-sub: #FBFAFC;
+    --ink:         #191320;
+    --muted:       #6C6377;
+    --faint:       #8F8799;
+    --rule:        #E3DDE9;
+    --rule-soft:   #EDE9F1;
+    --accent:      #6828A8;
+    --accent-wash: #F0E7F8;
+    --odoo:        #8F4E7E;
+    --done:        #2C7A57;
+    --done-wash:   #E4F1EB;
+    --live:        #A4620E;
+    --live-wash:   #FAEEDD;
+    --blocked:     #7C7687;
+    --integration: #2A5FA6;
+    --shadow:      0 1px 2px rgba(25,19,32,.05), 0 8px 24px -18px rgba(25,19,32,.35);
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:      #120E17;
+      --surface:     #1B1523;
+      --surface-sub: #211A2A;
+      --ink:         #EFEAF3;
+      --muted:       #A79DB3;
+      --faint:       #857B92;
+      --rule:        #2E2739;
+      --rule-soft:   #261F30;
+      --accent:      #BC8DEC;
+      --accent-wash: #2A1D3A;
+      --odoo:        #D19CC0;
+      --done:        #6FC69B;
+      --done-wash:   #16301F;
+      --live:        #E0A455;
+      --live-wash:   #34250F;
+      --blocked:     #8E869C;
+      --integration: #7FAEE8;
+      --shadow:      0 1px 2px rgba(0,0,0,.4), 0 8px 24px -18px rgba(0,0,0,.8);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground:      #120E17;
+    --surface:     #1B1523;
+    --surface-sub: #211A2A;
+    --ink:         #EFEAF3;
+    --muted:       #A79DB3;
+    --faint:       #857B92;
+    --rule:        #2E2739;
+    --rule-soft:   #261F30;
+    --accent:      #BC8DEC;
+    --accent-wash: #2A1D3A;
+    --odoo:        #D19CC0;
+    --done:        #6FC69B;
+    --done-wash:   #16301F;
+    --live:        #E0A455;
+    --live-wash:   #34250F;
+    --blocked:     #8E869C;
+    --integration: #7FAEE8;
+    --shadow:      0 1px 2px rgba(0,0,0,.4), 0 8px 24px -18px rgba(0,0,0,.8);
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: "Public Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 15px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    max-width: 68rem;
+    margin: 0 auto;
+    padding: 40px 24px 96px;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+  }
+
+  h1, h2, h3 { font-family: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif; text-wrap: balance; margin: 0; }
+
+  .eyebrow {
+    font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+
+  /* ---------- masthead ---------- */
+  .masthead { display: flex; flex-direction: column; gap: 10px; }
+  .masthead h1 { font-size: clamp(30px, 4.4vw, 44px); font-weight: 800; letter-spacing: -.022em; line-height: 1.05; }
+  .masthead p { margin: 0; color: var(--muted); max-width: 62ch; }
+  .masthead .systems {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 12px; color: var(--faint); display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 2px;
+  }
+  .masthead .systems b { color: var(--odoo); font-weight: 500; }
+  .masthead .systems i { color: var(--accent); font-style: normal; font-weight: 500; }
+
+  /* ---------- measurement ---------- */
+  .gauge {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    padding: 26px 26px 22px;
+    box-shadow: var(--shadow);
+    display: flex; flex-direction: column; gap: 20px;
+  }
+  .gauge-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 20px; }
+  .gauge-head h2 { font-size: 15px; font-weight: 700; letter-spacing: -.01em; }
+  .gauge-head .scope { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 11.5px; color: var(--faint); }
+
+  .scale { position: relative; padding-bottom: 54px; }
+  .track {
+    position: relative; height: 30px; border-radius: 3px;
+    background: var(--rule-soft);
+    overflow: hidden;
+  }
+  .track .seg-now { position: absolute; inset: 0 auto 0 0; width: 88%; background: var(--accent); }
+  .track .seg-gain {
+    position: absolute; top: 0; bottom: 0; left: 76%; width: 12%;
+    background: repeating-linear-gradient(135deg, var(--surface) 0 2px, transparent 2px 6px);
+    opacity: .45;
+  }
+  .ceiling {
+    position: absolute; top: -5px; bottom: 48px; left: 90%;
+    width: 2px; background: var(--ink);
+  }
+  .tick {
+    position: absolute; top: 38px;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 11px; font-variant-numeric: tabular-nums; color: var(--muted);
+    transform: translateX(-50%); white-space: nowrap;
+  }
+  .tick.is-anchor { transform: none; left: 0 !important; }
+  .tick.row2 { top: 58px; transform: none; font-size: 10.5px; color: var(--faint); }
+  .tick.is-end { transform: translateX(-100%); }
+  .tick.is-start { transform: none; padding-left: 6px; }
+  .tick b { color: var(--ink); font-weight: 600; }
+
+  .readings { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; }
+  .reading { background: var(--surface-sub); padding: 13px 15px; display: flex; flex-direction: column; gap: 3px; }
+  .reading .num { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 21px; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+  .reading .lab { font-size: 12px; color: var(--muted); line-height: 1.35; }
+
+  /* ---------- lanes ---------- */
+  .lane { display: flex; flex-direction: column; gap: 14px; }
+  .lane-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  .lane-head h2 { font-size: 21px; font-weight: 700; letter-spacing: -.018em; }
+  .lane-head .count { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 12px; color: var(--faint); font-variant-numeric: tabular-nums; }
+  .lane-head .blurb { font-size: 13.5px; color: var(--muted); flex-basis: 100%; margin: -6px 0 0; max-width: 66ch; }
+
+  .group { display: flex; flex-direction: column; gap: 7px; }
+  .group > .eyebrow { margin: 12px 0 1px; }
+
+  .task {
+    display: grid;
+    grid-template-columns: 26px 22px 1fr auto;
+    align-items: start;
+    gap: 0 12px;
+    width: 100%;
+    text-align: left;
+    font: inherit;
+    color: inherit;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: border-color .13s ease, background .13s ease, transform .13s ease;
+  }
+  .task:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .task:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .task .idx {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 12px; font-weight: 500; color: var(--faint);
+    font-variant-numeric: tabular-nums; padding-top: 2px;
+  }
+  .box {
+    width: 17px; height: 17px; margin-top: 2px;
+    border: 1.5px solid var(--rule); border-radius: 4px;
+    display: grid; place-items: center; flex: none;
+    transition: background .13s ease, border-color .13s ease;
+  }
+  .box svg { width: 11px; height: 11px; opacity: 0; transition: opacity .13s ease; }
+  .task:hover .box { border-color: var(--accent); }
+
+  .task .body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .task .name { font-weight: 600; letter-spacing: -.005em; }
+  .task .odoo { font-size: 13px; color: var(--muted); }
+  .task .odoo em { font-style: normal; color: var(--odoo); font-weight: 500; }
+
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; padding-top: 1px; }
+  .chip {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 10.5px; font-weight: 500; letter-spacing: .04em; text-transform: uppercase;
+    padding: 3px 7px; border-radius: 4px; white-space: nowrap;
+    background: var(--rule-soft); color: var(--muted);
+  }
+  .chip.live { background: var(--live-wash); color: var(--live); }
+  .chip.agent { background: var(--accent-wash); color: var(--accent); }
+
+  .task[data-status="done"] { background: var(--surface-sub); border-color: var(--rule-soft); }
+  .task[data-status="done"] .box { background: var(--done); border-color: var(--done); }
+  .task[data-status="done"] .box svg { opacity: 1; }
+  .task[data-status="done"] .name { text-decoration: line-through; text-decoration-thickness: 1px; color: var(--muted); }
+  .task[data-status="done"] .odoo { color: var(--faint); }
+  .task[data-status="done"] .chip.live { background: var(--done-wash); color: var(--done); }
+
+  /* ---------- out of reach ---------- */
+  .barred { display: flex; flex-direction: column; gap: 0; border-left: 2px solid var(--rule); padding-left: 18px; }
+  .barred .item { padding: 11px 0; border-bottom: 1px solid var(--rule-soft); display: flex; flex-direction: column; gap: 2px; }
+  .barred .item:last-child { border-bottom: 0; }
+  .barred .item .name { font-weight: 600; color: var(--muted); letter-spacing: -.005em; }
+  .barred .item .why { font-size: 13px; color: var(--faint); }
+  .barred .item .why em { font-style: normal; color: var(--odoo); font-weight: 500; }
+  .barred.integration { border-left-color: var(--integration); }
+  .barred.integration .item .name { color: var(--ink); }
+
+  /* ---------- footer ---------- */
+  .foot {
+    border-top: 1px solid var(--rule); padding-top: 18px;
+    display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: baseline;
+    font-size: 12.5px; color: var(--faint);
+  }
+  .foot .status { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 11.5px; }
+  .foot .status.warn { color: var(--live); }
+
+  @media (max-width: 640px) {
+    .page { padding: 28px 16px 72px; gap: 32px; }
+    .task { grid-template-columns: 22px 20px 1fr; }
+    .chips { grid-column: 1 / -1; justify-content: flex-start; padding-top: 8px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+    .task:hover { transform: none; }
+  }
+</style>
+
+<div class="page">
+
+  <header class="masthead">
+    <span class="eyebrow">Orders &amp; Quotations · 13 September 2026</span>
+    <h1>Nocoly Parity Worklist</h1>
+    <p>Everything still standing between the Nocoly Sales app and the Odoo Sales app it mirrors — what's in progress, what's queued, and what the platform can't do at all. Click a row to mark it done.</p>
+    <div class="systems">
+      <span><b>Odoo 19 Enterprise</b> casimir.odoo.com · MYR</span>
+      <span><i>Nocoly HAP</i> Sales · 8 orders · 21 lines · RM 961,400.65</span>
+    </div>
+  </header>
+
+  <section class="gauge">
+    <div class="gauge-head">
+      <h2>Replication of Orders / Quotations</h2>
+      <span class="scope">measured across form actions, fields, line editor and list view</span>
+    </div>
+
+    <div class="scale">
+      <div class="track">
+        <div class="seg-now"></div>
+        <div class="seg-gain"></div>
+        <div class="ceiling"></div>
+      </div>
+      <span class="tick is-anchor" style="left:0">0</span>
+      <span class="tick" style="left:76%">76</span>
+      <span class="tick" style="left:88%"><b>88</b> now</span>
+      <span class="tick is-start" style="left:90%"><b>90</b> ceiling</span>
+      <span class="tick is-end" style="left:100%">100</span>
+      <span class="tick row2" style="left:76%">hatched: +12 gained on 13 September · night work not yet checked in the UI</span>
+    </div>
+
+    <div class="readings">
+      <div class="reading"><span class="num">88%</span><span class="lab">Counted across all four sub-areas, up from 76%</span></div>
+      <div class="reading"><span class="num">96%</span><span class="lab">Order lifecycle alone — quote to invoice</span></div>
+      <div class="reading"><span class="num">90%</span><span class="lab">Ceiling: activities, portal and payments are out</span></div>
+      <div class="reading"><span class="num" id="tally">0 / 22</span><span class="lab">Open items cleared</span></div>
+    </div>
+  </section>
+
+  <section class="lane">
+    <div class="lane-head">
+      <h2>This round</h2>
+      <span class="count" id="count-flight"></span>
+      <p class="blurb">Items 1–10 and 12 landed on 13 September. Six agents are now working on everything still doable for Orders/Quotations: Add Subsection, autofill, down-payment rounding, invoicing gaps, online payment settings and Catalog. What isn't doable has moved to Out of reach.</p>
+    </div>
+    <div class="group" id="g-flight"></div>
+  </section>
+
+  <section class="lane">
+    <div class="lane-head">
+      <h2>Queued</h2>
+      <span class="count" id="count-queued"></span>
+      <p class="blurb">Real work, none of it blocked. Grouped by what it costs rather than by where it sits in the app.</p>
+    </div>
+    <div class="group" id="g-medium"></div>
+    <div class="group" id="g-defects"></div>
+    <div class="group" id="g-rest"></div>
+  </section>
+
+  <section class="lane">
+    <div class="lane-head">
+      <h2>Out of reach</h2>
+      <span class="count">13 items</span>
+      <p class="blurb">Not a backlog. The first twelve have no counterpart in Nocoly at all; the last one is only waiting on a payment provider.</p>
+    </div>
+
+    <span class="eyebrow">Impossible in Nocoly</span>
+    <div class="barred">
+      <div class="item"><span class="name">Activities</span><span class="why">No scheduling model, so <em>Odoo's Activity button, Activities column and activity views</em> have nothing to map to.</span></div>
+      <div class="item"><span class="name">Followers</span><span class="why">Comments reach Nocoly users only — there is no per-record subscriber list and no external contacts.</span></div>
+      <div class="item"><span class="name">Customer portal</span><span class="why">Share gives a view-only public page. <em>Odoo's accept, sign and pay online flow</em> can't be reproduced.</span></div>
+      <div class="item"><span class="name">Side-by-side column groups</span><span class="why">Nocoly has one 12-column grid, so Other Info reads top to bottom in Odoo's order instead of in two columns.</span></div>
+      <div class="item"><span class="name">Journal field</span><span class="why">No counterpart on the Nocoly order.</span></div>
+      <div class="item"><span class="name">Insert in spreadsheet · Upload Request for Quotation</span><span class="why">Two entries in <em>Odoo's list cog</em> with no Nocoly equivalent.</span></div>
+      <div class="item"><span class="name">Relation defaults never fire</span><span class="why">The platform limit behind item 14 — autofill from a product or customer can only ever be a workflow that runs after save.</span></div>
+      <div class="item"><span class="name">Buttons under the order lines</span><span class="why">Nocoly can't put controls inside the lines table, focus the new row's description, or refresh the table live — so Add Section, Add Note and Add Subsection live under More (item 11).</span></div>
+      <div class="item"><span class="name">Per-user Group By inside the list</span><span class="why">Nocoly only groups a list for everyone, by one field, never by date. <em>Odoo's ad hoc, multi-level Group By</em> would need a custom view plugin replacing the lists (item 13).</span></div>
+      <div class="item"><span class="name">Column defaults for everyone</span><span class="why">Hiding a column by default and locking always-visible columns only work per user in Nocoly (item 12).</span></div>
+      <div class="item"><span class="name">Rules on automated writes</span><span class="why">Nocoly's form rules — like "sections need a description" — don't apply to API or workflow writes; <em>Odoo enforces them in the database</em>.</span></div>
+      <div class="item"><span class="name">Subtable workflows and stored lookups</span><span class="why">Worksheet-event workflows never fire on subtable-mounted sheets, and new stored lookups stay blank until a manual Calibrate Data run, capped at once per sheet per two hours.</span></div>
+    </div>
+
+    <span class="eyebrow">Needs an integration, not impossible</span>
+    <div class="barred integration">
+      <div class="item"><span class="name">Payment Link · Capture / Void · Payments smart button</span><span class="why">All three need Stripe. Nothing to build until the account exists.</span></div>
+    </div>
+  </section>
+
+  <div class="foot">
+    <span>Counts follow the list of 13 September. Ticking a row saves it for everyone who opens this page.</span>
+    <span class="status" id="sync">connecting…</span>
+  </div>
+</div>
+
+<script>
+  var TASKS = [
+    { id: 1,  lane: "flight", name: "Deliver on Klinik S00013",
+      odoo: "<em>Odoo's S00014 is fully delivered</em>; Nocoly now matches — Delivered = Quantity on all three lines.",
+      chips: [["Agent A","agent"],["landed 13 Sep","live"]] },
+    { id: 2,  lane: "flight", name: "“Clean up copied order” workflow",
+      odoo: "Now mirrors <em>Odoo's Duplicate</em>: strips copied down-payment lines only, leaves ordinary new orders alone.",
+      chips: [["Agent A","agent"],["landed 13 Sep","live"]] },
+    { id: 3,  lane: "flight", name: "Footer sum on Total",
+      odoo: "<em>Odoo foots the column at RM 961,400.65</em>; Nocoly now does too, minus the RM prefix.",
+      chips: [["Agent B","agent"],["landed 13 Sep","live"]] },
+    { id: 4,  lane: "flight", name: "Create Project button",
+      odoo: "<em>Odoo's order cog creates a linked project</em> named after the order; Nocoly's button does the same.",
+      chips: [["Agent B","agent"],["landed 13 Sep","live"]] },
+    { id: 5,  lane: "flight", name: "Per-tax-rate totals",
+      odoo: "<em>Odoo lists SST 8% and SST 10% on their own lines</em>; so does the Nocoly form now.",
+      chips: [["Agent B","agent"],["landed 13 Sep","live"]] },
+    { id: 6,  lane: "flight", name: "“My Quotations” and “Expired” presets",
+      odoo: "Two of <em>Odoo's six search filters</em>, now saved on the Orders sheet with Odoo's cut-off.",
+      chips: [["Agent B","agent"],["landed 13 Sep","live"]] },
+    { id: 7,  lane: "flight", name: "Grey out Cancelled rows",
+      odoo: "<em>Odoo dims cancelled orders</em>; Nocoly's Quotations list now greys them via Status colours.",
+      chips: [["Agent B","agent"],["landed 13 Sep","live"]] },
+    { id: 9,  lane: "flight", name: "Save as template matches Odoo",
+      odoo: "<em>Odoo refuses orders with a down payment</em> and resets Expiration to today + 30; Nocoly now does the same.",
+      chips: [["Agent C","agent"],["landed 13 Sep","live"]] },
+
+    { id: 8,  lane: "flight", name: "Tax Incl. as a real mode",
+      odoo: "<em>Odoo stores the price as typed</em>; in Tax Incl. mode it includes tax and the totals follow. Nocoly now does the same.",
+      chips: [["Agent D","agent"],["landed 13 Sep","live"]] },
+    { id: 10, lane: "flight", name: "Copy carries the order lines",
+      odoo: "<em>Odoo's Duplicate</em> copies every line except down payments and resets number, status and dates. Nocoly's Copy carries no lines at all.",
+      chips: [["Agent E","agent"],["landed 13 Sep","live"]] },
+    { id: 11, lane: "flight", name: "Add Subsection",
+      odoo: "<em>Odoo adds a subsection at the end of a chosen section</em> from that section's menu. Add Section and Add Note already landed.",
+      chips: [["Agent","agent"],["running","live"]] },
+    { id: 12, lane: "flight", name: "Widen the optional-column pool",
+      odoo: "<em>Odoo's optional columns</em> are now offered on all four lists, per user, in Odoo's order.",
+      chips: [["Agent G","agent"],["landed 13 Sep","live"]] },
+
+    { id: 14, lane: "flight", name: "New-quotation autofill",
+      odoo: "<em>Odoo fills description, unit and taxes from the product</em>, and salesperson, terms and pricelist from the customer. Nocoly can only do it after save.",
+      chips: [["Agent","agent"],["running","live"]] },
+    { id: 15, lane: "flight", name: "Down-payment rounding",
+      odoo: "<em>Odoo redistributes the rounding</em> so the deposit is exact to the sen; Nocoly can land one sen off.",
+      chips: [["Agent","agent"],["running","live"]] },
+    { id: 16, lane: "flight", name: "Invoicing gaps",
+      odoo: "<em>Odoo carries sections and notes</em>, keeps line order and handles refunds; Nocoly drops notes, groups by policy and has no refund lines.",
+      chips: [["Agent","agent"],["running","live"]] },
+    { id: 17, lane: "flight", name: "Online payment settings",
+      odoo: "<em>Odoo has online payment off at 100% on all eight orders</em>; Nocoly has it on at 25%.",
+      chips: [["Agent","agent"],["running","live"]] },
+    { id: 23, lane: "flight", name: "Catalog",
+      odoo: "<em>Odoo's Catalog button</em> opens a product grid with quantity controls that add or update order lines.",
+      chips: [["Agent","agent"],["running","live"]] },
+
+    { id: 18, lane: "rest", name: "Pricelist print template",
+      odoo: "Agreed a while back, never built.",
+      chips: [["rest of app",""]] },
+    { id: 19, lane: "rest", name: "Refresh the parity audit",
+      odoo: "Two days stale, and <em>Quotations and Configuration</em> have never been audited at all.",
+      chips: [["rest of app",""]] },
+    { id: 20, lane: "rest", name: "Upselling status",
+      odoo: "Missing on Orders to Upsell.",
+      chips: [["rest of app",""]] },
+    { id: 21, lane: "rest", name: "Recheck Reporting",
+      odoo: "The weakest section at roughly 55%, and not rechecked since the pivots landed.",
+      chips: [["rest of app",""]] },
+    { id: 22, lane: "rest", name: "Loose ends",
+      odoo: "Chinese placeholder text on some fields, phone default country +86, and one unplaced chart.",
+      chips: [["rest of app",""]] }
+  ];
+
+  var GROUPS = [
+    { key: "flight",  el: "g-flight",  label: null },
+    { key: "medium",  el: "g-medium",  label: "Medium effort" },
+    { key: "defects", el: "g-defects", label: "Known defects and divergences" },
+    { key: "rest",    el: "g-rest",    label: "Rest of the app" }
+  ];
+
+  var CHECK = '<svg viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M2 6.3 4.7 9 10 3.3" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+  var statuses = {};
+  var db = null;
+  var nodes = {};
+
+  function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;"); }
+
+  function buildRow(t) {
+    var btn = document.createElement("button");
+    btn.className = "task";
+    btn.type = "button";
+    btn.dataset.id = t.id;
+    btn.dataset.status = "open";
+    btn.setAttribute("aria-pressed", "false");
+
+    var chips = t.chips.map(function (c) {
+      return '<span class="chip ' + c[1] + '">' + esc(c[0]) + "</span>";
+    }).join("");
+
+    btn.innerHTML =
+      '<span class="idx">' + String(t.id).padStart(2, "0") + "</span>" +
+      '<span class="box">' + CHECK + "</span>" +
+      '<span class="body"><span class="name">' + esc(t.name) + "</span>" +
+      '<span class="odoo">' + t.odoo + "</span></span>" +
+      '<span class="chips">' + chips + "</span>";
+
+    btn.addEventListener("click", function () { toggle(t.id); });
+    nodes[t.id] = btn;
+    return btn;
+  }
+
+  function render() {
+    GROUPS.forEach(function (g) {
+      var host = document.getElementById(g.el);
+      if (!host) return;
+      host.textContent = "";
+      if (g.label) {
+        var lab = document.createElement("span");
+        lab.className = "eyebrow";
+        lab.textContent = g.label;
+        host.appendChild(lab);
+      }
+      TASKS.filter(function (t) { return t.lane === g.key; })
+           .forEach(function (t) { host.appendChild(buildRow(t)); });
+    });
+    paint();
+  }
+
+  function paint() {
+    var done = 0, flightDone = 0, flightTotal = 0, queuedDone = 0, queuedTotal = 0;
+    TASKS.forEach(function (t) {
+      var s = statuses[t.id] === "done" ? "done" : "open";
+      var el = nodes[t.id];
+      if (el) {
+        el.dataset.status = s;
+        el.setAttribute("aria-pressed", s === "done" ? "true" : "false");
+      }
+      if (s === "done") done++;
+      if (t.lane === "flight") { flightTotal++; if (s === "done") flightDone++; }
+      else { queuedTotal++; if (s === "done") queuedDone++; }
+    });
+    document.getElementById("tally").textContent = done + " / " + TASKS.length;
+    document.getElementById("count-flight").textContent = flightDone + " of " + flightTotal + " cleared";
+    document.getElementById("count-queued").textContent = queuedDone + " of " + queuedTotal + " cleared";
+  }
+
+  function toggle(id) {
+    var next = statuses[id] === "done" ? "open" : "done";
+    statuses[id] = next;
+    paint();
+    if (!db) return;
+    db.doc("tasks/" + id).set({ status: next, at: new Date().toISOString() })
+      .catch(function (e) { setSync("not saved — " + (e && e.code ? e.code : "error"), true); });
+  }
+
+  function setSync(text, warn) {
+    var el = document.getElementById("sync");
+    el.textContent = text;
+    el.className = warn ? "status warn" : "status";
+  }
+
+  render();
+
+  (async function () {
+    try {
+      db = await window.claude.use("db");
+    } catch (e) {
+      db = null;
+    }
+    if (!db) {
+      setSync("local only — ticks are not saved");
+      return;
+    }
+    setSync("saving to this page");
+    db.collection("tasks").onSnapshot(function (snap) {
+      var seen = {};
+      snap.docs.forEach(function (d) {
+        var body = d.data() || {};
+        seen[d.id] = body.status === "done" ? "done" : "open";
+      });
+      statuses = seen;
+      paint();
+    }, function (e) {
+      setSync("sync stopped — " + (e && e.code ? e.code : "error"), true);
+    });
+  })();
+</script>
+
+</body></html>

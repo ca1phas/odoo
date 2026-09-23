@@ -1,0 +1,323 @@
+{
+ "artifact": "https://claude.ai/artifact/D5Tm2Q4Vm2jZa3e5fWDMTv",
+ "exported": "2026-09-23",
+ "tasks": [
+  {
+   "detail": "36 orders (S00001–S00036) with 119 lines, 28 invoices with 75 lines, 20 customers, 19 products. Every invoice's amounts agree with its own lines.",
+   "note": "",
+   "order": 1,
+   "phase": "A",
+   "status": "done",
+   "title": "Finish the seed",
+   "updated": "23 Sep 2026, 12:10",
+   "id": "a1"
+  },
+  {
+   "detail": "Variants now read like myBook Pro 14\" (1TB Storage, 16GB RAM, Silver), from a new Variant Values field. The three leftover plain variants are archived.",
+   "order": 2,
+   "phase": "A",
+   "status": "done",
+   "title": "Readable variant names",
+   "updated": "23 Sep 2026, 11:30",
+   "id": "a2"
+  },
+  {
+   "detail": "34 invoice lines linked to their order lines. Sales Orders: 7 Fully Invoiced, 7 To Invoice (one of them partly invoiced), 2 Upselling Opportunity.",
+   "order": 3,
+   "phase": "A",
+   "status": "done",
+   "title": "Link demo invoices to their orders",
+   "updated": "23 Sep 2026, 12:10",
+   "id": "a3"
+  },
+  {
+   "detail": "Counted from the data: Quotations 15, Orders 16, To Invoice 7, To Upsell 2, Templates 2; statuses Quotation 11, Quotation Sent 6, Sales Order 16, Cancelled 3; every order has lines.",
+   "note": "Seen in the browser: Quotations 15, Orders 16, To Invoice 7, To Upsell 2, Templates 2; S00004 opens with its 3 lines, readable variant name and its linked invoice.",
+   "order": 4,
+   "phase": "A",
+   "status": "done",
+   "title": "Every Orders view and status has records",
+   "updated": "23 Sep 2026, 12:25",
+   "id": "a4"
+  },
+  {
+   "detail": "Seeder fixes, Variant Values, the story data, the printing and batch-editing change for the business roles.",
+   "order": 5,
+   "phase": "A",
+   "status": "done",
+   "title": "Commit the seeder and settings work",
+   "updated": "23 Sep 2026, 12:10",
+   "id": "a5"
+  },
+  {
+   "detail": "Tax Amount and Total now fill in while a line is still being written, on order lines and invoice lines, for one tax or several. Seen in the browser: myPhone 16 at RM 3,999.00 with 10% G SC shows 399.90 and 4,398.90 before saving. No saved demo figure moved.",
+   "note": "Limit: changing the taxes on a line that is already saved shows the old tax until you save.",
+   "order": 1,
+   "phase": "B",
+   "status": "done",
+   "title": "Tax updates live on the order line form",
+   "updated": "23 Sep 2026, 13:55",
+   "id": "b1"
+  },
+  {
+   "detail": "An invoice line made by Create Invoice now carries the order line's taxes, all of them; a line typed by hand still takes the product's. Seen in the browser on a test invoice: tax 32.00 where the product's tax would have given 35.00.",
+   "note": "Known timing risk: the invoice totals add up each line once, right after it is created. Every test came out right, but in theory they could catch a line before its taxes are rewritten.",
+   "order": 2,
+   "phase": "B",
+   "status": "done",
+   "title": "Invoice line taxes follow the order line",
+   "updated": "23 Sep 2026, 13:20",
+   "id": "b2"
+  },
+  {
+   "detail": "Payment Status, Amount Paid and Last Payment Date under the totals, and a Register Payment button that asks for the amount and date. Seen in the browser on INV/2026/00012: paying 1,000 made it Partially Paid with 4,985.80 due; 5,000 was refused; paying the rest made it Paid and removed Register Payment, Reset to Draft and Cancel. Put back to Not Paid afterwards. Demo: 12 Paid, 1 Partially Paid, 5 customer invoices overdue.",
+   "note": "No separate payment record or bank entry, and no overpayment — a later phase.",
+   "order": 3,
+   "phase": "B",
+   "status": "done",
+   "title": "Register Payment on invoices",
+   "updated": "23 Sep 2026, 14:40",
+   "id": "b3"
+  },
+  {
+   "detail": "Order and invoice lines still offer archived taxes such as 10% G SC and 8% S OU. Show only active taxes, as the Incoterm picker already does.",
+   "order": 4,
+   "phase": "B",
+   "status": "todo",
+   "title": "Archived taxes out of the tax pickers",
+   "updated": "23 Sep 2026, 13:55",
+   "id": "b4"
+  },
+  {
+   "detail": "An invoice's totals now re-add whenever a line's Invoice, type, quantity, price, discount or taxes change, not only on create. Proved on three Create Invoice presses with non-default taxes (2,000.00 / 170.00 / 2,170.00 each) and on tax edits of a draft; no demo figure moved.",
+   "note": "",
+   "order": 5,
+   "phase": "B",
+   "status": "done",
+   "title": "Invoice totals re-add when a line's taxes change",
+   "updated": "23 Sep 2026, 16:40",
+   "id": "b5"
+  },
+  {
+   "detail": "Done by the owner in the browser: Apply Discount now opens a form for Discount Type and Discount Value, and both fields are hidden on the order. Still to do: a fixed amount comes off one cent too much (RM 500 → 500.01).",
+   "note": "The build script already leaves the owner's button as it is.",
+   "order": 6,
+   "phase": "B",
+   "status": "doing",
+   "title": "Apply Discount asks for its values",
+   "updated": "23 Sep 2026, 16:40",
+   "id": "b6"
+  },
+  {
+   "detail": "Reported by the owner. First establish whether it is a line's Discount (%) or the Global Discount percentage in the Apply Discount form, then fix and test in the browser.",
+   "order": 7,
+   "phase": "B",
+   "status": "todo",
+   "title": "Discount % isn't working",
+   "updated": "23 Sep 2026, 16:40",
+   "id": "b7"
+  },
+  {
+   "detail": "Not Delivered / Partially Delivered / Fully Delivered worked out from each line's Quantity Delivered, so Deliver and hand-typed quantities both update it. Asked for by the owner.",
+   "order": 8,
+   "phase": "B",
+   "status": "todo",
+   "title": "Delivery Status follows the lines",
+   "updated": "23 Sep 2026, 16:40",
+   "id": "b8"
+  },
+  {
+   "detail": "The Orders check still compares orders against the old casimir seed; the roles script wants to change Accountant and Invoicing on Orders again; the order-to-invoice test builder still points at a deleted contact; buttons built by script show no condition in the editor.",
+   "order": 9,
+   "phase": "B",
+   "status": "todo",
+   "title": "Housekeeping",
+   "updated": "23 Sep 2026, 16:40",
+   "id": "b9"
+  },
+  {
+   "detail": "Order Date, Customer and Salesperson added to order lines (hidden). They fill on new lines; existing lines fill when the reset before the demo re-creates them.",
+   "order": 1,
+   "phase": "B2",
+   "status": "done",
+   "title": "Lookups on Order Lines",
+   "updated": "23 Sep 2026, 14:40",
+   "id": "d1"
+  },
+  {
+   "detail": "11 charts plus two more headlines, now two rows of single figures so nothing is cut off. Seen in the browser: confirmed sales RM 1,213,917.46, open quotations 16 worth RM 1,383,107.20, orders to invoice 7, overdue 5 (RM 346,734.35), received this month. Click a chart, then its figure, to open the records.",
+   "note": "Top products follows the date filter only after the reset re-creates the lines.",
+   "order": 2,
+   "phase": "B2",
+   "status": "done",
+   "title": "Build the Sales Dashboard page",
+   "updated": "23 Sep 2026, 14:40",
+   "id": "d2"
+  },
+  {
+   "detail": "Every chart re-checked against the records at 15:10: all 13 agree, figure by figure, and the Last month filter agrees too (confirmed sales RM 94,496.00, status counts 3 · 2 · 2 · 1). Headlines seen in the browser with two decimals.",
+   "note": "Top products under a date filter can only be proved after the reset re-creates the order lines.",
+   "order": 3,
+   "phase": "B2",
+   "status": "done",
+   "title": "Check every figure against its records",
+   "updated": "23 Sep 2026, 15:10",
+   "id": "d3"
+  },
+  {
+   "detail": "Sidebar sections and every Sales list open.",
+   "order": 1,
+   "phase": "C",
+   "status": "todo",
+   "title": "1 · Finding your way",
+   "updated": "",
+   "id": "c01"
+  },
+  {
+   "detail": "Picking a customer fills addresses and payment terms; Expiration a month ahead; the number is given on save.",
+   "order": 2,
+   "phase": "C",
+   "status": "todo",
+   "title": "2 · Writing a quotation",
+   "updated": "",
+   "id": "c02"
+  },
+  {
+   "detail": "Product, section and note rows; totals add up; tax shows while editing; Batch Operation → Edit.",
+   "order": 3,
+   "phase": "C",
+   "status": "todo",
+   "title": "3 · Lines, taxes and totals",
+   "updated": "",
+   "id": "c03"
+  },
+  {
+   "detail": "A line discount; Apply Discount with Global Discount and with Fixed Amount on the prepared orders; value 0 removes the lines.",
+   "order": 4,
+   "phase": "C",
+   "status": "todo",
+   "title": "4 · Discounts",
+   "updated": "",
+   "id": "c04"
+  },
+  {
+   "detail": "Quotation layout on a quotation, Sales Order layout on an order, MyTech heading and footer.",
+   "order": 5,
+   "phase": "C",
+   "status": "todo",
+   "title": "5 · Printing",
+   "updated": "",
+   "id": "c05"
+  },
+  {
+   "detail": "Tested by the owner on S00039: the email arrived from MyTech Products & Services, subject “MyTech Products & Services Quotation (Ref S00039)”, with Quotation - S00039.pdf attached and the amount and salesperson in the body.",
+   "note": "",
+   "order": 6,
+   "phase": "C",
+   "status": "done",
+   "title": "6 · Sending",
+   "updated": "23 Sep 2026, 15:25",
+   "id": "c06"
+  },
+  {
+   "detail": "Share for Signature, sign in a logged-out browser, the order confirms itself; an expired quotation's button is greyed.",
+   "order": 7,
+   "phase": "C",
+   "status": "todo",
+   "title": "7 · Letting the customer sign",
+   "updated": "",
+   "id": "c07"
+  },
+  {
+   "detail": "Confirm, and its refusal on a line with no product; Cancel, and its refusal when Locked; Set to Quotation.",
+   "order": 8,
+   "phase": "C",
+   "status": "todo",
+   "title": "8 · Confirming, cancelling, reopening",
+   "updated": "",
+   "id": "c08"
+  },
+  {
+   "detail": "Deliver fills every product line's Quantity Delivered.",
+   "order": 9,
+   "phase": "C",
+   "status": "todo",
+   "title": "9 · Delivering",
+   "updated": "",
+   "id": "c09"
+  },
+  {
+   "detail": "Create Invoice on a To Invoice order gives a draft with its Journal; Confirm gives the next INV number; the order moves to Fully Invoiced; pressing again does nothing; Invoicing Closed takes an order off To Invoice.",
+   "order": 10,
+   "phase": "C",
+   "status": "todo",
+   "title": "10 · Invoicing",
+   "updated": "",
+   "id": "c10"
+  },
+  {
+   "detail": "Recreate a template into a fresh quotation, lines included.",
+   "order": 11,
+   "phase": "C",
+   "status": "todo",
+   "title": "11 · Templates and repeat orders",
+   "updated": "",
+   "id": "c11"
+  },
+  {
+   "detail": "Each view shows what it says; the Invoice Status quick filter.",
+   "order": 12,
+   "phase": "C",
+   "status": "todo",
+   "title": "12 · The lists you work from",
+   "updated": "",
+   "id": "c12"
+  },
+  {
+   "detail": "Each stated limit is still true.",
+   "order": 13,
+   "phase": "C",
+   "status": "todo",
+   "title": "13 · What it won't do yet",
+   "updated": "",
+   "id": "c13"
+  },
+  {
+   "detail": "Figures match their lists, charts click through correctly, and the figures move when an order is confirmed or invoiced.",
+   "order": 14,
+   "phase": "C",
+   "status": "todo",
+   "title": "14 · Sales Dashboard",
+   "updated": "",
+   "id": "c14"
+  },
+  {
+   "detail": "Anything the tests changed, plus a Sales Dashboard section.",
+   "order": 1,
+   "phase": "D",
+   "status": "todo",
+   "title": "Update the walkthrough guide",
+   "updated": "",
+   "id": "e1"
+  },
+  {
+   "detail": "The order to show things in, and the record to open at each step.",
+   "order": 2,
+   "phase": "D",
+   "status": "todo",
+   "title": "One-page demo script",
+   "updated": "",
+   "id": "e2"
+  },
+  {
+   "detail": "Testing moves records on (confirmed, invoiced, signed). Re-seed back to the starting state before the real demo.",
+   "note": "Needs the wipe again; I'll ask first.",
+   "order": 3,
+   "phase": "D",
+   "status": "todo",
+   "title": "Reset after rehearsal",
+   "updated": "",
+   "id": "e3"
+  }
+ ]
+}

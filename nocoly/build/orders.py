@@ -4391,6 +4391,65 @@ def step_selfdiscount():
           f'a second press, removes them at 0, and {DISCOUNT_ORDER} is back as it was')
 
 
+# ── 14e · Apply Discount as a dialog, and a Fixed Amount to the cent ─────────
+#
+# `applytest` makes (once) the TEST order the brief asks for: a Quotation for the owner's own contact **Nocoly**
+# (Customer, Invoice and Delivery Address — never a TEST contact the demo wipe removed), with product lines on two
+# tax combinations, 10% G and 8% S, priced so that a Fixed Amount leaves a rounding residual to correct.
+APPLY_TEST = 'TEST Apply Discount, mixed taxes'  # its Customer Reference, by which it is found again
+NOCOLY_CONTACT = 'd31d1f6b-fb89-4f6f-be0e-8e953a0892ac'  # Contacts › Nocoly (casimir.chiong@nocoly.com)
+APPLY_TEST_FROM = 'S00021'                       # the demo order whose product lines it copies, at its own quantities
+APPLY_TEST_QTY = (3, 7, 1)                       # myPad Air 11" (10% G) · Device Enrolment (8% S) · myPencil Pro (10% G)
+
+
+def apply_test_order(f):
+    """The TEST order's rowid, or None — found by Customer Reference through both read paths."""
+    ref = f['Customer Reference']
+    found = [r['rowid'] for r in C.records(ws(), APP)
+             if (r.get(ref['controlId']) or read_cell(ref, read_record(ws(), r['rowid']))) == APPLY_TEST]
+    if len(found) > 1:
+        sys.exit(f'{len(found)} orders carry the Customer Reference {APPLY_TEST!r} — read them before writing')
+    return found[0] if found else None
+
+
+def create_apply_test(f, f_lines):
+    """The TEST order and its three product lines, copied from APPLY_TEST_FROM's product lines (not its Discount
+    lines) at APPLY_TEST_QTY."""
+    src_order = by_number()[APPLY_TEST_FROM]
+    listing = listed_lines(f_lines)
+    src = sorted((listing[r] for r in lines_of(listing, src_order)
+                  if listing[r]['Display Type'] == [PRODUCT_LINE] and listing[r]['Product'] != [discount_variant()]),
+                 key=lambda c: c['Sequence'] or 0)
+    if len(src) != len(APPLY_TEST_QTY):
+        sys.exit(f'{APPLY_TEST_FROM} has {len(src)} product lines, wanted {len(APPLY_TEST_QTY)} to copy')
+    people = members({TEST_SALESPERSON})
+    cid = lambda n: f[n]['controlId']
+    rowid = write_record(ws(), None, [
+        {'id': cid('Status'), 'value': [STATUS_KEYS['Quotation']]},
+        {'id': cid(CUSTOMER), 'value': [NOCOLY_CONTACT]},
+        {'id': cid('Invoice Address'), 'value': [NOCOLY_CONTACT]},
+        {'id': cid('Delivery Address'), 'value': [NOCOLY_CONTACT]},
+        {'id': cid('Quotation/Order Date'), 'value': time.strftime('%Y-%m-%d %H:%M:%S')},
+        {'id': cid('Tax Mode'), 'value': [option_key(f['Tax Mode'], 'Tax Excluded')]},
+        {'id': cid('Invoice Status'), 'value': [option_key(f['Invoice Status'], 'Nothing to Invoice')]},
+        {'id': cid('Online Signature'), 'value': '0'}, {'id': cid('Online Payment'), 'value': '0'},
+        {'id': cid('Prepayment Percentage'), 'value': '100'},
+        {'id': cid('Locked'), 'value': '0'}, {'id': cid(IS_TEMPLATE), 'value': '0'},
+        {'id': cid('Salesperson'), 'value': [people[TEST_SALESPERSON]] if TEST_SALESPERSON in people else []},
+        {'id': cid('Customer Reference'), 'value': APPLY_TEST}])
+    for i, (c, qty) in enumerate(zip(src, APPLY_TEST_QTY)):
+        write_record(LINES_WS, None, [
+            {'id': CHILD['Orders'], 'value': [rowid]}, {'id': CHILD['Display Type'], 'value': [PRODUCT_LINE]},
+            {'id': CHILD['Product'], 'value': c['Product']}, {'id': CHILD['Description'], 'value': c['Description']},
+            {'id': CHILD['Quantity'], 'value': str(qty)}, {'id': CHILD['Unit'], 'value': c['Unit']},
+            {'id': CHILD['Unit Price'], 'value': str(c['Unit Price'])}, {'id': CHILD['Discount'], 'value': '0'},
+            {'id': CHILD['Taxes'], 'value': c['Taxes']}, {'id': CHILD['Sequence'], 'value': str(10 * (i + 1))}])
+    C.remember('records', KEY + APPLY_TEST, rowid)
+    print(f'  created {APPLY_TEST!r}: {rowid} — Nocoly, {len(src)} lines copied from {APPLY_TEST_FROM} at '
+          f'quantities {APPLY_TEST_QTY}')
+    return rowid
+
+
 # ── 15 · Download: Terms and conditions, the templates, System Print ────────
 #
 # Odoo's *Download* (`sale.action_report_saleorder` — the tenant labels the button Download, the 19.0 source Print,

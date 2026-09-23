@@ -1,0 +1,362 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Sales App Walkthrough</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Public+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+  :root {
+    --ground:      #F6F4F8;
+    --surface:     #FFFFFF;
+    --surface-sub: #FAF8FC;
+    --ink:         #191320;
+    --muted:       #625A6D;
+    --faint:       #8B8396;
+    --rule:        #E3DDE9;
+    --rule-soft:   #EEEAF2;
+    --nocoly:      #6828A8;
+    --nocoly-wash: #F1E8F9;
+    --odoo:        #8A4879;
+    --odoo-wash:   #F7EAF3;
+    --same:        #2C7A57;
+    --same-wash:   #E3F1EA;
+    --diff:        #9A5E0C;
+    --diff-wash:   #FAEEDC;
+    --no:          #6E6878;
+    --no-wash:     #ECE9F0;
+    --int:         #2A5FA6;
+    --int-wash:    #E4ECF8;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:      #120E17;
+      --surface:     #1B1523;
+      --surface-sub: #211A2A;
+      --ink:         #EFEAF3;
+      --muted:       #ADA3B9;
+      --faint:       #877D94;
+      --rule:        #302839;
+      --rule-soft:   #261F30;
+      --nocoly:      #C39AEE;
+      --nocoly-wash: #2B1F3B;
+      --odoo:        #D8A2C6;
+      --odoo-wash:   #33202E;
+      --same:        #74C9A0;
+      --same-wash:   #173022;
+      --diff:        #E2A85C;
+      --diff-wash:   #35260F;
+      --no:          #A59DB0;
+      --no-wash:     #2A2432;
+      --int:         #88B3EA;
+      --int-wash:    #1B2840;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground:      #120E17;
+    --surface:     #1B1523;
+    --surface-sub: #211A2A;
+    --ink:         #EFEAF3;
+    --muted:       #ADA3B9;
+    --faint:       #877D94;
+    --rule:        #302839;
+    --rule-soft:   #261F30;
+    --nocoly:      #C39AEE;
+    --nocoly-wash: #2B1F3B;
+    --odoo:        #D8A2C6;
+    --odoo-wash:   #33202E;
+    --same:        #74C9A0;
+    --same-wash:   #173022;
+    --diff:        #E2A85C;
+    --diff-wash:   #35260F;
+    --no:          #A59DB0;
+    --no-wash:     #2A2432;
+    --int:         #88B3EA;
+    --int-wash:    #1B2840;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--ground); color: var(--ink);
+    font-family: "Public Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 15px; line-height: 1.55; -webkit-font-smoothing: antialiased;
+  }
+  .page { max-width: 64rem; margin: 0 auto; padding: 44px 24px 96px; display: flex; flex-direction: column; gap: 44px; }
+  h1, h2, h3 { font-family: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif; margin: 0; text-wrap: balance; }
+  .mono { font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .eyebrow { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 11px; font-weight: 500; letter-spacing: .13em; text-transform: uppercase; color: var(--faint); }
+
+  /* masthead */
+  .masthead { display: flex; flex-direction: column; gap: 12px; }
+  .masthead h1 { font-size: clamp(32px, 4.6vw, 46px); font-weight: 800; letter-spacing: -.024em; line-height: 1.04; }
+  .masthead p { margin: 0; color: var(--muted); max-width: 64ch; }
+  .facts { display: flex; flex-wrap: wrap; gap: 8px 18px; font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 12px; color: var(--faint); }
+  .facts b { font-weight: 500; color: var(--odoo); }
+  .facts i { font-style: normal; font-weight: 500; color: var(--nocoly); }
+
+  /* legend */
+  .legend { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; font-size: 13px; color: var(--muted); }
+
+  .chip { display: inline-block; font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 10.5px; font-weight: 500; letter-spacing: .05em; text-transform: uppercase; padding: 3px 8px; border-radius: 4px; white-space: nowrap; }
+  .chip.same { background: var(--same-wash); color: var(--same); }
+  .chip.diff { background: var(--diff-wash); color: var(--diff); }
+  .chip.part { background: var(--diff-wash); color: var(--diff); }
+  .chip.no   { background: var(--no-wash);   color: var(--no); }
+  .chip.int  { background: var(--int-wash);  color: var(--int); }
+  .chip.wip  { background: var(--nocoly-wash); color: var(--nocoly); }
+
+  /* map */
+  .map-wrap { overflow-x: auto; border: 1px solid var(--rule); border-radius: 10px; background: var(--surface); }
+  table.map { width: 100%; border-collapse: collapse; font-size: 13.5px; min-width: 620px; }
+  table.map th { text-align: left; font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 11px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; padding: 12px 16px; border-bottom: 1px solid var(--rule); }
+  table.map th.o { color: var(--odoo); }
+  table.map th.n { color: var(--nocoly); }
+  table.map td { padding: 10px 16px; border-bottom: 1px solid var(--rule-soft); vertical-align: top; }
+  table.map tr:last-child td { border-bottom: 0; }
+  table.map td:first-child { font-weight: 600; white-space: nowrap; }
+  table.map .sub { color: var(--muted); }
+
+  /* parts */
+  .part { display: flex; flex-direction: column; gap: 14px; }
+  .part-head { display: flex; flex-direction: column; gap: 4px; padding-bottom: 6px; border-bottom: 1px solid var(--rule); }
+  .part-head h2 { font-size: 24px; font-weight: 800; letter-spacing: -.02em; }
+  .part-head p { margin: 0; color: var(--muted); font-size: 14px; max-width: 66ch; }
+
+  .step { display: grid; grid-template-columns: 44px 1fr; gap: 0 14px; padding: 16px 0 18px; border-bottom: 1px solid var(--rule-soft); }
+  .step:last-child { border-bottom: 0; }
+  .num { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 13px; font-weight: 500; color: var(--faint); padding-top: 3px; font-variant-numeric: tabular-nums; }
+  .step-body { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+  .step-title { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: baseline; justify-content: space-between; }
+  .step-title h3 { font-size: 17px; font-weight: 600; letter-spacing: -.01em; }
+
+  .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .side { background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 11px 13px; display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+  .side .who { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 10.5px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; }
+  .side.o .who { color: var(--odoo); }
+  .side.n .who { color: var(--nocoly); }
+  .path { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 12.5px; line-height: 1.5; color: var(--ink); overflow-wrap: anywhere; }
+  .path .sep { color: var(--faint); padding: 0 .25em; }
+  .side p { margin: 0; font-size: 13.5px; color: var(--muted); }
+  .side p strong { color: var(--ink); font-weight: 600; }
+  .note { margin: 0; font-size: 13.5px; color: var(--muted); max-width: 72ch; }
+  .note strong { color: var(--ink); font-weight: 600; }
+
+  /* closing */
+  .closing { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .box { background: var(--surface-sub); border: 1px solid var(--rule); border-radius: 10px; padding: 16px 18px; display: flex; flex-direction: column; gap: 8px; }
+  .box h3 { font-size: 16px; font-weight: 600; }
+  .box ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 5px; font-size: 13.5px; color: var(--muted); }
+  .box li strong { color: var(--ink); font-weight: 600; }
+
+  .foot { border-top: 1px solid var(--rule); padding-top: 16px; font-size: 12.5px; color: var(--faint); }
+
+  @media (max-width: 720px) {
+    .page { padding: 30px 16px 72px; gap: 36px; }
+    .pair, .closing { grid-template-columns: 1fr; }
+    .step { grid-template-columns: 32px 1fr; }
+  }
+
+  .summary { display: grid; grid-template-columns: repeat(6, minmax(0,1fr)); gap: 8px; }
+  .tile { display: flex; flex-direction: column; gap: 2px; padding: 12px 12px 11px; border-radius: 8px; border: 1px solid var(--rule); background: var(--surface); color: inherit; text-decoration: none; }
+  .tile:hover { border-color: var(--faint); }
+  .tile:focus-visible { outline: 2px solid var(--nocoly); outline-offset: 2px; }
+  .tile .n { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 24px; font-weight: 500; font-variant-numeric: tabular-nums; line-height: 1.1; }
+  .tile .l { font-size: 12.5px; color: var(--muted); }
+  .tile.same .n { color: var(--same); } .tile.diff .n, .tile.part .n { color: var(--diff); }
+  .tile.wip .n { color: var(--nocoly); } .tile.no .n { color: var(--no); } .tile.int .n { color: var(--int); }
+  .group-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; padding-bottom: 8px; border-bottom: 1px solid var(--rule); }
+  .group-head h2 { font-size: 24px; font-weight: 800; letter-spacing: -.02em; }
+  .group-head .count { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 12px; color: var(--faint); }
+  .group-head p { flex-basis: 100%; margin: 0; color: var(--muted); font-size: 14px; max-width: 66ch; }
+  .item { display: flex; flex-direction: column; gap: 10px; padding: 16px 0 18px; border-bottom: 1px solid var(--rule-soft); }
+  .item:last-child { border-bottom: 0; }
+  .item-title { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }
+  .item-title h3 { font-size: 17px; font-weight: 600; letter-spacing: -.01em; }
+  .stage { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 10.5px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; color: var(--faint); }
+  .side.none { background: var(--surface-sub); border-style: dashed; }
+  @media (max-width: 860px) { .summary { grid-template-columns: repeat(3, minmax(0,1fr)); } }
+
+  /* main-process run */
+  .chip.ok   { background: var(--same-wash); color: var(--same); }
+  .chip.fix  { background: var(--int-wash);  color: var(--int); }
+  .chip.open { background: var(--diff-wash); color: var(--diff); }
+  .run-meta { display: flex; flex-wrap: wrap; gap: 6px 18px; font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 12px; color: var(--faint); }
+  .run-meta b { font-weight: 500; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .tally { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 13px; color: var(--muted); }
+  .step-title .chip { align-self: center; }
+  .side p .ref { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 12px; color: var(--faint); }
+  .note.fixnote { color: var(--ink); }
+  .note.fixnote strong { color: var(--int); }
+</style>
+
+<div class="page">
+  <header class="masthead">
+    <span class="eyebrow">Status as of 14 September 2026</span>
+    <h1>Sales App Walkthrough</h1>
+    <p>Every step of a sale in Odoo's Sales app and in the Nocoly app that mirrors it, grouped by how closely Nocoly matches. Each item shows where to click in both; the small label above it says where it sits in the sale.</p>
+    <div class="facts">
+      <span><b>Odoo 19 Enterprise</b> casimir.odoo.com · MYR</span>
+      <span><i>Nocoly HAP</i> app "Sales" · Orders/Quotations ≈ 88% replicated</span>
+      <span>Shared dataset: 8 orders · 21 lines · RM 961,400.65</span>
+      <span><a href="#run" style="color: inherit">Main processes run on 14 September ↓</a></span>
+    </div>
+  </header>
+
+  <nav class="summary" aria-label="Groups"><a class="tile same" href="#same"><span class="n">14</span><span class="l">Same</span></a><a class="tile diff" href="#diff"><span class="n">5</span><span class="l">Different</span></a><a class="tile part" href="#part"><span class="n">10</span><span class="l">Partial</span></a><a class="tile wip" href="#wip"><span class="n">2</span><span class="l">In progress</span></a><a class="tile no" href="#no"><span class="n">11</span><span class="l">Not possible</span></a><a class="tile int" href="#int"><span class="n">1</span><span class="l">Need integration</span></a></nav>
+
+  <section class="part">
+    <div class="part-head">
+      <span class="eyebrow">Orientation</span>
+      <h2>Where everything lives</h2>
+      <p>Odoo's top menu maps onto Nocoly's four sections. Odoo's To Invoice menu became extra tabs on Nocoly's Orders list.</p>
+    </div>
+    <div class="map-wrap">
+      <table class="map">
+        <thead><tr><th>Menu</th><th class="o">Odoo · Sales menu</th><th class="n">Nocoly · app sections</th></tr></thead>
+        <tbody>
+          <tr><td>Orders</td><td>Orders › Quotations, Orders, Sales Teams, Customers</td><td>Orders › Orders (tabs Quotations, Orders), Sales Teams, Customers</td></tr>
+          <tr><td>To Invoice</td><td>To Invoice › Orders to Invoice, Orders to Upsell, Services &amp; Material</td><td>Orders › Orders (tabs Orders to Invoice, Orders to Upsell) <span class="sub">— Services &amp; Material is off in Odoo, hidden in Nocoly</span></td></tr>
+          <tr><td>Invoices</td><td>Invoicing app › Customers › Invoices, or the Invoices button on a sales order</td><td>The <strong>Invoices</strong> field on a sales order <span class="sub">— the Invoices list itself sits under the Orders section but is hidden from members' sidebars; admins see it greyed out</span></td></tr>
+          <tr><td>Products</td><td>Products › Products, Pricelists, Attributes, Combo Choices, Categories, Units &amp; Packagings</td><td>Products › the same six pages</td></tr>
+          <tr><td>Reporting</td><td>Reporting › Sales, Salespersons, Products, Customers</td><td>Reporting › the same four pages</td></tr>
+          <tr><td>Configuration</td><td>Configuration › Settings, Sales Teams, Templates, Headers/Footers, Activities, Payments</td><td>Configuration › Settings, Templates, Headers/Footers, Taxes, Payment Terms, Payment Methods, Fiscal Positions, Incoterms, Projects, Campaigns, Sources, Mediums, Activity Types/Plans</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="part" id="run">
+    <div class="part-head">
+      <span class="eyebrow">Proof run · 14 September 2026</span>
+      <h2>Main processes, run in both apps</h2>
+      <p>The sale from quotation to payment, run by hand through each app's own screens on test orders for the customer Casimir. Odoo is the reference. Where Nocoly fell short, it was fixed the same day and run again.</p>
+    </div>
+    <div class="run-meta">
+      <span>Run 1 · Odoo <b>S00020</b> / Nocoly <b>S00090</b>: quotation to payment</span>
+      <span>Run 2 · Odoo <b>S00021</b> / Nocoly <b>S00091</b>: duplicate, down payment, cancel</span>
+    </div>
+    <div class="tally"><span class="chip ok">Works</span> 7 steps <span class="chip fix">Fixed 14 Sep</span> 3 steps <span class="chip open">Open</span> 1 step</div>
+
+    <div>
+      <div class="step"><span class="num">01</span><div class="step-body">
+        <div class="step-title"><h3>Start a quotation for a customer</h3><span class="chip fix">Fixed 14 Sep</span></div>
+        <div class="pair">
+          <div class="side o"><span class="who">Odoo</span><p>Expiration shows today + 30 days (Oct 14). Picking the customer fills in the addresses, the pricelist (Default) and the salesperson; the team is <strong>Sales</strong>.</p></div>
+          <div class="side n"><span class="who">Nocoly</span><p>Addresses fill in straight away. Pricelist, salesperson and team fill in a few seconds after Submit.</p></div>
+        </div>
+        <p class="note fixnote"><strong>Fixed:</strong> Expiration was blank. It now opens as today + 30 days (checked on a new form: 2026-10-14). New orders were also getting the team <em>Online</em>, because all five teams had a blank Sequence. They now carry Odoo's values (Sales 0, the others 10), so the Sales team comes first. The team fix hasn't yet been re-run on a new quotation.</p>
+      </div></div>
+
+      <div class="step"><span class="num">02</span><div class="step-body">
+        <div class="step-title"><h3>Add product lines and pick a variant</h3><span class="chip open">Open</span></div>
+        <div class="pair">
+          <div class="side o"><span class="who">Odoo</span><p>Choosing the Ergonomic Office Chair opens <strong>Configure your product</strong>. Pick Blue and the line reads "Ergonomic Office Chair (Blue)" at RM 959 (899 + 60 extra).</p></div>
+          <div class="side n"><span class="who">Nocoly</span><p>The line links to the product only, with no colour choice, so the chair stays at RM 899. Unit and price fill in at once; description and tax fill in after save.</p></div>
+        </div>
+        <p class="note"><strong>In progress:</strong> Order Lines now has a <em>Variant</em> field, limited to the chosen product's variants, and a stored <em>Variant Extra Price</em>. Still to do: show Variant in the order's lines table, add the extra price when a line is priced (list price + extra; fixed-price rules unchanged, as in Odoo), and put the variant name in the description. Until then, run 1 totals RM 2,895.80 in Nocoly against RM 3,027.80 in Odoo, and the whole difference is the RM 120 extra.</p>
+      </div></div>
+
+      <div class="step"><span class="num">03</span><div class="step-body">
+        <div class="step-title"><h3>Send the quotation</h3><span class="chip ok">Works</span></div>
+        <div class="pair">
+          <div class="side o"><span class="who">Odoo</span><p>Send opens the composer with "Quotation - S00020.pdf" attached. The recipient didn't pre-fill because two Odoo contacts share Casimir's email; it was added by hand. Status: Quotation Sent.</p></div>
+          <div class="side n"><span class="who">Nocoly</span><p>Send asks to confirm, then emails the PDF to the customer's address (casimir.chiong@nocoly.com). Status: Quotation Sent.</p></div>
+        </div>
+      </div></div>
+
+      <div class="step"><span class="num">04</span><div class="step-body">
+        <div class="step-title"><h3>Confirm the order</h3><span class="chip ok">Works</span></div>
+        <div class="pair">
+          <div class="side o"><span class="who">Odoo</span><p>Sales Order, Locked, Not Delivered.</p></div>
+          <div class="side n"><span class="who">Nocoly</span><p>Sales Order, locked, Not Delivered, To Invoice.</p></div>
+        </div>
+      </div></div>
+
+      <div class="step"><span class="num">05</span><div class="step-body">
+        <div class="step-title"><h3>Deliver</h3><span class="chip ok">Works</span></div>
+        <div class="pair">
+          <div class="side o"><span class="who">Odoo</span><div class="path">⚙<span class="sep">›</span>Deliver</div><p>Fully Delivered (2 and 1).</p></div>
+          <div class="side n"><span class="who">Nocoly</span><div class="path">More ▾<span class="sep">›</span>Deliver</div><p>Fully Delivered.</p></div>
+        </div>
+      </div></div>
+
+      <div class="step"><span class="num">06</span><div class="step-body">
+        <div class="step-title"><h3>Create the invoice</h3><span class="chip ok">Works</span></div>
+        <div class="pair">
+          <div class="side o"><span class="who">Odoo</span><p>Regular invoice opens a draft with both lines.</p></div>
+          <div class="side n"><span class="who">Nocoly</span><p>Confirm, and draft INV/2026/0070 appears in the order's Invoices field; it doesn't open by itself. The order shows Fully Invoiced, as in Odoo.</p></div>
+        </div>
+      </div></div>
+
+      <div class="step"><span class="num">07</span><div class="step-body">
+        <div class="step-title"><h3>Post the invoice</h3><span class="chip fix">Fixed 14 Sep</span></div>
+        <div class="pair">
+          <div class="side o"><span class="who">Odoo</span><p>INV/2026/00002, Invoice Date Sep 14, Due Date Sep 14 (no payment terms).</p></div>
+          <div class="side n"><span class="who">Nocoly</span><p>Posted, with Payment Reference set to the invoice number.</p></div>
+        </div>
+        <p class="note fixnote"><strong>Fixed:</strong> Post left Invoice Date and Due Date empty. It now sets Invoice Date to today when it's empty, and Due Date to the invoice date plus the payment term's days. Checked on INV/2026/0067 (2026-09-14 / 2026-09-14); a 21-day term gives 2026-10-05 in the formula test.</p>
+      </div></div>
+
+      <div class="step"><span class="num">08</span><div class="step-body">
+        <div class="step-title"><h3>Register payment</h3><span class="chip ok">Works</span></div>
+        <div class="pair">
+          <div class="side o"><span class="who">Odoo</span><p>Pay asks for Journal, Payment Date and Memo. The invoice stays Posted with a PAID stamp.</p></div>
+          <div class="side n"><span class="who">Nocoly</span><p>Register Payment asks for the amount only. The invoice's Status and Payment Status both become Paid, and Amount Due drops to 0.</p></div>
+        </div>
+      </div></div>
+
+      <div class="step"><span class="num">09</span><div class="step-body">
+        <div class="step-title"><h3>Duplicate an order</h3><span class="chip ok">Works</span></div>
+        <div class="pair">
+          <div class="side o"><span class="who">Odoo</span><p>S00021: a new quotation, customer reference cleared, expiration reset.</p></div>
+          <div class="side n"><span class="who">Nocoly</span><p>S00091 opens straight away: a quotation with the same lines and Expiration 2026-10-14.</p></div>
+        </div>
+      </div></div>
+
+      <div class="step"><span class="num">10</span><div class="step-body">
+        <div class="step-title"><h3>Take a 30% down payment, then invoice the rest</h3><span class="chip ok">Works</span></div>
+        <div class="pair">
+          <div class="side o"><span class="who">Odoo</span><p>Deposit invoice with one line per tax (575.40 at 10%, 255.00 at 8%). The final invoice bills the chair and takes off both deposit lines; the undelivered service is left out.</p></div>
+          <div class="side n"><span class="who">Nocoly</span><p>Deposit INV/2026/0071 with one line per tax (539.40 at 10%, 255.00 at 8%) and a Down Payments section on the order. Final INV/2026/0072 has the same structure and deduction.</p></div>
+        </div>
+        <p class="note">The amounts differ only by the missing variant extra (step 02). New lines added by a workflow show at the top of an open order's table until it's refreshed.</p>
+      </div></div>
+
+      <div class="step"><span class="num">11</span><div class="step-body">
+        <div class="step-title"><h3>Unlock, cancel, back to quotation</h3><span class="chip fix">Fixed 14 Sep</span></div>
+        <div class="pair">
+          <div class="side o"><span class="who">Odoo</span><p>Unlock, then Cancel ("Yes, cancel order") cancels the draft final invoice and keeps the posted deposit. Set to Quotation works.</p></div>
+          <div class="side n"><span class="who">Nocoly</span><p>Unlock, Cancel with the same wording, and Back to Quotation all work.</p></div>
+        </div>
+        <p class="note fixnote"><strong>Fixed:</strong> Cancel left the draft invoice as Draft. It now also cancels that order's draft invoices and leaves posted ones alone. Checked on S00091: INV/2026/0072 became Cancelled and INV/2026/0071 stayed Posted.</p>
+      </div></div>
+    </div>
+
+    <div class="closing">
+      <div class="box">
+        <h3>Still to do before the demo</h3>
+        <ul>
+          <li><strong>Variants on order lines</strong>: finish step 02.</li>
+          <li><strong>INV/2026/0068</strong> is a posted invoice on the real order S00015 (Sarawak). It was created and posted at 11:18–11:19 while the stopped check agent was running. Confirm whose it is before anything is removed.</li>
+          <li>The <strong>Tax Display</strong> help text on the new-quotation form still says "display only".</li>
+        </ul>
+      </div>
+      <div class="box">
+        <h3>Test records to clear</h3>
+        <ul>
+          <li><strong>Nocoly:</strong> S00086–S00088, S00090, S00091; INV/2026/0064–0067, 0069–0072; "Template from S00086"; the test product and variant.</li>
+          <li><strong>Odoo:</strong> S00020, S00021, INV/2026/00002 with its payment, INV/2026/00003.</li>
+          <li>Not touched: the 8 real orders (still RM 961,400.65) and S00089.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="part" id="same"><div class="group-head"><span class="chip same">Same</span><h2>Same</h2><span class="count">14 items</span><p>Works the same way in both apps.</p></div><div class="item"><div class="item-title"><span class="stage">Set up</span><h3>Taxes, payment terms, fiscal positions</h3></div><div class="pair"><div class="side o"><span class="who">Odoo</span><div class="path">Invoicing<span class="sep">›</span>Configuration<span class="sep">›</span>Taxes · Payment Terms · Fiscal Positions</div></div><div class="side n"><span class="who">Nocoly</span><div class="path">Configuration<span class="sep">›</span>Taxes · Payment Terms · Fiscal Positions</div></div></div><p class="note">Change a tax rate in Nocoly and every order recomputes. Nocoly allows one tax per line.</p></div><div class="item"><div class="item-title"><span class="stage">Set up</span><h3>Product building blocks</h3></div><div class="pair"><div class="side o"><span class="who">Odoo</span><div class="path">Sales<span class="sep">›</span>Products<span class="sep">›</span>Categories · Units &amp; Packagings · Attributes · Combo Choices</div></div><div class="side n"><span class="who">Nocoly</span><div class="path">Products<span class="sep">›</span>Categories · Units &amp; Packagings · Attributes · Combo Choices</div></div></div><div class="item"><div class="item-title"><span class="stage">Set up</span><h3>Combo choices</h3></div><div class="pair"><div class="side o"><span class="who">Odoo</span><div class="path">Sales<span class="sep">›</span>Products<span class="sep">›</span>Combo Choices</div><p>Form: title and an Options table (variant, Original Price, Extra Price). List: Name, Combo Price, Product Count.</p></div><div class="side n"><span class="who">Nocoly</span><div class="path">Products<span class="sep">›</span>Combo Choices</div><p>Same form and list. Options are product variants; Original Price is the variant's price, and Combo Price is the lowest option.</p></div></div><p class="note">All 5 combos match Odoo line for line. Option names lack Odoo's [code] prefix, and combos can't be drag-reordered in the list.</p></div></div><div class="item"><div class="item-title"><span class="stage">Set up</span><h3>Customers and sales teams</h3></div><div class="pair"><div class="side o"><span class="who">Odoo</span><div class="path">Sales<span class="sep">›</span>Orders<span class="sep">›</span>Customers · Sales Teams</div></div><div class="side n"><span class="who">Nocoly</span><div class="path">Orders<span class="sep">›</span>Customers · Sales Teams</div></div></div><p class="note">A customer's salesperson, payment terms and pricelist feed every new quotation.</p></div><div class="item"><div class="item-title"><span class="stage">Set up</span><h3>Tracking lists</h3></div><div class="pair"><div class="side o"><span class="who">Odoo</span><div class="path">Invoicing<span class="sep">›</span>Configuration<span class="sep">›</span>Incoterms · UTM sources, mediums, campaigns · Project app</div></div><div class="side n"><span class="who">Nocoly</span><div class="path">Configuration<span class="sep">›</span>Incoterms · Sources · Mediums · Campaigns · Projects</div></div></div><p class="note">Picked on the order's Other Info tab. Nocoly still holds sample campaigns, projects and a "Direct" source that Odoo doesn't have (kept by decision on 13 September).</p></div></div><div class="item"><div class="item-title"><span class="stage">Quotation</span><h3>Adjust the price</h3></div><div class="pair"><div class="side o"><span class="who">Odoo</span><div class="path">Update Prices · Discount · Tax Excl. / Tax Incl.</div></div><div class="side n"><span class="who">Nocoly</span><div class="path">More ▾<span class="sep">›</span>Update Prices · Discount · Tax Display switch</div></div></div><p class="note">In Tax Incl. mode the price you type includes tax and the totals follow. Totals show Untaxed, SST 8% and SST 10% separately, then Total.</p></div><div class="item"><div class="item-title"><span class="stage">Send</span><h3>Download the PDF</h3></div><div class="pair"><div class="side o"><span class="who">Odoo</span><div class="path">Download</div></div><div class="side n"><span class="who">Nocoly</span><div class="path">Printer icon<span class="sep">›</span>Quotation (PDF) · Order (PDF)</div></div></div></div><div class="item"><div class="item-title"><span class="stage">Send</span><h3>Confirm the order</h3></div><div class="pair"><div class="side o"><span class="who">Odoo</span><div class="path">Confirm</div></div><div class="side n"><span class="who">Nocoly</span><div class="path">Confirm</div></div></div><p class="note">The quotation becomes a <strong>Sales Order</strong> and locks. Invoice status follows each product's invoicing policy.</p></div><div class="item"><div class="item-title"><span class="stage">Bill</span><h3>Deliver, and unlock to make changes</h3></div><div class="pair"><div class="side o"><span class="who">Odoo</span><div class="path">⚙<span class="sep">›</span>Deliver · Unlock · Lock</div></div><div class="side n"><span class="who">Nocoly</span><div class="path">More ▾<span class="sep">›</span>Deliver · Unlock · Lock</div></div></div><p class="note">Locked and cancelled orders are read-only in both.</p></div><div class="item"><div class="item-title"><span class="stage">Bill</span><h3>Take a down payment</h3></div><div class="pair"><div class="side o"><span class="who">Odoo</span><div class="path">Create Invoice<span class="sep">›</span>Down payment (% or fixed)</div></div><div class="side n"><span class="who">Nocoly</span><div class="path">More ▾<span class="sep">›</span>Down Payment</div><p>Pick percentage or fixed amount; a deposit invoice is created and the order gets down-payment lines.</p></div></div><p class="note">Exact to the sen, as in Odoo.</p></div><div class="item"><div class="item-title"><span class="stage">Bill</span><h3>Create the invoice</h3></div><div class="pair"><div class="side o"><span class="who">Odoo</span><div class="path">Create Invoice<span class="sep">›</span>Regular invoice</div></div><div class="side n"><span class="who">Nocoly</span><div class="path">Create Invoice</div></div></div><p class="note">Bills only what's due per line, deducts down payments once, carries sections and notes in order. If delivered drops below invoiced, the next invoice is a <strong>credit note</strong>; Invoice Status updates by itself when lines change.</p></div><div class="item"><div class="item-title"><span class="stage">Bill</span><h3>Close, reopen or cancel</h3></div><div class="pair"><div class="side o"><span class="who">Odoo</span><div class="path">⚙<span class="sep">›</span>Close Invoicing · Cancel · Set to Quotation</div></div><div class="side n"><span class="who">Nocoly</span><div class="path">More ▾<span class="sep">›</span>Close / Reopen Invoicing · Cancel · Back to Quotation</div></div></div><p class="note">Cancelling also cancels the order's draft invoices and leaves posted ones alone (Nocoly since 14 September).</p></div><div class="item"><div class="item-title"><span class="stage">Reuse</span><h3>Duplicate</h3></div><div class="pair"><div class="side o"><span class="who">Odoo</span><div class="path">⚙<span class="sep">›</span>Duplicate</div></div><div class="side n"><span class="who">Nocoly</span><div class="path">More ▾<span class="sep">›</span>Duplicate</div><p>Nocoly's own Copy and Recreate are switched off.</p></div></div><p class="note">A new quotation with every line except down payments.</p></div><div class="item"><div class="item-title"><span class="stage">Reuse</span><h3>Save as template, create a project</h3></div><div class="pair"><div class="side o"><span class="who">Odoo</span><div class="path">⚙<span class="sep">›</span>Save as template · Create Project</div></div><div class="side n"><span class="who">Nocoly</span><div class="path">More ▾<span class="sep">›</span>Save as template · Create Project</div></div></div><p class="note">Both refuse to template an order with a down payment and reset its expiration to today + 30 days.</p></div></section><section class="part" id="diff"><div class="group-head"><span class="chip diff">Different</span><h2>Different</h2><span class="count">5 items</span><p>Same result, reached a different way.</p></div><div class="item"><div class="item-title"><span class="stage">Set up</span><h3>Company defaults</h3></div><div class="pair"><div class="side o"><span class="who">Odoo</span><div class="path">Sales<span class="sep">›</span>Configuration<span class="sep">›</span>Settings</div><p>Switch features on: pricelists, discounts, variants, units, addresses, lock confirmed sales, online signature and payment, quotation validity.</p></div><div class="side n"><span class="who">Nocoly</span><div class="path">Configuration<span class="sep">›</span>Settings</div><p>The features are already built in; Settings only holds the defaults (signature required, online payment off, 30-day validity).</p></div></div></div><div class="item"><div class="item-title"><span class="stage">Quotation</span><h3>Start a quotation and pick the customer</h3></div><div class="pair"><div class="side o"><span class="who">Odoo</span><div class="path">Sales<span class="sep">›</span>Orders<span class="sep">›</span>Quotations<span class="sep">›</span>New</div><p>Addresses, pricelist, payment terms and salesperson fill in at once.</p></div><div class="side n"><span class="who">Nocoly</span><div class="path">Orders<span class="sep">›</span>Orders<span class="sep">›</span>Quotations tab<span class="sep">›</span>+ Record</div><p>Expiration (today + 30) and the addresses fill in at once. Submit first: pricelist, terms, salesperson and team fill in 2–15 s later; reopen to see them.</p></div></div></div><div class="item"><div class="item-title"><span class="stage">Quotation</span><h3>Add product lines</h3></div><div class="pair"><div class="side o"><span class="who">Odoo</span><div class="path">Order Lines<span class="sep">›</span>Add a line</div><p>Description, unit, taxes and price appear immediately.</p></div><div class="side n"><span class="who">Nocoly</span><div class="path">Order Lines<span class="sep">›</span>Add a row</div><p>Pick a product and save; description, unit, taxes and price fill in after save. Lines keep their on-screen order.</p></div></div></div><div class="item"><div class="item-title"><span class="stage">Send</span><h3>Email it, or mark it sent</h3></div><div class="pair"><div class="side o"><span class="who">Odoo</span><div class="path">Send · ⚙<span class="sep">›</span>Mark as Sent</div><p>Send opens an email composer with the PDF attached.</p></div><div class="side n"><span class="who">Nocoly</span><div class="path">Send · More ▾<span class="sep">›</span>Mark as Sent</div><p>Send confirms, then emails the customer with the PDF from Nocoly's address. No composer, no reply-to.</p></div></div><p class="note">Both move the quotation to <strong>Quotation Sent</strong>.</p></div><div class="item"><div class="item-title"><span class="stage">Bill</span><h3>Post the invoice and record payment</h3></div><div class="pair"><div class="side o"><span class="who">Odoo</span><div class="path">Invoicing<span class="sep">›</span>Customers<span class="sep">›</span>Invoices<span class="sep">›</span>Confirm<span class="sep">›</span>Pay</div></div><div class="side n"><span class="who">Nocoly</span><div class="path">Order's Invoices field<span class="sep">›</span>open invoice<span class="sep">›</span>Post<span class="sep">›</span>Register Payment</div><p>Records the payment by hand.</p></div></div><p class="note">Posting sets Invoice Date and Due Date in both apps (Nocoly since 14 September). Credit notes are numbered INV/ in Nocoly.</p></div></section><section class="part" id="part"><div class="group-head"><span class="chip part">Partial</span><h2>Partial</h2><span class="count">10 items</span><p>Close to Odoo, with gaps worth knowing.</p></div><div class="item"><div class="item-title"><span class="stage">Set up</span><h3>Pricelists and price rules</h3></div><div class="pair"><div class="side o"><span class="who">Odoo</span><div class="path">Sales<span class="sep">›</span>Products<span class="sep">›</span>Pricelists</div><p>Rules by product, category or all products, with minimum quantity and dates; fixed price, % discount or formula. Prices update as you add a line or change its quantity.</p></div><div class="side n"><span class="who">Nocoly</span><div class="path">Products<span class="sep">›</span>Pricelists</div><p>Same rules, applied in Odoo's order: fixed price into Unit Price, percentage as Disc.%.</p></div></div><p class="note">Prices a new line a few seconds after save, not as you type. Changing an existing line's quantity doesn't reprice it until <strong>Update Prices</strong>. Only fixed and percentage rules are built, and a variant's extra price isn't added. Existing lines keep the prices they were created with in both apps.</p></div><div class="item"><div class="item-title"><span class="stage">Set up</span><h3>Quotation templates and headers/footers</h3></div><div class="pair"><div class="side o"><span class="who">Odoo</span><div class="path">Sales<span class="sep">›</span>Configuration<span class="sep">›</span>Sales Orders<span class="sep">›</span>Templates · Headers/Footers</div><p>Picking a template fills the quotation's lines, expiration, terms and signature/payment settings; headers and footers are added as PDF pages.</p></div><div class="side n"><span class="who">Nocoly</span><div class="path">Configuration<span class="sep">›</span>Templates · Headers/Footers</div><p><strong>Implemented:</strong> Save as template creates a template from an order; Duplicate uses a template's validity days.</p><p><strong>Not implemented:</strong> picking a template on a quotation does nothing; headers/footers aren't added to the PDF; a template's confirmation email and signature/payment settings aren't applied.</p></div></div><p class="note">Neither app has any templates or headers/footers right now — Nocoly's sample ones were removed on 14 September to match Odoo.</p></div><div class="item"><div class="item-title"><span class="stage">Set up</span><h3>Products</h3></div><div class="pair"><div class="side o"><span class="who">Odoo</span><div class="path">Sales<span class="sep">›</span>Products<span class="sep">›</span>Products<span class="sep">›</span>New</div></div><div class="side n"><span class="who">Nocoly</span><div class="path">Products<span class="sep">›</span>Products<span class="sep">›</span>+ Record</div><p>Tabs: General Information · Attributes &amp; Variants · Sales · Prices · Inventory.</p></div></div><p class="note">Variants are stored, but Nocoly order lines don't let you pick one yet. A Variant field was added to Order Lines on 14 September and isn't finished (see Main processes, step 02).</p></div><div class="item"><div class="item-title"><span class="stage">Quotation</span><h3>Add several products at once</h3></div><div class="pair"><div class="side o"><span class="who">Odoo</span><div class="path">Order Lines<span class="sep">›</span>Catalog</div><p>A full-screen product grid with + / − on each card.</p></div><div class="side n"><span class="who">Nocoly</span><div class="path">More ▾<span class="sep">›</span>Catalog</div><p>A dialog: pick products, choose Add, Set quantity or Remove, enter a quantity.</p></div></div><p class="note">One action and quantity apply to every product picked; no category panels.</p></div><div class="item"><div class="item-title"><span class="stage">Quotation</span><h3>Sections, subsections and notes</h3></div><div class="pair"><div class="side o"><span class="who">Odoo</span><div class="path">Order Lines<span class="sep">›</span>Add a section · Add a note</div><p>A subsection comes from a section row's ⋮ menu.</p></div><div class="side n"><span class="who">Nocoly</span><div class="path">More ▾<span class="sep">›</span>Add Section · Add Note · Add Subsection</div><p>Each opens a draft line to type the description into; for a specific section, open that section line and use its Add Subsection.</p></div></div><p class="note">A description is required. New lines appear in place once the order is reopened.</p></div><div class="item"><div class="item-title"><span class="stage">Send</span><h3>Preview and share</h3></div><div class="pair"><div class="side o"><span class="who">Odoo</span><div class="path">Preview</div><p>Opens the customer portal, where they can sign and pay.</p></div><div class="side n"><span class="who">Nocoly</span><div class="path">Record ⋯<span class="sep">›</span>Share</div><p>A view-only public link.</p></div></div></div><div class="item"><div class="item-title"><span class="stage">Send</span><h3>Customer signs</h3></div><div class="pair"><div class="side o"><span class="who">Odoo</span><div class="path">Customer portal<span class="sep">›</span>Sign</div></div><div class="side n"><span class="who">Nocoly</span><div class="path">Sign &amp; Accept</div><p>Captures the signature from inside the app.</p></div></div></div><div class="item"><div class="item-title"><span class="stage">Report</span><h3>Work the lists</h3></div><div class="pair"><div class="side o"><span class="who">Odoo</span><div class="path">Quotations · Orders · Orders to Invoice · Orders to Upsell</div><p>Search, filters, Group By, optional columns, total at the bottom.</p></div><div class="side n"><span class="who">Nocoly</span><div class="path">Orders<span class="sep">›</span>Orders<span class="sep">›</span>the four tabs</div><p>Saved filters (My Quotations, Expired), per-user column panel, Total sum, cancelled rows greyed.</p></div></div><p class="note">No per-user Group By in Nocoly.</p></div><div class="item"><div class="item-title"><span class="stage">Report</span><h3>Reporting</h3></div><div class="pair"><div class="side o"><span class="who">Odoo</span><div class="path">Reporting<span class="sep">›</span>Sales · Salespersons · Products · Customers</div><p>Interactive pivot and graph views.</p></div><div class="side n"><span class="who">Nocoly</span><div class="path">Reporting<span class="sep">›</span>Sales · Salespersons · Products · Customers</div><p>Chart pages with Odoo's default pivots; less interactive.</p></div></div></div><div class="item"><div class="item-title"><span class="stage">Report</span><h3>Talk about the order</h3></div><div class="pair"><div class="side o"><span class="who">Odoo</span><div class="path">Chatter<span class="sep">›</span>Send message · Log note · Activity</div></div><div class="side n"><span class="who">Nocoly</span><div class="path">Side panel<span class="sep">›</span>Comments · Log</div><p>Comments with @mentions reach Nocoly users only; Log keeps every field change.</p></div></div><p class="note">No activity scheduling in Nocoly.</p></div></section><section class="part" id="wip"><div class="group-head"><span class="chip wip">In progress</span><h2>In progress</h2><span class="count">2 items</span><p>Nothing is running right now. These two were stopped mid-way on 14 September and can be resumed.</p></div><div class="item"><div class="item-title"><span class="stage">Check</span><h3>Click-through check in the app — paused</h3></div><div class="pair"><div class="side o"><span class="who">Covered so far</span><p>Autofill, Catalog, Save as template, Duplicate, Send, Confirm, Deliver, Create Invoice and Upselling, on test orders.</p></div><div class="side n"><span class="who">Still to check</span><p>Sections and subsections, pricing and Tax Incl., PDFs and Share, credit notes, the invoice form, lock/cancel, the lists, and a real-order spot check.</p></div></div><p class="note">Stopped on 14 September before it reported. Its test orders S00086–S00088 are still in the app. The main sale steps were run again by hand that afternoon; see Main processes at the top.</p></div><div class="item"><div class="item-title"><span class="stage">Set up</span><h3>Attributes &amp; Variants tab like Odoo — paused</h3></div><div class="pair"><div class="side o"><span class="who">Built</span><p>An attribute-lines table on the product (Attribute, Values), per-product value extra prices, seeded for the chair, monitor and desk to match Odoo.</p></div><div class="side n"><span class="who">Not yet</span><p>Automatic variant creation (switched off while unfinished), Configure, moving the variants list out of the tab, UI check.</p></div></div></div></section><section class="part" id="no"><div class="group-head"><span class="chip no">Not possible</span><h2>Not possible</h2><span class="count">11 items</span><p>No Nocoly counterpart. These are platform limits, recorded so nobody rebuilds them.</p></div><div class="item"><div class="item-title"><span class="stage">Report</span><h3>Activities</h3></div><div class="pair"><div class="side o"><span class="who">Odoo</span><div class="path">Chatter<span class="sep">›</span>Activity · Activities column · activity views</div></div><div class="side n none"><span class="who">Nocoly</span><div class="path">—</div><p>Nocoly has no activity scheduling.</p></div></div></div><div class="item"><div class="item-title"><span class="stage">Report</span><h3>Followers</h3></div><div class="pair"><div class="side o"><span class="who">Odoo</span><div class="path">Follow a record; followers get emailed</div></div><div class="side n none"><span class="who">Nocoly</span><div class="path">—</div><p>Comments reach Nocoly users only; there's no subscriber list.</p></div></div></div><div class="item"><div class="item-title"><span class="stage">Send</span><h3>Customer portal</h3></div><div class="pair"><div class="side o"><span class="who">Odoo</span><div class="path">Customer accepts, signs and pays online</div></div><div class="side n none"><span class="who">Nocoly</span><div class="path">—</div><p>Share is a view-only page.</p></div></div></div><div class="item"><div class="item-title"><span class="stage">Report</span><h3>Per-user Group By inside a list</h3></div><div class="pair"><div class="side o"><span class="who">Odoo</span><div class="path">Filters<span class="sep">›</span>Group By (any field, multi-level)</div></div><div class="side n none"><span class="who">Nocoly</span><div class="path">—</div><p>Nocoly groups a list only for everyone, by one field, never by date.</p></div></div></div><div class="item"><div class="item-title"><span class="stage">Quotation</span><h3>Controls under the order lines, and filling fields as you type</h3></div><div class="pair"><div class="side o"><span class="who">Odoo</span><div class="path">Add a line / section / note under the lines; instant onchange</div></div><div class="side n none"><span class="who">Nocoly</span><div class="path">—</div><p>Nocoly can't put buttons inside the lines table or fill fields before save.</p></div></div></div><div class="item"><div class="item-title"><span class="stage">Quotation</span><h3>Full-screen Catalog grid</h3></div><div class="pair"><div class="side o"><span class="who">Odoo</span><div class="path">Catalog kanban with category panel and + / −</div></div><div class="side n none"><span class="who">Nocoly</span><div class="path">—</div><p>Nocoly offers the dialog instead.</p></div></div></div><div class="item"><div class="item-title"><span class="stage">Bill</span><h3>Credit notes numbered RINV/</h3></div><div class="pair"><div class="side o"><span class="who">Odoo</span><div class="path">Separate credit-note sequence</div></div><div class="side n none"><span class="who">Nocoly</span><div class="path">—</div><p>One auto-number per sheet.</p></div></div></div><div class="item"><div class="item-title"><span class="stage">Report</span><h3>Column defaults for everyone</h3></div><div class="pair"><div class="side o"><span class="who">Odoo</span><div class="path">Optional columns hidden by default, fixed columns</div></div><div class="side n none"><span class="who">Nocoly</span><div class="path">—</div><p>Column show/hide only works per person.</p></div></div></div><div class="item"><div class="item-title"><span class="stage">Quotation</span><h3>Rules on automated changes</h3></div><div class="pair"><div class="side o"><span class="who">Odoo</span><div class="path">Required fields enforced for every write</div></div><div class="side n none"><span class="who">Nocoly</span><div class="path">—</div><p>Nocoly's form rules skip API and workflow writes.</p></div></div></div><div class="item"><div class="item-title"><span class="stage">Set up</span><h3>Side-by-side field groups, Journal field</h3></div><div class="pair"><div class="side o"><span class="who">Odoo</span><div class="path">Other Info in two columns; Journal on the order</div></div><div class="side n none"><span class="who">Nocoly</span><div class="path">—</div><p>One 12-column grid; no journal concept.</p></div></div></div><div class="item"><div class="item-title"><span class="stage">Report</span><h3>Insert in spreadsheet, Upload RFQ</h3></div><div class="pair"><div class="side o"><span class="who">Odoo</span><div class="path">List ⚙<span class="sep">›</span>Spreadsheet · Upload Request for Quotation</div></div><div class="side n none"><span class="who">Nocoly</span><div class="path">—</div><p>No equivalent.</p></div></div></div></section><section class="part" id="int"><div class="group-head"><span class="chip int">Need integration</span><h2>Need integration</h2><span class="count">1 item</span><p>Buildable once a payment provider is connected.</p></div><div class="item"><div class="item-title"><span class="stage">Bill</span><h3>Online payments</h3></div><div class="pair"><div class="side o"><span class="who">Odoo</span><div class="path">Payment Link · Capture / Void · Payments button</div></div><div class="side n none"><span class="who">Nocoly</span><div class="path">—</div><p>Needs a Stripe integration.</p></div></div></div></section>
+
+  <div class="foot">Paths reflect both apps on 14 September 2026. "More ▾" is the overflow menu in the header of a Nocoly order; which buttons show before it depends on screen width and the order's status. Stage labels: Set up · Quotation · Send · Bill · Reuse · Report.</div>
+</div>
+
+</body></html>
