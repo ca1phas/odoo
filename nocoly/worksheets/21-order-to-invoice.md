@@ -1143,6 +1143,8 @@ above because the roll-up happened to execute a second after the account run —
 only the account automation writes, is in the header's 32.00. If a roll-up ever reads a line between the
 category step's write and node 3's, the header's Tax would carry the product's taxes while the line carries
 the order line's. Before this fix the same race existed the other way round. Not addressed here; the owner's.
+**Closed the same day** by narrowing the roll-up to trigger fields, Taxes among them. Each of the automation's Taxes
+writes now starts a run of its own (07 *What starts the roll-up*, `invlines.py triggers`).
 
 **Found while proving it**: every TEST invoice this bundle recorded — *TEST o2i probe invoice*
 (`781df0c0-…`) and the three the Create Invoice presses made — is **no longer in the app** (removed by no step

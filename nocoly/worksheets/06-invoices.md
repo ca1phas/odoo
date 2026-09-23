@@ -890,6 +890,7 @@ button's fill-in form — the browser test below.
   cleanly on a TEST line afterwards, status 2). `taxes.py rollup` / `taxes.py check` and `invlines.py`'s roll-up
   still expect the Amount Due write, and `invlines.py amounts` writes Amount Due through the API: **those need the
   Amount Due entry taken out** — not done here, those files belong to the builds working on Invoice Lines.
+  **Done later on 23 Sep 2026** (07 *What starts the roll-up*): the spec and the checks no longer expect Amount Due.
 - The *Invoice Lines note* still says Amount Due is worked out from the lines; it is now Total less Amount Paid
   (text owned by `taxes.py` too, left alone).
 

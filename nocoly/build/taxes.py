@@ -1929,7 +1929,10 @@ def step_accounts():
 #   3   Untaxed Amount = $2$+0                                  unchanged
 #   3b  Tax = $2b$-$2$                                          NEW
 #   4   Total and Amount Due = $2b$+0                           was $2$+$the invoice's stored Tax$
-#   5   writes Untaxed Amount, Total, Amount Due **and Tax**    Tax was read and never written
+#   5   writes Untaxed Amount, Total **and Tax**                Tax was read and never written
+#
+# Step 5 wrote Amount Due too until 23 Sep 2026, when Register Payment made Amount Due a Formula (Total − Amount
+# Paid) and the server dropped that write from both nodes (06 *Register Payment*). Step 4 keeps its name.
 #
 # Σ Total − Σ Subtotal is the document's tax exactly, because each line's Total is itself rounded to two
 # decimals and the company rounds per line (`tax_calculation_rounding_method = round_per_line`).
@@ -1962,7 +1965,7 @@ def rollup_ids():
                 line_type=lf['Display Type']['controlId'], line_subtotal=lf['Subtotal']['controlId'],
                 line_total=lf[LINE_TOTAL]['controlId'], product_line=L.PRODUCT_LINE,
                 untaxed=inv['Invoices: Untaxed Amount'], tax=inv['Invoices: Tax'],
-                total=inv['Invoices: Total'], due=inv['Invoices: Amount Due'])
+                total=inv['Invoices: Total'])
 
 
 def rollup_filter(x, node_id, invoice_node):
@@ -2104,8 +2107,7 @@ def step_rollup():
         changed |= save_number(pid, by_name[TOTAL_STEP], f'${totals}-{NUMBER_FX}$+0')
         fields = [from_formula(x['untaxed'], by_name[UNTAXED_STEP]['id']),
                   from_formula(x['tax'], by_name[TAX_STEP]['id']),
-                  from_formula(x['total'], by_name[TOTAL_STEP]['id']),
-                  from_formula(x['due'], by_name[TOTAL_STEP]['id'])]
+                  from_formula(x['total'], by_name[TOTAL_STEP]['id'])]
         want = dict(selectNodeId=invoice, appId=x['invoices'], isException=False,
                     fields=sorted((f['fieldId'], f['nodeId'], f['fieldValueId']) for f in fields))
         if write_state(pid, by_name[WRITE_STEP]['id']) != want:
@@ -2116,7 +2118,7 @@ def step_rollup():
             got = write_state(pid, by_name[WRITE_STEP]['id'])
             if got != want:
                 sys.exit(f'{name} / {WRITE_STEP}: read back {got}, want {want}')
-            print(f'  {WRITE_STEP}: now writes Untaxed Amount, Tax, Total and Amount Due')
+            print(f'  {WRITE_STEP}: now writes Untaxed Amount, Tax and Total')
             changed = True
         info = read('workflow', 'get', pid)
         if (info.get('explain') or '') != ROLLUP_DESC:
@@ -2253,7 +2255,7 @@ def step_amounts(*only):
         if only and ref not in only:
             continue
         untaxed, total = sums[rowid]
-        want = dict(untaxed=untaxed, tax=round(total - untaxed, 2), total=total, residual=total)
+        want = dict(untaxed=untaxed, tax=round(total - untaxed, 2), total=total)   # Amount Due is a Formula
         got = L.read_amounts(rowid)
         if all(got[k] == v for k, v in want.items()):
             print(f"  OK    {ref:<34} {got['number']:<16} untaxed={got['untaxed']:>12,.2f} "
@@ -2606,7 +2608,8 @@ def g_differences(f):
 
 
 def rollup_differences():
-    """The two roll-ups read back: the seven steps in order, the three formulas and step 5's four writes."""
+    """The two roll-ups read back: the seven steps in order, the three formulas and step 5's three writes, and
+    what starts them (invlines.py `triggers`)."""
     x = rollup_ids()
     out = []
     for name in ROLLUPS:
@@ -2642,8 +2645,7 @@ def rollup_differences():
                            f"nullZero {d.get('nullZero')}, want {expression!r} / {MONEY_DOT} / True")
         fields = [from_formula(x['untaxed'], by_name[UNTAXED_STEP]['id']),
                   from_formula(x['tax'], by_name[TAX_STEP]['id']),
-                  from_formula(x['total'], by_name[TOTAL_STEP]['id']),
-                  from_formula(x['due'], by_name[TOTAL_STEP]['id'])]
+                  from_formula(x['total'], by_name[TOTAL_STEP]['id'])]
         want = dict(selectNodeId=by_name[GET_INVOICE]['id'], appId=x['invoices'], isException=False,
                     fields=sorted((f['fieldId'], f['nodeId'], f['fieldValueId']) for f in fields))
         if write_state(pid, by_name[WRITE_STEP]['id']) != want:
@@ -2651,7 +2653,8 @@ def rollup_differences():
         info = read('workflow', 'get', pid)
         if not info.get('enabled') or info.get('publishStatus') != 2:
             out.append(f"{name}: enabled={info.get('enabled')} publishStatus={info.get('publishStatus')}")
-    return out
+    import invlines as L
+    return out + L.trigger_differences()
 
 
 def other_worksheet_differences():

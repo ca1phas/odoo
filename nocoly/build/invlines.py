@@ -23,6 +23,8 @@ helpers: common.py. Run from the repo root with the CLI's interpreter:
     ~/.hap-venv/bin/python nocoly/build/invlines.py rules      # 6. a section or a note carries no figures
     ~/.hap-venv/bin/python nocoly/build/invlines.py views      # 7. Lines: columns, three-level sort, quick filter
     ~/.hap-venv/bin/python nocoly/build/invlines.py rollup     # 8. the two workflows that write 06's amounts
+    ~/.hap-venv/bin/python nocoly/build/invlines.py triggers   # 8b. the roll-up restarts on any change to what
+                                                               #    feeds the amounts, Taxes included
     ~/.hap-venv/bin/python nocoly/build/invlines.py seed       # 9. the fourteen lines of the five seeded
                                                                #    documents, then settle and verify
     ~/.hap-venv/bin/python nocoly/build/invlines.py amounts    # 10. recompute Untaxed Amount, Total and Amount
@@ -157,6 +159,9 @@ PLACE = {  # name -> (row, col, size)
     'Tax rate': (12, 0, 6), C.LIVE_ALL: (12, 1, 6),
     C.LIVE_OTHERS: (13, 0, 6),
 }
+# Controls another bundle put on Invoice Lines, which this script neither places nor checks: the order-to-invoice
+# bundle's lookup of the invoice's Type and its half of the order line ↔ invoice line pair (o2i.py, 21 §4).
+OTHER_BUNDLES = ('Document Type', 'Sales Order Lines')
 TITLE = 'Label'                                    # Odoo's _rec_name on account.move.line is `name`
 REQUIRED = {'Invoice', 'Display Type'}
 READONLY = {'Subtotal', 'Total', 'Number', 'Accounting Date', 'Status'}
@@ -347,7 +352,8 @@ def guard(created=True):
         sys.exit(f'{WORKSHEET} is not in ERP Master › {SECTION} yet — run `create` first')
     ctrls = hap.controls(wid)
     stock = {'Name', 'Description', 'Attachment'}
-    unknown = [c['controlName'] for c in ctrls if c['controlName'] not in PLACE and c['controlName'] not in stock]
+    unknown = [c['controlName'] for c in ctrls
+               if c['controlName'] not in PLACE and c['controlName'] not in stock | set(OTHER_BUNDLES)]
     if unknown:
         sys.exit(f"{WORKSHEET} holds controls this script does not own: {unknown}")
     for name, opts in OPTIONS.items():
@@ -799,8 +805,8 @@ def rollup_nodes(f, inv_f):
               'valueRef': {'node': {'nodeAlias': 'untaxed'}, 'fieldId': NUMBER_FX}},
              {'fieldId': INV['Total'], 'type': NUMBER,
               'valueRef': {'node': {'nodeAlias': 'total'}, 'fieldId': NUMBER_FX}},
-             {'fieldId': INV['Amount Due'], 'type': NUMBER,
-              'valueRef': {'node': {'nodeAlias': 'total'}, 'fieldId': NUMBER_FX}},
+             # Amount Due is not written: it is a Formula (Total − Amount Paid) since Register Payment,
+             # 23 Sep 2026, and the server drops a workflow write to a Formula (06 *Register Payment*).
          ]}},
     ]
 
@@ -906,8 +912,13 @@ def step_rollup():
     or changed, and a line deleted. HAP's worksheet-event trigger takes **one** event — 新增或更新 ('2') and
     删除 ('3') cannot share a trigger — so the same five steps are built twice.
 
-    The update step writes Untaxed Amount, Total and Amount Due into 06's own Number controls; not one of the
-    four is replaced, and the Tax is read for the Total and never written."""
+    The update step writes Untaxed Amount and Total into 06's own Number controls; not one of them is replaced,
+    and the Tax is read for the Total and never written. **Amount Due is not written**: it became a Formula
+    (Total − Amount Paid) with Register Payment on 23 Sep 2026 (06 *Register Payment*).
+
+    **Once `taxes.py rollup` has run, the body is taxes.py's**: it inserts two steps, rewrites the Total step's
+    formula and makes step 5 write the Tax. This step then leaves every node alone — re-running it would put
+    the Total back to "sum + stored Tax" — and only (re)applies the trigger fields (`step_triggers`)."""
     guard()
     f, inv_f = C.fields(ws()), C.fields(INVOICES)
     for name, event in ROLLUPS.items():
@@ -929,6 +940,9 @@ def step_rollup():
                     '--trigger-worksheet', ws(), '--trigger-event', event, '--trigger-alias', 'trigger')
             proc, byname = nodes_by_name(pid)
         trigger = proc['startEventId']
+        if TAXES_SUM_TOTAL_STEP in byname:
+            print(f'  {name}: the body is taxes.py\'s (it has {TAXES_SUM_TOTAL_STEP!r}); nodes left alone')
+            continue
         changed |= save_search(pid, byname[GET_INVOICE], INVOICES,
                                [invoice_of(byname[GET_INVOICE]['id'], trigger, f['Invoice']['controlId'])])
         alias = lambda text: (text.replace('$lines-', f"${byname[SUM_STEP]['id']}-")
@@ -937,10 +951,112 @@ def step_rollup():
         changed |= set_formula(pid, byname[TOTAL_STEP], alias(total_formula(inv_f)))
         changed |= set_fields(pid, byname[WRITE_STEP], [
             from_formula(INV['Untaxed Amount'], byname[UNTAXED_STEP]['id']),
-            from_formula(INV['Total'], byname[TOTAL_STEP]['id']),
-            from_formula(INV['Amount Due'], byname[TOTAL_STEP]['id'])], byname[GET_INVOICE]['id'])
+            from_formula(INV['Total'], byname[TOTAL_STEP]['id'])], byname[GET_INVOICE]['id'])
         print(f'  {name}:', C.publish(pid) if changed else 'already built; not re-published')
         print(C.structure(pid))
+    return step_triggers()
+
+
+# ── 8b · what starts the roll-up ────────────────────────────────────────────
+#
+# *Roll the lines up into the invoice* first ran on 新增或更新 with **no trigger fields**. On a worksheet event
+# that means "any change" — except a change written by **another workflow of this same worksheet**: under the
+# writer's 触发其他工作流 = 0 a same-worksheet workflow is started only if it is narrowed to trigger fields
+# (BUILDING.md, *Workflows*). So *fill the account of a new line* writing the product's taxes and then the
+# order line's taxes onto a new line started no roll-up at all; the header's Tax came from whichever state the
+# single create-time run happened to read (21 §14.6, the race). Narrowed to the fields below, each of those
+# writes starts its own run, and the last run reads the last write.
+#
+# The fields are every stored input to what the roll-up sums: its filter (Invoice, Display Type), Subtotal
+# (Quantity × Unit Price × (1 − Discount (%) / 100)) and Total (Subtotal and the three 汇总 over Taxes — Tax
+# rate, Tax rate (all taxes), Non-percentage taxes — which change only through Taxes). None of them is on
+# Invoices, which is the only worksheet the roll-up writes, so no run can start another.
+#
+# The delete roll-up keeps its 删除 trigger: a delete carries no fields.
+ROLLUP_TRIGGER_FIELDS = ('Invoice', 'Display Type', 'Quantity', 'Unit Price', 'Discount (%)', 'Taxes')
+TRIGGER_EVENT = {'create_or_update': '2', 'delete': '3'}
+TAXES_SUM_TOTAL_STEP = "The sum of the same lines' Total"      # the step taxes.py inserts
+
+
+def rollup_trigger(pid):
+    proc = hap.run('workflow', 'node', 'list', pid)
+    got = hap.run('workflow', 'node', 'get', pid, proc['startEventId'])
+    return proc, got.get('data', got)
+
+
+def trigger_differences(f=None):
+    """Each roll-up's trigger against the spec, and the no-loop guarantee: what each roll-up writes is on
+    Invoices, never one of its own trigger fields."""
+    f = f or C.fields(ws())
+    want_fields = sorted(f[n]['controlId'] for n in ROLLUP_TRIGGER_FIELDS)
+    names = {c['controlId']: n for n, c in f.items()}
+    out = []
+    for name, event in ROLLUPS.items():
+        pid = hap.ids()['workflows'][KEY + name]
+        proc, t = rollup_trigger(pid)
+        got = (str(t.get('triggerId')), t.get('appId'), sorted(t.get('assignFieldIds') or []))
+        want = (TRIGGER_EVENT[event], ws(), want_fields if event == 'create_or_update' else [])
+        if got != want:
+            out.append(f'{name}: trigger {got[0]} on {got[1]} fields {[names.get(i, i) for i in got[2]]}, want '
+                       f'{want[0]} on {want[1]} fields {[names.get(i, i) for i in want[2]]}')
+        for node in proc['flowNodeMap'].values():
+            if node.get('typeId') != 6:
+                continue
+            d = hap.run('workflow', 'node', 'get', pid, node['id'])
+            d = d.get('data', d)
+            written = [x.get('fieldId') for x in d.get('fields') or []]
+            if d.get('appId') != INVOICES or set(written) & set(want_fields):
+                out.append(f"{name} / {node['name']}: writes {d.get('appId')} {written} — a loop risk")
+        info = hap.run('workflow', 'get', pid)
+        info = info.get('data', info)
+        if not info.get('enabled') or info.get('publishStatus') != 2:
+            out.append(f"{name}: enabled={info.get('enabled')} publishStatus={info.get('publishStatus')}")
+    return out
+
+
+def step_triggers():
+    """Narrow *Roll the lines up into the invoice* to the six fields that feed the amounts, so a workflow's
+    write of a line's Taxes restarts it (§8b above). Backed up, saved, published and read back; a second run
+    saves nothing. The delete roll-up is read and left alone."""
+    guard()
+    f = C.fields(ws())
+    want = [f[n]['controlId'] for n in ROLLUP_TRIGGER_FIELDS]
+    for name, event in ROLLUPS.items():
+        pid = hap.ids()['workflows'][KEY + name]
+        proc, t = rollup_trigger(pid)
+        live = [c for c in t.get('assignFieldIds') or []]
+        label = lambda ids_: [next((n for n, c in f.items() if c['controlId'] == i), i) for i in ids_]
+        print(f"  {name}: trigger {t.get('triggerId')} {t.get('name')!r} fields {label(live)}")
+        if str(t.get('triggerId')) != TRIGGER_EVENT[event] or t.get('appId') != ws():
+            sys.exit(f"{name}: triggers on {t.get('appId')} / {t.get('triggerId')}, want {ws()} / "
+                     f'{TRIGGER_EVENT[event]} — read the app before changing it')
+        if event != 'create_or_update':
+            print(f'    a delete trigger carries no fields; left as it is')
+            continue
+        if sorted(live) == sorted(want):
+            print('    already narrowed to the six fields; nothing saved')
+            continue
+        hap.backup(f'invlines_rollup_trigger_pre_{pid}',
+                   {'trigger': t, 'nodes': {n['id']: hap.run('workflow', 'node', 'get', pid, n['id'])
+                                            for n in proc['flowNodeMap'].values()}})
+        hap.run('workflow', 'node', 'save', pid, proc['startEventId'], '--type', '0', '-n', t.get('name') or '',
+                '-c', json.dumps({'appId': ws(), 'appType': 1, 'triggerId': t.get('triggerId'),
+                                  'assignFieldIds': want, 'operateCondition': t.get('operateCondition') or [],
+                                  'returns': []}, ensure_ascii=False))
+        _, back = rollup_trigger(pid)
+        if sorted(back.get('assignFieldIds') or []) != sorted(want) or str(back.get('triggerId')) != '2':
+            sys.exit(f"{name}: read back trigger {back.get('triggerId')} fields "
+                     f"{label(back.get('assignFieldIds') or [])} — `hap workflow rollback {pid} -y` restores it")
+        result = C.publish(pid)
+        info = hap.run('workflow', 'get', pid)
+        info = info.get('data', info)
+        if not result.get('isPublish') or info.get('publishStatus') != 2:
+            sys.exit(f'{name}: publish {result}, publishStatus {info.get("publishStatus")}')
+        _, back = rollup_trigger(pid)
+        print(f"    now fields {label(back.get('assignFieldIds') or [])}; published {result}")
+    problems = trigger_differences(f)
+    print('  triggers: ' + ('OK' if not problems else 'DIFFERENCES\n    ' + '\n    '.join(problems)))
+    return len(problems)
 
 
 # ── 9 · the fourteen lines ──────────────────────────────────────────────────
@@ -1202,7 +1318,8 @@ def step_seed():
 
 # ── 10 · 06's amounts ───────────────────────────────────────────────────────
 
-AMOUNTS = ('Untaxed Amount', 'Total', 'Amount Due')      # Tax is never written: it waits for the Taxes bundle
+AMOUNTS = ('Untaxed Amount', 'Total')      # Tax is never written here: it waits for the Taxes bundle. Amount Due is a
+                                           # Formula (Total − Amount Paid) since Register Payment, 23 Sep 2026
 
 
 def sums_by_invoice():
@@ -1225,11 +1342,12 @@ def read_amounts(rowid):
 def amounts_for(rowid, untaxed):
     got = read_amounts(rowid)
     total = round(untaxed + got['tax'], 2)
-    return got, dict(untaxed=untaxed, total=total, residual=total)
+    return got, dict(untaxed=untaxed, total=total)
 
 
 def step_amounts():
-    """Untaxed Amount, Total and Amount Due on every invoice that has lines, from the lines themselves.
+    """Untaxed Amount and Total on every invoice that has lines, from the lines themselves. Amount Due is a
+    Formula (Total − Amount Paid) and is neither written nor compared.
 
     This is the same arithmetic the two workflows do, run once over what is already stored — the workflows
     keep it true from here on. The Tax is read and left exactly as the tenant seeded it, so the totals land on
@@ -1248,8 +1366,7 @@ def step_amounts():
             continue
         hap.run('worksheet', 'record', 'update', INVOICES, rowid, '-a', APP, '--fields-json', json.dumps(
             [{'id': cid('Untaxed Amount'), 'value': want['untaxed']},
-             {'id': cid('Total'), 'value': want['total']},
-             {'id': cid('Amount Due'), 'value': want['residual']}]))
+             {'id': cid('Total'), 'value': want['total']}]))
         back, _ = amounts_for(rowid, untaxed)
         ok = all(back[k] == v for k, v in want.items())
         bad += not ok
@@ -1273,9 +1390,10 @@ def line_sums():
 
 
 def wanted_amounts(sub, total):
-    """What 06's four amounts should read for a document whose lines sum to (sub, total): Untaxed Amount is
-    Σ Subtotal, Total and Amount Due are Σ Total, and the Tax is the difference (the Taxes bundle, 13 §1)."""
-    return dict(untaxed=sub, tax=round(total - sub, 2), total=total, residual=total)
+    """What 06's three rolled-up amounts should read for a document whose lines sum to (sub, total): Untaxed
+    Amount is Σ Subtotal, Total is Σ Total, and the Tax is the difference (the Taxes bundle, 13 §1). Amount Due
+    is not among them: it is a Formula, Total − Amount Paid, since Register Payment (23 Sep 2026)."""
+    return dict(untaxed=sub, tax=round(total - sub, 2), total=total)
 
 
 def step_settle(*only):
@@ -1443,8 +1561,7 @@ def step_selfcheck():
         expect = round(base + quantity * 100 * 0.9, 2)
         got = wait_for(rowid_invoice, lambda d: d['untaxed'] == expect)
         want = dict(untaxed=expect, total=round(expect + got['tax'], 2))
-        ok = got['untaxed'] == want['untaxed'] and got['total'] == want['total'] \
-            and got['residual'] == want['total']
+        ok = got['untaxed'] == want['untaxed'] and got['total'] == want['total']
         bad += not ok
         print(f'  {"OK  " if ok else "DIFF"}  {label:<28} {number} untaxed={got["untaxed"]:,.2f} '
               f'tax={got["tax"]:,.2f} total={got["total"]:,.2f} due={got["residual"]:,.2f}'
@@ -1494,8 +1611,8 @@ def step_check():
     f = hap.by_name(ctrls)
     names = {c['controlId']: c['controlName'] for c in ctrls}
     problems = []
-    if set(f) != set(PLACE):
-        problems.append(f'controls {sorted(set(f) ^ set(PLACE))}')
+    if set(f) - set(OTHER_BUNDLES) != set(PLACE):
+        problems.append(f'controls {sorted((set(f) - set(OTHER_BUNDLES)) ^ set(PLACE))}')
     problems += [f'{n}: {d}' for n, d in layout_differences(ctrls).items()]
     for name, opts in OPTIONS.items():
         live = [(o['key'], o['value']) for o in f.get(name, {}).get('options', []) if not o.get('isDeleted')]
@@ -1585,8 +1702,11 @@ def step_check():
         order = sorted(hap.controls(INVOICES), key=lambda c: (c.get('row', 0), c.get('col', 0)))
         tab = [c['controlName'] for c in order if c.get('sectionId') == INV['Invoice Lines']]
         print(f'  the Invoices tab Invoice Lines now holds: {tab}')
-        if tab != ['Invoice Lines note', LINES_FIELD, 'Terms and Conditions', 'Untaxed Amount', 'Tax', 'Total',
-                   'Amount Due']:
+        # Only this script's seven, in their order: Register Payment (invoices.py, 23 Sep 2026) added five
+        # controls to the same tab, whose places are the owner's.
+        mine = ['Invoice Lines note', LINES_FIELD, 'Terms and Conditions', 'Untaxed Amount', 'Tax', 'Total',
+                'Amount Due']
+        if [n for n in tab if n in mine] != mine:
             problems.append(f'the tab holds {tab}')
     # the two workflows
     for name, event in ROLLUPS.items():
@@ -1607,9 +1727,12 @@ def step_check():
         info = hap.run('workflow', 'get', pid)
         info = info.get('data', info)
         print(f"  workflow {name:<46} {pid} triggerId={trigger.get('triggerId')} "
+              f"fields={len(trigger.get('assignFieldIds') or [])} "
               f"published={info.get('publishStatus')} enabled={info.get('enabled')}")
+    # what starts them (8b), and that nothing they write can start them again
+    problems += trigger_differences()
     print('  check: ' + ('OK — controls, options, defaults, the rule, the view, the mount and the two '
-                         'roll-up workflows as specified' if not problems
+                         'roll-up workflows as specified, the write one narrowed to its six input fields' if not problems
                          else 'DIFFERENCES\n    ' + '\n    '.join(problems)))
     return len(problems)
 
@@ -1637,6 +1760,7 @@ STEPS = {
     'rules': step_rules,
     'views': step_views,
     'rollup': step_rollup,
+    'triggers': step_triggers,
     'seed': step_seed,
     'amounts': step_amounts,
     'settle': step_settle,
@@ -1655,5 +1779,5 @@ if __name__ == '__main__':
     if step not in STEPS:
         raise SystemExit(f"Unknown step {step!r}; choose from {', '.join(STEPS)}")
     result = STEPS[step](*sys.argv[2:])
-    if step in ('verify', 'check', 'all', 'selfcheck', 'amounts', 'settle', 'seed') and result:
+    if step in ('verify', 'check', 'all', 'selfcheck', 'amounts', 'settle', 'seed', 'triggers') and result:
         sys.exit(1)

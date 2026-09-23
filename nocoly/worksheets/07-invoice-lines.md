@@ -691,3 +691,81 @@ one version-pinned write. Saved figures are Tax rate's own, so no stored Total m
 on both read paths). Both helpers sit at row 9999; `PLACE` holds the intent (12,1,6 · 13,0,6) and `check` does not
 report their place. `taxes.py livetax` does not call `invlines.guard()`, which stops on o2i.py's Document Type and
 Sales Order Lines.
+
+## What starts the roll-up (23 Sep 2026, `invlines.py triggers`)
+
+**The defect.** An invoice made by *Create Invoice* could keep the product's tax in its header while its lines
+carried the order line's. *Roll the lines up into the invoice* ran on 新增或更新 with **no trigger fields**. That
+starts on any change a person or the API makes, but **not** on a change written by another workflow of the same
+worksheet: HAP starts a same-worksheet workflow only when it is narrowed to trigger fields (BUILDING.md,
+*Workflows*, 触发其他工作流). So the two Taxes writes by *fill the account of a new line* never started a roll-up.
+The only run was the one started by the create itself, which runs alongside that automation. Whatever Taxes it
+happened to read became the header's Tax, and nothing corrected it (21 §14.6, *A race this does not close*).
+
+**The fix, as the owner approved it.** The write roll-up's trigger is narrowed to the six stored inputs of what it sums:
+
+| Trigger field | Why it is an input |
+|---|---|
+| Invoice | the 汇总 filter: which document's lines |
+| Display Type | the 汇总 filter: only Product lines count |
+| Quantity, Unit Price, Discount (%) | Subtotal = Quantity × Unit Price × (1 − Discount ÷ 100) |
+| Taxes | Total = Subtotal × (1 + rate), where the rate comes from the three 汇总 over Taxes (Tax rate, Tax rate (all taxes), Non-percentage taxes). They change only when Taxes does |
+
+| Workflow | Trigger before | Trigger after |
+|---|---|---|
+| *Roll the lines up into the invoice* `6aaa2d6aa1c923a16efc81a7` | 新增或更新 (`triggerId` 2), no fields | 新增或更新 (2), **Invoice · Display Type · Quantity · Unit Price · Discount (%) · Taxes** |
+| *Roll the lines up when a line is deleted* `6aaa2ebba1c923a16efc8ecf` | 删除 (3), no fields | unchanged: a delete carries no fields |
+
+Only the trigger node's `assignFieldIds` changed. All 12 nodes were compared with the backup
+(`backups/invlines_rollup_trigger_pre_6aaa2d6aa1c923a16efc81a7_20260923-141113.json`). The trigger keeps its
+name, `工作表事件触发`. The workflow was published with no warnings, and a second run of `triggers` saves nothing.
+
+**No loop.** The roll-up's one update step writes Invoices (Untaxed Amount, Tax, Total). None of those is a trigger
+field. No workflow triggered on Invoices writes Invoice Lines: all 78 of the app's workflows were scanned.
+`check` asserts both points on every run.
+
+**Narrowing costs one thing.** A change to a field outside the six, such as Label, Account or Sequence, no longer
+starts a roll-up. It could not change the amounts anyway. A tax's own Amount edited on Taxes still restarts nothing,
+as before. Odoo does not recompute existing lines on such an edit either.
+
+**Proved through the CLI, 23 Sep 2026** (no browser). Both read paths were read each time: `record get` and the listing.
+
+1. *TEST rollup trigger invoice* `e0ae3c81-…`, a draft with two hand lines (A 2 × 100, B 1 × 300, both at 10% G):
+   500.00 / 50.00 / 550.00. Line A's Taxes changed by API to **5% G + 6% S** → **500.00 / 52.00 / 552.00**, then to
+   **none** → **500.00 / 30.00 / 530.00**, then 5% G + 6% S → 552.00 and 10% G → 550.00 again. Each time the
+   invoice followed about 7 s after the write was sent, and both paths agreed. (A direct API write started the
+   roll-up before this change too. This case shows only that the narrowing lost nothing.)
+2. **Create Invoice pressed three times** (`hap workflow trigger`), each time on a fresh TEST order: S00040, S00041
+   and S00042 (`TEST rollup race order 1–3`). Each order had two lines of *myPhone 16 (256GB Storage, Teal)*, a product
+   whose own tax is **10% G**. The *two-tax line* was 1 × 1,000 at **5% G + 6% S** and the *6% line* 2 × 500 at
+   **6% S**. With the product's tax the invoice would read 2,000.00 / 200.00 / 2,200.00. All three invoices
+   (`6c6e3c2b-…`, `e7f9937a-…`, `6fc0ae9f-…`) read **2,000.00 / 170.00 / 2,170.00** on both paths. That is the sum
+   of their lines (1,110.00 + 1,060.00), and each line carried the order line's taxes. It was read again 10 s later
+   and had not changed. On each line the roll-up ran **twice**: once for the create (in the same second as the
+   account automation) and once about 5 s later, started by the automation's Taxes write. That second run is the
+   new one, and it reads the line after the automation has finished.
+3. **Demo figures unchanged.** Every invoice was snapshotted before the change: Untaxed, Tax, Total and Amount Due
+   on both read paths, 30 documents. After all of the above, all 30 were identical. Two new invoices that are not
+   TEST records appeared during the run (`cc840c4b-…`, `c1baf76c-…` TANWM-2026-0051). They are someone else's work
+   in the browser, and they were not touched.
+
+**What is still open.** The automation writes Taxes twice (the product's, then the order line's), but each line
+showed only **one** roll-up run after it. The fix depends on that run starting after the automation's last write,
+which was true in all three presses. It is still an ordering the platform chooses, not one we set. If a run ever
+read the line between the two writes, a later edit of any of the six fields on that line puts it right, and
+so does `taxes.py amounts`.
+
+**Amount Due is out of the roll-up's spec.** It has been a Formula (Total − Amount Paid) since Register Payment,
+and the server had already dropped the roll-up's write to it (06 *Register Payment*). `taxes.py rollup` / `check`
+now expect step 5 to make three writes, not four. `invlines.py`'s own node spec and `amounts` no longer write Amount
+Due, and `amounts` / `settle` / `verify` no longer compare it with the Total. A part-paid document is not a
+difference. `invlines.py rollup` now leaves the nodes alone once `taxes.py` has rebuilt the body. Re-running it
+used to put the Total step back to "sum + stored Tax". `invlines.py check` also tolerates o2i.py's *Document Type*
+and *Sales Order Lines* and Register Payment's five controls on the Invoices tab, which it used to report as
+differences. `guard()` stopped on the first two.
+
+**TEST records left** (nothing deleted): the proof-1 invoice and its two lines; the three orders with their six
+lines; the three invoices Create Invoice made, with their six lines. All are in `ids.json` under `rollup-trigger: `.
+The three orders, and the invoices made from them, name the customer the demo wipe removed (`o2i.order_want`'s
+`CUSTOMER`). The coordinator is repointing TEST orders to the **Nocoly** contact. The three invoices need the same
+change.
