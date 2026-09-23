@@ -137,6 +137,10 @@ BUNDLE_2 = ('Account',)
 # amount and `price_total` straight after `price_subtotal`, so Taxes took row 7 (Subtotal moving down one) and
 # Total row 9 (the three lookups under it moving down two). Tax rate is the hidden 汇总 Total is computed from.
 BUNDLE_6 = ('Taxes', 'Tax rate', 'Total')
+# Two hidden helpers that let Total compute while a line is open in the form (taxes.py `livetax`, common.LIVE):
+# appended with `add-fields`, which parks them at row 9999. Their places below are the intent; placing them is the
+# owner's, so `check` does not report their row, column or size.
+LIVE_TAX = C.LIVE
 PLACE = {  # name -> (row, col, size)
     'Invoice': (0, 0, 12),
     'Sequence': (1, 0, 6), 'Display Type': (1, 1, 6),
@@ -150,7 +154,8 @@ PLACE = {  # name -> (row, col, size)
     'Total': (9, 0, 12),
     'Number': (10, 0, 6), 'Accounting Date': (10, 1, 6),
     'Status': (11, 0, 6),
-    'Tax rate': (12, 0, 6),
+    'Tax rate': (12, 0, 6), C.LIVE_ALL: (12, 1, 6),
+    C.LIVE_OTHERS: (13, 0, 6),
 }
 TITLE = 'Label'                                    # Odoo's _rec_name on account.move.line is `name`
 REQUIRED = {'Invoice', 'Display Type'}
@@ -162,6 +167,7 @@ HIDDEN = set()
 # Odoo shows its Amount live as the quantity and price are entered. "011" would be wrong for all five — a
 # hidden field never shows as a table column either, and the Lines view carries every one of them.
 PERMISSION = {'Tax rate': '001',                   # hidden **and** read-only: nobody types a roll-up
+              C.LIVE_ALL: C.LIVE_PERMISSION, C.LIVE_OTHERS: C.LIVE_PERMISSION,   # hidden working figures
               'Number': '100', 'Accounting Date': '100', 'Status': '100'}
 DESC = {  # Odoo's help where it reads well for a user, else plain words — only what the field does
     # (owner's rule, 22 Sep 2026). Build notes and Odoo references: worksheets/07-invoice-lines.md, foot.
@@ -185,6 +191,7 @@ DESC = {  # Odoo's help where it reads well for a user, else plain words — onl
     'Taxes': 'The taxes applied to this line.',
     'Tax rate': "The combined percentage of this line's taxes.",
     'Total': 'Subtotal plus tax, rounded to two decimals.',
+    **C.LIVE_DESC,
 }
 # ── a blank operand counts as 0 ─────────────────────────────────────────────
 #
@@ -215,14 +222,15 @@ ADVANCED = {  # advancedSetting keys this script owns
     'Total': dict(BLANK_IS_ZERO),
 }
 DOT = {'Sequence': 0, 'Quantity': 2, 'Unit Price': 2, 'Discount (%)': 2, 'Subtotal': 2, 'Total': 2,
-       'Tax rate': 4}                              # Odoo's amount is float(16, 4), so their sum is too
+       'Tax rate': 4, **C.LIVE_DOT}                # Odoo's amount is float(16, 4), so their sum is too
 ALIAS = {'Invoice': 'move_id', 'Sequence': 'sequence', 'Display Type': 'display_type', 'Product': 'product_id',
          'Label': 'name', 'Account': 'account_id', 'Quantity': 'quantity', 'Unit': 'product_uom_id',
          'Unit Price': 'price_unit',
          'Discount (%)': 'discount', 'Subtotal': 'price_subtotal', 'Number': 'move_name',
          'Accounting Date': 'date', 'Status': 'parent_state',
          'Taxes': 'tax_ids', 'Total': 'price_total',
-         'Tax rate': 'tax_rate'}                   # tax_rate is a helper, not a field of account.move.line
+         'Tax rate': 'tax_rate',                   # tax_rate is a helper, not a field of account.move.line
+         **C.LIVE_ALIAS}                           # and so are these two
 RELATIONS = {'Product': VARIANTS, 'Unit': UNITS, 'Account': ACCOUNTS,
              'Taxes': TAXES}                       # one-way; no target gets a reverse field
 LOOKUPS = [('Number', 'Number'), ('Accounting Date', 'Accounting Date'), ('Status', 'Status')]
@@ -578,7 +586,8 @@ def layout_differences(ctrls):
     for c in ctrls:
         if c['controlName'] not in PLACE:
             continue
-        diff = {k: (c.get(k), v) for k, v in desired(c).items() if normal(k, c.get(k)) != v}
+        diff = {k: (c.get(k), v) for k, v in desired(c).items() if normal(k, c.get(k)) != v
+                and not (c['controlName'] in LIVE_TAX and k in ('row', 'col', 'size'))}   # the owner places them
         adv = c.get('advancedSetting') or {}
         diff.update({f'advancedSetting.{k}': (adv.get(k), v)
                      for k, v in ADVANCED.get(c['controlName'], {}).items() if adv.get(k) != v})
@@ -594,7 +603,7 @@ def step_layout():
     ctrls = guard()
     # Account is bundle 2's and is placed when it is there; accounts.py adds it.
     missing = [n for n in PLACE if n not in {c['controlName'] for c in ctrls}
-               and n not in BUNDLE_2 + BUNDLE_6]
+               and n not in BUNDLE_2 + BUNDLE_6 + LIVE_TAX]
     if missing:
         sys.exit(f'{missing} are not on the worksheet yet — run fields, mount and computed first')
     hap.backup('invlines_controls_pre_layout', ctrls)

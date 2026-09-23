@@ -631,3 +631,119 @@ def picker_state(value):
         return value
     return sorted((i.get('controlId'), i.get('dataType'), i.get('filterType'), tuple(sorted(i.get('values') or [])))
                   for i in items or [])
+
+
+# ── a line's tax rate the open form can compute ─────────────────────────────
+#
+# Tax rate (Order Lines, Invoice Lines) is a 汇总 **filtered** to percentage taxes, and pd-openweb's form computes a
+# 汇总 while the form is open **only when it has no filter** (DataFormat.js: `if (advancedSetting.filters) return`).
+# So on a new line Tax rate stays 0 until the save, and every Formula built on it shows no tax (owner, 23 Sep 2026).
+# Two helpers per worksheet fix that without giving up the percentage rule:
+#
+#   * LIVE_ALL    — the same 汇总 **unfiltered**: the form sums the Amount of every tax picked, the moment it is picked
+#                   (the picker's rows carry Amount). On the server it is the plain sum of all the line's taxes;
+#   * LIVE_OTHERS — a **count** of the line's taxes that are *not* Percentage (the Tax rate filter with filterType
+#                   52, "is not"). It has a filter, so the form never computes it: it is the saved line's own count.
+#
+# and the rate every Formula reads becomes LIVE_RATE_TEMPLATE, with no IF (a number formula has none):
+#
+#     R + U × (1 − min(1, |R| × 10000)) × (1 − min(1, N))
+#
+#   * a saved line: R is exact, so the result is R whenever R ≠ 0; when R = 0 it is U only if N = 0, and then every
+#     tax is a percentage whose rates sum to 0, so U = 0 too. **The saved value is always Tax rate's own.**
+#   * a line open in the form: R and N are what was saved — 0 on a new line — so the result is U, the live sum.
+#   * a line saved **before** the helpers existed stores U and N blank, and a blank reads 0 (`nullzero "1"`): the
+#     result is R. That is what keeps every figure on the seeded demo records exactly as it was.
+# Limit: on an **already saved** line with a percentage tax, changing its taxes in the form shows the old rate until
+# the save (R ≠ 0 wins). Rates carry 4 decimals, so |R| × 10000 ≥ 1 for any non-zero R.
+# Why not a Lookup (type 30) of Amount: over a multi-record relation the server stores **nothing** on any read path,
+# and the form shows only the **first** record's value (pd-openweb getOtherWorksheetFieldValue) — measured 23 Sep 2026.
+LIVE_ALL, LIVE_OTHERS = 'Tax rate (all taxes)', 'Non-percentage taxes'
+LIVE = (LIVE_ALL, LIVE_OTHERS)
+LIVE_ALIAS = {LIVE_ALL: 'tax_rate_all', LIVE_OTHERS: 'tax_count_other'}
+LIVE_DESC = {LIVE_ALL: "The combined rate of all this line's taxes, worked out as soon as a tax is picked.",
+             LIVE_OTHERS: "How many of this line's taxes are not a percentage."}
+LIVE_DOT = {LIVE_ALL: 4, LIVE_OTHERS: 0}
+LIVE_PERMISSION = '011'                             # hidden: working figures, never typed and never a column
+LIVE_RATE_TEMPLATE = '$R$+$U$*(1-cMIN(1,cABS($R$)*10000))*(1-cMIN(1,$N$))'
+NE_SINGLE = 52                                      # a 汇总 filter's "is not" on a single select (EQ is 51)
+
+
+def live_rate(rate_id, all_id, others_id):
+    """LIVE_RATE_TEMPLATE over the three control ids."""
+    return (LIVE_RATE_TEMPLATE.replace('$R$', f'${rate_id}$').replace('$U$', f'${all_id}$')
+            .replace('$N$', f'${others_id}$'))
+
+
+def other_taxes_filter(rate_filters):
+    """Tax rate's own stored filter ("Tax Computation is Percentage", filterType 51) turned into "is not" (52), so
+    the count and the rate cannot drift apart."""
+    items = json.loads(rate_filters) if isinstance(rate_filters, str) else rate_filters
+    if len(items) != 1 or items[0].get('filterType') != 51:
+        sys.exit(f'Tax rate filter is {rate_filters!r} — expected one "is" condition (filterType 51) to invert')
+    return json.dumps([{**items[0], 'filterType': NE_SINGLE}], ensure_ascii=False, separators=(',', ':'))
+
+
+def live_rate_spec(relation_id, amount_col, name_col, rate_filters):
+    """{name: {key: value}} — what the two helpers must read back as. The filter is compared by `live_rate_problems`
+    for what it means (`picker_state`), not by spelling."""
+    base = {'type': 37, 'dataSource': f'${relation_id}$', 'fieldPermission': LIVE_PERMISSION, 'required': False}
+    return {LIVE_ALL: {**base, 'sourceControlId': amount_col, 'enumDefault': 5, 'dot': LIVE_DOT[LIVE_ALL],
+                       'alias': LIVE_ALIAS[LIVE_ALL], 'desc': LIVE_DESC[LIVE_ALL]},
+            LIVE_OTHERS: {**base, 'sourceControlId': name_col, 'enumDefault': 6, 'dot': LIVE_DOT[LIVE_OTHERS],
+                          'alias': LIVE_ALIAS[LIVE_OTHERS], 'desc': LIVE_DESC[LIVE_OTHERS]}}
+
+
+def live_rate_problems(f, relation_id, amount_col, name_col, rate_filters):
+    """Every way the two live helpers on a worksheet (controls by name) differ from the spec — [] when right."""
+    out = []
+    spec = live_rate_spec(relation_id, amount_col, name_col, rate_filters)
+    for name, want in spec.items():
+        c = f.get(name)
+        if c is None:
+            out.append(f'{name} is missing')
+            continue
+        diff = drift(c, want)
+        if diff:
+            out.append(f'{name}: {json.dumps(diff, ensure_ascii=False, default=str)}')
+    filters = {LIVE_ALL: [], LIVE_OTHERS: picker_state(other_taxes_filter(rate_filters))}
+    for name, want in filters.items():
+        if name in f and picker_state((f[name].get('advancedSetting') or {}).get('filters') or '[]') != want:
+            out.append(f"{name} filter is {(f[name].get('advancedSetting') or {}).get('filters')!r}, want {want}")
+    return out
+
+
+def ensure_live_rate(ws, relation_id, amount_col, name_col, rate_filters, place, backup, step, untouched=()):
+    """Append whichever of the two helpers `ws` lacks — `append_checked`, so no existing control moves — then repair
+    any key the append did not store in one pinned write limited to them. `place` is the intended (row, col, size)
+    per name; `add-fields` parks a new control at row 9999 and placing it is the owner's. Returns controls by name."""
+    f = hap.by_name(c for c in hap.controls(ws) if c['type'] != TAB)
+    spec = live_rate_spec(relation_id, amount_col, name_col, rate_filters)
+    build = {
+        LIVE_ALL: control('SUBTOTAL', LIVE_ALL, place[LIVE_ALL], alias=LIVE_ALIAS[LIVE_ALL], hint='',
+                          desc=LIVE_DESC[LIVE_ALL], hidden=True, data_source=relation_id,
+                          source_control_id=amount_col, extra={'enumDefault': 5, 'dot': LIVE_DOT[LIVE_ALL]},
+                          advanced_setting={'roundtype': '2', 'sorttype': 'zh'}),
+        LIVE_OTHERS: control('SUBTOTAL', LIVE_OTHERS, place[LIVE_OTHERS], alias=LIVE_ALIAS[LIVE_OTHERS], hint='',
+                             desc=LIVE_DESC[LIVE_OTHERS], hidden=True, data_source=relation_id,
+                             source_control_id=name_col, extra={'enumDefault': 6, 'dot': LIVE_DOT[LIVE_OTHERS]},
+                             advanced_setting={'roundtype': '2', 'sorttype': 'zh',
+                                               'filters': other_taxes_filter(rate_filters)}),
+    }
+    missing = [n for n in LIVE if n not in f]
+    if missing:
+        f = append_checked(ws, [build[n] for n in missing], backup, step, untouched)
+    else:
+        print(f'  {step}: {list(LIVE)} are already there; nothing appended')
+    repair = {f[n]['controlId']: {k: v for k, v in want.items() if k in drift(f[n], want)}
+              for n, want in spec.items() if drift(f[n], want)}
+    if repair:
+        pinned_write(ws, repair, backup + '_repair', step + ' repair')
+        f = hap.by_name(c for c in hap.controls(ws) if c['type'] != TAB)
+    left = live_rate_problems(f, relation_id, amount_col, name_col, rate_filters)
+    if left:
+        sys.exit(f'{step}: ' + '; '.join(left))
+    for n in LIVE:
+        print(f"  OK  {n} {f[n]['controlId']} t{f[n]['type']} perm {f[n]['fieldPermission']} "
+              f"row {f[n].get('row')} (placing it is the owner's)")
+    return f

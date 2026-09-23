@@ -27,6 +27,8 @@ interpreter:
     ~/.hap-venv/bin/python nocoly/build/taxes.py accounts    # 9. Default Taxes on Chart of Accounts, empty
     ~/.hap-venv/bin/python nocoly/build/taxes.py lines       # 10. Taxes, Tax rate (汇总) and Total on Invoice
                                                              #     Lines, the Total column, the 8 lines' taxes
+    ~/.hap-venv/bin/python nocoly/build/taxes.py livetax     # 10b. Total computes while a line is open in the
+                                                             #     form: two hidden helpers, one pinned write
     ~/.hap-venv/bin/python nocoly/build/taxes.py rollup      # 11. 07's two roll-ups gain 2b and 3b and write
                                                              #     Tax; automation B fills the line's Taxes
     ~/.hap-venv/bin/python nocoly/build/taxes.py amounts     # 12. drive the roll-up over every invoice with
@@ -1421,9 +1423,63 @@ def rate_filter(f):
 def total_expression(lf):
     """Odoo `price_total` for a percentage tax: Subtotal × (1 + the rate ÷ 100).
 
-    A HAP **number** formula is plain arithmetic over `$controlId$` and needs no `c` prefix without a
-    function. Whether it may read a **汇总** at all is §1's open question 1 — `measure` answers it."""
-    return f"${lf['Subtotal']['controlId']}$*(1+${lf[LINE_RATE]['controlId']}$/100)"
+    The rate is `common.LIVE_RATE_TEMPLATE` over Tax rate and the two live helpers (§10b), not Tax rate alone: a
+    filtered 汇总 is computed only by the server, so a line open in the form showed its Total without tax until it
+    was saved (23 Sep 2026). On every saved line the rate is Tax rate's own, so no stored Total moves. A HAP
+    **number** formula's functions need the `c` prefix (`cMIN`, `cABS`)."""
+    rate = C.live_rate(lf[LINE_RATE]['controlId'], lf[C.LIVE_ALL]['controlId'], lf[C.LIVE_OTHERS]['controlId'])
+    return f"${lf['Subtotal']['controlId']}$*(1+({rate})/100)"
+
+
+# ── 10b · a Total the open form computes ────────────────────────────────────
+# Invoice Lines' own place for the two helpers, next to Tax rate at (12, 0, 6) — the intent only: `add-fields`
+# parks them at row 9999 and placing them is the owner's (invlines.PLACE carries the same).
+LIVE_PLACE = {C.LIVE_ALL: (12, 1, 6), C.LIVE_OTHERS: (13, 0, 6)}
+
+
+def ensure_line_live(lf, tf):
+    """The two live helpers on Invoice Lines (common.ensure_live_rate), built on Tax rate's own stored filter."""
+    import invlines as L
+    rate_filters = (lf[LINE_RATE].get('advancedSetting') or {}).get('filters')
+    if C.picker_state(rate_filters) != C.picker_state(json.dumps(rate_filter(tf))):
+        sys.exit(f'{LINES} / {LINE_RATE} filter is {rate_filters!r}, not Tax Computation is Percentage — '
+                 'nothing to build the count on')
+    return C.ensure_live_rate(L.ws(), lf[LINE_TAXES]['controlId'], tf[AMOUNT]['controlId'], tf[NAME]['controlId'],
+                              rate_filters, LIVE_PLACE, 'taxes_invlines_controls_pre_livetax', 'livetax',
+                              untouched=(ws(),))
+
+
+def write_total(lf):
+    """Total's expression, if it is not `total_expression` — one version-pinned write of that control alone, with
+    the signature diff proving nothing else moved (common.pinned_write)."""
+    import invlines as L
+    return C.pinned_write(L.ws(), {lf[LINE_TOTAL]['controlId']: {'dataSource': total_expression(lf)}},
+                          'taxes_invlines_controls_pre_total', 'total')
+
+
+def step_livetax():
+    """Invoice Lines' Total computes while the line is open in the form: the two hidden helpers appended, then
+    Total's expression moved onto `common.LIVE_RATE_TEMPLATE`. Safe to re-run; a second run saves nothing."""
+    guard()
+    import invlines as L
+    # Not `L.guard()`: that stops on any control invlines.py does not own, and o2i.py's Document Type and Sales
+    # Order Lines are on the worksheet. What this step builds on is checked here instead.
+    tf = fields_of(ws())
+    lf = C.fields(L.ws())
+    kinds = {LINE_TAXES: RELATION, LINE_RATE: ROLLUP, LINE_TOTAL: FORMULA_NUMBER}
+    wrong = {n: (lf.get(n) or {}).get('type') for n, t in kinds.items() if (lf.get(n) or {}).get('type') != t}
+    if wrong:
+        sys.exit(f'{LINES}: {wrong} are not {kinds} — run `lines` first')
+    if lf[LINE_TAXES].get('dataSource') != ws() or lf[LINE_RATE].get('dataSource') != f"${lf[LINE_TAXES]['controlId']}$":
+        sys.exit(f'{LINES} / {LINE_TAXES} or {LINE_RATE} no longer point where this step expects')
+    lf = ensure_line_live(lf, tf)
+    for n in C.LIVE:
+        C.remember('controls', f'{LINES}: ' + n, lf[n]['controlId'])
+    write_total(lf)
+    lf = C.fields(L.ws())
+    if lf[LINE_TOTAL].get('dataSource') != total_expression(lf):
+        sys.exit(f'{LINES} / {LINE_TOTAL} reads back {lf[LINE_TOTAL].get("dataSource")!r}')
+    print(f"  OK  {LINES} / {LINE_TOTAL} = {lf[LINE_TOTAL]['dataSource']}")
 
 
 def step_lines():
@@ -1474,6 +1530,8 @@ def step_lines():
         lf = C.fields(L.ws())
         print(f"  {LINES} / {LINE_RATE}: {lf[LINE_RATE]['controlId']} (汇总, sum of {WORKSHEET}/{AMOUNT} "
               f"through {LINE_TAXES}, filtered {COMPUTATION} is Percentage)")
+    if not all(n in lf for n in C.LIVE):
+        lf = ensure_line_live(lf, tf)                  # §10b: Total's expression reads them
     if LINE_TOTAL not in lf:
         row, col, size = L.PLACE[LINE_TOTAL]
         # `nullzero "1"`: the server's default for a Formula is "0", and with it a blank Subtotal or Tax rate makes
@@ -1488,14 +1546,7 @@ def step_lines():
                changed={LINES: {n: {'*'} for n in L.PLACE}})
         lf = C.fields(L.ws())
         print(f"  {LINES} / {LINE_TOTAL}: {lf[LINE_TOTAL]['controlId']} = {total_expression(C.fields(L.ws()))}")
-    want = total_expression(lf)
-    if lf[LINE_TOTAL].get('dataSource') != want:
-        ctrls, version = C.controls_with_version(L.ws())
-        for c in ctrls:
-            if c['controlName'] == LINE_TOTAL:
-                c['dataSource'] = want
-        C.save_controls(L.ws(), ctrls, version=version)
-        print(f'  {LINE_TOTAL}: expression rewritten to {want}')
+    write_total(lf)                                    # pinned, and nothing when it is already right
     # places, the rule and the two column lists are invlines.py's own steps, against its own (extended) spec
     L.step_layout()
     L.step_rules()
@@ -2646,6 +2697,12 @@ def other_worksheet_differences():
     if picker_state((rate.get('advancedSetting') or {}).get('filters')) != picker_state(
             json.dumps(rate_filter(fields_of(ws())))):
         out.append(f'{LINES} / {LINE_RATE} filter: {(rate.get("advancedSetting") or {}).get("filters")}')
+    rate_filters = (rate.get('advancedSetting') or {}).get('filters') or json.dumps(rate_filter(fields_of(ws())))
+    out += [f'{LINES} / {p}' for p in C.live_rate_problems(
+        lf, lf.get(LINE_TAXES, {}).get('controlId'), fields_of(ws())[AMOUNT]['controlId'],
+        fields_of(ws())[NAME]['controlId'], rate_filters)]
+    if not all(n in lf for n in C.LIVE):
+        return out + [f'{LINES}: run `livetax`']
     want_expr = total_expression(lf)
     if lf.get(LINE_TOTAL, {}).get('dataSource') != want_expr:
         out.append(f"{LINES} / {LINE_TOTAL}: {lf.get(LINE_TOTAL, {}).get('dataSource')!r} != {want_expr!r}")
@@ -2780,6 +2837,7 @@ STEPS = {
     'products': step_products,
     'accounts': step_accounts,
     'lines': step_lines,
+    'livetax': step_livetax,
     'rollup': step_rollup,
     'amounts': step_amounts,
     'note': step_note,

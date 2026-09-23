@@ -680,3 +680,14 @@ The owner's rule of 22 Sep 2026: a description in the app says only what the fie
 | Taxes | desc | The taxes on this line — Odoo tax_ids. Unfiltered, as Odoo's own field is: its context turns active_test off, so its picker offers archived taxes too, and it carries no Tax Type domain. A line takes whatever the product put there. | The taxes applied to this line. |
 | Tax rate | desc | The sum of the Amounts of this line's Taxes, counting only the ones whose Tax Computation is Percentage — so a Fixed or Custom Formula tax cannot add its amount as if it were a rate. A roll-up (汇总) over the Taxes relation; hidden and read-only, and Total is computed from it. | The combined percentage of this line's taxes. |
 | Total | desc | Subtotal plus this line's tax — Odoo price_total. Subtotal × (1 + Tax rate ÷ 100), rounded to two decimals, which is what the company's round-per-line setting does. The sum of these is the invoice's Total, and the difference from the sum of the Subtotals is its Tax. | Subtotal plus tax, rounded to two decimals. |
+
+## Total on a line that is still open (23 Sep 2026, `taxes.py livetax`)
+
+Total showed Subtotal without tax on a line open in the form, because Tax rate is a filtered 汇总 and the form
+computes only unfiltered ones. Fixed as on Order Lines (16-orders.md §13): two hidden helpers appended —
+**Tax rate (all taxes)** `6ab357dcbd43f55762240c88` (unfiltered sum) and **Non-percentage taxes**
+`6ab357dcbd43f55762240c89` (count of the non-percentage taxes) — and Total moved onto `common.LIVE_RATE_TEMPLATE` in
+one version-pinned write. Saved figures are Tax rate's own, so no stored Total moved (every line and invoice compared
+on both read paths). Both helpers sit at row 9999; `PLACE` holds the intent (12,1,6 · 13,0,6) and `check` does not
+report their place. `taxes.py livetax` does not call `invlines.guard()`, which stops on o2i.py's Document Type and
+Sales Order Lines.

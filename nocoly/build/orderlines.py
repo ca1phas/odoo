@@ -12,6 +12,9 @@
     ~/.hap-venv/bin/python nocoly/build/orderlines.py defaults   # 3b. Quantity 1 and Discount 0 as static
                                                                  #    defaults, and a blank operand counting as 0
                                                                  #    in the three Formulas — one pinned save
+    ~/.hap-venv/bin/python nocoly/build/orderlines.py livetax    # 3c. Tax Amount and Total compute while a line
+                                                                 #    is open in the form: two hidden helpers
+                                                                 #    appended, then `formulas` — one pinned save
     ~/.hap-venv/bin/python nocoly/build/orderlines.py rules      # 4. a section or a note carries no figures
     ~/.hap-venv/bin/python nocoly/build/orderlines.py alias      # 5. the Odoo field names into `alias`, one
                                                                  #    pinned save
@@ -99,7 +102,13 @@ TEXT_LINES = ('Section', 'Subsection', 'Note')      # Odoo's non-accountable dis
 TAX_AMOUNT_COL = '6aad104e7d58b0f4493141fc'         # Taxes / Amount — what the 汇总 sums
 TAX_COMPUTATION_COL = '6aad104e7d58b0f4493141fb'    # Taxes / Tax Computation — what its filter tests
 TAX_PERCENTAGE = 'a7101f45-bf00-4b19-98bd-08c62094258a'
+TAX_NAME_COL = '6aad104e7d58b0f4493141f9'           # Taxes / Tax Name — what the non-percentage count counts
 RATE = 'Tax rate'
+# The two hidden helpers that let Tax Amount and Total compute while a line is open in the form (§3c,
+# common.LIVE). Where they belong, next to Tax rate — the intent only: `add-fields` parks them at row 9999 and
+# placing them is the owner's.
+LIVE_ALL, LIVE_OTHERS = C.LIVE_ALL, C.LIVE_OTHERS
+LIVE_PLACE = {LIVE_ALL: (10, 1, 6), LIVE_OTHERS: (11, 0, 6)}
 
 # ── the three controls this builder appends ─────────────────────────────────
 #
@@ -124,7 +133,10 @@ ALIAS = {
     'Discount': 'discount', 'Taxes': 'tax_ids', 'Tax Amount': 'price_tax', 'Subtotal': 'price_subtotal',
     'Total': 'price_total', 'Lead Time': 'customer_lead', 'Optional Line': 'is_optional',
     'Tax rate': 'tax_rate', 'Product Unit': 'product_uom_name',
+    **C.LIVE_ALIAS,                                 # two more helpers, common.LIVE
 }
+
+OBSOLETE = 'ZZ obsolete – '                        # a retired control, hidden and kept, never deleted
 
 REQUIRED = ('Orders', 'Description')                # Odoo: order_id and name are both required=True
 
@@ -169,7 +181,7 @@ def guard():
     keys = {o['value']: o['key'] for o in dt.get('options') or [] if not o.get('isDeleted')}
     if any(keys.get(label) != key for label, key in DISPLAY_TYPE_KEYS.items()):
         sys.exit(f'Display Type options are {keys}, expected {DISPLAY_TYPE_KEYS} — re-read the option table')
-    unknown = sorted(set(f) - set(CONTROLS) - set(NEW))
+    unknown = sorted(n for n in set(f) - set(CONTROLS) - set(NEW) - set(C.LIVE) if not n.startswith(OBSOLETE))
     if unknown:
         print(f'  note: {WORKSHEET} also carries {unknown} — added by the owner, and nothing here names them')
     for name, cid in CONTROLS.items():
@@ -410,14 +422,20 @@ CONVERT = ('Subtotal', 'Tax Amount', 'Total')
 # a converted control and the operand of the other two.
 OPERANDS = {'Subtotal': '6ab0ca80805aef703286d82a', RATE: '6ab0d4bbe43d174ab3753780',
             'Quantity': '6ab0c864e43d174ab37535fb', 'Unit Price': '6ab0ca1be43d174ab3753657',
-            'Discount': '6ab0ca1be43d174ab3753658'}
+            'Discount': '6ab0ca1be43d174ab3753658',
+            LIVE_ALL: '6ab35c91e54d2a34faaaa856', LIVE_OTHERS: '6ab35c91e54d2a34faaaa857'}       # §3c, minted 23 Sep 2026
 # Invoice Lines' two formulas with their own operands as placeholders: `$S$` Subtotal, `$R$` the Tax rate 汇总,
-# `$Q$` Quantity, `$P$` Unit Price, `$D$` Discount.
-TOTAL_TEMPLATE = '$S$*(1+$R$/100)'
+# `$U$` and `$N$` the two live helpers (§3c), `$Q$` Quantity, `$P$` Unit Price, `$D$` Discount.
+#
+# The rate is `common.LIVE_RATE_TEMPLATE`, not `$R$` alone, since 23 Sep 2026: Tax rate is a **filtered** 汇总, which
+# the form never computes, so a new line picked with 10% G SC showed Tax Amount 0.00 and Total = Subtotal until it
+# was saved (owner, in the browser). On every saved line the template's value is Tax rate's own, so no stored figure
+# moved — every seeded order and invoice compared before and after.
+TOTAL_TEMPLATE = '$S$*(1+(' + C.LIVE_RATE_TEMPLATE + ')/100)'
 # Odoo's `price_subtotal` is `quantity × price_unit × (1 − discount/100)`, which is what 07 stores as well.
 SUBTOTAL_TEMPLATE = '$Q$*$P$*(1-$D$/100)'
 # Odoo's `price_tax` is `price_total - price_subtotal`; arrived at from the rate it is the same figure.
-TAX_TEMPLATE = '$S$*$R$/100'
+TAX_TEMPLATE = '$S$*(' + C.LIVE_RATE_TEMPLATE + ')/100'
 SHAPE_KEYS = ('type', 'enumDefault', 'enumDefault2', 'fieldPermission', 'dot')
 # What Invoice Lines' two Formulas must still carry for this step to copy them. Checked against the live controls
 # rather than written onto them: a drift on 07 stops this build instead of being propagated to it.
@@ -469,6 +487,11 @@ def reference_formula(rate):
         inv_ops[label] = c['controlId']
     inv_ops['$S$'] = ref['Subtotal']['controlId']
     inv_ops['$R$'] = rate['controlId']
+    for label, name in (('$U$', LIVE_ALL), ('$N$', LIVE_OTHERS)):
+        c = live.get(name)
+        if c is None:
+            sys.exit(f'Invoice Lines / {name} is missing — run `taxes.py livetax` first; its Total is the template')
+        inv_ops[label] = c['controlId']
     templates, want = {}, {'Total': TOTAL_TEMPLATE, 'Subtotal': SUBTOTAL_TEMPLATE}
     for name in ('Total', 'Subtotal'):
         expr = ref[name].get('dataSource') or ''
@@ -497,7 +520,8 @@ def operands(f):
         c = f.get(name)
         if c is None:
             sys.exit(f'{name} is not on {WORKSHEET}, so the expression has no operand to name'
-                     + (' — run `fields` first' if name == RATE else ''))
+                     + (' — run `fields` first' if name == RATE else '')
+                     + (' — run `livetax` first' if name in C.LIVE else ''))
         if c['controlId'] != expected:
             sys.exit(f'{name} is {c["controlId"]}, expected {expected} — the owner has replaced the control; '
                      're-read the worksheet before writing a formula on it')
@@ -513,14 +537,15 @@ def operands(f):
         if f[name]['type'] not in kinds:
             sys.exit(f'{name} is t{f[name]["type"]}, expected one of {kinds} — a formula over it would compute '
                      'nothing and say nothing')
-    if f[RATE]['type'] != ROLLUP:
-        sys.exit(f'{RATE} is t{f[RATE]["type"]}, expected a 汇总 (t{ROLLUP})')
+    for name in (RATE, LIVE_ALL, LIVE_OTHERS):
+        if f[name]['type'] != ROLLUP:
+            sys.exit(f'{name} is t{f[name]["type"]}, expected a 汇总 (t{ROLLUP})')
     return out
 
 
 def fill(template, ops):
-    for label, name in (('$S$', 'Subtotal'), ('$R$', RATE), ('$Q$', 'Quantity'), ('$P$', 'Unit Price'),
-                        ('$D$', 'Discount')):
+    for label, name in (('$S$', 'Subtotal'), ('$R$', RATE), ('$U$', LIVE_ALL), ('$N$', LIVE_OTHERS),
+                        ('$Q$', 'Quantity'), ('$P$', 'Unit Price'), ('$D$', 'Discount')):
         template = template.replace(label, f'${ops[name]}$')
     return template
 
@@ -683,6 +708,38 @@ def step_defaults():
     return bool(changed)
 
 
+# ── 3c · Tax Amount and Total compute while a line is open in the form ─────
+#
+# Tax rate is a 汇总 filtered to percentage taxes, and pd-openweb's form computes a 汇总 only when it has **no**
+# filter — so on a new line it stayed 0 until the save and Tax Amount and Total, Formulas on it, showed no tax
+# (owner, 23 Sep 2026: myPhone 16 at RM 3,999.00 with 10% G SC read Tax Amount 0.00 and Total 3,999.00 until saved).
+# The mechanism, the two helpers and why the saved figures cannot move are in `common.LIVE`; the expressions are
+# TAX_TEMPLATE and TOTAL_TEMPLATE above, written by `formulas`.
+
+def live_args(f):
+    """(relation, Amount, Tax Name, Tax rate's own stored filter) — what the two helpers are built on."""
+    rate_filters = (f[RATE].get('advancedSetting') or {}).get('filters')
+    want = [(TAX_COMPUTATION_COL, DROPDOWN, EQ_SINGLE, (TAX_PERCENTAGE,))]
+    if C.picker_state(rate_filters) != want:
+        sys.exit(f'{RATE} filter is {rate_filters!r}, not Tax Computation is Percentage — nothing to build on')
+    return f['Taxes']['controlId'], TAX_AMOUNT_COL, TAX_NAME_COL, rate_filters
+
+
+def step_livetax():
+    """Append the two hidden helpers (`common.ensure_live_rate` — no existing control re-sent), then `formulas`,
+    which moves Tax Amount and Total onto the live rate in one version-pinned save proved by signature diff.
+    Needs Invoice Lines' Total on the same template first (`taxes.py livetax`): `formulas` copies it."""
+    f = guard()
+    if RATE not in f:
+        sys.exit(f'{RATE} is not on {WORKSHEET} — run `fields` first')
+    f = C.ensure_live_rate(ws(), *live_args(f), LIVE_PLACE, 'orderlines_controls_pre_livetax', 'livetax')
+    for n in C.LIVE:
+        C.remember('controls', KEY + n, f[n]['controlId'])
+        if OPERANDS[n] != f[n]['controlId']:
+            sys.exit(f'{n} is {f[n]["controlId"]}; write that id into OPERANDS, then run `formulas`')
+    return step_formulas()
+
+
 # ── 4 · the line-level rule ─────────────────────────────────────────────────
 
 RULE_FIGURES = 'A section or a note carries no figures'
@@ -780,7 +837,7 @@ def alias_gaps(f):
     """{control name: alias} for every control that carries none. A control that already has one is left
     alone — an alias is what every view, filter and `record get` keys a value by, and renaming one silently
     re-points nothing."""
-    unknown = sorted(n for n, c in f.items() if not c.get('alias') and n not in ALIAS)
+    unknown = sorted(n for n, c in f.items() if not c.get('alias') and n not in ALIAS and not n.startswith(OBSOLETE))
     if unknown:
         sys.exit(f'{unknown} have no alias and this builder has no Odoo field name for them — '
                  'add it to ALIAS or leave the control to the owner')
@@ -1077,7 +1134,7 @@ def condition_state(filters, names):
 def report(f=None):
     """Everything this builder owns, as it reads back."""
     f = f or C.fields(ws())
-    for n in list(CONTROLS) + list(NEW):
+    for n in list(CONTROLS) + list(NEW) + list(C.LIVE):
         c = f.get(n)
         if not c:
             print(f'  {n:<20} MISSING')
@@ -1106,6 +1163,11 @@ def step_check():
                 problems.append(f'{n}: {json.dumps(diff, ensure_ascii=False)}')
             else:
                 print(f'  OK  {n} as specified ({f[n]["controlId"]})')
+        live_problems = C.live_rate_problems(f, *live_args(f))
+        if live_problems:
+            problems += [f'{p} — run `livetax`' for p in live_problems]
+        else:
+            print(f"  OK  {list(C.LIVE)} as specified ({f[LIVE_ALL]['controlId']}, {f[LIVE_OTHERS]['controlId']})")
         cspec = computed_spec(f)
         for n, want in cspec.items():
             diff = drift(f[n], want)
@@ -1115,8 +1177,8 @@ def step_check():
                 print(f'  OK  {n} {sorted(want)}')
         # the three converted Formulas, and the proof no function default is left on any of them
         shape, setting, templates = reference_formula(ref)
-        fspec = formula_spec(f, shape, setting, templates)
-        for n in CONVERT:
+        fspec = formula_spec(f, shape, setting, templates) if not live_problems else {}
+        for n in CONVERT if fspec else ():
             diff = drift(f[n], fspec[n])
             extra = leftovers(f[n], setting)
             if diff or extra:
@@ -1268,7 +1330,7 @@ def step_show():
 
 
 STEPS = {'fields': step_fields, 'computed': step_computed, 'formulas': step_formulas, 'defaults': step_defaults,
-         'rules': step_rules,
+         'livetax': step_livetax, 'rules': step_rules,
          'alias': step_alias, 'wipe': step_wipe, 'seed': step_seed, 'figures': step_figures,
          'check': step_check, 'show': step_show}
 

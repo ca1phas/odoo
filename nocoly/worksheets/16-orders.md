@@ -1050,3 +1050,45 @@ and `check` recognise it. No custom button carries the name, and no `ids.json` k
 (§11). `orders.py` no longer expects it — `buttons`, `send` and `check` used to compare it byte for byte and stop
 without it — and `check` only notes it should that id come back. No `ids.json` key ever carried it, so none was
 removed.
+
+## 13 · Tax Amount and Total on a line that is still open — built 23 Sep 2026 (`orderlines.py` §3c)
+
+**The defect (owner, in the browser).** On a new, unsaved line, picking a tax left Tax Amount at 0.00 and Total equal
+to Subtotal — myPhone 16 at RM 3,999.00 with *10% G SC* read 0.00 / 3,999.00 until saved. Tax rate is a 汇总
+filtered to percentage taxes, and the form computes a 汇总 only when it has no filter (pd-openweb `DataFormat.js`),
+so the Formulas on it saw 0 until the server recomputed at the save. Invoice Lines' Total had the same defect.
+
+**What was tried first — a Lookup of the taxes' Amount (type 30).** Measured on scratch controls and five `TEST live
+tax –` lines: over a multi-record relation the server **stores nothing** (blank on `record get`, the listing and
+`GetRowDetail`, with one tax or two, after create and after update), and a Formula reading it gets 0. The form
+shows only the **first** tax's value. It can be live, but it cannot sum and it is never right once saved.
+
+**What was built.** Two hidden helpers (`011`), appended, and one version-pinned save of Tax Amount and Total:
+
+| Control | id | What |
+|---|---|---|
+| Tax rate (all taxes) `tax_rate_all` | `6ab35c91e54d2a34faaaa856` | 汇总, sum of the taxes' Amount, **no filter** — so the form computes it the moment a tax is picked |
+| Non-percentage taxes `tax_count_other` | `6ab35c91e54d2a34faaaa857` | 汇总, count of the taxes whose Tax Computation **is not** Percentage (filterType 52); filtered, so the form never computes it |
+
+Tax Amount is `Subtotal × rate ÷ 100` and Total `Subtotal × (1 + rate ÷ 100)`, where the rate is
+`R + U × (1 − min(1, |R| × 10000)) × (1 − min(1, N))` — R Tax rate, U the unfiltered sum, N the count
+(`common.LIVE_RATE_TEMPLATE`; a number formula has no IF). **Once saved it is always Tax rate's own value**, so Odoo's
+rule — only percentage taxes count — holds exactly: R ≠ 0 gives R; R = 0 with a non-percentage tax gives 0; R = 0
+without one means every tax is a 0 % percentage, so U = 0 too. **In the open form** R and N are what was saved — 0 on
+a new line — so the rate is U, the live sum of every tax picked, one or several. A line saved before the helpers
+existed has U and N blank, which read 0, so its figures are exactly as they were.
+
+Limits: on an **already saved** line that has a percentage tax, changing its taxes in the form shows the old rate until
+the save. A non-percentage tax picked on a new line counts its Amount in the live preview until the save (none is
+active; all three are Custom Formula with Amount 0).
+
+**Placement is the owner's**: both helpers are at row 9999; the intent is `LIVE_PLACE` — beside Lead Time and under
+it (10,1,6 · 11,0,6). They are hidden, so the form does not show them either way.
+
+**Demo figures unchanged.** Every order's Untaxed / Tax / Total, every invoice's Untaxed / Tax / Total / Amount Due,
+and every line's Subtotal, Tax rate, Tax Amount and Total, read through both paths before and after: identical
+(`scratchpad` snapshot, 23 Sep 2026 — figures in the report).
+
+**Scratch controls** used for the measurement are renamed `ZZ obsolete – …` and hidden (seven, `6ab353af…d9` to
+`6ab354ac…807`); nothing was deleted. **TEST records**: order `TEST live tax order` (S00038) with six `TEST live
+tax –` lines (ids in `ids.json` under `Order Lines: TEST live tax …`).
