@@ -418,6 +418,18 @@ What decides is **whether the value being compared is in the write**.
   Invoices' two journal checks, which are enforced on `record update` (`resultCode` 32) with exactly that shape
   (06 §2, 21 Sep 2026). A lookup added to a live worksheet **computes on every existing record at once** — all 36
   invoices carried their journal's Type the moment the control was saved, with no nudge.
+- **The form computes a 汇总 while it is open only when the 汇总 has no filter.** pd-openweb `DataFormat.js` sums the
+  picked records' values client-side the moment the relation changes, but returns early on any
+  `advancedSetting.filters`. A filtered 汇总 — and every Formula on it — shows its **saved** value (0 on a new record)
+  until the save. The picker's rows (`ChooseRelationRows`) carry the target's numbers, so an unfiltered sum of one is
+  live. Order Lines' and Invoice Lines' Tax rate hit this (23 Sep 2026); `common.LIVE` is the fix.
+- **A lookup (type 30) over a multi-record relation stores nothing** — blank through `record get`, the listing and
+  `GetRowDetail`, even with one record picked and after an update — and a Formula reading it gets 0. In the form it
+  shows the **first** picked record's value only (pd-openweb `getOtherWorksheetFieldValue`). Measured on Order Lines,
+  23 Sep 2026.
+- **A 汇总 or Formula appended to a worksheet with records was blank on most existing records** (Order Lines,
+  23 Sep 2026 — unlike the lookup above), and a later write recomputed it only when one of its operands changed.
+  A Formula that starts reading a new control must therefore give the old answer when that control is blank.
 
 ### Views
 
@@ -603,6 +615,20 @@ What decides is **whether the value being compared is in the write**.
   `--app-id` at create time like any data node: a later `saveNode` cannot attach `appId`. Both roll-ups of bundle 6
   gained their 汇总 and their Tax formula that way, in the middle, and published unchanged otherwise. Change a trigger's fields or condition with
   `workflow node save --type 0 -c '{appId, appType: 1, triggerId, assignFieldIds, operateCondition, returns: []}'`.
+- **Appending after a branch: `batch-add --trigger-node-id <the gateway>`.** A gateway whose branch ends the
+  workflow carries `nextId` `99`; the first node `batch-add` creates with the gateway as its predecessor becomes
+  the gateway's `nextId` — what every path converges on — and the rest chain after it. No path and no node inside
+  a path is touched (*Invoice Lines: fill the account of a new line*, 23 Sep 2026: 25 nodes compared with their
+  backup, only the gateway's `nextId` differed). Read `nextId` before and after; it is the whole proof.
+- **A search step's conditionId 33 on a multiple Relation matches a record whose list *contains* the value.**
+  Order Lines' *Invoice Lines* (多, `enumDefault` 2) *is* `{nodeId: <trigger>, controlId: "rowid"}` found the
+  order line that bills the triggering invoice line, and found nothing for a line with no link — without failing
+  the run, since the trigger's rowid is never empty. Prefer it to "rowid *is* the trigger's Relation" whenever the
+  trigger's Relation can be empty (see the empty-value bullet below).
+- **An update step copying a multiple Relation from another node copies the whole list, and an empty list
+  empties the field.** Invoice Lines' Taxes ← an order line's Taxes (`addType` 0) stored both of *5% G, 6% S*,
+  and on a line whose order line had no taxes it emptied the product's *10% G* (23 Sep 2026, read back through
+  `record get` and the listing).
 - A data step's **worksheet is fixed when the step is added**: `node save` with another `appId` answers success, keeps
   the old one and drops the fields that do not fit. `hap workflow rollback <processId> -y` restores the last published
   version, so a mis-built draft needs no step deleted.
@@ -1345,3 +1371,69 @@ line's Subtotal; not found → create it. A second sub-process then prices each 
   and `record get` and the listing both returned the value. Before the write `record get` gave nothing for them —
   empty and absent look the same there — so this does not settle the table in CLAUDE.md, only adds a case where both
   paths agree.
+
+### Charts and custom pages (23 Sep 2026, the Sales Dashboard)
+
+`nocoly/build/dashboard.py` is the worked example. `hap guide chart` covers the basics; these are what it does not say.
+
+- **A chart is two stored objects, and the condition is the second.** `filter.items` on `chart create` becomes a
+  separate filter (`Worksheet/SaveWorksheetFilter`, `module` 2) and the chart keeps only its `filterId`. Read the
+  conditions back with `Worksheet/GetWorksheetFilterById {filterId}` (`data.items`); rewrite them in place by sending
+  the same `filterId` to `SaveWorksheetFilter`, so a re-run does not mint a new one. A single select's "is" is
+  `filterType` **51** (any of, several keys allowed), "is not" **52**; a checkbox "not ticked" is **6** with `["1"]`;
+  a date "before today" is **35** (DATE_LT) with `dateRange` **1**.
+- **A lookup (type 30) filters as the control it shows** — `dataType` is its `sourceControlType` (11 for Order
+  Lines' *Order Status*) — but it carries **no options**: read the option keys off the source control on the parent.
+- **`sourceType: 1` makes it a page chart**: it is not listed by `chart list` on its worksheet (the CRM Reporting
+  charts, made without it, are listed on Leads). Find it again by the id in ids.json.
+- **`displaySetup.showRowList: true` is the click-through**: a click on a bar, slice or number opens the records
+  behind it (pd-openweb `isViewOriginalData`). With it off, the chart is a picture.
+- **A dynamic range (`rangeType` 21) snaps to the month.** `dynamicFilter` start *past 11 months* (`startType` 5,
+  `startCount` 11, `startUnit` 3), end *today* (`endType` 1) read back from getData as `2025/10/01-2026/09/23` on
+  23 Sep 2026 — the last twelve whole months, this one included.
+- **`report/getData {reportId, pageId, version: "6.5", reload: true, filters: []}` is what the page calls**, and
+  returns what the chart draws: `map[]`, one series per value, each keyed by `c_id` (the control id, or
+  `record_count`), points `{x, v}`, with `valueMap` turning an option key or a rowid into its label. A number chart's
+  series `key` is the **control's own name, not the label the chart shows** — key on `c_id`. `filters` takes the
+  page filter's conditions as a list of lists (`formatFiltersGroup` in the custom-page filter widget), which is how
+  `dashboard.py check` proves the page filter without a browser.
+- **A new custom page has no layout until the first `custom-page save`**: `custom-page info` answers version 0 and
+  no components, and `custom-page update-config --desc` fails with **页面不存在**. Write the description after the
+  first layout save.
+- **A page filter is a filter group** (`Worksheet/SaveFiltersGroup`), and the page component holds only its id.
+  **Each call without a `filtersGroupId` mints a new group**, so remember the id the moment it is minted — two groups
+  were orphaned when a run stopped between minting and the layout save. Read back with
+  `Worksheet/GetFiltersGroupByIds {filtersGroupIds: [...]}`: the filter's top-level `controlId` and each
+  `objectControls[].name` come back **empty**; bind and compare by `objectId` and `controlId` per object.
+- **Keep a chart component's `config.objectId` across saves.** The page filter binds charts by it; a re-save that
+  minted new ones would silently unbind every chart from the filter.
+
+### Three from Register Payment (23 Sep 2026, Invoices)
+
+- **A fill-in button (填写指定字段) that also runs a workflow** is `create-custom-action` with `type:
+  "updateCurrentRecord"`, `updateFields` and `runWorkflowAfterSubmit: true` — `clickType` 3, `writeType` 1,
+  `writeObject` 1, `workflowType` 1 — and it gets its workflow like any workflow button. Each `writeControls` entry
+  takes its own **default for the form**: `defsource` `[{"rcid":"","cid":"<another control>","staticValue":""}]` fills
+  it from that field of the record (the Sales app's Register Payment stores this shape), and a date's `staticValue "2"`
+  with `time "current"` is today. `type` 3 is required, 2 optional. The adapter builds no `defsource`, so it is written
+  afterwards with an in-place `SaveWorksheetBtn` (`invoices.save_button_in_place`). Whether a **hidden** (`011`) field
+  shows in the fill-in form is for the browser test to settle (06 › *Register Payment*).
+- **A validation rule (check type 1) is enforced on `record update`**, and a comparison with **another field** is a
+  `dynamicSource` `[{"rcid":"","cid":"<control>","staticValue":"","isAsync":false}]` on the condition: Payment Amount
+  above the Amount Due came back `resultCode` 32 naming the rule's id, and nothing stored.
+- **Converting a control to a Formula drops every workflow write into it**, silently, from the saved node: the
+  Invoice Lines roll-up's write step read back Untaxed Amount, Tax and Total only once Amount Due had become type 31 —
+  no warning, `isException` unset, the published version still running cleanly. A builder that compares that step's
+  field list against its own spec then reports a difference it cannot repair.
+- **A page chart that a layout save leaves off the page stops drawing, for good** (23 Sep 2026). Its config still
+  reads through `chart get`, but getData answers `status` 0 with no name, and re-saving it does not revive it. So
+  **never save a layout with a chart left out because its read failed**: retry the read, and stop if it still
+  fails. A read can fail for no reason of its own: `hap` renames `~/.hap-cli/cli_access_check.json` from a `.tmp` on
+  every run, and two agents' runs at once made one `chart get` fail on the missing file. `dashboard.py` `alive` is the
+  check (getData `status` 1).
+- **A lookup appended to Order Lines on 23 Sep did not backfill its existing records.** *Order Date*, *Customer* and
+  *Salesperson* (type 30, stored, off the single Orders relation, hidden) read empty on all 127 lines through
+  `rowData` and the listing, and were still empty ten minutes later. The same append of *Order Status* on 22 Sep
+  filled every line at once, and so did Invoice Lines' lookups. The difference is not in the control: apart from
+  `sourceControlType` the four read back identical. Until the records are refreshed, **do not count on an appended
+  lookup holding values**. Read a few rows first.

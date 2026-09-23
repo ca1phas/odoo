@@ -95,6 +95,7 @@ the twelve months, so a dashboard has a shape to draw.
 | Invoice **Confirm** | the 6 drafts |
 | Invoice **Cancel** / **Reset to Draft** | the 6 drafts / the 14 posted, 2 cancelled and the credit note |
 | Overdue on the demo day | **6** — INV-KTN-0119 (28 days, its Due Date computed by the app), INV-NURUL-0044 (19), INV-SMBD-0502 (17), BILL-LOGISTIK-7741 (15), INV-GGR-91104 (11), INV-HPSC-0640 (3) |
+| Payment Status (23 Sep 2026, `paid` / `paid_offset` in demo.json) | **12 Paid** — every posted document not overdue, paid in full between its invoice and due dates; **1 Partially Paid** — INV-SMBD-0502, 50,000.00 of 113,592.00 (63,592.00 due); **15 Not Paid** — the other five overdue, the 7 drafts and the 3 cancelled. *Register Payment* is offered on the 6 posted documents not yet Paid (five overdue and the part-paid one); *Reset to Draft* is no longer offered on the 13 Paid or Partially Paid ones, which narrows the row two above |
 | The numbering the Confirm workflow reproduces | INV/2025/00001–00004 then INV/2026/00001–00012, BILL/2025/00001 and BILL/2026/00001–00003, and **RINV/2026/00001** for the credit note (the Sales journal has a Dedicated Credit Note Sequence) |
 | Draft numbering | 7 drafts whose Number reads `Draft` |
 | *Due Date follows the Payment Terms* + *Payment Terms follow the Customer / Vendor* | INV-KTN-0119 states **neither** Payment Terms nor Due Date, so both come from the customer |

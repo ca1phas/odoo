@@ -38,6 +38,14 @@ the CLI's interpreter:
                                                                 #    on a receipt (22 Sep 2026)
     ~/.hap-venv/bin/python nocoly/build/invoices.py selfincoterm # set both on a TEST invoice, read them back through
                                                                 #    both read paths, put them back
+    ~/.hap-venv/bin/python nocoly/build/invoices.py payments    # Register Payment (23 Sep 2026): Payment Status, Amount
+                                                                #    Paid, Last Payment Date and the two hidden inputs,
+                                                                #    appended; Amount Due made a Formula in place; the
+                                                                #    two payment rules; the button, its fill-in form and
+                                                                #    its workflow, published; Cancel and Reset to Draft
+                                                                #    refused on a paid or partly paid document
+    ~/.hap-venv/bin/python nocoly/build/invoices.py selfpayment # a part payment, a refused overpayment and the rest on
+                                                                #    a TEST posted invoice, read back through both paths
     ~/.hap-venv/bin/python nocoly/build/invoices.py show        # the live control list
 
 Every step reads the live worksheet first and is safe to re-run; a second run writes nothing.
@@ -63,7 +71,7 @@ import os
 import re
 import sys
 import time
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 
 import common as C
@@ -117,8 +125,13 @@ AUTO_POST_OPTIONS = [                              # auto_post
     option('744e55ed-97ff-4d75-bcd0-a32eceea3094', 'Quarterly', 4, '#C2F1D2'),
     option('f0b8149c-d6a9-4838-a9a4-6da7bc06919a', 'Yearly', 5, '#FFE7B1'),
 ]
+PAYMENT_STATUS_OPTIONS = [                        # payment_state — the three of Odoo's seven this app can reach
+    option('3d0c6b1e-5a52-4f0e-9c1a-8f1f6a0e2b41', 'Not Paid', 1, '#FBD2BF', True),
+    option('b6f3c2d4-7e19-4a8b-a5d0-2c9e4f7b1a63', 'Partially Paid', 2, '#FFE7B1'),
+    option('e8a1d5f7-3c64-4b2e-9f80-6d7c1b3a5e92', 'Paid', 3, '#C2F1D2'),
+]
 OPTIONS = {'Type': TYPE_OPTIONS, 'Status': STATUS_OPTIONS, 'Tax mode': TAX_MODE_OPTIONS,
-           'Auto-post': AUTO_POST_OPTIONS}
+           'Auto-post': AUTO_POST_OPTIONS, 'Payment Status': PAYMENT_STATUS_OPTIONS}
 DEFAULT_OPTION = {name: next(o['key'] for o in opts if o['checked']) for name, opts in OPTIONS.items()}
 LABEL = {name: {o['key']: o['value'] for o in opts} for name, opts in OPTIONS.items()}
 OPTION_KEY = {name: {o['value']: o['key'] for o in opts} for name, opts in OPTIONS.items()}
@@ -167,6 +180,8 @@ JOURNAL_TYPE = 'Journal Type'                      # a stored lookup of the Jour
 # Odoo saas~19.4 view_move_form on HAP's 12-column grid. Odoo's header buttons become Confirm / Cancel / Reset to
 # Draft and Status as a read-only field; the h1 Number follows; then Odoo's left column (the partner) beside its
 # right column (the dates, the journal and the tax mode); then Odoo's three notebook pages as HAP tabs.
+# Rows from 12 down moved 3 lower on 23 Sep 2026, when Amount Paid, Last Payment Date, Payment Status and the
+# two Register Payment inputs took rows 12-14 under the totals (PAYMENT_PLACE).
 PLACE = {  # name -> (row, col, size, tab)
     'Status': (0, 0, 6, None),                   'Type': (0, 1, 6, None),
     'Number': (1, 0, 12, None),
@@ -182,23 +197,23 @@ PLACE = {  # name -> (row, col, size, tab)
     'Terms and Conditions': (9, 0, 12, INVOICE_LINES),
     'Untaxed Amount': (10, 0, 6, INVOICE_LINES), 'Tax': (10, 1, 6, INVOICE_LINES),
     'Total': (11, 0, 6, INVOICE_LINES),          'Amount Due': (11, 1, 6, INVOICE_LINES),
-    OTHER_INFO: (12, 0, 12, None),
-    'Invoice': (13, 0, 12, OTHER_INFO),          # Odoo's <group name="invoice"> heading (divider, type 22)
-    NOTE_OTHER: (14, 0, 12, OTHER_INFO),
-    'Customer Reference': (15, 0, 6, OTHER_INFO), 'Salesperson': (15, 1, 6, OTHER_INFO),
-    'Recipient Bank': (16, 0, 6, OTHER_INFO),     'Payment Reference': (16, 1, 6, OTHER_INFO),
-    'Delivery Date': (17, 0, 6, OTHER_INFO),
+    OTHER_INFO: (15, 0, 12, None),
+    'Invoice': (16, 0, 12, OTHER_INFO),          # Odoo's <group name="invoice"> heading (divider, type 22)
+    NOTE_OTHER: (17, 0, 12, OTHER_INFO),
+    'Customer Reference': (18, 0, 6, OTHER_INFO), 'Salesperson': (18, 1, 6, OTHER_INFO),
+    'Recipient Bank': (19, 0, 6, OTHER_INFO),     'Payment Reference': (19, 1, 6, OTHER_INFO),
+    'Delivery Date': (20, 0, 6, OTHER_INFO),
     # Row 18 holds Sales Orders and Sales Order Count, placed 23 Sep 2026 when the order → invoice link
     # landed, so everything from Accounting down sits one row lower than the first build put it.
-    'Accounting': (19, 0, 12, OTHER_INFO),       # Odoo's <group name="accounting_info_group"> heading
-    'Source Document': (20, 0, 6, OTHER_INFO),   'Auto-post': (20, 1, 6, OTHER_INFO),
-    'Auto-post until': (21, 0, 6, OTHER_INFO),
+    'Accounting': (22, 0, 12, OTHER_INFO),       # Odoo's <group name="accounting_info_group"> heading
+    'Source Document': (23, 0, 6, OTHER_INFO),   'Auto-post': (23, 1, 6, OTHER_INFO),
+    'Auto-post until': (24, 0, 6, OTHER_INFO),
     # Not an Odoo field: a stored lookup of the Journal's Type, added 21 Sep 2026 so the two journal checks
     # below have something on this worksheet to compare (15 §1.3). Odoo reads `journal_id.type` straight off
     # the relation and stores nothing; a HAP rule condition can only name a control of its own worksheet.
-    JOURNAL_TYPE: (21, 1, 6, OTHER_INFO),
-    MYINVOIS: (23, 0, 12, None),
-    NOTE_MYINVOIS: (24, 0, 12, MYINVOIS),
+    JOURNAL_TYPE: (24, 1, 6, OTHER_INFO),
+    MYINVOIS: (26, 0, 12, None),
+    NOTE_MYINVOIS: (27, 0, 12, MYINVOIS),
 }
 
 # What each remark block says, as the HTML the block stores. For the app's users only (owner, 22 Sep 2026): what
@@ -239,7 +254,7 @@ DESC = {  # Odoo's help where it reads well for a user, else plain words — onl
     'Untaxed Amount': "The sum of the lines' subtotals, before tax.",
     'Tax': 'The tax on the lines.',
     'Total': 'The amount to pay, tax included.',
-    'Amount Due': 'What is still to be paid on this document.',
+    'Amount Due': 'What is still to be paid on this document: the Total less the Amount Paid.',
     'Customer Reference': "The customer's reference for this invoice, or the vendor's reference on a bill.",
     'Salesperson': '',
     'Recipient Bank': "The bank account the invoice will be paid into: the company's account on a customer invoice "
@@ -274,7 +289,8 @@ ADVANCED = {  # advancedSetting keys this script owns
     'Untaxed Amount': {'defsource': C.static_default(0)},
     'Tax': {'defsource': C.static_default(0)},
     'Total': {'defsource': C.static_default(0)},
-    'Amount Due': {'defsource': C.static_default(0)},
+    # Amount Due carried a static 0 until 23 Sep 2026, when `payments` made it a Formula (Total − Amount Paid);
+    # a Formula carries no default, so it is no longer listed here.
     NOTE_LINES: {'hidetitle': '1'},
     NOTE_OTHER: {'hidetitle': '1'},
     NOTE_MYINVOIS: {'hidetitle': '1'},
@@ -445,7 +461,7 @@ def guard():
             problems.append(f"skeleton control {cid} ({name}) is {c and (c['controlName'], c['type'])}")
     problems += [f"unknown control {c['controlName']!r} ({c['controlId']})" for c in ctrls
                  if c['controlName'] not in PLACE and c['controlId'] not in FIRST_BUILD
-                 and c['controlName'] not in INCOTERM_FIELDS]
+                 and c['controlName'] not in INCOTERM_FIELDS + PAYMENT_FIELDS + O2I_FIELDS]
     for name, opts in OPTIONS.items():
         c = next((c for c in ctrls if c['controlName'] == name), None)
         if c:
@@ -453,9 +469,10 @@ def guard():
             if live != [(o['key'], o['value']) for o in opts]:
                 problems.append(f'{name} options changed: {live}')
     rules = {r['name'] for r in hap.listing('worksheet', 'rules', WORKSHEET)}
-    problems += [f'unknown rule {n!r}' for n in rules - set(RULES) - set(JOURNAL_CHECKS) - set(INCOTERM_RULES)]
+    problems += [f'unknown rule {n!r}' for n in rules - set(RULES) - set(JOURNAL_CHECKS) - set(INCOTERM_RULES)
+                 - set(PAYMENT_RULES)]
     buttons = {b['name'] for b in hap.listing('worksheet', 'custom-actions', WORKSHEET)}
-    problems += [f'unknown button {n!r}' for n in buttons - set(BUTTONS)]
+    problems += [f'unknown button {n!r}' for n in buttons - set(BUTTONS) - {REGISTER_PAYMENT}]
     views = {v['name'] for v in hap.listing('worksheet', 'view', 'list', WORKSHEET, '-a', APP)}
     problems += [f'unknown view {n!r}' for n in views - set(VIEWS) - {'All'}]
     if problems:
@@ -1310,6 +1327,880 @@ def set_number(pid, f, byname, trigger):
         patch(f['Number']['controlId'], 2, node=byname[NUMBER_STEP]['id'], source=STRING_FX)], trigger)
 
 
+# ── 4c · Register Payment (23 Sep 2026) ─────────────────────────────────────
+#
+# The owner's small version of Odoo's payment step. Odoo's *Pay* button (`action_register_payment`,
+# account_move_views.xml:734, 19.0 source) opens the `account.payment.register` wizard — an **amount** defaulting to
+# what is left to pay and a **payment date** defaulting to today — which books an `account.payment`, posts its journal
+# entry and reconciles it with the invoice; `payment_state` and `amount_residual` then follow from the reconciliation
+# (`_compute_payment_state`, `_compute_amount`). **There is no Payments worksheet and no bank entry here** (the Payments
+# bundle is a later phase), so the document itself carries the running result:
+#
+#   * **Payment Status** (`payment_state`) — three of Odoo's seven values: Not Paid · Partially Paid · Paid;
+#   * **Amount Paid** — the running total received (Odoo computes `amount_paid` as total − residual);
+#   * **Last Payment Date** — the latest payment's date (Odoo shows it in the payments widget);
+#   * **Amount Due** (`amount_residual`) becomes a **Formula**, Total − Amount Paid, converted in place (6 → 31, the
+#     control id kept) — so the roll-up can go on rewriting Total and the figure due still follows;
+#   * **Payment Amount** and **Payment Date** — the wizard's two fields, hidden on the form and filled only through the
+#     button's fill-in form (填写指定字段), which defaults them to the Amount Due and today.
+#
+# **Register Payment** is offered on a posted customer invoice, vendor bill or credit note that is not Paid. Its
+# workflow adds the amount to Amount Paid, stamps Last Payment Date, sets Payment Status (Paid when nothing is left,
+# Partially Paid when part of the Total is left, else Not Paid) and clears the two inputs. **An overpayment is
+# refused** — Odoo would book it and leave the surplus as an outstanding credit; with no payment records there is
+# nowhere to keep one. Two validation rules say so in the form and on API writes, and the workflow refuses it again.
+# **Reset to Draft and Cancel are not offered on a paid or partly paid document**: with no payment record to
+# unreconcile, resetting would leave Amount Paid attached to a draft. (Odoo 19.0 itself *does* allow resetting a paid
+# invoice — `button_draft` keeps the reconciliation and `_compute_payment_state` covers drafts — so this is a
+# divergence, recorded in 06 and DECISIONS.md.)
+
+REGISTER_PAYMENT = 'Register Payment'
+PAYMENT_STATUS, AMOUNT_PAID, LAST_PAYMENT_DATE = 'Payment Status', 'Amount Paid', 'Last Payment Date'
+PAYMENT_AMOUNT, PAYMENT_DATE = 'Payment Amount', 'Payment Date'
+PAYMENT_FIELDS = (PAYMENT_STATUS, AMOUNT_PAID, LAST_PAYMENT_DATE, PAYMENT_AMOUNT, PAYMENT_DATE)
+O2I_FIELDS = ('Sales Orders', 'Sales Order Count')     # o2i.py's, on this worksheet since 23 Sep 2026
+NUMBER, DATE, FORMULA = 6, 15, 31
+NE_SINGLE = 52                                     # a button's / view's "is not" on a single select
+GT, LE = 13, 16                                    # rule filter types: > and <=
+FILL_REQUIRED = 3                                  # a fill-in field the button's form requires
+PAYABLE_TYPES = ('Customer Invoice', 'Customer Credit Note', 'Vendor Bill', 'Vendor Credit Note')
+UNPAID_ONLY = ('Cancel', 'Reset to Draft')         # the buttons refused on a paid or partly paid document
+UNPAID_CONDITION = (PAYMENT_STATUS, NE_SINGLE, ('Paid', 'Partially Paid'))
+ALL_LABELS = {o['key']: o['value'] for opts in OPTIONS.values() for o in opts}
+
+PAYMENT_TYPE = {PAYMENT_STATUS: DROPDOWN, AMOUNT_PAID: NUMBER, LAST_PAYMENT_DATE: DATE,
+                PAYMENT_AMOUNT: NUMBER, PAYMENT_DATE: DATE}
+PAYMENT_KIND = {DROPDOWN: 'DROP_DOWN', NUMBER: 'NUMBER', DATE: 'DATE'}
+PAYMENT_ALIAS = {PAYMENT_STATUS: 'payment_state',            # Odoo's field
+                 AMOUNT_PAID: 'amount_paid',                 # Odoo's name for total − residual (_get_invoice_...)
+                 LAST_PAYMENT_DATE: 'last_payment_date',     # no Odoo field; the name says what it holds
+                 PAYMENT_AMOUNT: 'amount',                   # account.payment.register.amount
+                 PAYMENT_DATE: 'payment_date'}               # account.payment.register.payment_date
+PAYMENT_DESC = {  # for the app's users only (owner's rule, 22 Sep 2026)
+    PAYMENT_STATUS: 'Whether this document has been paid: Not Paid, Partially Paid or Paid. Register Payment keeps '
+                    'it up to date.',
+    AMOUNT_PAID: 'The total of the payments registered on this document.',
+    LAST_PAYMENT_DATE: 'The date of the latest payment registered on this document.',
+    PAYMENT_AMOUNT: 'The amount of this payment. It cannot be more than the Amount Due.',
+    PAYMENT_DATE: 'The date the payment was received or made.',
+}
+PAYMENT_PERM = {PAYMENT_STATUS: '101', AMOUNT_PAID: '101', LAST_PAYMENT_DATE: '101',
+                PAYMENT_AMOUNT: '011', PAYMENT_DATE: '011'}           # the two inputs are hidden on the form
+PAYMENT_DEFAULT = {PAYMENT_STATUS: C.static_default(OPTION_KEY['Payment Status']['Not Paid']),
+                   AMOUNT_PAID: C.static_default(0)}
+# Intent, for the owner — `append_controls` parks every new control at row 9999 of the Invoice Lines tab, and
+# **placement is the owner's**: Amount Paid · Last Payment Date on the row under Total · Amount Due, Payment Status
+# under them (Odoo shows it as a ribbon), and the two hidden inputs anywhere — they never show on the form. Other
+# Info and everything under it would move down three rows.
+PAYMENT_PLACE = {AMOUNT_PAID: (12, 0, 6, INVOICE_LINES), LAST_PAYMENT_DATE: (12, 1, 6, INVOICE_LINES),
+                 PAYMENT_STATUS: (13, 0, 6, INVOICE_LINES),
+                 PAYMENT_AMOUNT: (14, 0, 6, INVOICE_LINES), PAYMENT_DATE: (14, 1, 6, INVOICE_LINES)}
+FORMULA_SETTING = {'roundtype': '2', 'sorttype': 'zh', 'nullzero': '1'}     # every number Formula in this app
+NUMBER_ONLY = ('showtype', 'thousandth', 'min', 'max', 'numshow', 'defsource', 'defaulttype', 'defaultfunc')
+
+RULE_NOT_MORE_THAN_DUE = 'A payment cannot be more than the amount due'
+RULE_MORE_THAN_ZERO = 'A payment must be more than zero'
+MSG_NOT_MORE_THAN_DUE = 'The payment cannot be more than the Amount Due.'
+MSG_MORE_THAN_ZERO = 'Enter a payment amount greater than zero.'
+PAYMENT_RULES = {RULE_NOT_MORE_THAN_DUE: MSG_NOT_MORE_THAN_DUE, RULE_MORE_THAN_ZERO: MSG_MORE_THAN_ZERO}
+PAYMENT_BUTTON_DESC = 'Record a payment received or made on this document.'
+
+PAY_PAID_STEP = 'The Amount Paid after this payment'
+PAY_DUE_STEP = 'The Amount Due after this payment'
+PAY_BRANCH = 'Can the payment be registered, and what is left to pay?'
+PATH_REFUSED = 'No amount, no date, or more than the Amount Due'
+PATH_PAID = 'Nothing is left to pay'
+PATH_PARTIAL = 'Part of the Total is left to pay'
+PATH_UNPAID = 'Otherwise'
+SET_REFUSED = 'Clear the payment fields'
+SET_PAID = 'Register the payment: Paid'
+SET_PARTIAL = 'Register the payment: Partially Paid'
+SET_UNPAID = 'Register the payment: Not Paid'
+PAY_PATHS = ((PATH_REFUSED, SET_REFUSED, None), (PATH_PAID, SET_PAID, 'Paid'),
+             (PATH_PARTIAL, SET_PARTIAL, 'Partially Paid'), (PATH_UNPAID, SET_UNPAID, 'Not Paid'))
+PAY_STEPS = (PAY_PAID_STEP, PAY_DUE_STEP, PAY_BRANCH) + tuple(s for _, s, _ in PAY_PATHS)
+FORMULA_NUMBER_NODE, NUMBER_FX_ID = '100', 'number_fx_id'
+LE_C, LT_C, GT_C, EMPTY_C = '13', '11', '12', '8'  # workflow conditionIds: ≤ · < · > · 为空
+
+# What the button editor sends back on a save besides the name and texts (pd-openweb CreateCustomBtn.jsx) —
+# orders.BTN_SAVE_KEYS, BUILDING.md › Buttons.
+BTN_SAVE_KEYS = ('isAllView', 'color', 'icon', 'writeControls', 'relationControl', 'writeType', 'writeObject',
+                 'clickType', 'showType', 'advancedSetting', 'enableConfirm', 'verifyPwd', 'workflowType', 'isBatch')
+BTN_VOLATILE = ('updateTime', 'updateAccountId')
+
+
+def invoice_lines_tab():
+    """Teh Li Wei's Invoice Lines tab, whose id the skeleton check already pins."""
+    return next(cid for cid, (name, kind) in FIRST_BUILD.items() if name == INVOICE_LINES and kind == C.TAB)
+
+
+def payment_controls():
+    """The five controls to append, in the Invoice Lines tab (the append keeps `sectionId`; the row is 9999)."""
+    tab = invoice_lines_tab()
+    out = {}
+    for n in PAYMENT_FIELDS:
+        extra = {'fieldPermission': PAYMENT_PERM[n], 'sectionId': tab}
+        if PAYMENT_TYPE[n] == NUMBER:
+            extra['dot'] = 2
+        out[n] = C.control(PAYMENT_KIND[PAYMENT_TYPE[n]], n, PAYMENT_PLACE[n][:3], alias=PAYMENT_ALIAS[n], hint='',
+                           desc=PAYMENT_DESC[n], options=PAYMENT_STATUS_OPTIONS if n == PAYMENT_STATUS else None,
+                           advanced_setting={'defsource': PAYMENT_DEFAULT[n]} if n in PAYMENT_DEFAULT else None,
+                           extra=extra)
+    return out
+
+
+def payment_spec():
+    """What the five must read back as. Row, column and tab are placement — the owner's — and are not judged."""
+    out = {}
+    for n in PAYMENT_FIELDS:
+        s = {'type': PAYMENT_TYPE[n], 'alias': PAYMENT_ALIAS[n], 'desc': PAYMENT_DESC[n], 'hint': '',
+             'required': False, 'fieldPermission': PAYMENT_PERM[n]}
+        if PAYMENT_TYPE[n] == NUMBER:
+            s['dot'] = 2
+        if n in PAYMENT_DEFAULT:
+            s['advancedSetting.defsource'] = PAYMENT_DEFAULT[n]
+        out[n] = s
+    return out
+
+
+def amount_due_spec(f):
+    """Amount Due as a Formula: Total − Amount Paid, two decimals, a blank Amount Paid counted as 0 (BUILDING.md:
+    a number Formula computes nothing on a blank operand unless `nullzero` is "1")."""
+    spec = {'type': FORMULA, 'alias': 'amount_residual', 'fieldPermission': '101', 'dot': 2, 'enumDefault': 0,
+            'enumDefault2': 0, 'unit': '', 'desc': DESC['Amount Due'], 'hint': '',
+            'dataSource': f"${f['Total']['controlId']}$-${f[AMOUNT_PAID]['controlId']}$"}
+    spec.update({f'advancedSetting.{k}': v for k, v in FORMULA_SETTING.items()})
+    return spec
+
+
+def amount_due_leftovers(c):
+    return {k: v for k, v in (c.get('advancedSetting') or {}).items() if k in NUMBER_ONLY and v not in (None, '')}
+
+
+def ensure_amount_due():
+    """Convert Amount Due **in place** from a Number (6) to a Formula (31), keeping its control id — the move Order
+    Lines' Tax Amount, Total and Quantity Invoiced made (16 §7.3, 21 §14.3). One save pinned to the version it read,
+    proved by signature diff to have changed Amount Due and nothing else. The values it held were the roll-up's copy
+    of Total; they are backed up first."""
+    ctrls, version = C.controls_with_version(WORKSHEET)
+    f = hap.by_name(c for c in ctrls if c['type'] != C.TAB)
+    c = f['Amount Due']
+    want = amount_due_spec(f)
+    stale, leftover = C.drift(c, want), amount_due_leftovers(c)
+    if not stale and not leftover:
+        print(f"  Amount Due is already the Formula {want['dataSource']}; nothing saved")
+        return False
+    surplus = {k: v for k, v in (c.get('advancedSetting') or {}).items()
+               if k not in FORMULA_SETTING and k not in NUMBER_ONLY and v}
+    if surplus:
+        sys.exit(f'Amount Due carries advancedSetting {surplus} that a Formula does not and this step was not told '
+                 'to drop — stopping rather than discarding them')
+    values = {r['rowid']: r.get(c['controlId']) for r in C.records(WORKSHEET, APP)}
+    print('  backup of the values Amount Due held:', hap.backup('invoices_amount_due_values_pre_formula', values))
+    hap.backup('invoices_controls_pre_amount_due_formula', ctrls)
+    before = C.control_signature(ctrls)
+    c['advancedSetting'] = dict(FORMULA_SETTING)                 # the Number's own keys go with the type
+    for key, value in want.items():
+        if not key.startswith('advancedSetting.'):
+            c[key] = value
+    C.save_controls(WORKSHEET, ctrls, version=version)
+    live = hap.controls(WORKSHEET)
+    changed = C.changed_ids(before, C.control_signature(live))
+    names = {x['controlId']: x['controlName'] for x in live}
+    if changed != [c['controlId']]:
+        sys.exit(f'payments: the conversion changed {[names.get(k, k) for k in changed]}, wanted only Amount Due')
+    now = hap.by_name(x for x in live if x['type'] != C.TAB)['Amount Due']
+    left = C.drift(now, want)
+    if left or amount_due_leftovers(now):
+        sys.exit(f'Amount Due read back with differences {json.dumps(left, ensure_ascii=False, default=str)} '
+                 f'{amount_due_leftovers(now)}')
+    print(f"  Amount Due: type 6 -> 31, {now['dataSource']} — {len(before)} controls compared, no other change")
+    return True
+
+
+def payment_rule_filters(f, name):
+    """Payment Amount is filled **and** is more than the Amount Due (another field: `dynamicSource`), or is filled
+    and not more than zero. "Is filled" keeps both off every save that does not register a payment."""
+    pa = f[PAYMENT_AMOUNT]
+    filled = C.cond(pa, C.NOT_EMPTY)
+    if name == RULE_NOT_MORE_THAN_DUE:
+        compare = {'controlId': pa['controlId'], 'dataType': NUMBER, 'spliceType': 1, 'filterType': GT, 'value': '',
+                   'values': [], 'isGroup': False, 'dynamicSource': [
+                       {'rcid': '', 'cid': f['Amount Due']['controlId'], 'staticValue': '', 'isAsync': False}]}
+    else:
+        compare = {'controlId': pa['controlId'], 'dataType': NUMBER, 'spliceType': 1, 'filterType': LE, 'value': '0',
+                   'values': ['0'], 'dynamicSource': [], 'isGroup': False}
+    return C.any_of([filled, compare])
+
+
+def payment_rule_state(r, names):
+    conds = [g for group in r['filters'] for g in group.get('groupFilters', [])]
+    return (r['type'], r['disabled'], r.get('checkType'), r.get('hintType'),
+            sorted((names.get(c['controlId']), c['filterType'], tuple(str(v) for v in c.get('values') or []),
+                    tuple(names.get(d.get('cid'), d.get('cid')) for d in c.get('dynamicSource') or []))
+                   for c in conds),
+            [(i['type'], [names.get(x['controlId']) for x in i['controls']], i.get('message', ''))
+             for i in r['ruleItems']])
+
+
+def payment_rule_want(name):
+    compare = ((PAYMENT_AMOUNT, GT, (), ('Amount Due',)) if name == RULE_NOT_MORE_THAN_DUE
+               else (PAYMENT_AMOUNT, LE, ('0',), ()))
+    return (C.VALIDATION, False, 1, 0, sorted([(PAYMENT_AMOUNT, C.NOT_EMPTY, (), ()), compare]),
+            [(C.ERROR, [PAYMENT_AMOUNT], PAYMENT_RULES[name])])
+
+
+def ensure_payment_rules(f):
+    names = {c['controlId']: c['controlName'] for c in hap.controls(WORKSHEET)}
+    live = {r['name']: r for r in hap.listing('worksheet', 'rules', WORKSHEET)}
+    specs = [(name, C.VALIDATION, payment_rule_filters(f, name),
+              [C.item(C.ERROR, f[PAYMENT_AMOUNT], message=message)], {'check_type': 1, 'hint_type': 0})
+             for name, message in PAYMENT_RULES.items()
+             if name not in live or payment_rule_state(live[name], names) != payment_rule_want(name)]
+    if specs:
+        C.upsert_rules(WORKSHEET, specs, 'invoices_rules_pre_payments')
+        live = {r['name']: r for r in hap.listing('worksheet', 'rules', WORKSHEET)}
+    else:
+        print(f'  {list(PAYMENT_RULES)} already as specified; nothing saved')
+    for name in PAYMENT_RULES:
+        r = live.get(name)
+        if r is None or payment_rule_state(r, names) != payment_rule_want(name):
+            sys.exit(f'rule {name!r} read back as {r and payment_rule_state(r, names)}')
+        C.remember('rules', KEY + name, r['ruleId'])
+    return bool(specs)
+
+
+# ── the buttons ──
+
+def payment_enable_when(f):
+    """Posted **and** a customer invoice, credit note or vendor bill **and** not Paid (Odoo's Pay button:
+    `state != 'posted' or payment_state not in (…) or move_type not in (…)`)."""
+    return {'type': 'group', 'logic': 'AND', 'children': [
+        {'type': 'condition', 'field': f['Status']['controlId'], 'dataType': DROPDOWN, 'operator': 'eq',
+         'value': [OPTION_KEY['Status']['Posted']]},
+        {'type': 'condition', 'field': f['Type']['controlId'], 'dataType': DROPDOWN, 'operator': 'eq',
+         'value': [OPTION_KEY['Type'][x] for x in PAYABLE_TYPES]},
+        {'type': 'condition', 'field': f[PAYMENT_STATUS]['controlId'], 'dataType': DROPDOWN, 'operator': 'ne',
+         'value': [OPTION_KEY['Payment Status']['Paid']]}]}
+
+
+def payment_button_conditions():
+    return sorted([('Status', EQ_SINGLE, ('Posted',)), ('Type', EQ_SINGLE, tuple(sorted(PAYABLE_TYPES))),
+                   (PAYMENT_STATUS, NE_SINGLE, ('Paid',))])
+
+
+def button_conditions(b, names):
+    return sorted((names.get(x['controlId'], x['controlId']), x['filterType'],
+                   tuple(sorted(ALL_LABELS.get(y, y) for y in x.get('values') or [])))
+                  for x in b.get('filters') or [])
+
+
+def payment_write_controls(f):
+    """The fill-in form: Payment Amount defaulting to the record's Amount Due, Payment Date to today — the shape the
+    Sales app's own Register Payment stores (`defsource` with a `cid`); both required."""
+    return [{'controlId': f[PAYMENT_AMOUNT]['controlId'], 'type': FILL_REQUIRED,
+             'defsource': json.dumps([{'rcid': '', 'cid': f['Amount Due']['controlId'], 'staticValue': ''}])},
+            {'controlId': f[PAYMENT_DATE]['controlId'], 'type': FILL_REQUIRED, 'defsource': TODAY}]
+
+
+def write_controls_state(items):
+    return [(x.get('controlId'), x.get('type'), C.defsource_state(x.get('defsource') or ''))
+            for x in items or []]
+
+
+def payment_button_state(b, names):
+    return dict(clickType=b.get('clickType'), writeType=b.get('writeType'), writeObject=b.get('writeObject'),
+                workflowType=b.get('workflowType'), isBatch=bool(b.get('isBatch')), desc=b.get('desc') or '',
+                filters=button_conditions(b, names), writeControls=write_controls_state(b.get('writeControls')))
+
+
+def payment_button_want(f):
+    return dict(clickType=3, writeType=1, writeObject=1, workflowType=1, isBatch=False, desc=PAYMENT_BUTTON_DESC,
+                filters=payment_button_conditions(), writeControls=write_controls_state(payment_write_controls(f)))
+
+
+def save_button_in_place(b, overrides, step):
+    """`SaveWorksheetBtn` with the button's `btnId` and everything the button editor sends, as read, with only
+    `overrides` changed — orders.ensure_send_batch. Every other key is compared before and after."""
+    from hap_cli.core.session import Session
+    params = {'btnId': b['btnId'], 'name': b['name'], 'worksheetId': WORKSHEET, 'filters': b.get('filters') or [],
+              'confirmMsg': b.get('confirmMsg') or '', 'sureName': b.get('sureName') or '',
+              'cancelName': b.get('cancelName') or '', 'workflowId': b.get('workflowId') or '',
+              'desc': b.get('desc') or '', 'appId': APP, 'addRelationControlId': b.get('addRelationControl') or '',
+              **{k: b.get(k) for k in BTN_SAVE_KEYS}}
+    params.update(overrides)
+    got = Session.load(None).api_call('Worksheet', 'SaveWorksheetBtn', params)
+    after = next((x for x in hap.listing('worksheet', 'custom-actions', WORKSHEET) if x['btnId'] == b['btnId']), None)
+    if after is None:
+        sys.exit(f"{step}: {b['name']} is gone after SaveWorksheetBtn answered {got!r}")
+    moved = sorted(k for k in set(b) | set(after)
+                   if k not in BTN_VOLATILE and k not in overrides and b.get(k) != after.get(k))
+    if moved:
+        sys.exit(f"{step}: {b['name']}: {moved} changed with {sorted(overrides)} — the button as it was is in "
+                 f'backups/invoices_buttons_pre_payments_*.json')
+    return after
+
+
+def payment_process_id(b):
+    pid = hap.ids().get('workflows', {}).get(KEY + REGISTER_PAYMENT)
+    if pid:
+        return pid
+    from hap_cli.core import worksheet as ws_mod
+    from hap_cli.core.session import Session
+    data = ws_mod.get_process_by_trigger_id(Session.load(None), WORKSHEET, b['btnId'])
+    data = data.get('data', data) if isinstance(data, dict) else data
+    pid = data[0]['id'] if isinstance(data, list) and data else None
+    if not pid:
+        sys.exit(f'{REGISTER_PAYMENT}: no workflow found for button {b["btnId"]}')
+    C.remember('workflows', KEY + REGISTER_PAYMENT, pid)
+    return pid
+
+
+def ensure_payment_button(f):
+    """The button, created once by name (create-custom-action ignores --btn-id and would add a duplicate), then
+    brought to spec in place: the fill-in form and its defaults, the condition, no batch. Returns (button, changed)."""
+    from hap_cli.core import filter_translator as flt
+    names = {c['controlId']: c['controlName'] for c in hap.controls(WORKSHEET)}
+    live = hap.listing('worksheet', 'custom-actions', WORKSHEET)
+    b = next((x for x in live if x['name'] == REGISTER_PAYMENT), None)
+    changed = False
+    if b is None:
+        hap.backup('invoices_buttons_pre_payments', live)
+        spec = {'name': REGISTER_PAYMENT, 'type': 'updateCurrentRecord', 'runWorkflowAfterSubmit': True,
+                'updateFields': [f[PAYMENT_AMOUNT]['controlId'], f[PAYMENT_DATE]['controlId']],
+                'enableWhen': payment_enable_when(f), 'isBatch': False, 'desc': PAYMENT_BUTTON_DESC}
+        out = hap.run('worksheet', 'create-custom-action', WORKSHEET, '-a', APP, '--action-spec',
+                      json.dumps(spec, ensure_ascii=False))
+        data = out.get('data', out) if isinstance(out, dict) else {}
+        if data.get('processId'):
+            C.remember('workflows', KEY + REGISTER_PAYMENT, data['processId'])
+        b = next((x for x in hap.listing('worksheet', 'custom-actions', WORKSHEET) if x['name'] == REGISTER_PAYMENT),
+                 None)
+        if b is None:
+            sys.exit(f'{REGISTER_PAYMENT} was not created: {out}')
+        print(f"  {REGISTER_PAYMENT}: created {b['btnId']}")
+        changed = True
+    C.remember('buttons', KEY + REGISTER_PAYMENT, b['btnId'])
+    want = payment_button_want(f)
+    got = payment_button_state(b, names)
+    if got != want:
+        hap.backup('invoices_buttons_pre_payments', hap.listing('worksheet', 'custom-actions', WORKSHEET))
+        overrides = {k: v for k, v in dict(
+            clickType=3, writeType=1, writeObject=1, workflowType=1, isBatch=False, desc=PAYMENT_BUTTON_DESC,
+            filters=flt.translate_filter_group(payment_enable_when(f)),
+            writeControls=payment_write_controls(f)).items()}
+        b = save_button_in_place(b, overrides, 'payments')
+        got = payment_button_state(b, names)
+        if got != want:
+            sys.exit(f'{REGISTER_PAYMENT} read back {json.dumps(got, ensure_ascii=False, default=str)}\n'
+                     f'  wanted {json.dumps(want, ensure_ascii=False, default=str)}')
+        print(f'  {REGISTER_PAYMENT}: fill-in form, defaults, condition and batch written')
+        changed = True
+    else:
+        print(f'  {REGISTER_PAYMENT}: already as specified')
+    return b, changed
+
+
+def ensure_unpaid_guards(f):
+    """Cancel and Reset to Draft gain **Payment Status is not Paid or Partially Paid**, AND-ed with the Status
+    condition they already carry — one in-place save each, nothing else about either button changed."""
+    from hap_cli.core import filter_translator as flt
+    names = {c['controlId']: c['controlName'] for c in hap.controls(WORKSHEET)}
+    extra = {'type': 'condition', 'field': f[PAYMENT_STATUS]['controlId'], 'dataType': DROPDOWN, 'operator': 'ne',
+             'value': [OPTION_KEY['Payment Status'][x] for x in ('Partially Paid', 'Paid')]}
+    status_labels = {'Cancel': ['Draft'], 'Reset to Draft': ['Posted', 'Cancelled']}
+    for name in UNPAID_ONLY:
+        b = next(x for x in hap.listing('worksheet', 'custom-actions', WORKSHEET) if x['name'] == name)
+        want = sorted([('Status', EQ_SINGLE, tuple(sorted(status_labels[name]))), UNPAID_CONDITION])
+        if button_conditions(b, names) == want:
+            print(f'  {name}: already refused on a paid or partly paid document')
+            continue
+        hap.backup('invoices_buttons_pre_payments', hap.listing('worksheet', 'custom-actions', WORKSHEET))
+        group = status_when(f, status_labels[name], 'eq')
+        group['children'].append(extra)
+        b = save_button_in_place(b, {'filters': flt.translate_filter_group(group)}, 'payments')
+        if button_conditions(b, names) != want:
+            sys.exit(f'{name}: filters read back {button_conditions(b, names)}, wanted {want}')
+        print(f'  {name}: now offered only while Payment Status is neither Paid nor Partially Paid')
+
+
+# ── the workflow ──
+
+def payment_nodes():
+    """Two number formulas and a four-way exclusive branch (唯一分支), each path one update of the document. Path
+    conditions and field writes are written afterwards: `batch-add` stores both empty (Found while building)."""
+    upd = lambda alias, name: {'nodeAlias': alias, 'nodeType': 'update_record', 'name': name,
+                               'config': {'target': {'node': {'nodeAlias': 'trigger'}}, 'worksheet': WORKSHEET,
+                                          'fields': []}}
+    return [
+        {'nodeAlias': 'paid', 'nodeType': 'compute', 'name': PAY_PAID_STEP, 'config': {'mode': 'number',
+                                                                                      'formula': '0+0'}},
+        {'nodeAlias': 'due', 'nodeType': 'compute', 'name': PAY_DUE_STEP, 'config': {'mode': 'number',
+                                                                                    'formula': '0+0'}},
+        {'nodeAlias': 'which', 'nodeType': 'branch', 'name': PAY_BRANCH, 'config': {'paths': [
+            {'alias': f'p{i}', 'name': path, 'nodes': [upd(f'u{i}', step)]}
+            for i, (path, step, _) in enumerate(PAY_PATHS, 1)]}},
+    ]
+
+
+def read_node(pid, node_id):
+    d = hap.run('workflow', 'node', 'get', pid, node_id)
+    return d.get('data', d) if isinstance(d, dict) else {}
+
+
+def sync_number_formula(pid, node, expression):
+    """A number formula step (actionId 100): expression, two decimals, a blank input counted as 0 — both of which
+    default the wrong way (invlines.set_formula)."""
+    want = {'formulaValue': expression, 'number': 2, 'nullZero': True}
+    if all(read_node(pid, node['id']).get(k) == v for k, v in want.items()):
+        return False
+    hap.run('workflow', 'node', 'save', pid, node['id'], '--type', '9', '-n', node['name'], '-c', json.dumps(
+        {'actionId': FORMULA_NUMBER_NODE, 'name': node['name'], 'execute': True, 'formulaValue': expression,
+         'number': 2, 'nullZero': True, 'type': NUMBER}, ensure_ascii=False))
+    back = read_node(pid, node['id'])
+    if any(back.get(k) != v for k, v in want.items()):
+        sys.exit(f"{node['name']}: read back {[(k, back.get(k)) for k in want]}")
+    return True
+
+
+def value_state(v):
+    if isinstance(v.get('value'), dict):
+        return ('key', v['value'].get('key'))
+    if v.get('controlId'):
+        return ('field', v.get('nodeId') or '', v.get('controlId'))
+    return ('value', str(v.get('value') or ''))
+
+
+def path_conditions_state(groups):
+    return [[(c.get('nodeId') or '', c.get('filedId'), str(c.get('conditionId')),
+              tuple(value_state(v) for v in c.get('conditionValues') or [])) for c in g] for g in groups or []]
+
+
+def save_payment_path(pid, path, name, conditions):
+    """A branch path's name and condition, compared down to the values and the fields compared with."""
+    got = read_node(pid, path['id'])
+    want = path_conditions_state(conditions)
+    changed = path_conditions_state(got.get('conditions')) != want
+    if changed:
+        hap.run('workflow', 'node', 'save', pid, path['id'], '--type', '2', '-n', name,
+                '-c', json.dumps({'operateCondition': conditions}, ensure_ascii=False))
+        back = path_conditions_state(read_node(pid, path['id']).get('conditions'))
+        if back != want:
+            sys.exit(f'{name}: the path condition read back {back}, wanted {want}')
+    if got.get('name') != name:
+        hap.run('workflow', 'node', 'rename', pid, path['id'], '-n', name)
+        changed = True
+    return changed
+
+
+def fx_value(node_id, condition_id, values):
+    return {'nodeId': node_id, 'filedId': NUMBER_FX_ID, 'filedValue': '', 'filedTypeId': NUMBER,
+            'conditionId': condition_id, 'sourceType': 0, 'conditionValues': values}
+
+
+def field_ref(node_id, control_id):
+    return [{'nodeId': node_id, 'controlId': control_id, 'value': '', 'sureNodeId': node_id}]
+
+
+def write_state(entry):
+    """A field write reduced to what it means; `nodeAppType` is rewritten by the server (o2i.write_state)."""
+    return (entry.get('fieldId'), entry.get('type'), entry.get('addType') or 0, entry.get('fieldValue') or '',
+            entry.get('fieldValueId') or '', entry.get('nodeId') or '', bool(entry.get('isClear')))
+
+
+def set_writes(pid, node, wanted, select_node):
+    """Give an update step **exactly** these field writes on the record `select_node` produced, read back."""
+    d = read_node(pid, node['id'])
+    if (d.get('selectNodeId') == select_node and not d.get('isException')
+            and sorted(write_state(x) for x in d.get('fields') or []) == sorted(write_state(w) for w in wanted)):
+        return False
+    hap.run('workflow', 'node', 'save', pid, node['id'], '--type', '6', '-n', node['name'], '-c', json.dumps(
+        {'actionId': d.get('actionId') or '2', 'appId': WORKSHEET, 'appType': 1, 'selectNodeId': select_node,
+         'fields': wanted}, ensure_ascii=False))
+    back = read_node(pid, node['id'])
+    got, want = sorted(write_state(x) for x in back.get('fields') or []), sorted(write_state(w) for w in wanted)
+    if got != want or back.get('isException') or back.get('selectNodeId') != select_node:
+        sys.exit(f"{node['name']}: read back {got} isException={back.get('isException')}\n  wanted {want}")
+    return True
+
+
+def clear(control):
+    """An update step's write that empties a field: `isClear` (the editor's 清空). Sent as a plain empty value the
+    entry is dropped on save and the step writes nothing (BUILDING.md › Workflows)."""
+    return {'fieldId': control['controlId'], 'type': control['type'], 'addType': 0, 'fieldValue': '',
+            'fieldValueId': '', 'nodeId': '', 'isClear': True}
+
+
+def from_formula(control, node_id):
+    """A number formula step's result into a Number — invlines.from_formula."""
+    return {'fieldId': control['controlId'], 'type': NUMBER, 'addType': 0, 'fieldValue': '',
+            'fieldValueId': NUMBER_FX_ID, 'nodeId': node_id, 'sureNodeId': node_id, 'nodeAppType': 1,
+            'nodeTypeId': 9, 'nodeActionId': FORMULA_NUMBER_NODE}
+
+
+def gateway_paths(proc, gateway_id):
+    """A gateway's paths in the order its `flowIds` lists them — the order an exclusive branch tries them."""
+    order = proc['flowNodeMap'][gateway_id].get('flowIds') or []
+    return [proc['flowNodeMap'][i] for i in order if i in proc['flowNodeMap']]
+
+
+def payment_path_conditions(f, trigger, due_node):
+    """The four paths, tried in order. The first refuses what the two rules refuse in the form — again, for a run
+    that did not come through the form; the next three read the Amount Due the payment leaves."""
+    pa, pd = f[PAYMENT_AMOUNT], f[PAYMENT_DATE]
+    return {
+        PATH_REFUSED: [[cond(trigger, pa, EMPTY_C)], [cond(trigger, pa, LE_C, [{'value': '0'}])],
+                       [cond(trigger, pa, GT_C, field_ref(trigger, f['Amount Due']['controlId']))],
+                       [cond(trigger, pd, EMPTY_C)]],
+        PATH_PAID: [[fx_value(due_node, LE_C, [{'value': '0'}])]],
+        PATH_PARTIAL: [[fx_value(due_node, LT_C, field_ref(trigger, f['Total']['controlId']))]],
+        PATH_UNPAID: [],                            # no condition: the default path of an exclusive branch
+    }
+
+
+def ensure_payment_workflow(f, pid):
+    """Build the workflow once, then write every formula, path and field write that differs. Returns True when
+    anything changed (the caller publishes)."""
+    proc = hap.run('workflow', 'node', 'list', pid)
+    trigger = proc['startEventId']
+    byname = {n['name']: n for n in proc['flowNodeMap'].values()}
+    changed = False
+    if PAY_PAID_STEP not in byname:
+        first = proc['flowNodeMap'][trigger].get('nextId')
+        if first not in (None, '', '99'):
+            sys.exit(f'{REGISTER_PAYMENT}: workflow {pid} has steps this script did not build — read it first')
+        hap.run('workflow', 'node', 'batch-add', pid, '--nodes', json.dumps(payment_nodes(), ensure_ascii=False),
+                '--trigger-node-id', trigger, '--trigger-alias', 'trigger')
+        proc = hap.run('workflow', 'node', 'list', pid)
+        byname = {n['name']: n for n in proc['flowNodeMap'].values()}
+        changed = True
+    missing = [s for s in PAY_STEPS if s not in byname]
+    if missing:
+        sys.exit(f'{REGISTER_PAYMENT}: workflow {pid} is missing {missing}')
+    t = lambda name: f"${trigger}-{f[name]['controlId']}$"
+    paid_node, due_node = byname[PAY_PAID_STEP]['id'], byname[PAY_DUE_STEP]['id']
+    changed |= sync_number_formula(pid, byname[PAY_PAID_STEP], f"{t(AMOUNT_PAID)}+{t(PAYMENT_AMOUNT)}")
+    changed |= sync_number_formula(pid, byname[PAY_DUE_STEP], f"{t('Amount Due')}-{t(PAYMENT_AMOUNT)}")
+    gateway = byname[PAY_BRANCH]
+    if gateway.get('gatewayType') != 2:              # 2 = 唯一分支: the first path whose condition holds
+        from hap_cli.core.session import Session
+        Session.load(None).workflow_call('flowNode/saveNode', {'nodeId': gateway['id'], 'processId': pid,
+                                                               'gatewayType': 2})
+        changed = True
+    paths = gateway_paths(proc, gateway['id'])
+    if len(paths) != len(PAY_PATHS):
+        sys.exit(f'{PAY_BRANCH}: {len(paths)} paths, wanted {len(PAY_PATHS)}')
+    conditions = payment_path_conditions(f, trigger, due_node)
+    for path, (name, step, label) in zip(paths, PAY_PATHS):
+        inside = proc['flowNodeMap'].get(path.get('nextId')) or {}
+        if inside.get('name') != step:
+            sys.exit(f'{PAY_BRANCH}: path {path.get("name")!r} leads to {inside.get("name")!r}, wanted {step!r}')
+        changed |= save_payment_path(pid, path, name, conditions[name])
+        writes = [clear(f[PAYMENT_AMOUNT]), clear(f[PAYMENT_DATE])]
+        if label:
+            writes += [from_formula(f[AMOUNT_PAID], paid_node),
+                       patch(f[LAST_PAYMENT_DATE]['controlId'], DATE, node=trigger,
+                             source=f[PAYMENT_DATE]['controlId']),
+                       patch(f[PAYMENT_STATUS]['controlId'], DROPDOWN, value=OPTION_KEY['Payment Status'][label])]
+        changed |= set_writes(pid, inside, writes, trigger)
+    return changed
+
+
+def backfill_payment_status(f):
+    """Every document with no Payment Status reads Not Paid, as every Odoo move carries a `payment_state`. The
+    control's default fills a new document in the form; the API applies no defaults, so a document written through
+    the API before or after is filled here. `demo.py invoices` then writes the demo documents' own."""
+    ps = f[PAYMENT_STATUS]['controlId']
+    empty = [r['rowid'] for r in C.records(WORKSHEET, APP) if not r.get(ps)]
+    for rowid in empty:
+        hap.run('worksheet', 'record', 'update', WORKSHEET, rowid, '-a', APP, '--fields-json',
+                json.dumps([{'id': ps, 'value': [OPTION_KEY['Payment Status']['Not Paid']]}]))
+    if empty:
+        time.sleep(2)
+        still = [r['rowid'] for r in C.records(WORKSHEET, APP) if r['rowid'] in empty and not r.get(ps)]
+        if still:
+            sys.exit(f'payments: Payment Status did not store on {still}')
+    print(f'  Payment Status filled with Not Paid on {len(empty)} document(s) that had none')
+
+
+def step_payments():
+    """Controls, Amount Due as a Formula, the two rules, the button, its workflow (published after every change),
+    the guard on Cancel and Reset to Draft, and Payment Status on documents that have none. Re-running saves
+    nothing."""
+    guard()
+    f = hap.by_name(c for c in hap.controls(WORKSHEET) if c['type'] != C.TAB)
+    missing = [n for n in PAYMENT_FIELDS if n not in f]
+    if missing:
+        built = payment_controls()
+        f = C.append_checked(WORKSHEET, [built[n] for n in missing], 'invoices_controls_pre_payments', 'payments')
+    else:
+        print(f'  {list(PAYMENT_FIELDS)} are already on Invoices; nothing appended')
+    spec = {}
+    for n, want in payment_spec().items():
+        stale = C.drift(f[n], want)
+        if stale:
+            spec[f[n]['controlId']] = {k: want[k] for k in stale}
+    live_opts = [(o['key'], o['value']) for o in f[PAYMENT_STATUS].get('options') or [] if not o.get('isDeleted')]
+    if live_opts != [(o['key'], o['value']) for o in PAYMENT_STATUS_OPTIONS]:
+        spec.setdefault(f[PAYMENT_STATUS]['controlId'], {})['options'] = PAYMENT_STATUS_OPTIONS
+    if spec:
+        C.pinned_write(WORKSHEET, spec, 'invoices_controls_pre_payments_repair', 'payments')
+    else:
+        print(f'  {list(PAYMENT_FIELDS)} already as specified; nothing saved')
+    ensure_amount_due()
+    f = hap.by_name(c for c in hap.controls(WORKSHEET) if c['type'] != C.TAB)
+    for n in PAYMENT_FIELDS + ('Amount Due',):
+        C.remember('controls', KEY + n, f[n]['controlId'])
+    ensure_payment_rules(f)
+    b, button_changed = ensure_payment_button(f)
+    pid = payment_process_id(b)
+    changed = ensure_payment_workflow(f, pid) or button_changed
+    info = hap.run('workflow', 'get', pid)
+    info = info.get('data', info) if isinstance(info, dict) else {}
+    if changed or not info.get('enabled') or info.get('publishStatus') != 2:
+        result = C.publish(pid)
+        print(f'  {REGISTER_PAYMENT} workflow {pid}: published {result}')
+        if not result.get('isPublish'):
+            sys.exit(f'{REGISTER_PAYMENT}: publish failed: {result}')
+    else:
+        print(f'  {REGISTER_PAYMENT} workflow {pid}: already built and published; not re-published')
+    ensure_unpaid_guards(f)
+    backfill_payment_status(f)
+    problems = payment_problems()
+    if problems:
+        sys.exit('payments: read back with differences\n  ' + '\n  '.join(problems))
+    print(C.structure(pid))
+    parked = [n for n in PAYMENT_FIELDS if f[n].get('row') == 9999]
+    if parked:
+        print('  placement outstanding — the owner places these in the designer; intended (row, col, size, tab): '
+              + ', '.join(f'{n} {PAYMENT_PLACE[n]}' for n in parked))
+    print('  payments: OK')
+
+
+def payment_problems():
+    """Everything `payments` builds, read back — for `check`."""
+    ctrls = hap.controls(WORKSHEET)
+    f = hap.by_name(c for c in ctrls if c['type'] != C.TAB)
+    names = {c['controlId']: c['controlName'] for c in ctrls}
+    problems = []
+    counts = {}
+    for c in ctrls:
+        counts[c['controlName']] = counts.get(c['controlName'], 0) + 1
+    for n, want in payment_spec().items():
+        if counts.get(n, 0) != 1:
+            problems.append(f'Invoices carries {counts.get(n, 0)} controls named {n!r}, wanted one — run `payments`')
+            continue
+        diff = C.drift(f[n], want)
+        if diff:
+            problems.append(f'{n}: {json.dumps(diff, ensure_ascii=False, default=str)} — run `payments`')
+    if PAYMENT_STATUS not in f or AMOUNT_PAID not in f:
+        return problems
+    diff = C.drift(f['Amount Due'], amount_due_spec(f))
+    if diff or amount_due_leftovers(f['Amount Due']):
+        problems.append(f"Amount Due is not the Formula Total − Amount Paid: {json.dumps(diff, default=str)} "
+                        f"{amount_due_leftovers(f['Amount Due'])}")
+    rules = {r['name']: r for r in hap.listing('worksheet', 'rules', WORKSHEET)}
+    for name in PAYMENT_RULES:
+        r = rules.get(name)
+        if r is None or payment_rule_state(r, names) != payment_rule_want(name):
+            problems.append(f'rule {name!r}: {r and payment_rule_state(r, names)}')
+    b = next((x for x in hap.listing('worksheet', 'custom-actions', WORKSHEET) if x['name'] == REGISTER_PAYMENT),
+             None)
+    if b is None:
+        return problems + [f'button {REGISTER_PAYMENT} missing']
+    if payment_button_state(b, names) != payment_button_want(f):
+        problems.append(f'button {REGISTER_PAYMENT}: {payment_button_state(b, names)}')
+    pid = hap.ids().get('workflows', {}).get(KEY + REGISTER_PAYMENT)
+    if not pid:
+        return problems + [f'{REGISTER_PAYMENT}: no workflow in ids.json']
+    proc = hap.run('workflow', 'node', 'list', pid)
+    byname = {n['name']: n for n in proc['flowNodeMap'].values()}
+    missing = [s for s in PAY_STEPS if s not in byname]
+    if missing:
+        return problems + [f'{REGISTER_PAYMENT} workflow is missing {missing}']
+    trigger = proc['startEventId']
+    conditions = payment_path_conditions(f, trigger, byname[PAY_DUE_STEP]['id'])
+    for path, (name, step, _) in zip(gateway_paths(proc, byname[PAY_BRANCH]['id']), PAY_PATHS):
+        got = read_node(pid, path['id'])
+        if got.get('name') != name or path_conditions_state(got.get('conditions')) != \
+                path_conditions_state(conditions[name]):
+            problems.append(f'{PAY_BRANCH}: path {got.get("name")!r} differs from {name!r}')
+        inside = read_node(pid, path.get('nextId'))
+        if inside.get('isException') or not inside.get('fields'):
+            problems.append(f'{step}: isException={inside.get("isException")}, {len(inside.get("fields") or [])} '
+                            'field writes')
+    info = hap.run('workflow', 'get', pid)
+    info = info.get('data', info) if isinstance(info, dict) else {}
+    if not info.get('enabled') or info.get('publishStatus') != 2:
+        problems.append(f"{REGISTER_PAYMENT} workflow: enabled={info.get('enabled')} "
+                        f"publishStatus={info.get('publishStatus')} — run `payments`")
+    return problems
+
+
+# ── self-check: Register Payment on a TEST invoice ──────────────────────────
+
+PAY_TEST = 'TEST Register Payment'                 # Customer Reference and Number of the TEST document
+PAY_TEST_TOTAL = 1000.0
+
+
+def buttons_offered(rowid):
+    """{button name: offered?} for one document, evaluated by the server — `GetWorksheetBtns` with a `rowId` answers
+    each button's `disabled` against the record's own values (orders.buttons_offered)."""
+    from hap_cli.core.session import Session
+    got = Session.load(None).api_call('Worksheet', 'GetWorksheetBtns',
+                                      {'appId': APP, 'worksheetId': WORKSHEET, 'rowId': rowid, 'viewId': ''})
+    got = got.get('data', got) if isinstance(got, dict) else got
+    return {b['name']: not b.get('disabled') for b in got or []}
+
+
+def payment_reading(rowid, f):
+    """The payment fields through both read paths: `record get` (by alias) and the record listing (by id). The two
+    inputs are hidden, so the listing reads them blank whatever they hold (CLAUDE.md › Reading records)."""
+    got = hap.run('worksheet', 'record', 'get', WORKSHEET, rowid, '-a', APP)['data']
+    listed = next((r for r in C.records(WORKSHEET, APP) if r['rowid'] == rowid), {})
+    num = lambda v: None if v in (None, '') else round(float(v), 2)
+    label = lambda v: option_label(v) if v not in (None, '') else None
+    day_of = lambda v: (v or '')[:10]
+    return {
+        'get': dict(paid=num(got.get(PAYMENT_ALIAS[AMOUNT_PAID])), due=num(got.get('amount_residual')),
+                    total=num(got.get('amount_total')), status=label(got.get(PAYMENT_ALIAS[PAYMENT_STATUS])),
+                    last=day_of(got.get(PAYMENT_ALIAS[LAST_PAYMENT_DATE])),
+                    amount=num(got.get(PAYMENT_ALIAS[PAYMENT_AMOUNT])),
+                    date=day_of(got.get(PAYMENT_ALIAS[PAYMENT_DATE]))),
+        'list': dict(paid=num(listed.get(f[AMOUNT_PAID]['controlId'])), due=num(listed.get(f['Amount Due']['controlId'])),
+                     total=num(listed.get(f['Total']['controlId'])),
+                     status=label(listed.get(f[PAYMENT_STATUS]['controlId'])),
+                     last=day_of(listed.get(f[LAST_PAYMENT_DATE]['controlId']))),
+    }
+
+
+def step_selfpayment():
+    """On a TEST posted customer invoice (Total 1,000.00, no lines, no email anywhere): a part payment of 400.00, an
+    overpayment of 700.00 refused, then the remaining 600.00 — Amount Paid, Amount Due and Payment Status read back
+    through both paths after each — and Register Payment, Cancel and Reset to Draft as the server offers them."""
+    guard()
+    problems = payment_problems()
+    if problems:
+        sys.exit('\n'.join(problems))
+    f = C.fields(WORKSHEET)
+    cid = lambda n: f[n]['controlId']
+    today = date.today().isoformat()
+    pid = hap.ids()['workflows'][KEY + REGISTER_PAYMENT]
+    journals = titles(JOURNALS, 'Journal Name')
+    partners = titles(CONTACTS, 'Name')
+    customer = next((r for r, t in partners.items() if t and not str(t).startswith('TEST')), None)
+    reset = [{'id': cid('Number'), 'value': PAY_TEST},
+             {'id': cid('Type'), 'value': [OPTION_KEY['Type']['Customer Invoice']]},
+             {'id': cid('Status'), 'value': [OPTION_KEY['Status']['Posted']]},
+             {'id': cid('Customer / Vendor'), 'value': [customer] if customer else []},
+             {'id': cid('Invoice Date'), 'value': today}, {'id': cid('Accounting Date'), 'value': today},
+             {'id': cid('Journal'), 'value': [next(r for r, t in journals.items() if t == 'Sales')]},
+             {'id': cid('Tax mode'), 'value': [OPTION_KEY['Tax mode']['Tax Excluded']]},
+             {'id': cid('Auto-post'), 'value': [OPTION_KEY['Auto-post']['No']]},
+             {'id': cid('Customer Reference'), 'value': PAY_TEST},
+             {'id': cid('Untaxed Amount'), 'value': PAY_TEST_TOTAL}, {'id': cid('Tax'), 'value': 0},
+             {'id': cid('Total'), 'value': PAY_TEST_TOTAL},
+             {'id': cid(AMOUNT_PAID), 'value': 0}, {'id': cid(LAST_PAYMENT_DATE), 'value': ''},
+             {'id': cid(PAYMENT_STATUS), 'value': [OPTION_KEY['Payment Status']['Not Paid']]},
+             {'id': cid(PAYMENT_AMOUNT), 'value': ''}, {'id': cid(PAYMENT_DATE), 'value': ''}]
+    rowid = next((r['rowid'] for r in C.records(WORKSHEET, APP) if r.get(cid('Customer Reference')) == PAY_TEST),
+                 None)
+    if rowid:
+        hap.run('worksheet', 'record', 'update', WORKSHEET, rowid, '-a', APP, '--fields-json', json.dumps(reset))
+        print(f'  {PAY_TEST} ({rowid}): put back to posted, Total {PAY_TEST_TOTAL:,.2f}, nothing paid')
+    else:
+        rowid = C.row_id(hap.run('worksheet', 'record', 'create', WORKSHEET, '-a', APP,
+                                 '--fields-json', json.dumps(reset)))
+        print(f'  {PAY_TEST}: created {rowid}')
+    C.remember('records', KEY + PAY_TEST, rowid)
+    time.sleep(2)
+    bad = []
+
+    def expect(label, want):
+        got = payment_reading(rowid, f)
+        for path in ('get', 'list'):
+            diffs = {k: (got[path].get(k), v) for k, v in want.items() if k in got[path] and got[path].get(k) != v}
+            if diffs:
+                bad.append(f'{label} / {path}: {diffs}')
+        print(f"  {label}\n    record get: {got['get']}\n    listing:    {got['list']}")
+        return got
+
+    def offered(label, want):
+        got = buttons_offered(rowid)
+        mine = {n: got.get(n) for n in (REGISTER_PAYMENT, 'Cancel', 'Reset to Draft', 'Confirm')}
+        diffs = {n: (mine[n], v) for n, v in want.items() if mine[n] != v}
+        if diffs:
+            bad.append(f'{label}: buttons {diffs}')
+        print(f'    offered: {mine}' + (f'  <- {diffs}' if diffs else ''))
+
+    def pay(amount, when):
+        """What the fill-in form does: store the two inputs (the button's workflow is then run on the record)."""
+        try:
+            return hap.run('worksheet', 'record', 'update', WORKSHEET, rowid, '-a', APP, '--fields-json', json.dumps(
+                [{'id': cid(PAYMENT_AMOUNT), 'value': amount}, {'id': cid(PAYMENT_DATE), 'value': when}]))
+        except RuntimeError as e:                  # a refused write can also come back as a failed command
+            return str(e)
+
+    def run_and_wait(before_paid):
+        hap.run('workflow', 'trigger', pid, '-s', rowid)
+        for _ in range(40):
+            got = payment_reading(rowid, f)['get']
+            if got['paid'] != before_paid and got['amount'] is None:
+                return
+            time.sleep(1)
+
+    expect('0. posted, nothing paid', dict(paid=0.0, due=PAY_TEST_TOTAL, total=PAY_TEST_TOTAL, status='Not Paid'))
+    offered('0', {REGISTER_PAYMENT: True, 'Reset to Draft': True, 'Cancel': False, 'Confirm': False})
+
+    first_day = (date.today() - timedelta(days=3)).isoformat()
+    pay(400, first_day)
+    run_and_wait(0.0)
+    expect('1. a part payment of 400.00', dict(paid=400.0, due=600.0, status='Partially Paid', last=first_day,
+                                               amount=None, date=''))
+    offered('1', {REGISTER_PAYMENT: True, 'Reset to Draft': False, 'Cancel': False})
+
+    out = pay(700, today)
+    stored = payment_reading(rowid, f)['get']
+    refused = stored['amount'] is None
+    print(f"  2. an overpayment of 700.00 (600.00 due): record update answered "
+          f"{json.dumps(out, ensure_ascii=False)[:300]}; Payment Amount now {stored['amount']!r}")
+    if not refused:
+        bad.append('2: the rule let an overpayment of 700.00 store')
+        run_and_wait(400.0)
+        time.sleep(3)
+    expect('2. after the refused overpayment', dict(paid=400.0, due=600.0, status='Partially Paid', last=first_day,
+                                                    amount=None))
+    out = pay(0, today)
+    zero = payment_reading(rowid, f)['get']['amount']
+    print(f"  2b. a payment of 0.00: record update answered {json.dumps(out, ensure_ascii=False)[:300]}; "
+          f'Payment Amount now {zero!r}')
+    if zero is not None:
+        bad.append('2b: the rule let a payment of 0.00 store')
+        hap.run('worksheet', 'record', 'update', WORKSHEET, rowid, '-a', APP, '--fields-json', json.dumps(
+            [{'id': cid(PAYMENT_AMOUNT), 'value': ''}, {'id': cid(PAYMENT_DATE), 'value': ''}]))
+
+    pay(600, today)
+    run_and_wait(400.0)
+    expect('3. the remaining 600.00', dict(paid=1000.0, due=0.0, status='Paid', last=today, amount=None, date=''))
+    offered('3', {REGISTER_PAYMENT: False, 'Reset to Draft': False, 'Cancel': False})
+
+    # A run that did not come through the form, with nothing filled in: the workflow's own refusal path must leave
+    # the document exactly as it is.
+    runs = lambda: len(hap.listing('approval', 'history', '--process-id', pid, '-n', '50'))
+    ran = runs()
+    hap.run('workflow', 'trigger', pid, '-s', rowid)
+    for _ in range(20):
+        if runs() > ran:
+            break
+        time.sleep(1)
+    time.sleep(2)
+    expect('4. the workflow run again with no amount and no date', dict(paid=1000.0, due=0.0, status='Paid',
+                                                                         last=today, amount=None, date=''))
+    print('  selfpayment: ' + ('OK — part payment, refused overpayment and zero, final payment, and the buttons '
+                               'offered as specified' if not bad else 'DIFFERENCES\n    ' + '\n    '.join(bad)))
+    return len(bad)
+
+
 # ── 5 · the three customers, into Contacts ──────────────────────────────────
 
 CONTACT_FIELDS = {'name': 'Name', 'email': 'Email', 'phone': 'Phone', 'street': 'Street', 'street2': 'Street 2',
@@ -1823,9 +2714,9 @@ def step_check():
     problems = []
     # o2i.py owns the two the order → invoice link added on 23 Sep 2026; this script neither writes nor places
     # them, and their rows are the owner's (Other Info › Invoice, row 18).
-    O2I_FIELDS = {'Sales Orders', 'Sales Order Count'}
-    if set(f) != set(PLACE) | set(INCOTERM_FIELDS) | O2I_FIELDS:
-        problems.append(f'controls {sorted(set(f) ^ (set(PLACE) | set(INCOTERM_FIELDS) | O2I_FIELDS))}')
+    known = set(PLACE) | set(INCOTERM_FIELDS) | set(O2I_FIELDS) | set(PAYMENT_FIELDS)
+    if set(f) != known:
+        problems.append(f'controls {sorted(set(f) ^ known)}')
     problems += [f'{n}: {d}' for n, d in layout_differences(ctrls).items()]
     for cid, (name, _) in FIRST_BUILD.items():
         want = RENAME.get(cid, name)
@@ -1837,7 +2728,7 @@ def step_check():
             problems.append(f'{name} options {live}')
     for name, want in {'Number': 'Draft', 'Type': 'Customer Invoice', 'Status': 'Draft', 'Tax mode': 'Tax Excluded',
                        'Auto-post': 'No', 'Untaxed Amount': '0', 'Tax': '0', 'Total': '0',
-                       'Amount Due': '0'}.items():
+                       PAYMENT_STATUS: 'Not Paid', AMOUNT_PAID: '0'}.items():
         if name not in f:
             continue
         source = json.loads((f[name].get('advancedSetting') or {}).get('defsource') or '[]')
@@ -1915,10 +2806,13 @@ def step_check():
         if not b:
             problems.append(f'button {name} missing')
             continue
-        conds = [(names.get(x['controlId']), x['filterType'],
-                  sorted(LABEL['Status'].get(y, y) for y in x.get('values') or [])) for x in b.get('filters') or []]
-        if conds != [('Status', EQ_SINGLE, sorted(labels))] or (b.get('confirmMsg') or '') != confirm:
+        conds = button_conditions(b, names)
+        want = [('Status', EQ_SINGLE, tuple(sorted(labels)))]
+        if name in UNPAID_ONLY:                     # 23 Sep 2026: refused on a paid or partly paid document
+            want.append(UNPAID_CONDITION)
+        if conds != sorted(want) or (b.get('confirmMsg') or '') != confirm:
             problems.append(f"button {name}: filters={conds} confirm={b.get('confirmMsg')!r}")
+    problems += payment_problems()
     pid = hap.ids().get('workflows', {}).get(KEY + 'Confirm')
     if pid:
         _, byname = nodes_by_name(pid)
@@ -1935,7 +2829,7 @@ def step_check():
         print(f'  NOTE {parked} still parked at row 9999 of Other Info, for the owner to place: '
               + ', '.join(f'{n} {INCOTERM_PLACE[n]}' for n in parked))
     print('  check: ' + ('OK — controls, tabs, options, defaults, rules, views, buttons and the numbering '
-                         'workflow as specified, and Incoterm with its receipt rule' if not problems
+                         'workflow as specified, Incoterm with its receipt rule, and Register Payment' if not problems
                          else 'DIFFERENCES\n    ' + '\n    '.join(problems)))
     return len(problems)
 
@@ -1969,6 +2863,8 @@ STEPS = {
     'untouched': step_untouched,
     'incoterm': step_incoterm,
     'selfincoterm': step_selfincoterm,
+    'payments': step_payments,
+    'selfpayment': step_selfpayment,
     'show': show,
 }
 
@@ -1977,5 +2873,5 @@ if __name__ == '__main__':
     if step not in STEPS:
         raise SystemExit(f"Unknown step {step!r}; choose from {', '.join(STEPS)}")
     result = STEPS[step](*sys.argv[2:])
-    if step in ('verify', 'check', 'all', 'selfcheck', 'selfincoterm') and result:
+    if step in ('verify', 'check', 'all', 'selfcheck', 'selfincoterm', 'selfpayment') and result:
         sys.exit(1)

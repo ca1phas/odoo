@@ -159,8 +159,9 @@ covers, and the numbering uniqueness that **Confirm** produces by construction.
 | Button | Shown when | Does | Confirmation |
 |---|---|---|---|
 | **Confirm** | Status is Draft | Status → **Posted**; assigns the **Number**; fills **Invoice Date** with today when it is empty; fills **Payment Reference** with the new Number on a customer document when it is empty | none — Odoo posts straight away |
-| **Cancel** | Status is Draft | Status → **Cancelled** | "Are you sure you want to cancel this document?" · Cancel document / Back |
-| **Reset to Draft** | Status is Posted or Cancelled | Status → **Draft**, **keeping the Number** — Odoo does not give it back | none |
+| **Cancel** | Status is Draft **and Payment Status is neither Paid nor Partially Paid** (23 Sep 2026) | Status → **Cancelled** | "Are you sure you want to cancel this document?" · Cancel document / Back |
+| **Reset to Draft** | Status is Posted or Cancelled **and Payment Status is neither Paid nor Partially Paid** (23 Sep 2026) | Status → **Draft**, **keeping the Number** — Odoo does not give it back | none |
+| **Register Payment** (23 Sep 2026) | Status is Posted, Type is a customer invoice, customer credit note, vendor bill or vendor credit note, and Payment Status is not Paid | Asks for **Payment Amount** (default the Amount Due) and **Payment Date** (default today); adds the amount to Amount Paid, sets Last Payment Date and Payment Status. See *Register Payment* below | the fill-in form itself |
 
 **Numbering, which Confirm has to reproduce** (`sequence.mixin`, and the tenant's own INV/2026/00001):
 
@@ -196,7 +197,7 @@ graph and activity views are not reproduced.
 | Taxes on those lines, and so real Untaxed Amount / Tax / Total | The **Taxes** bundle. The four amounts are seeded read-only figures until 07 |
 | ~~Payment Terms (`invoice_payment_term_id`) as a relation~~ | **Built on 17 Sep 2026 by the Payment Terms bundle** (`worksheets/10-payment-terms.md`): the relation replaced the text stand-in, and the Due Date is computed from the term |
 | Recipient Bank (`partner_bank_id`) as a relation | `res.partner.bank` records; a text stand-in again |
-| Payments — *Pay*, Payment Status (`payment_state`), the Payments and Reversals smart buttons, outstanding credits, `matched_payment_ids` | The **Payments** bundle. Amount Due therefore equals Total, and no document can be marked paid |
+| Payments — ~~*Pay*, Payment Status (`payment_state`)~~, the Payments and Reversals smart buttons, outstanding credits, `matched_payment_ids`, payment records and their journal entries | The **Payments** bundle. **A small Register Payment was built on 23 Sep 2026** (*Register Payment* below): Payment Status, Amount Paid and Amount Due = Total − Amount Paid live on the document, with no payment record behind them |
 | **Credit Note** (`action_reverse`), Reversal of / Reversal Move (`reversed_entry_id`, `reversal_move_ids`) | Reversing copies the lines with the sign flipped, so it needs 07. The Type options for both credit notes are already here |
 | *Send*, *Print*, *Preview*, Sent (`is_move_sent`, `move_sent_values`), the invoice PDF (`invoice_pdf_report_*`), UBL/CII (`ubl_cii_xml_*`) | Reports and outgoing mail; nothing here renders a PDF |
 | Currency (`currency_id`) | Currencies bundle; one currency (MYR) per app copy, and Odoo hides the field on a single-currency database |
@@ -791,6 +792,121 @@ Invoices workflow fires on them (each worksheet-event trigger is narrowed to oth
 **Not built**: the company default (`_compute_incoterm` fills a customer document's Incoterm from
 `res.company.incoterm_id`) and Odoo's placeholder naming it — there is no company table; and the Incoterm carried from
 a sales order — it waits for the order → invoice link.
+
+## Register Payment — added 23 Sep 2026 (`invoices.py payments`)
+
+The owner chose a **small** version of Odoo's payment step. Odoo's *Pay* button (`action_register_payment`,
+account_move_views.xml:734, 19.0 source) opens the `account.payment.register` wizard — `amount`, defaulting to what is
+left to pay, and `payment_date`, defaulting to today (account_payment_register.py:18-21) — which books an
+`account.payment`, posts its journal entry and reconciles it with the invoice; `payment_state` and `amount_residual`
+then follow from the reconciliation (`_compute_payment_state`, account_move.py:1234). **Here there is no Payments
+worksheet, no payment record and no bank entry**; the document itself carries the running result.
+
+### Controls
+
+| Control | Id | Type | Alias | Permission | Notes |
+|---|---|---|---|---|---|
+| **Payment Status** | `6ab357f3bd43f55762240c93` | Dropdown: **Not Paid · Partially Paid · Paid** (default Not Paid) | `payment_state` | `101` read-only | three of Odoo's seven values (19.4 extract: also In Payment, Reversed, Blocked, Invoicing App Legacy) |
+| **Amount Paid** | `6ab357f3bd43f55762240c94` | Number, 2 dp, default 0 | `amount_paid` | `101` | the running total received; Odoo's `amount_paid` is total − residual (account_move.py:6704) |
+| **Last Payment Date** | `6ab357f3bd43f55762240c95` | Date | `last_payment_date` | `101` | no Odoo field — Odoo shows payment dates in the payments widget |
+| **Payment Amount** | `6ab357f3bd43f55762240c96` | Number, 2 dp | `amount` | `011` hidden | the wizard's `amount`; filled only through the button's form |
+| **Payment Date** | `6ab357f3bd43f55762240c97` | Date | `payment_date` | `011` hidden | the wizard's `payment_date`; filled only through the button's form |
+| **Amount Due** | `6aa9f847e54d2a34fa4dfef6` (kept) | **Formula (31)**, was Number (6): `Total − Amount Paid`, `nullzero "1"`, 2 dp | `amount_residual` | `101` | **converted in place**, the id kept, as Order Lines' Tax Amount, Total and Quantity Invoiced were. Before the save every Amount Due equalled its Total (backed up in `backups/invoices_amount_due_values_pre_formula_*.json`); after it, all 29 documents read Amount Due = Total, both read paths |
+
+All five were **appended** in the Invoice Lines tab, so they sit at **row 9999** of it — **placement is the
+owner's**. `PAYMENT_PLACE` is the intent: **Amount Paid | Last Payment Date** on the row under Total | Amount Due,
+**Payment Status** under them, and the two hidden inputs anywhere (they never show on the form), with Other Info and
+everything under it moving down three rows.
+
+### Register Payment
+
+Button `6ab3581a805aef7032e333d6`, workflow `6ab3581aa2c872a5c145b333` (published).
+
+- **Offered** on a document whose Status is **Posted**, whose Type is **Customer Invoice, Customer Credit Note, Vendor
+  Bill or Vendor Credit Note**, and whose Payment Status is **not Paid** — Odoo's `state != 'posted' or payment_state
+  not in (…) or move_type not in (…)`. Not in batch.
+- **A fill-in form** (填写指定字段, `clickType` 3, `writeType` 1, workflow after submit): **Payment Amount**, default the
+  record's **Amount Due** (a `defsource` naming the control, the shape the Sales app's own Register Payment stores),
+  and **Payment Date**, default **today**; both required.
+- **Two validation rules**, checked in the form and on API writes (check type 1), on Payment Amount:
+  *A payment cannot be more than the amount due* (`6ab35816e43d174ab3cd8082`) — "The payment cannot be more than the
+  Amount Due." — and *A payment must be more than zero* (`6ab35817bd43f55762240ca1`) — "Enter a payment amount greater
+  than zero." Each is conditioned on Payment Amount being filled, so no other save meets it.
+- **The workflow**: *The Amount Paid after this payment* (Amount Paid + Payment Amount) and *The Amount Due after this
+  payment* (Amount Due − Payment Amount), both number formulas with 2 dp and blank-as-0; then one **exclusive** branch
+  (唯一分支), tried in order:
+
+  | Path | When | Writes |
+  |---|---|---|
+  | No amount, no date, or more than the Amount Due | Payment Amount empty, or ≤ 0, or > Amount Due, or Payment Date empty | clears the two inputs, nothing else |
+  | Nothing is left to pay | the new Amount Due ≤ 0 | Amount Paid, Last Payment Date, **Paid**, clears the inputs |
+  | Part of the Total is left to pay | the new Amount Due < Total | the same with **Partially Paid** |
+  | Otherwise | — | the same with **Not Paid** |
+
+  Amount Due recomputes by itself (it is the Formula). The first path repeats the rules for a run that did not come
+  through the form. **Nothing sends email** and no credits are spent.
+- **Cancel and Reset to Draft** gained *Payment Status is not Paid or Partially Paid*, AND-ed with their Status
+  condition — one in-place `SaveWorksheetBtn` each, every other key of the button read back unchanged.
+
+**Every document written before this** had no Payment Status; `payments` filled **Not Paid** on the 29 there were
+(the control's default only fills a new document in the form — the API applies none).
+
+### Divergences from Odoo
+
+| Odoo 19 | Here | Why |
+|---|---|---|
+| A payment is an `account.payment` with its own journal entry, reconciled with the invoice | the document's Amount Paid and Last Payment Date; no record of each payment | no Payments worksheet yet (the owner's choice) |
+| **An overpayment is accepted**: the surplus stays as an outstanding credit on the partner | **refused** — "The payment cannot be more than the Amount Due." | nowhere to keep a credit without payment records |
+| Payment Status has seven values, In Payment included (a payment not yet matched on a bank statement) | three: Not Paid, Partially Paid, Paid | no bank statements |
+| **Reset to Draft on a paid invoice is allowed** in 19.0 source: `button_draft` keeps the reconciliation and `_compute_payment_state` covers drafts. *Cancel* unreconciles (`button_cancel`, `remove_move_reconcile`) | **both refused** on a Paid or Partially Paid document (the button is not offered) | with no payment record to detach, a reset would leave Amount Paid on a draft that can be edited; the brief took Odoo to refuse — **the 19.0 source says otherwise**, recorded here |
+| *Pay* also on receipts (`out_receipt`, `in_receipt`) | not on receipts | the owner's list: invoice, bill, credit note |
+| Pay many invoices at once (group payments) | one document at a time | a single amount and date per document |
+| Amount Paid on a document with nothing paid | blank (Amount Due still reads the Total: a blank counts as 0) | only a registered payment writes it |
+
+### Self-check (`selfpayment`, 23 Sep 2026)
+
+On **TEST Register Payment** (`f54de108-ac58-41fd-ab2b-832c601952ec`), a posted customer invoice with Total 1,000.00
+and no lines, the button's two steps done by the CLI — the two inputs written with `record update`, then the workflow
+run with `workflow trigger` — and each state read through `record get` **and** the listing:
+
+| Step | Amount Paid | Amount Due | Payment Status | Last Payment Date | Offered |
+|---|---|---|---|---|---|
+| posted, nothing paid | 0.00 | 1,000.00 | Not Paid | — | Register Payment, Reset to Draft |
+| 400.00 on 20 Sep | 400.00 | 600.00 | Partially Paid | 2026-09-20 | Register Payment (**not** Reset to Draft) |
+| 700.00 — refused, `resultCode` 32 by *A payment cannot be more than the amount due* | 400.00 | 600.00 | Partially Paid | 2026-09-20 | |
+| 0.00 — refused by *A payment must be more than zero* | unchanged | | | | |
+| 600.00 on 23 Sep | 1,000.00 | 0.00 | **Paid** | 2026-09-23 | **none** of Register Payment, Cancel, Reset to Draft |
+| the workflow run again with nothing filled in | 1,000.00 | 0.00 | Paid | 2026-09-23 | |
+
+Both read paths agreed at every step; the inputs read back empty after each run. What was **not** seen: the fill-in
+form itself, its two defaults, the rule messages drawn in the form, and whether a hidden (`011`) field shows in a
+button's fill-in form — the browser test below.
+
+### Also changed by the conversion
+
+- **The roll-up's write to Amount Due is gone.** *Roll the lines up into the invoice* and *…when a line is deleted*
+  (Invoice Lines) wrote Total into Amount Due too; since Amount Due is a Formula, the server **dropped that write from
+  both nodes' saved definition** (Untaxed Amount, Tax and Total are still written; the published versions ran
+  cleanly on a TEST line afterwards, status 2). `taxes.py rollup` / `taxes.py check` and `invlines.py`'s roll-up
+  still expect the Amount Due write, and `invlines.py amounts` writes Amount Due through the API: **those need the
+  Amount Due entry taken out** — not done here, those files belong to the builds working on Invoice Lines.
+- The *Invoice Lines note* still says Amount Due is worked out from the lines; it is now Total less Amount Paid
+  (text owned by `taxes.py` too, left alone).
+
+### Browser test
+
+1. Open a **Posted, Not Paid** customer invoice (INV/2026/00012, INV-NURUL-0044): *Register Payment* is offered;
+   *Reset to Draft* too. Click it: the form shows **Payment Amount 5,985.80** (its Amount Due) and **Payment Date
+   today**, both required, and **nothing else** — check the two hidden fields do appear there.
+2. Enter **1,000**: Amount Paid 1,000.00, Amount Due 4,985.80, Payment Status Partially Paid, Last Payment Date today;
+   the two inputs are not visible on the form afterwards; *Reset to Draft* is gone.
+3. *Register Payment* again: the default now reads **4,985.80**. Enter **5,000**: the form refuses with *The payment
+   cannot be more than the Amount Due.* Enter **0**: *Enter a payment amount greater than zero.*
+4. Enter **4,985.80**: Paid, Amount Due 0.00; *Register Payment*, *Reset to Draft* and *Cancel* are all gone.
+5. A **draft**, a **cancelled** document and a **journal entry**: no *Register Payment*. A **paid** vendor bill
+   (BILL/2026/00001): no *Register Payment*, no *Reset to Draft*.
+6. The form shows Payment Status, Amount Paid and Last Payment Date read-only, and no Payment Amount / Payment Date.
+7. Put INV/2026/00012 back afterwards if the demo needs it unpaid: `demo.py invoices` rewrites its payment fields.
 
 ## Descriptions rewritten for the app's users (22 Sep 2026)
 

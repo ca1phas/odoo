@@ -3,7 +3,8 @@
   "The demo dataset for ERP Master: MyTech Products & Services Sdn Bhd, an invented Malaysian reseller of consumer tech and services. Every brand, company, person, email and phone number here is made up; every email address ends in example.com.",
   "Dates are OFFSETS IN DAYS from the seeding day, never fixed dates: -348 is 348 days before the day demo.py runs, +11 is eleven days after it. The dataset therefore stays \"the last twelve months\" whenever it is reseeded.",
   "Record numbers are never written here. Orders take the number the auto-number control mints; an invoice Number is built at seed time from its journal prefix, the year of its Accounting Date and its position in that series. Every record is matched on a key of its own: a tag on its path, a contact on its key, a product or variant on its Internal Reference, an order on its Customer Reference (or Template Name), an invoice on its Customer Reference, a line on (its parent, its Sequence).",
-  "Amounts: order and invoice line Subtotal/Total are formulas and the four invoice amounts are written by Invoice Lines' roll-up workflow, so no total is written here."
+  "Amounts: order and invoice line Subtotal/Total are formulas and the four invoice amounts are written by Invoice Lines' roll-up workflow, so no total is written here.",
+  "Payments: an invoice's `paid` is what has been received on it (paid out, on a bill) and `paid_offset` the day of the latest payment. There are no payment records: the document carries Amount Paid, Last Payment Date and Payment Status (nothing paid: Not Paid; the whole Total: Paid; otherwise Partially Paid), and its Amount Due is Total less Amount Paid. Every posted document is paid in full on a day between its invoice date and its due date, except the six OVERDUE ones: five unpaid and one partly paid."
  ],
  "company": "MyTech Products & Services Sdn Bhd",
  "country": "Malaysia",
@@ -3664,6 +3665,8 @@
    "delivery_address": null,
    "delivery_date_offset": null,
    "tax_mode": "Tax Excluded",
+   "paid": 45246.4,
+   "paid_offset": -300,
    "demonstrates": "paid in full long ago",
    "lines": [
     {
@@ -3723,6 +3726,8 @@
    "delivery_address": null,
    "delivery_date_offset": null,
    "tax_mode": "Tax Excluded",
+   "paid": 33682.0,
+   "paid_offset": -330,
    "demonstrates": "immediate-payment reseller invoice",
    "lines": [
     {
@@ -3782,6 +3787,8 @@
    "delivery_address": null,
    "delivery_date_offset": null,
    "tax_mode": "Tax Excluded",
+   "paid": 15145.6,
+   "paid_offset": -285,
    "demonstrates": "clinic invoice",
    "lines": [
     {
@@ -3841,6 +3848,8 @@
    "delivery_address": null,
    "delivery_date_offset": null,
    "tax_mode": "Tax Excluded",
+   "paid": 52406.16,
+   "paid_offset": -271,
    "demonstrates": "design studio invoice",
    "lines": [
     {
@@ -3900,6 +3909,8 @@
    "delivery_address": "ggr_store",
    "delivery_date_offset": null,
    "tax_mode": "Tax Excluded",
+   "paid": 124872.0,
+   "paid_offset": -240,
    "demonstrates": "reseller invoice with a delivery address",
    "lines": [
     {
@@ -3959,6 +3970,8 @@
    "delivery_address": null,
    "delivery_date_offset": null,
    "tax_mode": "Tax Excluded",
+   "paid": 97031.1,
+   "paid_offset": -176,
    "demonstrates": "first of two staged invoices; carries a Section",
    "lines": [
     {
@@ -4010,6 +4023,8 @@
    "delivery_address": null,
    "delivery_date_offset": null,
    "tax_mode": "Tax Excluded",
+   "paid": 108695.1,
+   "paid_offset": -158,
    "demonstrates": "second staged invoice; carries a Note",
    "lines": [
     {
@@ -4074,6 +4089,8 @@
    "delivery_address": null,
    "delivery_date_offset": null,
    "tax_mode": "Tax Excluded",
+   "paid": 164362.08,
+   "paid_offset": -160,
    "demonstrates": "ward rollout invoice",
    "lines": [
     {
@@ -4133,6 +4150,8 @@
    "delivery_address": null,
    "delivery_date_offset": null,
    "tax_mode": "Tax Excluded",
+   "paid": 84176.4,
+   "paid_offset": -121,
    "demonstrates": "council invoice",
    "lines": [
     {
@@ -4192,7 +4211,9 @@
    "delivery_address": null,
    "delivery_date_offset": null,
    "tax_mode": "Tax Excluded",
-   "demonstrates": "the one document that states NEITHER Payment Terms NOR Due Date: both are left to *Payment Terms follow the Customer / Vendor* and *Due Date follows the Payment Terms*",
+   "paid": 0.0,
+   "paid_offset": null,
+   "demonstrates": "the one document that states NEITHER Payment Terms NOR Due Date: both are left to *Payment Terms follow the Customer / Vendor* and *Due Date follows the Payment Terms*. OVERDUE by 28 days and unpaid",
    "lines": [
     {
      "kind": "Product",
@@ -4238,7 +4259,9 @@
    "delivery_address": null,
    "delivery_date_offset": null,
    "tax_mode": "Tax Excluded",
-   "demonstrates": "OVERDUE by 17 days",
+   "paid": 50000.0,
+   "paid_offset": -40,
+   "demonstrates": "OVERDUE by 17 days, PARTIALLY PAID: 50,000.00 received 40 days ago, 63,592.00 still due",
    "lines": [
     {
      "kind": "Product",
@@ -4297,6 +4320,8 @@
    "delivery_address": null,
    "delivery_date_offset": null,
    "tax_mode": "Tax Excluded",
+   "paid": 0.0,
+   "paid_offset": null,
    "demonstrates": "OVERDUE by 3 days",
    "lines": [
     {
@@ -4356,6 +4381,8 @@
    "delivery_address": "ggr_store",
    "delivery_date_offset": null,
    "tax_mode": "Tax Excluded",
+   "paid": 0.0,
+   "paid_offset": null,
    "demonstrates": "OVERDUE by 11 days",
    "lines": [
     {
@@ -4415,6 +4442,8 @@
    "delivery_address": null,
    "delivery_date_offset": null,
    "tax_mode": "Tax Excluded",
+   "paid": 0.0,
+   "paid_offset": null,
    "demonstrates": "OVERDUE by 19 days, walk-in sale",
    "lines": [
     {
@@ -4474,6 +4503,8 @@
    "delivery_address": null,
    "delivery_date_offset": null,
    "tax_mode": "Tax Excluded",
+   "paid": 0.0,
+   "paid_offset": null,
    "demonstrates": "draft waiting for Confirm; the Number reads Draft",
    "lines": [
     {
@@ -4533,6 +4564,8 @@
    "delivery_address": null,
    "delivery_date_offset": null,
    "tax_mode": "Tax Excluded",
+   "paid": 0.0,
+   "paid_offset": null,
    "demonstrates": "draft waiting for Confirm",
    "lines": [
     {
@@ -4592,6 +4625,8 @@
    "delivery_address": null,
    "delivery_date_offset": null,
    "tax_mode": "Tax Excluded",
+   "paid": 0.0,
+   "paid_offset": null,
    "demonstrates": "draft, immediate payment",
    "lines": [
     {
@@ -4651,6 +4686,8 @@
    "delivery_address": null,
    "delivery_date_offset": null,
    "tax_mode": "Tax Excluded",
+   "paid": 0.0,
+   "paid_offset": null,
    "demonstrates": "draft raised yesterday",
    "lines": [
     {
@@ -4710,6 +4747,8 @@
    "delivery_address": null,
    "delivery_date_offset": null,
    "tax_mode": "Tax Excluded",
+   "paid": 0.0,
+   "paid_offset": null,
    "demonstrates": "draft raised on the demo day",
    "lines": [
     {
@@ -4769,6 +4808,8 @@
    "delivery_address": null,
    "delivery_date_offset": null,
    "tax_mode": "Tax Excluded",
+   "paid": 0.0,
+   "paid_offset": null,
    "demonstrates": "services-only draft, 8% tax throughout",
    "lines": [
     {
@@ -4815,6 +4856,8 @@
    "delivery_address": null,
    "delivery_date_offset": null,
    "tax_mode": "Tax Excluded",
+   "paid": 0.0,
+   "paid_offset": null,
    "demonstrates": "cancelled after the order was withdrawn; it keeps its Number. Its two-line payment term puts the Due Date on the LAST line, 60 days out",
    "lines": [
     {
@@ -4861,6 +4904,8 @@
    "delivery_address": null,
    "delivery_date_offset": null,
    "tax_mode": "Tax Excluded",
+   "paid": 0.0,
+   "paid_offset": null,
    "demonstrates": "cancelled reseller invoice",
    "lines": [
     {
@@ -4907,6 +4952,8 @@
    "delivery_address": null,
    "delivery_date_offset": null,
    "tax_mode": "Tax Excluded",
+   "paid": 1907.4,
+   "paid_offset": -228,
    "demonstrates": "the one credit note; the Sales journal has a Dedicated Credit Note Sequence, so its Number takes the RINV prefix",
    "lines": [
     {
@@ -4940,6 +4987,8 @@
    "delivery_address": null,
    "delivery_date_offset": null,
    "tax_mode": "Tax Excluded",
+   "paid": 284680.0,
+   "paid_offset": -274,
    "demonstrates": "stock purchase from the main distributor",
    "lines": [
     {
@@ -4999,6 +5048,8 @@
    "delivery_address": null,
    "delivery_date_offset": null,
    "tax_mode": "Tax Excluded",
+   "paid": 225170.0,
+   "paid_offset": -124,
    "demonstrates": "second distributor bill",
    "lines": [
     {
@@ -5045,6 +5096,8 @@
    "delivery_address": null,
    "delivery_date_offset": null,
    "tax_mode": "Tax Excluded",
+   "paid": 0.0,
+   "paid_offset": null,
    "demonstrates": "OVERDUE vendor bill (15 days)",
    "lines": [
     {
@@ -5091,6 +5144,8 @@
    "delivery_address": null,
    "delivery_date_offset": null,
    "tax_mode": "Tax Excluded",
+   "paid": 0.0,
+   "paid_offset": null,
    "demonstrates": "draft vendor bill",
    "lines": [
     {
@@ -5137,6 +5192,8 @@
    "delivery_address": null,
    "delivery_date_offset": null,
    "tax_mode": "Tax Excluded",
+   "paid": 0.0,
+   "paid_offset": null,
    "demonstrates": "cancelled vendor bill (wrong distributor price list)",
    "lines": [
     {

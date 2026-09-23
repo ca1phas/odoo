@@ -82,7 +82,8 @@
   "Orders: Invoice Status follows its lines": "6ab2d2df94093ab76bdda713",
   "Orders: Invoice Status when a line is deleted": "6ab2d2fe94093ab76bddae2f",
   "Orders: Create Invoice": "6ab2d6a0a2c872a5c1408ae6",
-  "Orders: Create Invoice: one order line": "6ab2d7f5789584ded345986f"
+  "Orders: Create Invoice: one order line": "6ab2d7f5789584ded345986f",
+  "Invoices: Register Payment": "6ab3581aa2c872a5c145b333"
  },
  "buttons": {
   "Archive": "6aa8a5654720c515252bda3d",
@@ -114,7 +115,8 @@
   "Orders: Share for Signature": "6ab27f107d58b0f4498fcb8e",
   "Incoterms: Archive": "6ab28f70805aef7032e32838",
   "Incoterms: Unarchive": "6ab28f73e43d174ab3cd7627",
-  "Orders: Create Invoice": "6ab2d6a07d58b0f4498fcfa3"
+  "Orders: Create Invoice": "6ab2d6a07d58b0f4498fcfa3",
+  "Invoices: Register Payment": "6ab3581a805aef7032e333d6"
  },
  "views": {
   "Units & Packagings: Units & Packagings": "6aa8d14d4a73a3142152d3fa",
@@ -405,7 +407,19 @@
   "Orders: Lines invoiced": "6ab2d077e54d2a34faaa9bbd",
   "Orders: Lines upselling": "6ab2d077e54d2a34faaa9bbe",
   "Orders: Product lines": "6ab2d077e54d2a34faaa9bbf",
-  "Order Lines: Invoiceable line": "6ab2dbc2805aef7032e32ae3"
+  "Order Lines: Invoiceable line": "6ab2dbc2805aef7032e32ae3",
+  "Invoice Lines: Tax rate (all taxes)": "6ab357dcbd43f55762240c88",
+  "Invoice Lines: Non-percentage taxes": "6ab357dcbd43f55762240c89",
+  "Invoices: Payment Status": "6ab357f3bd43f55762240c93",
+  "Invoices: Amount Paid": "6ab357f3bd43f55762240c94",
+  "Invoices: Last Payment Date": "6ab357f3bd43f55762240c95",
+  "Invoices: Payment Amount": "6ab357f3bd43f55762240c96",
+  "Invoices: Payment Date": "6ab357f3bd43f55762240c97",
+  "Order Lines: Tax rate (all taxes)": "6ab35c91e54d2a34faaaa856",
+  "Order Lines: Non-percentage taxes": "6ab35c91e54d2a34faaaa857",
+  "Order Lines: Order Date": "6ab36202e54d2a34faaaa888",
+  "Order Lines: Customer": "6ab36202e54d2a34faaaa889",
+  "Order Lines: Salesperson": "6ab36202e54d2a34faaaa88a"
  },
  "rules": {
   "Journals: Payment Communications only for Sales": "6aa9dae5e54d2a34fa4dfde2",
@@ -455,7 +469,9 @@
   "Orders: A quotation needs a customer, a template does not": "6ab0e7fe7d58b0f449317067",
   "Orders: Template Name is for templates": "6ab0e7fe805aef703286dcd5",
   "Incoterms: Code has at most three characters": "6ab28f04bd43f55762240042",
-  "Invoices: Incoterm is not offered on a receipt": "6ab29fefbd43f557622400f7"
+  "Invoices: Incoterm is not offered on a receipt": "6ab29fefbd43f557622400f7",
+  "Invoices: A payment cannot be more than the amount due": "6ab35816e43d174ab3cd8082",
+  "Invoices: A payment must be more than zero": "6ab35817bd43f55762240ca1"
  },
  "records": {
   "Invoices: customer Sunway Construction Group": "a4935a3f-0262-4d68-9b3b-6049d32e390b",
@@ -1185,7 +1201,21 @@
   "Demo: Invoices BILL-SINAR-20444": "f3bb5a02-2012-4ea1-83c2-ddc141bfd4cc",
   "Demo: Invoices BILL-LOGISTIK-7741": "6345da8a-1d56-47bf-80d8-7b7ab76c48a0",
   "Demo: Invoices BILL-SAUJANA-0926": "bbd10488-e626-4800-8361-dfd607a2a7e9",
-  "Demo: Invoices BILL-SINAR-20509": "eeacaf78-b95e-47a5-b26c-04fe0e5ebcc1"
+  "Demo: Invoices BILL-SINAR-20509": "eeacaf78-b95e-47a5-b26c-04fe0e5ebcc1",
+  "o2i: TEST o2i taxes order": "5e02e57e-a6a6-4b1d-a841-7f61b7229ddb",
+  "o2i: TEST o2i taxes two-tax line": "7a2cb4fd-7e59-4b0c-bde2-c02765c02283",
+  "o2i: TEST o2i taxes no-tax line": "538ab5eb-7ec0-4dcb-8840-72054b2a6064",
+  "o2i: TEST o2i taxes invoice from Create Invoice": "2cebe425-2b42-4539-a937-3dae27b160ac",
+  "o2i: TEST o2i taxes hand-typed line": "93ff7e11-fc23-4149-a445-332b6b248acd",
+  "Order Lines: TEST live tax order": "551a2c15-8e7a-4d05-8069-da2bb5a85b4a",
+  "o2i: TEST o2i taxes hand-typed line on the order invoice": "37466e94-c7f5-41e1-83aa-454d9b1fdf94",
+  "Order Lines: TEST live tax – one tax": "0f551dab-a541-4e69-a5bd-2c10801fa80a",
+  "Order Lines: TEST live tax – two taxes": "698890bb-09ab-40c8-89ff-bd28bf60f3ef",
+  "Order Lines: TEST live tax – custom formula tax only": "49862fb4-d12e-4f42-8f24-307f147b96ed",
+  "Order Lines: TEST live tax – percentage and custom formula": "68b81332-2104-44e7-81c6-6efe19ce9ffd",
+  "Order Lines: TEST live tax – no tax": "763e6d67-0ce8-4196-b63d-709feac20487",
+  "Invoices: TEST Register Payment": "f54de108-ac58-41fd-ab2b-832c601952ec",
+  "Order Lines: TEST live tax – created after the change": "40a51cbf-55bb-420f-bb23-37ebc0f0b126"
  },
  "roles": {
   "Administrator": "25ef76ef-5538-4779-a5e6-ab1fbce9dcfe",
@@ -1252,5 +1282,26 @@
   "Orders: Quotation / Order": "6ab258cd7903a53029f5ade7",
   "Orders: Quotation": "6ab2badf7903a53029f5b5be",
   "Orders: Sales Order": "6ab2bb577903a53029f5b5c0"
+ },
+ "dashboard": {
+  "Sales Dashboard: page": "6ab353b77e7f0f2333bec7d2",
+  "Sales Dashboard: Confirmed sales": "6ab354263bd0d5cfc333898d",
+  "Sales Dashboard: Open quotations": "6ab354363bd0d5cfc333898e",
+  "Sales Dashboard: Orders to invoice": "6ab354373bd0d5cfc333898f",
+  "Sales Dashboard: Monthly sales": "6ab354383bd0d5cfc3338990",
+  "Sales Dashboard: Quotations and orders by status": "6ab354393bd0d5cfc3338991",
+  "Sales Dashboard: Top customers": "6ab354393bd0d5cfc3338992",
+  "Sales Dashboard: Sales by salesperson": "6ab3543a3bd0d5cfc3338993",
+  "Sales Dashboard: Sales orders by invoicing status": "6ab3543b3bd0d5cfc3338994",
+  "Sales Dashboard: Top products": "6ab361723bd0d5cfc33390bd",
+  "Sales Dashboard: page filter": "a907f87e-c949-4dee-88ea-9c291a6eee4e",
+  "Sales Dashboard: Overdue invoices": "6ab3589a3bd0d5cfc3338dcc",
+  "Sales Dashboard: Received this month": "6ab3589c3bd0d5cfc3338dcd",
+  "Sales Dashboard: Value of open quotations": "6ab35fef59bcf31f9afcf7c9",
+  "Sales Dashboard: Amount overdue": "6ab35ff8df55951844a382d3",
+  "Sales Dashboard: retired Top products": "6ab3543c3bd0d5cfc3338995",
+  "Sales Dashboard: Order Lines: Order Date": "6ab36202e54d2a34faaaa888",
+  "Sales Dashboard: Order Lines: Customer": "6ab36202e54d2a34faaaa889",
+  "Sales Dashboard: Order Lines: Salesperson": "6ab36202e54d2a34faaaa88a"
  }
 }

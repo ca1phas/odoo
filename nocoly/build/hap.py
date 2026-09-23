@@ -16,7 +16,16 @@ def ids():
 
 
 def run(*args):
-    """Run `hap --json <args>` and return the parsed output; raise on failure."""
+    """Run `hap --json <args>` and return the parsed output; raise on failure.
+
+    A record write gets `--ignore-rules`: hap-cli 0.9 checks the form's read-only fields, required fields and
+    business rules on `record create/update` unless told otherwise, and refuses the write. Every builder here was
+    written for the older behaviour, where an API write stored whatever the form's permissions said, the way a
+    workflow write does (CLAUDE.md, *An API write works whatever the permission*). Rules the server enforces
+    itself still apply. Found 23 Sep 2026 when the demo seeder could not write the read-only Payment Status."""
+    if args[:2] == ('worksheet', 'record') and len(args) > 2 and args[2] in ('create', 'update') \
+            and '--ignore-rules' not in args:
+        args = (*args, '--ignore-rules')
     p = subprocess.run(['hap', '--json', *args], capture_output=True, text=True, timeout=180)
     out = p.stdout.strip()
     if p.returncode != 0:

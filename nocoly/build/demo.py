@@ -58,7 +58,9 @@ show out of the row altogether, and `record get` drops a control added after the
 **Fields the app's own automations own are not written and not compared**, only reported:
   * a child contact's address, Tax ID, Company ID, DUNS, payment terms and salesperson — copied down from its
     company by *copy company details to its contact* and *push company address and Tax ID to its contacts*;
-  * an invoice's Untaxed Amount, Tax, Total and Amount Due — written by *Roll the lines up into the invoice*;
+  * an invoice's Untaxed Amount, Tax and Total — written by *Roll the lines up into the invoice* — and its Amount
+    Due, a Formula (Total − Amount Paid) since 23 Sep 2026. Amount Paid, Last Payment Date and Payment Status
+    **are** written, from demo.json's `paid` and `paid_offset` (Payment Status derived: see `payment_status_of`);
   * an order's Untaxed Amount, Tax and Total — 汇总 over the Order Lines subtable, computed server-side;
   * an invoice line's Account — filled by *fill the account of a new line*;
   * a product's first variant — created by *create a new product's variant*, which copies the product's
@@ -1425,7 +1427,56 @@ def invoice_state(d):
                 delivery_date=dateonly(d, f, 'Delivery Date'), auto_post=opt(d, f, 'Auto-post'),
                 source_document=t(d, f, 'Source Document'),
                 untaxed=n(d, f, 'Untaxed Amount'), tax=n(d, f, 'Tax'), total=n(d, f, 'Total'),
-                residual=n(d, f, 'Amount Due'))
+                residual=n(d, f, 'Amount Due'),
+                paid=n(d, f, 'Amount Paid'), paid_on=dateonly(d, f, 'Last Payment Date'),
+                payment_status=opt(d, f, 'Payment Status'))
+
+
+# ── the payments (23 Sep 2026) ──────────────────────────────────────────────
+#
+# There are no payment records: a document carries Amount Paid, Last Payment Date and Payment Status, written here
+# from demo.json's `paid` and `paid_offset`, and its Amount Due is a Formula, Total − Amount Paid
+# (`invoices.py payments`). Payment Status is **derived**, never stated in demo.json: nothing paid is Not Paid, the
+# whole Total is Paid, anything between is Partially Paid — the rule Register Payment's own workflow applies. The Total
+# it compares with is worked out from the document's own lines in demo.json (each line's Subtotal plus its taxes,
+# rounded to two decimals per line, as the company rounds), so the status does not wait for the roll-up to land.
+PAYMENT_KEYS = ('paid', 'paid_on', 'payment_status')
+_TAX_RATES = {}
+
+
+def tax_rates():
+    """{Tax Name: its Amount, as a percentage} from the Taxes worksheet."""
+    if not _TAX_RATES:
+        f = controls('Taxes')
+        _TAX_RATES.update({t(d, f, 'Tax Name'): n(d, f, 'Amount', 4) for d in all_rows('Taxes').values()})
+    return _TAX_RATES
+
+
+def document_total(i):
+    """The Total a document's own lines add up to — each product line's Subtotal with its taxes, rounded per line."""
+    total = 0.0
+    for l in i['lines']:
+        if l['kind'] != 'Product':
+            continue
+        subtotal = round(l['quantity'] * l['price'] * (1 - l['discount'] / 100), 2)
+        total += round(subtotal * (1 + sum(tax_rates()[x] for x in l['taxes']) / 100), 2)
+    return round(total, 2)
+
+
+def payment_status_of(i):
+    paid = round(float(i.get('paid') or 0), 2)
+    if paid <= 0:
+        return 'Not Paid'
+    return 'Paid' if paid >= document_total(i) else 'Partially Paid'
+
+
+def payment_values(f, i):
+    """The three payment fields' record write."""
+    return [{'id': f['Amount Paid']['controlId'], 'value': round(float(i.get('paid') or 0), 2)},
+            {'id': f['Last Payment Date']['controlId'],
+             'value': day(i['paid_offset']) if i.get('paid_offset') is not None else ''},
+            {'id': f['Payment Status']['controlId'],
+             'value': [option_key(f['Payment Status'], payment_status_of(i))]}]
 
 
 def invoice_want(i, display_of, numbers):
@@ -1443,7 +1494,10 @@ def invoice_want(i, display_of, numbers):
                 reference=i['customer_reference'], payment_reference=i['payment_reference'] or '',
                 delivery_date=(day(i['delivery_date_offset'])
                                if i['delivery_date_offset'] is not None else ''),
-                auto_post='No', source_document='')
+                auto_post='No', source_document='',
+                paid=round(float(i.get('paid') or 0), 2),
+                paid_on=day(i['paid_offset']) if i.get('paid_offset') is not None else '',
+                payment_status=payment_status_of(i))
 
 
 def step_invoices():
@@ -1475,6 +1529,16 @@ def step_invoices():
         if got and not differences(got, compare):
             remember('Invoices', i['key'], rowid)
             continue
+        if got and set(differences(got, compare)) <= set(PAYMENT_KEYS):
+            # only the payment differs: write the three payment fields and nothing else, so no automation that
+            # watches the rest of the document is started for nothing
+            rowid, how = write('Invoices', rowid, payment_values(f, i), i['key'])
+            wrote += 1
+            live[rowid] = invoice_state(row('Invoices', rowid))
+            print(f"  {how} {i['key']:<22} {want['number']:<18} payment: {want['payment_status']}, "
+                  f"{want['paid']:,.2f} on {want['paid_on'] or '—'}")
+            remember('Invoices', i['key'], rowid)
+            continue
         values = [
             {'id': cid('Number'), 'value': want['number']},
             {'id': cid('Type'), 'value': [option_key(f['Type'], i['type'])]},
@@ -1500,6 +1564,7 @@ def step_invoices():
                            'value': [terms[i['payment_terms']]] if i['payment_terms'] else []})
         if want['due'] is not None:
             values.append({'id': cid('Due Date'), 'value': want['due']})
+        values += payment_values(f, i)
         rowid, how = write('Invoices', rowid, values, i['key'])
         wrote += 1
         live[rowid] = invoice_state(row('Invoices', rowid))
@@ -1889,7 +1954,16 @@ def step_check():
                       if v['status'] == 'Posted' and v['due'] and v['due'] < today and v['residual'] > 0),
                      key=lambda v: v['due'])
     print(f'  overdue on {today} ({len(overdue)}): '
-          + ', '.join(f"{v['number']} due {v['due']} RM {v['residual']:,.2f}" for v in overdue))
+          + ', '.join(f"{v['number']} due {v['due']} RM {v['residual']:,.2f}"
+                      + (f" ({v['payment_status']}, RM {v['paid']:,.2f} paid)" if v['paid'] else '')
+                      for v in overdue))
+    print(f"  by Payment Status: {dict(Counter(v['payment_status'] for v in docs.values()))}")
+    for key, v in sorted(docs.items()):
+        # the three payment fields and the Amount Due Formula must tell one story
+        want = ('Not Paid' if v['paid'] <= 0 else 'Paid' if v['paid'] >= v['total'] else 'Partially Paid')
+        if v['payment_status'] != want or abs(v['residual'] - round(v['total'] - v['paid'], 2)) > 0.005:
+            problems.append(f"{key} ({v['number']}): Payment Status {v['payment_status']!r}, Amount Paid "
+                            f"{v['paid']}, Total {v['total']}, Amount Due {v['residual']} — they disagree")
     print(f"  drafts whose Number reads {DRAFT_NUMBER!r}: "
           f"{sum(1 for v in docs.values() if v['number'] == DRAFT_NUMBER)}")
     print(f"  credit notes: {sorted(v['number'] for v in docs.values() if v['type'] in CREDIT_NOTES)}")
