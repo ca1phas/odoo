@@ -1435,5 +1435,8 @@ line's Subtotal; not found → create it. A second sub-process then prices each 
   *Salesperson* (type 30, stored, off the single Orders relation, hidden) read empty on all 127 lines through
   `rowData` and the listing, and were still empty ten minutes later. The same append of *Order Status* on 22 Sep
   filled every line at once, and so did Invoice Lines' lookups. The difference is not in the control: apart from
-  `sourceControlType` the four read back identical. Until the records are refreshed, **do not count on an appended
-  lookup holding values**. Read a few rows first.
+  `sourceControlType` the four read back identical. **Re-saving a line's unchanged Orders link does not fill them**
+  (coordinator's test). **A new line fills them when it is created.** So an appended lookup holds values only on
+  records made after it, until the records are re-created. Read a few rows before counting on one.
+- **A chart's `dotFormat` "1" drops trailing zeros** ("RM 1,383,107.2"); **"0" keeps `dot` decimals.** Use "0" for
+  money.
