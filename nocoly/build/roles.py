@@ -270,7 +270,7 @@ def guard():
     """Stop unless the profile reaches ERP Master and the app holds every worksheet in ORDER."""
     who = hap.run('auth', 'whoami')
     app = hap.run('app', 'info', '-a', APP).get('data', {})
-    if app.get('name') != 'ERP Master':
+    if app.get('name') not in hap.APP_NAMES:
         sys.exit(f"profile {who.get('profile')!r} does not reach ERP Master (found {app.get('name')!r})")
     extra, live = unowned()
     if not set(ORDER) <= live:

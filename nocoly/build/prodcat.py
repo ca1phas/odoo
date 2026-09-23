@@ -206,7 +206,7 @@ def guard(fresh=False):
     app = hap.run('app', 'info', '-a', APP).get('data', {})
     worksheet = hap.ids().get('worksheets', {}).get(WORKSHEET)
     section = next((s for s in app.get('sections', []) if any(i['id'] == worksheet for i in s['items'])), None)
-    if app.get('name') != 'ERP Master' or not section or section['name'] != SECTION:
+    if app.get('name') not in hap.APP_NAMES or not section or section['name'] != SECTION:
         sys.exit(f"profile {who.get('profile')!r} does not reach ERP Master › {SECTION} › {WORKSHEET}")
     problems, ctrls = [], hap.controls(worksheet)
     stock = {'Name', 'Description', 'Attachment', '名称', '描述', '附件'}

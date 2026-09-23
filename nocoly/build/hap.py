@@ -9,6 +9,9 @@ import datetime, json, os, subprocess
 HERE = os.path.dirname(os.path.abspath(__file__))
 IDS_PATH = os.path.join(HERE, 'ids.json')
 BACKUPS = os.path.join(HERE, 'backups')
+# The app's names, current first. The owner renamed ERP Master to 'CRM odoo' on 23 Sep 2026; the guards accept
+# either, since the app is the id in ids.json and the name may change back.
+APP_NAMES = ('CRM odoo', 'ERP Master')
 
 
 def ids():

@@ -2864,9 +2864,12 @@ def check_journal_fallback(live):
             continue
         try:
             d = read_record(INVOICES, rowid)
-        except KeyError:
+        except (KeyError, RuntimeError) as e:
             # `record get` answers with no `data` for a record that is no longer there. By 23 Sep 2026, 12:20
-            # every TEST invoice of this bundle had gone from the app, by no step of this script.
+            # every TEST invoice of this bundle had gone from the app, by no step of this script. By 16:00 the
+            # same read failed outright ("The server refused the request"), so both count as gone.
+            if isinstance(e, RuntimeError) and 'refused' not in str(e):
+                raise
             print(f'    {key}: {rowid} is no longer in the app — not checked')
             continue
         journal = [x.get('name') for x in (d.get('journal_id') or []) if isinstance(x, dict)]

@@ -35,7 +35,9 @@ APP = hap.ids()['app']
 KEY = 'Sales Dashboard: '                      # ids.json key prefix
 PAGE_NAME = 'Sales Dashboard'
 SECTION = 'Sales'
-AFTER = 'Order Lines'                          # the page sits right after this sidebar item
+AFTER = None                                   # the sidebar item the page sits right after; None puts it first.
+                                               # The owner moved it to the top of Sales on 23 Sep 2026.
+WHERE = f'right after {AFTER}' if AFTER else 'first in the section'
 ICON = 'sys_dashboard'
 PAGE_DESC = 'Sales at a glance: confirmed sales, open quotations, invoicing and the best customers and products.'
 
@@ -554,19 +556,19 @@ def step_page():
     remember('page', page['id'])
     order = [i['id'] for i in s['items']]
     want = [i for i in order if i != page['id']]
-    want.insert(want.index(next(i['id'] for i in s['items'] if i['name'] == AFTER)) + 1, page['id'])
+    want.insert(want.index(next(i['id'] for i in s['items'] if i['name'] == AFTER)) + 1 if AFTER else 0, page['id'])
     if order != want and not created:
         # Placement is the owner's once the page exists: on 23 Sep 2026 a re-run found it out of place and moved it
         # back before this rule existed. Now a misplaced page is reported, and `check` flags it.
-        print(f'  NOT moved: the sidebar reads {[i["name"] for i in s["items"]]} — the page is not right after '
-              f'{AFTER}, and a page that exists is placed by the owner')
+        print(f'  NOT moved: the sidebar reads {[i["name"] for i in s["items"]]} — the page is not '
+              f'{WHERE}, and a page that exists is placed by the owner')
     elif order != want:
         hap.run('app', 'sort-worksheets', APP, s['id'], *want)
         if [i['id'] for i in section()['items']] != want:
             sys.exit(f'{SECTION}: the order read back as {[i["name"] for i in section()["items"]]}')
-        print(f'  moved to right after {AFTER}')
+        print(f'  moved {WHERE}')
     else:
-        print(f'  already right after {AFTER}')
+        print(f'  already {WHERE}')
     if page_info(page['id']).get('version'):
         write_desc(page['id'])
     else:
@@ -764,8 +766,8 @@ def step_check():
     s = section()
     names = [i['name'] for i in s['items']]
     print(f'  sidebar {SECTION}: {names}')
-    if PAGE_NAME not in names or names.index(PAGE_NAME) != names.index(AFTER) + 1:
-        problems.append(f'{PAGE_NAME} is not right after {AFTER}')
+    if PAGE_NAME not in names or names.index(PAGE_NAME) != (names.index(AFTER) + 1 if AFTER else 0):
+        problems.append(f'{PAGE_NAME} is not {WHERE}')
     info = page_info(pid)
     comps = {c.get('value'): c for c in info.get('components') or []}
     for name, spec in CHARTS.items():

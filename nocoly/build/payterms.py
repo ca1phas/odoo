@@ -373,7 +373,7 @@ def guard(fresh=False):
     who = hap.run('auth', 'whoami')
     app = hap.run('app', 'info', '-a', APP).get('data', {})
     section = next((s for s in app.get('sections', []) if s['name'] == SECTION), None)
-    if app.get('name') != 'ERP Master' or not section:
+    if app.get('name') not in hap.APP_NAMES or not section:
         sys.exit(f"profile {who.get('profile')!r} does not reach ERP Master › {SECTION}")
     problems = []
     for name, spec in SPEC.items():
@@ -422,7 +422,7 @@ def step_create():
     Invoices · Invoice Lines, and the lines hidden from the sidebar (HomeApp/SetWorksheetStatus, status 2)."""
     refuse_sales()
     section = hap.ids()['sections'][SECTION]
-    if C.app_info(APP).get('name') != 'ERP Master':
+    if C.app_info(APP).get('name') not in hap.APP_NAMES:
         sys.exit('the profile does not reach ERP Master')
     before = snap(ALL_WORKSHEETS)
     for name in (TERMS_WS, LINES_WS):

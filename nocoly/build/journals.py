@@ -322,7 +322,7 @@ def guard():
     who = hap.run('auth', 'whoami')
     app = hap.run('app', 'info', '-a', APP).get('data', {})
     section = next((s for s in app.get('sections', []) if any(i['id'] == WORKSHEET for i in s['items'])), None)
-    if app.get('name') != 'ERP Master' or not section or section['name'] != 'Invoicing':
+    if app.get('name') not in hap.APP_NAMES or not section or section['name'] != 'Invoicing':
         sys.exit(f"profile {who.get('profile')!r} does not reach ERP Master › Invoicing › Journals")
     problems, ctrls = [], hap.controls(WORKSHEET)
     by_id = {c['controlId']: c for c in ctrls}

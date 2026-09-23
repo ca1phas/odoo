@@ -343,7 +343,7 @@ def guard(created=True):
     who = hap.run('auth', 'whoami')
     app = C.app_info(APP)
     section = next((s for s in app.get('sections', []) if s['name'] == SECTION), None)
-    if app.get('name') != 'ERP Master' or not section:
+    if app.get('name') not in hap.APP_NAMES or not section:
         sys.exit(f"profile {who.get('profile')!r} does not reach ERP Master › {SECTION}")
     if not created:
         return None

@@ -913,7 +913,7 @@ def tags_problems():
 def step_tags():
     """Append Tags if it is missing, repair anything the append did not store in one version-pinned save limited to it,
     and read it back. Re-running saves nothing."""
-    if hap.run('app', 'info', '-a', hap.ids()['app']).get('data', {}).get('name') != 'ERP Master':
+    if hap.run('app', 'info', '-a', hap.ids()['app']).get('data', {}).get('name') not in hap.APP_NAMES:
         sys.exit('the profile does not reach ERP Master')
     named = [c for c in hap.controls(WS) if c['controlName'] == TAGS]
     if len(named) > 1:
