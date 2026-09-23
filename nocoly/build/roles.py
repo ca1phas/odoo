@@ -345,6 +345,17 @@ SHEET_SWITCHES = {
     'recordShare': False, 'recordDiscussion': True, 'recordSystemPrinting': False,
     'recordAttachmentDownload': True, 'recordLogging': False, 'payment': False,
 }
+# **Orders and Order Lines keep printing, and batch editing where the role may edit** (owner, 23 Sep 2026:
+# "do what makes the most sense"). Printing a quotation or an order is the everyday act on these two, and a
+# read-only accountant still needs a copy, so `recordSystemPrinting` is on for all four roles. Batch editing is
+# an editing convenience, so it follows the add/edit right: on for Accounting Administrator, Accountant and
+# Invoicing, off for Accounting Read-only. Everywhere else the table's own defaults still switch both off.
+SHEET_SWITCH_OVERRIDES = {
+    'Orders': {'recordSystemPrinting': True, 'worksheetBatchOperation': True},
+    'Order Lines': {'recordSystemPrinting': True, 'worksheetBatchOperation': True},
+}
+PRINTERS_KEEP_BATCH = set(SHEET_SWITCH_OVERRIDES)
+
 VIEW_RIGHTS = ('canRead', 'canEdit', 'canRemove')
 
 
@@ -386,7 +397,10 @@ def reconcile(name, role_id, description, matrix, dry=False):
         if bool(sheet.get('canAdd')) != add:
             sheet['canAdd'] = add
             changed.append(f'{worksheet}.canAdd')
-        for key, value in {**SHEET_SWITCHES, ADD_KEY: add, EXPORT_KEY: want_export}.items():
+        switches = {**SHEET_SWITCHES, **SHEET_SWITCH_OVERRIDES.get(worksheet, {})}
+        if worksheet in PRINTERS_KEEP_BATCH and not add:
+            switches = {**switches, 'worksheetBatchOperation': False}
+        for key, value in {**switches, ADD_KEY: add, EXPORT_KEY: want_export}.items():
             if bool((sheet.get(key) or {}).get('enable')) != value:
                 sheet.setdefault(key, {'enable': False, 'range': 1, 'allowExport': False})
                 sheet[key]['enable'] = value

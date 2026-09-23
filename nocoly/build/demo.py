@@ -196,7 +196,9 @@ def row(name, rowid):
 
 def all_rows(name):
     """{rowid: rowData} for every record of the worksheet — one GetRowDetail each, complete."""
-    return {r['rowid']: row(name, r['rowid']) for r in scan(name).values()}
+    # fresh=True: the scan is cached, and a read-back straight after a step's writes must see the rows that
+    # step just made — the stale cache is what stopped tags, contacts and variants on 23 Sep 2026.
+    return {r['rowid']: row(name, r['rowid']) for r in scan(name, fresh=True).values()}
 
 
 def scan(name, fresh=False):
@@ -349,6 +351,21 @@ def fail(step, bad):
     if bad:
         sys.exit(f'{step}: read back with differences\n    ' + '\n    '.join(bad))
     return 0
+
+
+def settle(verify, *args, tries=5, wait=4, **kwargs):
+    """Run a step's read-back, and if it reports differences try again a few seconds later.
+
+    The record listing a read-back uses trails a create by a second or two, so a step that has just written
+    its rows could fail its own check and stop the seed (23 Sep 2026: tags, contacts and products each stopped
+    that way with every row present). A difference that survives every try is real and still stops the run."""
+    for attempt in range(tries):
+        try:
+            return verify(*args, **kwargs)
+        except SystemExit:
+            if attempt == tries - 1:
+                raise
+            time.sleep(wait)
 
 
 # ── 1 · the rows the wipe covers ────────────────────────────────────────────
@@ -659,7 +676,7 @@ def step_tags():
         live[rowid] = tag_state(row('Contact Tags', rowid))
         print(f'  {how} {path}: {rowid}')
         remember('Contact Tags', t_['key'], rowid)
-    return tags_verify(wrote=wrote)
+    return settle(tags_verify, wrote=wrote)
 
 
 def tags_verify(wrote=None):
@@ -693,6 +710,9 @@ CHILD_OWNED = ('street', 'street2', 'city', 'zip', 'state', 'country', 'vat', 'c
 def contact_state(d):
     f = controls('Contacts')
     out = {k: t(d, f, name) for k, name in CONTACT_TEXT.items()}
+    # The Phone control is type 3 and stores what the form shows — "+60 3 4256 9013" for the "+60342569013"
+    # sent — so the read-back is compared with the spaces taken out (23 Sep 2026).
+    out['phone'] = (out.get('phone') or '').replace(' ', '')
     out.update(display=t(d, f, 'Display Name'), company=one_name(d, f, 'Company'),
                type=opt(d, f, 'Address Type'), state=one_name(d, f, 'State'),
                country=one_name(d, f, 'Country'), tags=sorted(rel_names(d, f, 'Tags')),
@@ -703,6 +723,7 @@ def contact_state(d):
 
 def contact_want(c, display_of, tag_names, states_short):
     want = {k: (c.get(k) or '') for k in CONTACT_TEXT}
+    want['phone'] = want['phone'].replace(' ', '')
     want.update(type=c['type'], active='1',
                 tags=sorted(tag_names[x] for x in c.get('tags', [])),
                 company=display_of(c['company']) if c['company'] else '')
@@ -778,7 +799,7 @@ def step_contacts():
         mine[c['key']] = dict(live[rowid], rowid=rowid)
         print(f"  {how} {c['key']:<12} {live[rowid]['display']}: {rowid}")
         remember('Contacts', c['key'], rowid)
-    return contacts_verify(wrote=wrote)
+    return settle(contacts_verify, wrote=wrote)
 
 
 def contacts_verify(wrote=None):
@@ -887,7 +908,7 @@ def step_products():
         print(f'  {note}')
     if wrote:
         settle_variants()
-    return products_verify(wrote=wrote)
+    return settle(products_verify, wrote=wrote)
 
 
 def products_verify(wrote=None):
@@ -914,7 +935,7 @@ def variant_state(d):
     f = controls('Product Variants')
     return dict(display=t(d, f, 'Display Name'), product=one_id(d, f, 'Product'),
                 internal_reference=t(d, f, 'Internal Reference'), barcode=t(d, f, 'Barcode'),
-                cost=n(d, f, 'Cost'), active=sw(d, f, 'Active'))
+                cost=n(d, f, 'Cost'), active=sw(d, f, 'Active'), values=t(d, f, 'Variant Values'))
 
 
 def settle_variants(seconds=30):
@@ -934,6 +955,16 @@ def settle_variants(seconds=30):
     print(f'  waited {seconds}s and {len(missing)} product(s) still have no variant ({missing[:3]}) — '
           'the variants step will create them')
     return False
+
+
+def variant_label(vkey):
+    """What sets the variant apart — "1TB Storage, 16GB RAM, Silver" — or '' for a single-variant product. The
+    Display Name reads "<product> (<this>)" (Variant Values, added 23 Sep 2026 at the owner's ask)."""
+    return next((v['label'] for p in data()['products'] for v in p['variants'] if v['key'] == vkey), '')
+
+
+def product_reference(pkey):
+    return next(p['internal_reference'] for p in data()['products'] if p['key'] == pkey)
 
 
 def variant_specs():
@@ -968,7 +999,8 @@ def step_variants():
         product_row = remembered('Products', pkey)
         if not product_row:
             sys.exit(f'{pkey} is not in ids.json — run `products` first')
-        want = dict(product=product_row, internal_reference=ref, barcode=barcode, cost=cost, active=active)
+        want = dict(product=product_row, internal_reference=ref, barcode=barcode, cost=cost, active=active,
+                    values=variant_label(vkey))
         rowid = remembered('Product Variants', vkey)
         got = live.get(rowid)
         if not got:
@@ -976,7 +1008,9 @@ def step_variants():
             rowid = next((r for r, v in mine.items() if v['internal_reference'] == ref), None)
             if rowid is None and is_first:
                 # the variant the automation made carries the product's own reference, or none at all
-                rowid = next((r for r, v in mine.items() if v['internal_reference'] in ('', ref)), None)
+                # (the Products copy-down writes the product's reference onto it, e.g. MYB-AIR13)
+                rowid = next((r for r, v in mine.items()
+                              if v['internal_reference'] in ('', ref, product_reference(pkey))), None)
             got = live.get(rowid)
         if got and not differences(got, want):
             remember('Product Variants', vkey, rowid)
@@ -985,13 +1019,14 @@ def step_variants():
                   {'id': cid('Barcode'), 'value': barcode},
                   {'id': cid('Cost'), 'value': cost},
                   {'id': cid('Active'), 'value': active},
-                  {'id': cid('Product'), 'value': [product_row]}]
+                  {'id': cid('Product'), 'value': [product_row]},
+                  {'id': cid('Variant Values'), 'value': variant_label(vkey)}]
         rowid, how = write('Product Variants', rowid, values, vkey)
         wrote += 1
         live[rowid] = variant_state(row('Product Variants', rowid))
         print(f'  {how} {vkey:<22} ({pkey}): {rowid}')
         remember('Product Variants', vkey, rowid)
-    return variants_verify(wrote=wrote)
+    return settle(variants_verify, wrote=wrote)
 
 
 def variants_verify(wrote=None):
@@ -1055,7 +1090,9 @@ def order_want(o, display_of, incoterm_of):
         date=moment(o['date_offset']),
         expiry=day(o['expiry_offset']) if o['expiry_offset'] is not None else '',
         delivery_date=moment(o['delivery_date_offset']) if o['delivery_date_offset'] is not None else '',
-        invoice_status=o['invoice_status'], delivery_status=o['delivery_status'] or '',
+        # Invoice Status is not written or compared: since the order → invoice link (o2i.py, 23 Sep 2026) it
+        # is computed from the invoice lines linked to the order's lines — see the `link` step.
+        delivery_status=o['delivery_status'] or '',
         payment_terms=o['payment_terms'] or '',
         locked='1' if o['locked'] else '0', invoicing_closed='1' if o['invoicing_closed'] else '0',
         is_template='1' if o['is_template'] else '0', template_name=o['template_name'] or '',
@@ -1130,7 +1167,6 @@ def step_orders():
         values = [
             {'id': cid('Status'), 'value': [option_key(f['Status'], o['status'])]},
             {'id': cid('Quotation/Order Date'), 'value': want['date']},
-            {'id': cid('Invoice Status'), 'value': [option_key(f['Invoice Status'], o['invoice_status'])]},
             {'id': cid('Tax Mode'), 'value': [option_key(f['Tax Mode'], o['tax_mode'])]},
             {'id': cid('Salesperson'), 'value': [salesperson()]},
             {'id': cid('Locked'), 'value': want['locked']},
@@ -1187,7 +1223,7 @@ def step_orders():
     if not image:
         print(f'  ids.json has no {SIGNATURE_SOURCE!r}, so the two signed orders carry Signed By and Signed '
               'On and no image')
-    return orders_verify(wrote=wrote)
+    return settle(orders_verify, wrote=wrote)
 
 
 def orders_verify(wrote=None):
@@ -1240,6 +1276,8 @@ def delivered_for(o, l):
     fully delivered order, the first two of a partly delivered one, none anywhere else."""
     if l['kind'] != 'Product' or l['product'] == 'DISCOUNT':
         return 0.0
+    if l.get('delivered') is not None:          # an over-delivery the story states: an upselling opportunity
+        return round(float(l['delivered']), 2)
     if o['delivery_status'] == 'Fully Delivered':
         return round(float(l['quantity']), 2)
     if o['delivery_status'] == 'Partially Delivered' and l['sequence'] <= 20:
@@ -1266,7 +1304,7 @@ def order_line_want(o, l, order_row):
                 price=round(float(l.get('price') or 0), 2) if product else 0.0,
                 discount=round(float(l.get('discount') or 0), 2) if product else 0.0,
                 taxes=sorted(l.get('taxes') or []) if product else [],
-                delivered=delivered_for(o, l), invoiced=invoiced_for(o, l))
+                delivered=delivered_for(o, l))   # Quantity Invoiced is a formula over the linked invoice lines
 
 
 def step_orderlines():
@@ -1302,7 +1340,6 @@ def step_orderlines():
                 {'id': cid('Unit Price'), 'value': want['price']},
                 {'id': cid('Discount'), 'value': want['discount']},
                 {'id': cid('Quantity Delivered'), 'value': want['delivered']},
-                {'id': cid('Quantity Invoiced'), 'value': want['invoiced']},
                 {'id': cid('Product'), 'value': [want['product']] if want['product'] else []},
                 {'id': cid('Unit'), 'value': [units[l['unit']]] if want['unit'] else []},
                 {'id': cid('Taxes'), 'value': [taxes[x] for x in want['taxes']]},
@@ -1311,7 +1348,7 @@ def step_orderlines():
             wrote += 1
             live[(order_row, l['sequence'])] = (rowid, order_line_state(row('Order Lines', rowid)))
             print(f"  {how} {o['key']:<22} line {l['sequence']:<4} {l['description'][:44]}")
-    return orderlines_verify(wrote=wrote)
+    return settle(orderlines_verify, wrote=wrote)
 
 
 def orderlines_verify(wrote=None):
@@ -1468,7 +1505,7 @@ def step_invoices():
         live[rowid] = invoice_state(row('Invoices', rowid))
         print(f"  {how} {i['key']:<22} {want['number']:<18} {i['type']:<22} {i['status']}: {rowid}")
         remember('Invoices', i['key'], rowid)
-    return invoices_verify(wrote=wrote, settle=4)
+    return settle(invoices_verify, wrote=wrote, settle=4)
 
 
 def invoices_verify(wrote=None, settle=1):
@@ -1609,7 +1646,7 @@ def step_invlines():
             live[(invoice_row, l['sequence'])] = (rowid, invoice_line_state(row('Invoice Lines', rowid)))
             print(f"  {how} {i['key']:<22} line {l['sequence']:<4} {l['label'][:44]}")
     settle_line_taxes()
-    return invlines_verify(wrote=wrote)
+    return settle(invlines_verify, wrote=wrote)
 
 
 def invlines_verify(wrote=None):
