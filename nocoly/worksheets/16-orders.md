@@ -1272,3 +1272,27 @@ empty whatever it was compared with — `== "Goods"`, a `FIND` of the option key
 the value. Stored, it renders as its label, as Order Status does for Invoice Status. And, as before, **a function
 formula appended to a worksheet computes blank on every existing record until its definition is saved again**:
 Goods line and Goods line delivered each needed a no-op re-save of the expression.
+
+## 16 · Discount fixes found in the browser (23 Sep 2026)
+
+**Global Discount (%) priced its lines at a few ringgit.** The owner relabelled Discount Type's options *Global
+Discount (%)* and *Fixed Amount (Whole)*; the workflow's two formulas still tested `== "Global Discount"`, so a
+percentage was treated as a fixed amount spread over the order's tax-included total: 10% on S00047 gave −0.75 and
+−8.36 instead of −220.50 and −2,468.70. Both formulas now test the label's first 15 characters
+(`is_global_formula`), and `check` accepts any suffix. Proved in the browser: 10% → Untaxed 24,202.80, Tax 2,380.59,
+lines labelled "Discount 10.00%- On products with the following taxes …".
+
+**A Fixed Amount left a cent over.** Each tax group's share is priced and taxed on its own, so RM 500 came out as
+−459.69 − 40.32 = −500.01. Seven steps appended after *Price each tax group's discount line* (`applycent`) sum the
+discount lines' tax-included Total, and on a Fixed Amount with anything left over move the largest discount line's
+Unit Price by the difference taken back through its tax rate — Odoo's `_reduce_base_lines_to_target_amount` does the
+same. `batch-add` saved the two number formulas with **0 decimals**, so the +0.01 read 0 and the branch never
+fired (the run history showed it); both are 2 decimals now. Proved: RM 500 → −417.89 / −40.32, Total 29,037.10.
+
+**A line's own Discount (%) works**: 10% on S00047's Setup & Migration line stored Subtotal 2,205.00, Tax 176.40,
+Total 2,381.40, and the order moved by exactly that. While a row is being edited in the grid its Tax Amount reads
+0.00 and its Total leaves the tax out until the save — the live-tax helpers cover a new line's form, not a grid
+edit of an existing row. Cosmetic; noted for the walkthrough.
+
+**The Apply Discount button is the owner's fill-in form** (clickType 3, asking Discount Type and Discount Value);
+`check` accepts it as long as it asks for both.

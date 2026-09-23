@@ -2689,8 +2689,10 @@ def other_worksheet_differences():
     if lf.get(LINE_TAXES, {}).get('dataSource') != ws() or lf.get(LINE_TAXES, {}).get('enumDefault') != 2:
         out.append(f"{LINES} / {LINE_TAXES}: ds {lf.get(LINE_TAXES, {}).get('dataSource')} "
                    f"multi {lf.get(LINE_TAXES, {}).get('enumDefault')}")
-    if (lf.get(LINE_TAXES, {}).get('advancedSetting') or {}).get('filters'):
-        out.append(f'{LINES} / {LINE_TAXES} carries a picker filter; §1 says unfiltered')
+    # Active taxes only since 23 Sep 2026 (owner; `pickers`) — §1's "unfiltered" offered archived taxes
+    got_picker = C.picker_state((lf.get(LINE_TAXES, {}).get('advancedSetting') or {}).get('filters'))
+    if got_picker != C.picker_state(json.dumps(picker_items('active'))):
+        out.append(f'{LINES} / {LINE_TAXES}: picker filter {got_picker}, want Active only — run `pickers`')
     rate = lf.get(LINE_RATE, {})
     want_rate = (f"${lf[LINE_TAXES]['controlId']}$", fields_of(ws())[AMOUNT]['controlId'], 5, '001')
     got_rate = (rate.get('dataSource'), rate.get('sourceControlId'), rate.get('enumDefault'),
@@ -2827,7 +2829,45 @@ def show():
     C.show(ws())
 
 
+# ── the line pickers offer active taxes only (23 Sep 2026, owner) ─────────────
+#
+# Order Lines' Taxes carried an "Active is ticked" filter stored with `value "1"` and `values: null`, which the
+# picker ignores — archived 10% G SC and 8% S OU were offered. Invoice Lines' had none. Odoo's sale line domain is
+# `type_tax_use = 'sale'` and active; an invoice line's depends on the document (bills take purchase taxes), so it
+# gets Active only. The shape is Products' Sales Taxes filter, which works (`values: ["1"]`).
+
+TAX_ACTIVE, TAX_TYPE = '6aad104e7d58b0f449314208', '6aad104e7d58b0f4493141fa'
+SALES_TAX_TYPE = 'd4ecbc5c-c6d5-47a6-90ce-f0871737b853'
+PICKERS = {
+    # worksheet, relation control -> filter items
+    ('6ab0c740e43d174ab37535b2', '6ab0c984e43d174ab3753636'): 'sales and active',   # Order Lines / Taxes
+    ('6aaa2b50e54d2a34fa4e0221', '6aad1419bd43f55762c758ab'): 'active',             # Invoice Lines / Taxes
+}
+
+
+def picker_items(kind):
+    item = lambda cid, dt, values: {'controlId': cid, 'dataType': dt, 'spliceType': 1, 'filterType': 2,
+                                    'dateRange': 0, 'dateRangeType': 0, 'value': '', 'values': values,
+                                    'minValue': None, 'maxValue': None, 'isAsc': False, 'dynamicSource': [],
+                                    'advancedSetting': None, 'isGroup': False, 'groupFilters': None, 'emptyRule': 0}
+    active = item(TAX_ACTIVE, 36, ['1'])
+    return [item(TAX_TYPE, 11, [SALES_TAX_TYPE]), active] if kind == 'sales and active' else [active]
+
+
+def step_pickers():
+    for (ws, cid), kind in PICKERS.items():
+        want = json.dumps(picker_items(kind), separators=(',', ':'))
+        c = next(c for c in hap.controls(ws) if c['controlId'] == cid)
+        got = (c.get('advancedSetting') or {}).get('filters')
+        if C.picker_state(got) == C.picker_state(want):
+            print(f"  {c['controlName']} ({ws}): offers {kind} taxes already; nothing saved")
+            continue
+        print(f"  {c['controlName']} ({ws}): {C.picker_state(got)} -> {C.picker_state(want)}")
+        C.pinned_write(ws, {cid: {'advancedSetting.filters': want}}, f'taxes_picker_pre_{cid}', 'pickers')
+
+
 STEPS = {
+    'pickers': step_pickers,
     'create': step_create,
     'fields': step_fields,
     'rules': step_rules,

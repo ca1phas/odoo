@@ -542,12 +542,15 @@ def unit_row():
 
 
 TAX_10 = 'Taxes: MY|sale|consu|10% G'             # ids.json; a Sales tax, 10 %
-CUSTOMER = 'Invoices: customer Sunway Construction Group'
+# The owner's own contact for every TEST record (23 Sep 2026): the Sunway fixture the old seed carried was wiped
+# with the demo reseed, and a TEST order must never point at a deleted contact.
+CUSTOMER = 'Contacts: Nocoly'
+NOCOLY_CONTACT = 'd31d1f6b-fb89-4f6f-be0e-8e953a0892ac'
 TERM_45 = 'Payment Terms: 45 Days'
 
 
 def order_want(f, today, reference=TEST_ORDER, journal=True):
-    ids = hap.ids()['records']
+    ids = {**hap.ids()['records'], CUSTOMER: NOCOLY_CONTACT}
     want = {
         'Status': [option_key(ORDERS, 'Status', 'Sales Order')],
         'Quotation/Order Date': f'{today} 09:00:00',

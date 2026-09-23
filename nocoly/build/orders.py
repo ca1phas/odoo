@@ -201,6 +201,7 @@ RULE_TAX_MODE = 'Tax Mode is fixed once the quotation is confirmed'
 # The two the template flag brings with it (§6 below builds the controls they stand on).
 RULE_CUSTOMER = 'A quotation needs a customer, a template does not'
 RULE_TEMPLATE_NAME = 'Template Name is for templates'
+SEED_CHECK = False                                 # the casimir seed comparison in `check`, retired 23 Sep 2026
 CREATE_SWITCH = 'Create'                           # templates.py's switch at the top of a new record
 
 # Odoo's `readonly="state in ['cancel','sale']"` covers eight fields on `sale.order`'s form. Three of them were
@@ -613,6 +614,7 @@ CHILD = {
     'Description': '6ab0c864e43d174ab37535fa',
     'Quantity': '6ab0c864e43d174ab37535fb',
     'Quantity Invoiced': '6ab0c864e43d174ab37535fc',
+    'Quantity To Invoice': '6ab2d06fe43d174ab3cd77d2',     # o2i.py's, shown in the grid by the owner
     'Quantity Delivered': '6ab0c864e43d174ab37535fd',
     'Unit': '6ab0c984e43d174ab3753634',
     'Unit Price': '6ab0ca1be43d174ab3753657',
@@ -638,7 +640,7 @@ ROLLUPS = {                                    # name -> the child control it su
 # controls (Tax rate, Product Unit) and the two optional ones orderlines.py appends (Lead Time, Optional Line),
 # which the owner can add by hand.
 SUBTABLE_COLUMNS = ('Sequence', 'Display Type', 'Product', 'Description', 'Quantity', 'Quantity Delivered',
-                    'Quantity Invoiced', 'Unit', 'Unit Price', 'Taxes', 'Discount', 'Tax Amount', 'Subtotal',
+                    'Quantity Invoiced', 'Quantity To Invoice', 'Unit', 'Unit Price', 'Taxes', 'Discount', 'Tax Amount', 'Subtotal',
                     'Total')
 # The dead id the subtable was carrying: `showControls` and `advancedSetting.controlssorts` both named
 # 6ab0c740e43d174ab37535b6, a control that is not on Order Lines any more, so the grid drew one *Sequence*
@@ -3239,7 +3241,9 @@ def discount_fields_problems(f):
                             f'{({k: v for k, v in want.items() if got[k] != v})}')
         if n == DISCOUNT_TYPE:
             labels = [o['value'] for o in c.get('options') or [] if not o.get('isDeleted')]
-            if labels != list(DISCOUNT_OPTIONS):
+            # the owner relabelled them "Global Discount (%)" and "Fixed Amount (Whole)" (23 Sep 2026); the workflows
+            # test the label's start (`is_global_formula`), so a suffix is the owner's to choose
+            if len(labels) != len(DISCOUNT_OPTIONS) or not all(l.startswith(w) for l, w in zip(labels, DISCOUNT_OPTIONS)):
                 problems.append(f'{n}: options {labels}, wanted {list(DISCOUNT_OPTIONS)}')
         if n == DISCOUNT_VALUE and c.get('dot') != 2:
             problems.append(f'{n}: {c.get("dot")} decimals, wanted 2')
@@ -3414,13 +3418,21 @@ A_SET = 'Set its Unit Price'
 LABEL_PARAM, VALUE_PARAM, DIVISOR_PARAM = 'label', 'value', 'divisor'
 
 
+def is_global_formula(type_ref):
+    """Discount Type is Global Discount — by the label's first 15 characters, so the owner's relabelling of the
+    options ("Global Discount (%)", "Fixed Amount (Whole)", 23 Sep 2026) cannot break the test again. An exact
+    `== "Global Discount"` failed silently on the renamed option: the divisor became the order's tax-included
+    total and a 10% discount priced its lines at a few ringgit (S00047, found in the browser)."""
+    return f'LEFT(CONCAT({type_ref}, ""), {len(GLOBAL_DISCOUNT)}) == "{GLOBAL_DISCOUNT}"'
+
+
 def discount_label_formula(type_ref, value_ref):
     """Odoo's line name, from `_prepare_global_discount_so_lines`: "Discount %(percent)s%%" with the percentage as
     `float_repr(…, Discount precision 2)` — so **10 reads "10.00"** — or plain "Discount" for a fixed amount.
     HAP's function formulas have no number formatting, so the two decimals are built by hand."""
     v = value_ref
     two = f'RIGHT(CONCAT("0", ROUND({v}*100, 0) - INT({v})*100), 2)'
-    return (f'IF({type_ref} == "{GLOBAL_DISCOUNT}", CONCAT("Discount ", INT({v}), ".", {two}, "%"), '
+    return (f'IF({is_global_formula(type_ref)}, CONCAT("Discount ", INT({v}), ".", {two}, "%"), '
             f'"Discount")')
 
 
@@ -3521,7 +3533,7 @@ def apply_nodes(f, params):
                             'formula': discount_label_formula(t(typ), t(val))}},
                 {'nodeAlias': 'divisor', 'nodeType': 'compute', 'name': A_DIVISOR,
                  'config': {'mode': 'function', 'output_type': 'text',
-                            'formula': f'CONCAT(IF({t(typ)} == "{GLOBAL_DISCOUNT}", 100, '
+                            'formula': f'CONCAT(IF({is_global_formula(t(typ))}, 100, '
                                        f'$total-{NUMBER_FX}$))'}},
                 {'nodeAlias': 'each', 'nodeType': 'sub_process', 'name': A_EACH,
                  'config': {'target': {'kind': 'record', 'node': {'nodeAlias': 'lines'}},
@@ -3940,7 +3952,7 @@ def apply_wanted(f, pid):
         (pid, A_LABEL, 'formula', dict(action=FUNCTION_FORMULA, number=2, null_zero=False, out_type=TEXT,
                                        expression=discount_label_formula(t(typ), t(val)))),
         (pid, A_DIVISOR, 'formula', dict(action=FUNCTION_FORMULA, number=2, null_zero=False, out_type=TEXT,
-                                         expression=f'CONCAT(IF({t(typ)} == "{GLOBAL_DISCOUNT}", 100, '
+                                         expression=f'CONCAT(IF({is_global_formula(t(typ))}, 100, '
                                                     f'${n(by, A_TOTAL)}-{NUMBER_FX}$))')),
         (pid, A_GROUPS, 'search', dict(worksheet=LINES_WS, kind=GET_MANY, action=FROM_WORKSHEET, execute=True,
                                        filters=filters_of(order_is(n(by, A_GROUPS), GET_MANY, FROM_WORKSHEET, trigger),
@@ -4065,12 +4077,20 @@ def apply_structure(f, pid):
     b = next((x for x in hap.listing('worksheet', 'custom-actions', ws()) if x['name'] == APPLY), None)
     if b is None:
         return [f'the {APPLY!r} button is missing — run `buttons`']
-    if button_state(b) != button_wanted(apply_spec(f)) or (b.get('desc') or '') != APPLY_DESC:
+    # The owner turned Apply Discount into a fill-in form in the browser (23 Sep 2026): clickType 3, asking for
+    # Discount Type and Discount Value before the workflow runs. That form is theirs; only a lost workflow or a
+    # button that no longer asks for the two values is a problem.
+    asks = {w.get('controlId') for w in b.get('writeControls') or []}
+    if b.get('clickType') == 3:
+        if not {f[DISCOUNT_TYPE]['controlId'], f[DISCOUNT_VALUE]['controlId']} <= asks:
+            problems.append(f'{APPLY}: the fill-in form asks for {sorted(asks)}, not Discount Type and Value')
+    elif button_state(b) != button_wanted(apply_spec(f)) or (b.get('desc') or '') != APPLY_DESC:
         problems.append(f'{APPLY}: stored {button_state(b)} desc={b.get("desc")!r}, wanted '
                         f'{button_wanted(apply_spec(f))}')
     proc, by = nodes_by_name(pid)
     kids = apply_children(pid, by)
-    for p, wanted in ((pid, PARENT_STEPS), (kids[A_INNER], INNER_STEPS), (kids[A_PRICE_INNER], PRICE_STEPS)):
+    for p, wanted in ((pid, PARENT_STEPS + CENT_STEPS), (kids[A_INNER], INNER_STEPS),
+                      (kids[A_PRICE_INNER], PRICE_STEPS)):
         got = steps_of(nodes_by_name(p)[0]) if p else []
         if got != sorted(wanted):
             problems.append(f'workflow {p}: steps {got}, wanted {sorted(wanted)}')
@@ -4306,6 +4326,108 @@ def single_group_order(f, f_lines, rows):
     return None, None
 
 
+# ── Fixed Amount: no cent left over (23 Sep 2026, found in the browser on S00047) ──────────────────────────
+#
+# Each tax group's share of a Fixed Amount is priced on its own and rounded twice (the untaxed price, then its tax),
+# so RM 500 came out as −459.69 and −40.32 = −500.01. Odoo's `_reduce_base_lines_to_target_amount` puts the rounding
+# difference on one line so the discount lines total exactly the amount; so do these steps, appended after
+# *Price each tax group's discount line*: the discount lines' tax-included total, the difference from the amount,
+# and — on a Fixed Amount with a difference — the largest discount line's Unit Price moved by the difference taken
+# back through its own tax rate.
+
+A_DTOTAL = "The discount lines' total, tax included"
+A_DMIN = 'The largest discount line'                  # its Subtotal: the most negative
+A_DELTA = 'What is left over'
+A_CENT = 'Is a cent left over?'
+A_BIGGEST = 'That discount line'
+A_ADJUST = 'Its Unit Price, corrected'
+A_FIX = 'Correct it'
+LINE_TAX_RATE = '6ab0d4bbe43d174ab3753780'           # Order Lines / Tax rate (the line's percentage)
+CENT_STEPS = (A_DTOTAL, A_DMIN, A_DELTA, A_CENT, A_BIGGEST, A_ADJUST, A_FIX)
+
+
+def apply_cent_nodes(f, variant_node):
+    typ, val = f[DISCOUNT_TYPE]['controlId'], f[DISCOUNT_VALUE]['controlId']
+    trig = {'nodeAlias': 'trigger'}
+    fixed = next(o for o in f[DISCOUNT_TYPE]['options'] if o['value'].startswith(FIXED_AMOUNT) and not o.get('isDeleted'))
+    discount_lines = {'logic': 'and', 'items': [
+        {'left': {'node': trig, 'fieldId': LINES_ORDERS, '_filedTypeId': RELATION}, 'op': RELATION_EQ,
+         'right': {'kind': 'field', 'node': trig, 'fieldId': 'rowid'}},
+        {'left': {'node': trig, 'fieldId': CHILD['Product'], '_filedTypeId': RELATION}, 'op': RELATION_EQ,
+         'right': {'kind': 'field', 'node': variant_node, 'fieldId': 'rowid'}}]}
+    biggest = {'logic': 'and', 'items': discount_lines['items'] + [
+        {'left': {'node': trig, 'fieldId': CHILD['Subtotal'], '_filedTypeId': NUMBER}, 'op': 'eq',
+         'right': {'kind': 'field', 'node': {'nodeAlias': 'dmin'}, 'fieldId': NUMBER_FX}}]}
+    return [
+        {'nodeAlias': 'dtotal', 'nodeType': 'rollup', 'name': A_DTOTAL,
+         'config': {'mode': 'worksheet', 'worksheet': LINES_WS, 'aggregate': 'sum', 'field': CHILD['Total'],
+                    'filter': discount_lines}},
+        {'nodeAlias': 'dmin', 'nodeType': 'rollup', 'name': A_DMIN,
+         'config': {'mode': 'worksheet', 'worksheet': LINES_WS, 'aggregate': 'min', 'field': CHILD['Subtotal'],
+                    'filter': discount_lines}},
+        {'nodeAlias': 'delta', 'nodeType': 'compute', 'name': A_DELTA,
+         'config': {'mode': 'number', 'formula': f'0-$trigger-{val}$-$dtotal-{NUMBER_FX}$'}},
+        {'nodeAlias': 'cent', 'nodeType': 'branch', 'name': A_CENT, 'config': {'paths': [
+            {'alias': 'left_over', 'name': 'Yes', 'condition': {'logic': 'and', 'items': [
+                {'left': {'node': trig, 'fieldId': typ, '_filedTypeId': DROPDOWN}, 'op': IS_ANY_OF,
+                 'right': {'kind': 'literal', 'values': [{'key': fixed['key'], 'value': fixed['value'],
+                                                          'isDeleted': False}]}},
+                {'left': {'node': {'nodeAlias': 'delta'}, 'fieldId': NUMBER_FX, '_filedTypeId': NUMBER},
+                 'op': 'ne', 'right': {'kind': 'literal', 'value': '0'}}]},
+             'nodes': [
+                {'nodeAlias': 'biggest', 'nodeType': 'get_single', 'name': A_BIGGEST,
+                 'config': {'worksheet': LINES_WS, 'execute_type': 2, 'filter': biggest}},
+                {'nodeAlias': 'adjust', 'nodeType': 'compute', 'name': A_ADJUST,
+                 'config': {'mode': 'number',
+                            'formula': f'$biggest-{CHILD["Unit Price"]}$+$delta-{NUMBER_FX}$'
+                                       f'/(1+$biggest-{LINE_TAX_RATE}$/100)'}},
+                {'nodeAlias': 'fix', 'nodeType': 'update_record', 'name': A_FIX,
+                 'config': {'worksheet': LINES_WS, 'target': {'node': {'nodeAlias': 'biggest'}},
+                            'fields': [{'fieldId': CHILD['Unit Price'], 'type': 8,
+                                        'valueRef': {'node': {'nodeAlias': 'adjust'}, 'fieldId': NUMBER_FX,
+                                                     'nodeActionId': '100'}}]}}]},
+            {'alias': 'none_over', 'name': 'No'},
+        ]}},
+    ]
+
+
+def step_applycent():
+    """Append the cent correction after *Price each tax group's discount line* in Apply Discount, once."""
+    f = guard()
+    pid = hap.ids()['workflows'][KEY + APPLY]
+    proc, by = nodes_by_name(pid)
+    if A_DTOTAL in by:
+        print(f'  {APPLY}: the cent correction is there ({[n for n in CENT_STEPS if n in by]}); nothing added')
+        if sync_cent_formulas(pid):
+            print(f'  {APPLY}: {C.publish(pid)}')
+        return
+    for need in (A_PRICE, A_VARIANT):
+        if need not in by:
+            sys.exit(f'{APPLY} has no step {need!r} — run `buttons` first')
+    hap.backup('orders_apply_discount_pre_cent', proc)
+    hap.run('workflow', 'node', 'batch-add', pid, '-a', APP, '--after', by[A_PRICE]['id'],
+            '--alias', f"variant={by[A_VARIANT]['id']}",
+            '--nodes', json.dumps(apply_cent_nodes(f, {'nodeAlias': 'variant'}), ensure_ascii=False))
+    proc, by = nodes_by_name(pid)
+    missing = [n for n in CENT_STEPS if n not in by]
+    if missing:
+        sys.exit(f'{APPLY}: {missing} did not come back')
+    sync_cent_formulas(pid)
+    print(f'  {APPLY}: {C.publish(pid)}')
+
+
+def sync_cent_formulas(pid):
+    """`batch-add` saves a number formula with **0 decimals**: the +0.01 left over read 0 and the branch never
+    fired (S00047, the run history). Both number steps are brought to 2 decimals, null as zero."""
+    proc, by = nodes_by_name(pid)
+    changed = False
+    for name in (A_DELTA, A_ADJUST):
+        d = hap.run('workflow', 'node', 'get', pid, by[name]['id'], '--json')
+        d = d.get('data', d)
+        changed |= bool(sync_formula(pid, by[name], NUMBER_FORMULA, d.get('formulaValue'), number=2, null_zero=True))
+    return changed
+
+
 def step_selfdiscount():
     f = guard()
     f_lines = hap.by_name(c for c in hap.controls(LINES_WS) if c['type'] != C.TAB)
@@ -4512,7 +4634,10 @@ def terms_problems(f):
     diff = drift(c, terms_spec())
     if diff:
         problems.append(f'{TERMS}: {json.dumps(diff, ensure_ascii=False, default=str)}')
-    if c.get('default') or (c.get('advancedSetting') or {}).get('defsource'):
+    # templates.py fills Terms from the chosen Quotation Template (a relation-read default); anything else is not ours
+    src = (c.get('advancedSetting') or {}).get('defsource') or ''
+    from_template = hap.ids().get('controls', {}).get('Orders: Quotation Template', '~') in src
+    if c.get('default') or (src and src != '[]' and not from_template):
         problems.append(f"{TERMS}: carries a default ({c.get('default')!r} / "
                         f"{(c.get('advancedSetting') or {}).get('defsource')!r}); Odoo's comes from company "
                         'settings this app does not have, so it is empty here')
@@ -7563,8 +7688,11 @@ def step_check():
     if not found:
         print(f"  OK  System Print {PRINT_NAME!r} {hap.ids()['prints'][PRINT_KEY]} on {WORKSHEET}: Word, "
               f'{TEMPLATE_GENERAL}')
-    data, _lines = seed_data()
-    seeded = seeded_orders()
+    # The casimir seed this compared against was wiped with the demo reseed (23 Sep 2026); the orders are demo.py's
+    # now, and `demo.py check` compares them. Kept behind SEED_CHECK for the `seed` step's own use.
+    data, seeded = (seed_data()[0], seeded_orders()) if SEED_CHECK else ({'orders': []}, {})
+    if not SEED_CHECK:
+        print('  (the old casimir seed comparison is retired — `demo.py check` owns the orders now)')
     absent = [o['name'] for o in data['orders'] if o['name'] not in seeded]
     if absent:
         problems.append(f'{len(absent)} seeded order(s) are not on the worksheet ({absent}) — run `seed`')
@@ -7617,7 +7745,7 @@ def step_show():
         print(f"    t{r['type']:<3} {r['controlName']:<24} {r['controlId']}")
 
 
-STEPS = {'rules': step_rules, 'retire': step_retire, 'expiry': step_expiry, 'totals': step_totals,
+STEPS = {'applycent': step_applycent, 'rules': step_rules, 'retire': step_retire, 'expiry': step_expiry, 'totals': step_totals,
          'dots': step_dots, 'controls': step_controls, 'part1': step_part1, 'customer': step_customer,
          'invstatus': step_invstatus, 'views': step_views,
          'wipe': step_wipe, 'seed': step_seed, 'figures': step_figures, 'buttons': step_buttons,

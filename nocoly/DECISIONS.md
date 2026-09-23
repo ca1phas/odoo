@@ -316,3 +316,13 @@ the build is `build/roles.py` and the ids are in `build/ids.json` under `roles`.
 | 23 Sep 2026 | **Three workflows (the order's Status, a line created or changed, a line deleted) over two hidden 汇总**, the Invoice Status mechanism reused; the owner's draft *Set Delivery Status* is kept, renamed *ZZ obsolete – …*, unpublished and disabled | It triggered on Orders' Order Lines field, which a line edit never writes. A worksheet trigger takes one event, so a delete needs its own workflow | implementation agent |
 | 23 Sep 2026 | **The demo's TANWM-2026-0051 is Not Delivered**, not Nothing to Deliver, and `demo.py` no longer writes Delivery Status | A confirmed order with three undelivered product lines computes Not Delivered; a reseed must agree with the workflows | implementation agent |
 | 23 Sep 2026 | **Only goods lines count for Delivery Status** — a product line whose product's Product Type is Goods; services, combos and the Discount product never hold an order back | Odoo makes a picking for storable goods only. Order Lines got a stored lookup *Product Type* (through the variant) and two hidden flags, *Goods line* and *Goods line delivered*; Orders got a *Goods lines* roll-up, and the workflows read it where they read Product lines | owner |
+
+## Orders · discount fixes and housekeeping (23 Sep 2026)
+
+| Date | Decision | Why |
+|---|---|---|
+| 23 Sep 2026 | **Discount Type is recognised by the start of its label** ("Global Discount…", "Fixed Amount…") | The owner's relabelling broke an exact comparison silently; the suffix is theirs to choose |
+| 23 Sep 2026 | **A Fixed Amount's rounding difference goes on the largest discount line** | Odoo's `_reduce_base_lines_to_target_amount`; the discount lines must total the amount entered |
+| 23 Sep 2026 | **Tax pickers offer active taxes only** — sale taxes on order lines, any active tax on invoice lines | Archived 10% G SC and 8% S OU were offered; an invoice line's tax use depends on the document |
+| 23 Sep 2026 | **The three business roles see To Invoice and To Upsell**; `roles.py` read-back and check honour the per-worksheet overrides | The views were added after the roles, so those roles could not open them; the scripts reported every correct role as wrong |
+| 23 Sep 2026 | **`orders.py check` no longer compares orders with the old casimir seed** (`SEED_CHECK = False`) | The seed was wiped; `demo.py check` owns the orders |

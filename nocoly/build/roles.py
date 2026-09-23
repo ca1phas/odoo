@@ -225,6 +225,24 @@ def worksheet_actions(name):
     return {**DEFAULT_WORKSHEET_ACTIONS, 'export': name in EXPORTERS}
 
 
+V3_SWITCH = {'recordSystemPrinting': ('record', 'systemPrint'), 'worksheetBatchOperation': ('worksheet', 'batchOperation')}
+
+
+def expected_actions(name, worksheet_id, matrix):
+    """The V3 worksheetActions and recordActions a role should read back with on one worksheet — the defaults,
+    plus SHEET_SWITCH_OVERRIDES exactly as `reconcile` writes them (printing kept on Orders and Order Lines, batch
+    operation only where the role can add). Without the overrides every correct role read as a difference."""
+    worksheet = next((n for n, i in WORKSHEETS.items() if i == worksheet_id), None)
+    acts, rec = worksheet_actions(name), dict(DEFAULT_RECORD_ACTIONS)
+    overrides = dict(SHEET_SWITCH_OVERRIDES.get(worksheet, {}))
+    if worksheet in PRINTERS_KEEP_BATCH and worksheet in matrix and not SCOPE[matrix[worksheet]][1]:
+        overrides['worksheetBatchOperation'] = False
+    for key, value in overrides.items():
+        side, v3 = V3_SWITCH[key]
+        (acts if side == 'worksheet' else rec)[v3] = value
+    return acts, rec
+
+
 def roles():
     """The live roles as the **app's own Roles page** sees them: AppManagement/GetRolesWithUsers, which is
     what pd-openweb calls, returning each role's stored name.
@@ -437,8 +455,13 @@ def reconcile(name, role_id, description, matrix, dry=False):
         got = (tuple(sheet.get(LEVEL_KEY[r]) for r in ('read', 'edit', 'delete')), bool(sheet.get('canAdd')),
                {k: bool((sheet.get(k) or {}).get('enable')) for k in (*SHEET_SWITCHES, ADD_KEY, EXPORT_KEY)},
                all(v.get(k) for v in sheet.get('views') or [] for k in VIEW_RIGHTS), field_state(sheet, targets))
+        # the same switches the write above sets — the per-worksheet overrides included (Orders and Order Lines
+        # keep printing), or every correct write reads back as wrong and the step stops after one role
+        switches = {**SHEET_SWITCHES, **SHEET_SWITCH_OVERRIDES.get(worksheet, {})}
+        if worksheet in PRINTERS_KEEP_BATCH and not add:
+            switches = {**switches, 'worksheetBatchOperation': False}
         want = (tuple(scope[r] for r in ('read', 'edit', 'delete')), add,
-                {**SHEET_SWITCHES, ADD_KEY: add, EXPORT_KEY: want_export}, True,
+                {**switches, ADD_KEY: add, EXPORT_KEY: want_export}, True,
                 {fid: (hide,) * len(FIELD_SWITCHES) for fid, hide in targets.items()})
         if got != want:
             wrong[worksheet] = (got, want)
@@ -575,10 +598,11 @@ def step_check():
                 continue
             actions = {k: v for k, v in (w.get('worksheetActions') or {}).items()}
             record = {k: v for k, v in (w.get('recordActions') or {}).items() if k != 'add'}
-            if actions != worksheet_actions(name):
-                problems.append(f'{name} / {w["id"]}: worksheetActions {actions}')
-            if record != DEFAULT_RECORD_ACTIONS:
-                problems.append(f'{name} / {w["id"]}: recordActions {record}')
+            want_actions, want_record = expected_actions(name, w['id'], matrix)
+            if actions != want_actions:
+                problems.append(f'{name} / {w["id"]}: worksheetActions {actions}, want {want_actions}')
+            if record != want_record:
+                problems.append(f'{name} / {w["id"]}: recordActions {record}, want {want_record}')
         # The same switch in the model the Roles page itself edits, so a difference between the two shows up
         # rather than hiding behind whichever call is read.
         model = role_model(r['roleId'])
