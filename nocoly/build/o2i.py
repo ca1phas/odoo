@@ -15,6 +15,7 @@ Steps, in order — each reads live state first, saves nothing when re-run, and 
     ~/.hap-venv/bin/python nocoly/build/o2i.py status      # 5 the three Invoice Status workflows
     ~/.hap-venv/bin/python nocoly/build/o2i.py views       # 6 To Invoice / To Upsell, Lines to Invoice
     ~/.hap-venv/bin/python nocoly/build/o2i.py guards      # 7 the two automation gates
+    ~/.hap-venv/bin/python nocoly/build/o2i.py taxes       # 7b the order line's taxes after the account automation
     ~/.hap-venv/bin/python nocoly/build/o2i.py create      # 8 Create Invoice, the button and its workflow
     ~/.hap-venv/bin/python nocoly/build/o2i.py repair      # 9 rebuild Orders' Invoices from the lines
     ~/.hap-venv/bin/python nocoly/build/o2i.py selfcheck   # 10 the CLI drive of steps 5 and 8
@@ -1801,8 +1802,170 @@ def taxes_gate_report():
     for step, node_id, entries in writes:
         print(f'    {step!r} {node_id}: {entries}')
     print('  Gating those on "Taxes is empty" needs a gateway and a duplicate write inside each of the four '
-          'paths — not a filter — so it is left exactly as it was. Until the owner decides, an invoice line '
-          "Create Invoice makes carries the **product's** taxes, not the order line's (21 §12 divergence 6).")
+          'paths — not a filter — so they are left exactly as they were. The owner chose 21 §14.6 option (a): '
+          "`o2i.py taxes` appends three nodes after the gateway that re-write the order line's taxes.")
+
+
+# ── 7b · the order line's taxes, after the account automation (21 §14.6 option a) ─
+#
+# Odoo `_prepare_invoice_line` (`sale/models/sale_order_line.py`) writes `tax_ids = Command.set(self.tax_ids.ids)`
+# — the invoice line takes the **order line's** taxes. Create Invoice copies them, and then 07's *fill the account
+# of a new line* overwrites them with the product's in four of its steps. The owner chose to leave those four
+# alone and **append** after the gateway: find the order line this line bills, and when there is one, write its
+# Taxes over whatever the gateway left. A line typed by hand has no order line and keeps the product's taxes.
+
+TAX_GET = 'Get the order line it bills'
+TAX_BRANCH = 'Did the line come from an order?'
+TAX_PATH_ORDER = 'From an order'
+TAX_PATH_HAND = 'Typed by hand'
+TAX_STEP = "Take the order line's taxes"
+ACCOUNT_GATEWAY = 'Which account does the line take?'
+
+
+def taxes_nodes(trigger):
+    """The three nodes, for one `batch-add` whose `--trigger-node-id` is the account gateway: a node added after a
+    gateway is what the branch converges on, so they run after whichever account path ran."""
+    return [
+        # execute_type 2: a line typed by hand has no order line, and must carry on to the empty path
+        {'nodeAlias': 'order_line', 'nodeType': 'get_single', 'name': TAX_GET,
+         'config': {'worksheet': OLINES, 'execute_type': 2}},
+        {'nodeAlias': 'from_order', 'nodeType': 'branch', 'name': TAX_BRANCH, 'config': {'paths': [
+            {'alias': 'order', 'name': TAX_PATH_ORDER, 'nodes': [
+                {'nodeAlias': 'set_taxes', 'nodeType': 'update_record', 'name': TAX_STEP,
+                 'config': {'worksheet': ILINES, 'target': {'node': {'nodeId': trigger}}, 'fields': []}}]},
+            {'alias': 'hand', 'name': TAX_PATH_HAND}]}},
+    ]
+
+
+def order_line_filter(lf, node_id, trigger):
+    """The order line whose Invoice Lines holds this invoice line. The filter keys on the trigger's own record id,
+    which is never empty: keyed on the line's Sales Order Lines instead, a line typed by hand would give the search
+    an empty value and fail the whole run (BUILDING.md, *a search step whose filter value is empty*)."""
+    c = lf[OL_INVOICE_LINES]
+    return [{'nodeId': node_id, 'nodeType': GET_ONE, 'actionId': FROM_SHEET_ONE, 'filedId': c['controlId'],
+             'filedValue': c['controlName'], 'filedTypeId': RELATION, 'enumDefault': c.get('enumDefault'),
+             'conditionId': RELATION_EQ, 'sourceType': 0,
+             'conditionValues': [{'nodeId': trigger, 'controlId': 'rowid'}]}]
+
+
+def taxes_structure(proc, byname):
+    """Where the three nodes sit, as problems; empty when the chain is gateway → search → branch → end."""
+    problems = []
+    for name in (ACCOUNT_GATEWAY, TAX_GET, TAX_BRANCH, TAX_STEP):
+        if name not in byname:
+            problems.append(f'{ACCOUNT_WORKFLOW} has no node {name!r}')
+    if problems:
+        return problems
+    m = proc['flowNodeMap']
+    if m[byname[ACCOUNT_GATEWAY]['id']].get('nextId') != byname[TAX_GET]['id']:
+        problems.append(f'{ACCOUNT_GATEWAY!r} does not converge on {TAX_GET!r}')
+    if m[byname[TAX_GET]['id']].get('nextId') != byname[TAX_BRANCH]['id']:
+        problems.append(f'{TAX_GET!r} is not followed by {TAX_BRANCH!r}')
+    if m[byname[TAX_BRANCH]['id']].get('nextId') not in ('', '99', None):
+        problems.append(f'{TAX_BRANCH!r} converges on {m[byname[TAX_BRANCH]["id"]].get("nextId")}, wanted nothing')
+    paths = paths_of(proc, byname[TAX_BRANCH]['id'])
+    into = {p.get('nextId') or '' for p in paths}
+    if len(paths) != 2 or byname[TAX_STEP]['id'] not in into:
+        problems.append(f'{TAX_BRANCH!r} has {len(paths)} paths running into {into}')
+    return problems
+
+
+def taxes_paths(proc, byname):
+    order, hand = None, None
+    for path in paths_of(proc, byname[TAX_BRANCH]['id']):
+        if path.get('nextId') == byname[TAX_STEP]['id']:
+            order = path
+        else:
+            hand = path
+    if not order or not hand:
+        sys.exit(f'{TAX_BRANCH}: could not tell the two paths apart')
+    return order, hand
+
+
+def step_taxes():
+    """Append the order line's taxes to *Invoice Lines: fill the account of a new line*. No existing node is
+    edited; the workflow is backed up first, and `hap workflow rollback <pid> -y` restores the published one."""
+    guard()
+    pid = ACCOUNT_PID
+    if workflow_id(ACCOUNT_WORKFLOW) != pid:
+        sys.exit(f'{ACCOUNT_WORKFLOW!r} is {workflow_id(ACCOUNT_WORKFLOW)}, not {pid} — read the app first')
+    lf, ilf = fields(OLINES), fields(ILINES)
+    if ilf['Taxes']['controlId'] != IL_TAXES:
+        sys.exit(f'Invoice Lines / Taxes is {ilf["Taxes"]["controlId"]}, not {IL_TAXES}')
+    proc, byname = nodes_by_name(pid)
+    trigger = proc['startEventId']
+    if ACCOUNT_GATEWAY not in byname:
+        sys.exit(f'{ACCOUNT_WORKFLOW}: no gateway named {ACCOUNT_GATEWAY!r}')
+    existing = {n['id'] for n in proc['flowNodeMap'].values()}
+    changed = TAX_GET not in byname
+    if changed:
+        converges = proc['flowNodeMap'][byname[ACCOUNT_GATEWAY]['id']].get('nextId')
+        if converges not in ('', '99', None):
+            sys.exit(f'{ACCOUNT_GATEWAY!r} already converges on {converges}; this step appends only at the end')
+        hap.backup(f'o2i_account_workflow_{pid}_pre_taxes',
+                   {n['id']: read_node(pid, n['id']) for n in proc['flowNodeMap'].values()})
+        hap.run('workflow', 'node', 'batch-add', pid, '--nodes',
+                json.dumps(taxes_nodes(trigger), ensure_ascii=False),
+                '--trigger-node-id', byname[ACCOUNT_GATEWAY]['id'], '--trigger-alias', 'gateway')
+        proc, byname = nodes_by_name(pid)
+        added = [n for n in proc['flowNodeMap'].values() if n['id'] not in existing]
+        print(f'  added {[(n["id"], n["name"]) for n in added]}')
+    problems = taxes_structure(proc, byname)
+    if problems:
+        hap.run('workflow', 'rollback', pid, '-y')
+        sys.exit('the appended nodes are not where they belong; the draft was rolled back:\n  ' +
+                 '\n  '.join(problems))
+    changed |= sync_search(pid, byname[TAX_GET], OLINES, order_line_filter(lf, byname[TAX_GET]['id'], trigger),
+                           execute_type=2)
+    order, hand = taxes_paths(proc, byname)
+    # Both halves of "from an order": the line names an order line, and the search found one. The second alone
+    # would do; the first keeps a line whose relation was emptied from ever reaching the write.
+    changed |= save_path(pid, order, TAX_PATH_ORDER,
+                         [[cond(trigger, ilf[IL_ORDER_LINES], NOT_EMPTY_C),
+                           cond(byname[TAX_GET]['id'], lf['Orders'], NOT_EMPTY_C)]])
+    changed |= save_path(pid, hand, TAX_PATH_HAND, [])
+    changed |= set_entries(pid, byname[TAX_STEP],
+                           [patch(IL_TAXES, RELATION, node=byname[TAX_GET]['id'], source=lf['Taxes']['controlId'])],
+                           trigger, ILINES)
+    if changed or published_status(pid) != 2:
+        res = C.publish(pid)
+        print(f'  {ACCOUNT_WORKFLOW}:', res)
+        if published_status(pid) != 2:
+            sys.exit(f'{ACCOUNT_WORKFLOW}: publishStatus {published_status(pid)} after publishing — {res}')
+    else:
+        print(f'  {ACCOUNT_WORKFLOW}: already built; not re-published')
+    for line in taxes_report(pid):
+        print(line)
+
+
+def taxes_report(pid):
+    """The appended chain as it reads live, one line per node; a line starting `PROBLEM` is a failure."""
+    proc, byname = nodes_by_name(pid)
+    problems = taxes_structure(proc, byname)
+    if problems:
+        return [f'  PROBLEM {p}' for p in problems]
+    lf = fields(OLINES)
+    out = []
+    get = read_node(pid, byname[TAX_GET]['id'])
+    out.append(f"    {TAX_GET!r} {byname[TAX_GET]['id']} appId={get.get('appId')} "
+               f"executeType={get.get('executeType')} filter={wf_filter_state(get.get('filters'))}")
+    order, hand = taxes_paths(proc, byname)
+    for path in (order, hand):
+        d = read_node(pid, path['id'])
+        out.append(f"    path {d.get('name')!r} {path['id']} {path_state(d)}")
+    step = read_node(pid, byname[TAX_STEP]['id'])
+    entries = [write_state(x) for x in step.get('fields') or []]
+    out.append(f"    {TAX_STEP!r} {byname[TAX_STEP]['id']} selectNodeId={step.get('selectNodeId')} "
+               f"isException={step.get('isException')} fields={entries}")
+    want = write_state(patch(IL_TAXES, RELATION, node=byname[TAX_GET]['id'], source=lf['Taxes']['controlId']))
+    if entries != [want] or step.get('isException'):
+        out.append(f'  PROBLEM {TAX_STEP!r} writes {entries}, wanted [{want}]')
+    if get.get('executeType') != 2 or get.get('appId') != OLINES:
+        out.append(f'  PROBLEM {TAX_GET!r} is not a carry-on search of Order Lines')
+    if [read_node(pid, order['id']).get('name'), read_node(pid, hand['id']).get('name')] != \
+            [TAX_PATH_ORDER, TAX_PATH_HAND] or path_state(read_node(pid, hand['id'])):
+        out.append(f'  PROBLEM the two paths are not {TAX_PATH_ORDER!r} (conditioned) and {TAX_PATH_HAND!r} (else)')
+    return out
 
 
 # ── 8 · Create Invoice ──────────────────────────────────────────────────────
@@ -2699,7 +2862,13 @@ def check_journal_fallback(live):
         rowid = record_id(key)
         if not rowid:
             continue
-        d = read_record(INVOICES, rowid)
+        try:
+            d = read_record(INVOICES, rowid)
+        except KeyError:
+            # `record get` answers with no `data` for a record that is no longer there. By 23 Sep 2026, 12:20
+            # every TEST invoice of this bundle had gone from the app, by no step of this script.
+            print(f'    {key}: {rowid} is no longer in the app — not checked')
+            continue
         journal = [x.get('name') for x in (d.get('journal_id') or []) if isinstance(x, dict)]
         print(f'    {key}: Journal {journal}')
         if not journal:
@@ -2778,6 +2947,13 @@ def step_check():
     print(f'    Payment Terms gated on being empty: {gated} of 2 paths')
     if gated != 2:
         problems.append(f'the Payment Terms automation is gated on {gated} of 2 paths')
+    print(f"  {ACCOUNT_WORKFLOW}: the order line's taxes (21 §14.6 option a)")
+    if published_status(ACCOUNT_PID) != 2:
+        problems.append(f'{ACCOUNT_WORKFLOW}: publishStatus {published_status(ACCOUNT_PID)}, wanted 2')
+    for line in taxes_report(ACCOUNT_PID):
+        print(line)
+        if line.lstrip().startswith('PROBLEM'):
+            problems.append(line.strip())
     print('  views and the button')
     C.print_views(ORDERS, APP)
     for b in hap.listing('worksheet', 'custom-actions', ORDERS):
@@ -2798,7 +2974,7 @@ def step_check():
 def main():
     steps = {'lookups': step_lookups, 'relations': step_relations, 'fixture': step_fixture,
              'qty': step_qty, 'toinvoice': step_toinvoice, 'status': step_status, 'views': step_views,
-             'guards': step_guards, 'create': step_create, 'repair': step_repair,
+             'guards': step_guards, 'taxes': step_taxes, 'create': step_create, 'repair': step_repair,
              'selfcheck': step_selfcheck, 'check': step_check}
     if len(sys.argv) != 2 or sys.argv[1] not in steps:
         sys.exit(f'usage: o2i.py <{"|".join(steps)}>')

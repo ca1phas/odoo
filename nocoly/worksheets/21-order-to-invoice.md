@@ -917,7 +917,7 @@ precedents, and Create Invoice is entirely record writes.
 | 3 | `invoice_ids` picks up a credit note made **directly from the invoice** (`sale_order.py:572-575`) | a credit note reaches the figures only if something links its lines back to the order lines | 06 has no Credit Note button yet (`06-invoices.md` §1) — revisit with it |
 | 4 | a section reaches the invoice **only when an invoiceable line follows it** | every Section, Subsection and Note is carried | a per-row loop cannot look ahead (§5.4) |
 | 5 | several orders for one customer merge into **one** invoice by default | **one invoice per order** | a HAP batch button runs once per record (§5.7) |
-| 6 | the invoice line's taxes are the **order line's** | the order line's — **only after step 7's fix**; before it, the product's | 07's account automation also writes Taxes (§5.6) |
+| 6 | the invoice line's taxes are the **order line's** | the order line's — **resolved 23 Sep 2026** by `o2i.py taxes` (§14.6): 07's account automation still writes the product's taxes first, and three nodes appended after its gateway write the order line's over them | 07's account automation also writes Taxes (§5.6); the owner chose §14.6 option (a) |
 | 7 | the invoice's payment term is the **order's** | the order's — **only after step 7's fix**; before it, the customer's | 06's payment-terms automation (§5.6) |
 | 8 | `invoice_policy` per product decides ordered vs delivered quantities | every line is **Ordered quantities** | Products has no Invoicing Policy control (§3.5); `order` is Odoo's default |
 | 9 | `Label` is `_get_journal_items_full_name(name, product.display_name)` | the order line's Description, copied | the helper builds a two-line string from the product and the line description; the order line's Description already holds Odoo's own line text |
@@ -1033,7 +1033,7 @@ trigger field only costs runs. It is in the button's condition, where §6.4 puts
 | # | Odoo 19.0 | Here | Why |
 |---|---|---|---|
 | 21 | `_get_invoiceable_lines` decides per line, in Python | an extra hidden type-53 formula **Invoiceable line** on Order Lines decides it, and the loop's filter is a flat AND on it | a workflow search step's filter cannot express an OR (§14.2 item 3). It also makes §12.4's section behaviour one editable expression |
-| 22 | the invoice line's taxes are the **order line's** | still the **product's** | §14.6: gating the account automation needs more than a filter, so it was not touched |
+| 22 | the invoice line's taxes are the **order line's** | ~~still the **product's**~~ — **resolved 23 Sep 2026**, the order line's (§14.6, option a) | gating the account automation needed more than a filter; the fix appends instead of gating |
 
 `Accounting Date` and `Auto-post` are written on the new invoice although `_prepare_invoice` does not carry
 them: both are `account.move`'s own **field defaults** (`date = fields.Date.context_today`,
@@ -1075,7 +1075,8 @@ invoice already has. Odoo's compute is `partner.property_payment_term_id or move
 (`account/models/account_move.py:1081-1089`) with `precompute=True`, so it does overwrite on a partner change —
 that half is lost.
 
-*Invoice Lines: fill the account of a new line* (`6aab44254f2a99acac0f026f`) **was not touched.** §3.4 says one
+*Invoice Lines: fill the account of a new line* (`6aab44254f2a99acac0f026f`) **was not touched by step 7** — the
+owner then chose option (a), built below. §3.4 says one
 step carries the Taxes entry; read live, **four** do — every step that takes an account from a product or a
 category also writes that product's Sales or Purchase Taxes:
 
@@ -1096,7 +1097,59 @@ built, reviewed workflow. Two smaller options for the owner to choose between:
 * **b) split**: remove the four Taxes entries and give Invoice Lines a second small workflow, *fill the taxes of
   a new line*, whose **trigger condition** is Taxes is empty — a filter, but it does edit the four steps.
 
-Until then the invoice line's taxes are the product's, which is §12 divergence 6's pre-fix state.
+~~Until then the invoice line's taxes are the product's, which is §12 divergence 6's pre-fix state.~~ **The owner chose (a); built 23 Sep 2026 — below.**
+
+#### Option (a), as built — `o2i.py taxes`
+
+Three nodes (five with the two branch paths) appended to *Invoice Lines: fill the account of a new line*
+(`6aab44254f2a99acac0f026f`) **after its gateway converges**. `batch-add --trigger-node-id <the gateway>` puts
+the first new node on the gateway's `nextId`, which was `99` (the end) — so the chain runs after whichever of
+the seven account paths ran. **No existing node was edited**: all 25 were compared with the backup
+(`backups/o2i_account_workflow_6aab44254f2a99acac0f026f_pre_taxes_20260923-121315.json`) and only the
+gateway's `nextId` differs.
+
+| # | Node | Id | What it does |
+|---|---|---|---|
+| 1 | *Get the order line it bills* | `6ab351dce606b26d2608de2f` | search (406) on Order Lines: **Invoice Lines** (the m2m's other half) *is* the trigger's record id, conditionId 33; carry on when nothing is found (`executeType` 2). It keys on the trigger's own rowid, never on the line's Sales Order Lines, because a line typed by hand would give the search an empty value and fail the whole run |
+| 2 | *Did the line come from an order?* | `6ab351dce606b26d2608df74` | gateway |
+| 2a | path *From an order* | `6ab351dce606b26d2608df75` | the trigger's Sales Order Lines **is not empty** and the found order line's Orders **is not empty** |
+| 2b | path *Typed by hand* | `6ab351dce606b26d2608df76` | no condition (the else path), no step — the product's taxes stay |
+| 3 | *Take the order line's taxes* | `6ab351dde606b26d2608e11c` | update the trigger line: Taxes ← node 1's Taxes (`6ab0c984e43d174ab3753636`) |
+
+Published (`isPublish` true, no warnings); a second run of `taxes` saves nothing; `check` asserts the chain,
+the filter, both paths and the one field write.
+
+**Proved at runtime, 23 Sep 2026** (the CLI; no browser):
+
+* TEST order **S00037** (*TEST o2i taxes order*, `5e02e57e-…`) with two product lines of *myPhone 16 (256GB
+  Storage, Teal)*, whose product's Sales Taxes are **10% G**: *two-tax line* carrying **5% G + 6% S**, and
+  *no-tax line* carrying **none**. Create Invoice pressed (`hap workflow trigger`) → invoice `2cebe425-…`.
+* Both runs of the account automation ended `status` 2 and passed *… · Which account does the line take? ·
+  Take the category's Income Account · Get the order line it bills · Did the line come from an order? · Take
+  the order line's taxes* — the category step wrote the product's 10% G first, the new step wrote over it.
+* The invoice lines, read through **both** paths (`record get` and `common.records`): *two-tax line* **5% G,
+  6% S** — both taxes, not just the first; *no-tax line* **none** — an empty order-line value empties the
+  product's tax, as Odoo's `Command.set([])` does. Account 410000 Trade Income on both.
+* A line typed by hand on the same invoice (*TEST o2i taxes hand-typed line on the order invoice*, product
+  myPhone, no order link): its run found nothing at node 1, took *Typed by hand*, and the line reads **10% G**
+  through both paths — exactly as before.
+* The invoice's figures followed: 250.00 / 22.00 / 272.00 after Create Invoice, 350.00 / 32.00 / 382.00 after
+  the hand line.
+
+**A race this does not close, and did not open.** 07's roll-up (*Roll the lines up into the invoice*) runs
+**once per line, on the create**, beside the account automation, and is not restarted by the account
+automation's writes (the roll-up has no trigger fields, BUILDING.md). The header came out right in every run
+above because the roll-up happened to execute a second after the account run — the hand line's 10% G, which
+only the account automation writes, is in the header's 32.00. If a roll-up ever reads a line between the
+category step's write and node 3's, the header's Tax would carry the product's taxes while the line carries
+the order line's. Before this fix the same race existed the other way round. Not addressed here; the owner's.
+
+**Found while proving it**: every TEST invoice this bundle recorded — *TEST o2i probe invoice*
+(`781df0c0-…`) and the three the Create Invoice presses made — is **no longer in the app** (removed by no step
+of `o2i.py`). A hand line first sent to the probe invoice (*TEST o2i taxes hand-typed line*, `93ff7e11-…`)
+therefore hangs off a dead invoice; its account run stopped at the gateway (`未通过分支`, as any line whose
+invoice cannot be found does). It was left as it is, not deleted. `check` now reports a vanished invoice
+instead of crashing on it.
 
 ### 14.7 What the CLI proved, and what still needs a browser
 
