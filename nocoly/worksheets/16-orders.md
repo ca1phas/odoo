@@ -48,7 +48,7 @@ built** (owner's decision, 21 Sep 2026).
 | 18 | Online payment | `require_payment` | Checkbox | — | **unticked** | from a company setting — see below |
 | 19 | Prepayment % | `prepayment_percent` | Number | — | **100 %** | from a company setting — see below |
 | 20 | Invoicing status | `invoice_status` | Single Select, read-only | — | computed | **Upselling Opportunity · Fully Invoiced · To Invoice · Nothing to Invoice** |
-| 21 | Delivery status | `delivery_status` | **Single Select, editable** | — | empty | **Owner's decision, 21 Sep 2026: a flag a person sets, not a computed figure** — Odoo computes it from stock pickings, which do not exist here. See *How Odoo computes it* below |
+| 21 | Delivery status | `delivery_status` | **Single Select, read-only, computed** | — | Nothing to Deliver | **Computed from the lines since 23 Sep 2026** (owner) — Odoo computes it from stock pickings, which do not exist here, so it is worked out from each product line's Quantity and Quantity Delivered. Until then it was a hand-set flag (owner, 21 Sep 2026). See *Delivery status* below and §15 |
 | 22 | Untaxed Amount · Tax · Total | `amount_untaxed`, `amount_tax`, `amount_total` | roll-ups over the lines | — | — | the pattern 06 uses: Σ Subtotal, and Σ Total − Σ Subtotal for the tax |
 | 23 | **Locked** | `locked` | **Checkbox, editable** | — | unticked | **Owner's decision, 21 Sep 2026: a plain editable checkbox, and Odoo's Lock / Unlock buttons are not built.** Odoo's help: "Locked orders cannot be modified." It still drives a read-only rule — see below |
 
@@ -73,7 +73,7 @@ defaults and record that they came from a setting, or build a one-row Settings w
 cheaper and is what every other ERP Master worksheet has done with a company default; the cost is that
 changing the validity from 30 days becomes a build change rather than a setting.
 
-### Delivery status — why it is a flag here
+### Delivery status — computed from the lines, not from pickings
 
 Odoo's `delivery_status` is **not a `sale` field at all**. It lives in **`sale_stock`**
 (`addons/sale_stock/models/sale_order.py`), is `store=True` and computed from
@@ -87,24 +87,37 @@ Odoo's `delivery_status` is **not a `sale` field at all**. It lives in **`sale_s
 | any picking done, but no line carries a delivered quantity | `started` **Started** |
 | pickings exist, none done | `pending` **Not Delivered** |
 
-Every branch reads a stock picking. **There are no pickings in ERP Master and there will not be until
-Inventory is built** (Phase 5), so nothing here could compute this field honestly. The owner's call is
-therefore to carry it as an **editable Single Select a person sets by hand** — the same shape as *Locked*,
-where Odoo's mechanism was replaced by a control someone drives.
+Every branch reads a stock picking, and **there are no pickings in this app until Inventory is built**. From
+21 Sep 2026 the field was therefore an editable flag a person set by hand; the owner then reported that it did
+not follow the lines ("delivery status is not updated when quantity delivered of line items changes"), and on
+**23 Sep 2026 approved computing it from the lines' own quantities** instead — the one delivery figure the app
+does have, which the **Deliver** button and a person typing Quantity Delivered both write:
 
-**Two things to know about the option set as built:**
+| Here, in this order — the first that holds wins | Value |
+|---|---|
+| Status is not *Sales Order* (Quotation, Quotation Sent, Cancelled) | **Nothing to Deliver** |
+| a Sales Order with no product line (Display Type = Product) | **Nothing to Deliver** |
+| every product line's Quantity Delivered ≥ its Quantity | **Fully Delivered** |
+| some product line has Quantity Delivered > 0 | **Partially Delivered** |
+| otherwise | **Not Delivered** |
+
+**Over-delivery on one line never covers another line's shortfall.** Each line's shortfall is clamped at zero
+(*Left to Deliver*) before the order sums it, so an order with one line 5/3 and another 0/2 is Partially
+Delivered, not Fully. The demo has two such over-deliveries, GGR-PO-91104 and SRW-PO-2025-114, and both are
+Fully Delivered because their other lines are delivered in full.
+
+**Two things to know about the option set:**
 
 - It carries **Nothing to Deliver**, which Odoo does not have as an option — Odoo uses the **empty** value for
   "no pickings". Naming the null is the same modelling choice Invoice Lines made when it gave Display Type an
-  explicit *Product* option, so it is consistent with the house pattern and worth keeping.
-- It **omits `started` — Started**. In Odoo that is a real state, and a distinct one: a picking has been
-  completed but no line yet shows a delivered quantity. Add it if the four are meant to mirror Odoo; leave it
-  out deliberately if a hand-set flag does not need the distinction. **Not decided.**
+  explicit *Product* option.
+- It **omits `started` — Started**, and stays without it: in Odoo that state means a picking is done while no
+  line yet shows a delivered quantity, and with no pickings nothing here can be in it.
 
-Because the value is now typed rather than derived, **it can disagree with reality** — nothing keeps it in
-step, and nothing will until Inventory lands and the field can go back to being computed. The rule that hides
-it unless Status is *Sales Order* (see below) carries more weight for that reason: it keeps a meaningless
-flag off an unconfirmed quotation.
+Every product line counts, services and the Discount product included — the Deliver button delivers them all,
+so the two stay consistent. In Odoo a service or a discount line never gets a picking and so never holds a
+delivery back. The rule that hides Delivery Status unless Status is *Sales Order* (see below) still applies.
+How it is built is §15.
 
 ### Lines — `sale.order.line`
 
@@ -270,7 +283,7 @@ amount_total · invoice_status · expected_date`, with a dozen more available an
 | What | Why |
 |---|---|
 | **Create Invoice** and the order → invoice link (`invoice_lines`, `invoice_count`, `invoice_status` as a live figure) | This is the one piece worth arguing about. Invoices and Invoice Lines are built, so the link is reachable — but it needs a button that creates a document and its lines from another document's lines, which nothing in Phase 1 does. Treat it as its own bundle |
-| **Delivery** — `qty_delivered` and `commitment_date` honouring stock, and `delivery_status` as a **computed** figure | Inventory is not in scope at all. Delivery status is built as an editable flag instead (§2); the computation waits for Phase 5 |
+| **Delivery** — `qty_delivered` and `commitment_date` honouring stock, and `delivery_status` from **pickings** | Inventory is not in scope at all. Since 23 Sep 2026 Delivery status is computed from the lines' Quantity and Quantity Delivered instead (§2, §15); the pickings wait for Phase 5 |
 | **Pricelists** (`pricelist_id`) and the price-recompute it drives | A worksheet of its own, not built |
 | **Quotation Templates** (`sale_order_template_id`) | Not built; zero records on the tenant |
 | **Quote Builder** tab (`quotation_document_ids`, `customizable_pdf_form_fields`) | See worksheet 17 — it configures a PDF assembler HAP does not have |
@@ -1107,17 +1120,44 @@ so the Relation points at Orders itself. Recreate from the record menu still wor
 | Create from Template | Switch (`6ab39292bd43f5576224145d`) | — (not an Odoo field) | On a new quotation only: hidden once the order has a Number |
 | Quotation Template | Relation → Orders, single, one-way (`6ab39292bd43f5576224145e`) | `sale_order_template_id` | Shown while the toggle is ticked **or** a template is chosen; read-only once saved; picker filtered to Is Template ticked; shown by Template Name |
 
+### 14.1 · Create Quotation | Create Template, and everything a template hands on (23 Sep 2026, owner's follow-ups)
+
+- **The switch.** *Create* (`6ab39685e54d2a34faaab04b`, a tiled single select — type 9, `direction "2"`, title hidden)
+  sits alone on the top row of a new record: **◉ Create Quotation ○ Create Template**, Create Quotation by default,
+  hidden once the record has a Number. A type 11 with `showtype "1"` reads "Tiled" in the designer and still renders
+  as a dropdown; type 9 is what Products' Product Type is.
+- **Create Template** hides every field a template does not hand on (rule *A template shows only what it hands on*,
+  also applied to a saved template via Is Template): Status, Locked, Customer and both addresses, Expiration,
+  Quotation/Order Date, Delivery Date, Payment Terms, Invoice and Delivery Status, Invoicing Closed, the signature
+  fields, Signing Link, Invoices, Invoice Count, Salesperson, Sales Teams, Customer Reference, Tracking/Source
+  Document and the from-template pair. What stays: Template Name, Tax Mode, Order Lines, Terms and conditions,
+  Online Signature/Payment, Tags, Journal, Incoterm and Incoterm Location.
+- **Is Template is ticked by a workflow**, *Orders: a record created as a template is ticked Is Template*
+  (`6ab3998a789584ded34ce3aa`, on create, trigger filtered to Create = Create Template), about 8 s after the save;
+  proved on S00050 and S00054. A function default on the hidden Is Template stored 0 (S00049, since relabelled TEST).
+  On the new record orders.py's *Template Name is for templates* and *A quotation needs a customer* read the switch
+  too, because Is Template is still unticked there. **A hide from any rule wins over a show from another** — a
+  second rule showing Template Name could not beat orders.py's; it is disabled (`RETIRED_RULES`), not deleted.
+- **Copied as well:** Tags, Incoterm, Incoterm Location, and **Tax Mode**. Inside a function a lookup of a single
+  select is not its text (probe on Customer Reference: `M=Create Quotation|L=` — the switch read as text, the lookup
+  broke the expression), so a hidden text formula *Tax Mode name* (`6ab39982805aef7032e33b1c`) holds each order's
+  Tax Mode as text, the hidden lookup *Template Tax Mode* (`6ab395d4805aef7032e33acd`) reads it through Quotation
+  Template, and Tax Mode's function default is `IF(ISBLANK(lookup),"Tax Excluded",lookup)`. A function default
+  replaces the static one outright — an empty result does not fall through to it. Proved in the browser: Tax
+  Excluded with no template, **Tax Included** on choosing *TEST Tax Included template* (S00048), and its tag, DAP
+  incoterm and location filled.
+
 **What fills, in the open form, before the save** (UI-verified 23 Sep 2026):
 
 | Target | How |
 |---|---|
 | Order Lines | the subtable's default is a **query worksheet** (`6ab3929d7d58b0f4498fe5a0`): Order Lines whose Orders is the chosen template, by Sequence; each row hands over Sequence, Display Type, Product, Description, Quantity, Unit, Unit Price, Discount, Taxes, Lead Time, Optional Line. Choosing the other template replaces the lines |
-| Terms and conditions · Journal · Online Signature · Online Payment · Prepayment Percentage | a dynamic default read through Quotation Template (`defsource` rcid), the shape Payment Terms uses through Customer |
+| Terms and conditions · Journal · Online Signature · Online Payment · Prepayment Percentage · Tags · Incoterm · Incoterm Location | a dynamic default read through Quotation Template (`defsource` rcid), the shape Payment Terms uses through Customer |
+| Tax Mode | a function default over a lookup of the template's Tax Mode as text (§14.1) |
 
 **Not copied, on purpose:** Customer and the addresses (an Odoo template has no customer); Payment Terms (follows the
 customer, and one default cannot read both); Expiration (Odoo adds the template's number of days to today; the
-existing today + N default stays); **Tax Mode** (required, with a static default — a template kept Tax Included would
-start a Tax Excluded quotation; both demo templates are Tax Excluded).
+existing today + N default stays). Tax Mode was on this list first; it is copied now (§14.1).
 
 **Proved:** S00047 (Customer Nocoly, Customer Reference *TEST from template*) was made in the browser from *Starter
 Classroom Pack*: six lines, the section row among them, Untaxed 27,137.00 / Tax 2,664.70 / Total 29,801.70 — the

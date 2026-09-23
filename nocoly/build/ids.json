@@ -83,7 +83,11 @@
   "Orders: Invoice Status when a line is deleted": "6ab2d2fe94093ab76bddae2f",
   "Orders: Create Invoice": "6ab2d6a0a2c872a5c1408ae6",
   "Orders: Create Invoice: one order line": "6ab2d7f5789584ded345986f",
-  "Invoices: Register Payment": "6ab3581aa2c872a5c145b333"
+  "Invoices: Register Payment": "6ab3581aa2c872a5c145b333",
+  "Orders: Delivery Status follows the order's own Status": "6ab396e194093ab76be5bdc3",
+  "Orders: Delivery Status follows its lines": "6ab3978894093ab76be5d12b",
+  "Orders: Delivery Status when a line is deleted": "6ab397cc94093ab76be5e752",
+  "Orders: a record created as a template is ticked Is Template": "6ab3998a789584ded34ce3aa"
  },
  "buttons": {
   "Archive": "6aa8a5654720c515252bda3d",
@@ -424,7 +428,10 @@
   "Orders: Create from Template": "6ab39292bd43f5576224145d",
   "Orders: Quotation Template": "6ab39292bd43f5576224145e",
   "Orders: Units left to deliver": "6ab39411e54d2a34faaaafa1",
-  "Orders: Product lines with deliveries": "6ab39411e54d2a34faaaafa2"
+  "Orders: Product lines with deliveries": "6ab39411e54d2a34faaaafa2",
+  "Orders: Template Tax Mode": "6ab395d4805aef7032e33acd",
+  "Orders: Create": "6ab39685e54d2a34faaab04b",
+  "Orders: Tax Mode name": "6ab39982805aef7032e33b1c"
  },
  "rules": {
   "Journals: Payment Communications only for Sales": "6aa9dae5e54d2a34fa4dfde2",
@@ -1236,7 +1243,19 @@
   "rollup-trigger: TEST rollup race 3 two-tax line": "cfb00dc1-adf7-45c6-b9ba-15e10ef04023",
   "rollup-trigger: TEST rollup race 3 6% line": "381943f0-796f-4e41-b350-a12ef02a9785",
   "rollup-trigger: TEST rollup race invoice 3": "6fc0ae9f-4eeb-4fb7-8460-14c51fd8f504",
-  "Orders: TEST Apply Discount, mixed taxes": "6b6d4632-58b1-4699-b642-fa0fd282db1f"
+  "Orders: TEST Apply Discount, mixed taxes": "6b6d4632-58b1-4699-b642-fa0fd282db1f",
+  "Templates: TEST Tax Included template": "ca94dae5-7c68-4974-8b3b-e5b010b9a996",
+  "Templates: TEST template made with the Create switch": "6e086604-4fd5-4fa8-82bb-f8066c141556",
+  "delivery: TEST delivery status – no product lines": "58ec17b2-79c2-4dfb-8c6a-219479e53732",
+  "delivery: TEST delivery section only": "1ddfe9c4-3962-4f6d-b320-0abfc3174c11",
+  "Templates: TEST first switch trial": "176a4e99-b7ff-4388-95cf-8da3a7aa024d",
+  "delivery: TEST delivery status": "119844b8-bf39-4091-ac1a-b207c4820a17",
+  "delivery: TEST delivery section": "089719a0-0ed4-450f-85bc-357f3a80cdfe",
+  "delivery: TEST delivery line A": "4c87657c-2342-47dc-ade4-e561f6508e4a",
+  "delivery: TEST delivery status – Deliver button": "f6d48776-f0b3-4b42-8695-7e50b93c5e37",
+  "delivery: TEST delivery Deliver line 1": "0f072451-4a92-46ce-ad64-79c674084f9a",
+  "delivery: TEST delivery Deliver line 2": "74dbd23e-fab2-49c1-9437-b5988d34a268",
+  "Templates: TEST second switch template": "3db6ce61-97f6-45f8-9d55-4039d1e40cab"
  },
  "roles": {
   "Administrator": "25ef76ef-5538-4779-a5e6-ab1fbce9dcfe",

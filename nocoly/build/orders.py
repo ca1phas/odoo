@@ -201,6 +201,7 @@ RULE_TAX_MODE = 'Tax Mode is fixed once the quotation is confirmed'
 # The two the template flag brings with it (§6 below builds the controls they stand on).
 RULE_CUSTOMER = 'A quotation needs a customer, a template does not'
 RULE_TEMPLATE_NAME = 'Template Name is for templates'
+CREATE_SWITCH = 'Create'                           # templates.py's switch at the top of a new record
 
 # Odoo's `readonly="state in ['cancel','sale']"` covers eight fields on `sale.order`'s form. Three of them were
 # on the worksheet when the rule was first built; the evening rebuild of 21 Sep 2026 added **Online Signature,
@@ -307,10 +308,18 @@ def template_rule_specs(f):
       SHOW it, and REQUIRE it. Two items rather than one rule each because a field a rule hides must not be
       required on the field itself (BUILDING.md), and the show half is what hides it on an ordinary quotation.
     """
+    customer = [C.cond(f[IS_TEMPLATE], C.NE, 1)]
+    template = [[is_ticked(f, IS_TEMPLATE)]]
+    if CREATE_SWITCH in f:
+        # templates.py's Create Quotation | Create Template switch: on a new record Is Template is still unticked
+        # (a workflow ticks it after the save), so the switch decides.
+        sw = f[CREATE_SWITCH]
+        as_template = next(o['key'] for o in sw['options'] if o['value'] == 'Create Template')
+        customer.append(C.cond(sw, C.NE, as_template))
+        template.append([C.cond(sw, C.EQ, as_template), C.cond(f['Number'], C.EMPTY)])
     return [
-        (RULE_CUSTOMER, C.INTERACTION, C.any_of([C.cond(f[IS_TEMPLATE], C.NE, 1)]),
-         [C.item(C.REQUIRE, f[CUSTOMER])], {}),
-        (RULE_TEMPLATE_NAME, C.INTERACTION, C.any_of([is_ticked(f, IS_TEMPLATE)]),
+        (RULE_CUSTOMER, C.INTERACTION, C.any_of(customer), [C.item(C.REQUIRE, f[CUSTOMER])], {}),
+        (RULE_TEMPLATE_NAME, C.INTERACTION, C.any_of(*template),
          [C.item(C.SHOW, f[TEMPLATE_NAME]), C.item(C.REQUIRE, f[TEMPLATE_NAME])], {}),
     ]
 
