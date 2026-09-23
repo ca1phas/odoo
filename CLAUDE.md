@@ -84,7 +84,7 @@ restriction **on**. `111` unrestricted · `101` read-only · `011` hidden · `10
 form. A hidden field is never a column; hidden-on-create is not the same thing.
 
 **An API write works whatever the permission** — `011` hidden and `100` read-only both store through
-`record update`, and a workflow update node writes them too. Permission governs the *form*, not the API.
+`record update`, and a workflow update node writes them too. Permission governs the *form*, not the API. **Since hap-cli 0.9 (23 Sep 2026) that needs `--ignore-rules`**: without it `record create/update` checks the form's read-only and required fields and business rules and refuses. `nocoly/build/hap.py run()` adds it to every record write; a raw `hap worksheet record update` you type yourself must pass it.
 
 **But no single read path is complete, and they differ.** Measured on Orders, 21 Sep 2026:
 
