@@ -1094,7 +1094,9 @@ def order_want(o, display_of, incoterm_of):
         delivery_date=moment(o['delivery_date_offset']) if o['delivery_date_offset'] is not None else '',
         # Invoice Status is not written or compared: since the order → invoice link (o2i.py, 23 Sep 2026) it
         # is computed from the invoice lines linked to the order's lines — see the `link` step.
-        delivery_status=o['delivery_status'] or '',
+        # Delivery Status is not written or compared either: since delivery.py (23 Sep 2026) three workflows
+        # compute it from the lines' Quantity and Quantity Delivered. demo.json's `delivery_status` still says
+        # which lines `delivered_for` fills, and it states the value those workflows arrive at.
         payment_terms=o['payment_terms'] or '',
         locked='1' if o['locked'] else '0', invoicing_closed='1' if o['invoicing_closed'] else '0',
         is_template='1' if o['is_template'] else '0', template_name=o['template_name'] or '',
@@ -1185,9 +1187,6 @@ def step_orders():
             {'id': cid('Signed By'), 'value': want['signed_by']},
             {'id': cid('Signed On'), 'value': want['signed_on']},
             {'id': cid('Discount Value'), 'value': want['discount_value']},
-            {'id': cid('Delivery Status'),
-             'value': [option_key(f['Delivery Status'], o['delivery_status'])] if o['delivery_status']
-                      else []},
             {'id': cid('Discount Type'),
              'value': [option_key(f['Discount Type'], o['discount_type'])] if o['discount_type'] else []},
             {'id': cid('Payment Terms'),
@@ -1842,7 +1841,7 @@ def step_plan():
     print(f"    Sales Orders by Invoice Status: "
           f"{dict(Counter(o['invoice_status'] for o in orders if o['status'] == 'Sales Order'))}")
     print(f"    Sales Orders by Delivery Status: "
-          f"{dict(Counter(o['delivery_status'] for o in orders if o['delivery_status']))}")
+          f"{dict(Counter(o['delivery_status'] for o in orders if o['status'] == 'Sales Order'))}")
     open_quotes = [o for o in orders if o['status'].startswith('Quotation') and not o['is_template']]
     print(f"    open quotations expiring within 7 days: "
           f"{sorted(o['key'] for o in open_quotes if 0 <= (o['expiry_offset'] or 0) <= 7)}")

@@ -1440,3 +1440,22 @@ line's Subtotal; not found → create it. A second sub-process then prices each 
   records made after it, until the records are re-created. Read a few rows before counting on one.
 - **A chart's `dotFormat` "1" drops trailing zeros** ("RM 1,383,107.2"); **"0" keeps `dot` decimals.** Use "0" for
   money.
+
+### Four from Delivery Status (23 Sep 2026, Orders)
+
+- **A worksheet function formula computes empty when a Number operand was never written.** Order Lines' *Left to
+  Deliver*, `MAX(0, Quantity − Quantity Delivered)`, stored nothing on the 15 of 142 lines whose Quantity Delivered
+  had never been written — an empty cell is not 0 there. `IF(CONCAT(x, "") == "", 0, x)` in its place fixed all 15.
+  **`MAX` exists** in a function formula (no `c` prefix) and clamps as expected.
+- **Two 汇总 appended to Orders stayed blank on every existing order** (46 of 46, `record get` and GetRowDetail,
+  after a minute and more) while the same worksheet's *Product lines* had filled at once. **Saving each one's
+  `advancedSetting.filters` to `""` and back** — two version-pinned saves naming only those controls — recomputed
+  both on every order within seconds (`delivery.nudge_rollups`). And **a 汇总 can sum a function formula (type 53)**:
+  *Units left to deliver* sums Left to Deliver and agreed with the lines on every order.
+- **hap-cli 0.9 checks a whole-step `node save` against the step's known keys**, and a search step (type 7) has no
+  `appType`: `o2i.sync_search` is refused ("This kind of step has no setting called 'appType'") and so would be
+  `o2i.py status` on a re-run that needs to re-save a search. Update steps (6) and get-multiple (13) still take it;
+  the trigger (0), branch paths (2) and formulas (9) are not checked. `delivery.sync_search` is the 0.9 shape.
+- **hap-cli 0.9's `batch-add` refuses `not_empty` on a Relation** in a branch condition ("It takes: all_contains,
+  eq, ne") — the guard *Does the line belong to an order?* that o2i built under 0.8. Build the path with no
+  condition, then write *Orders is not empty* (conditionId 7) with `node save --type 2`, which still takes it.

@@ -79,7 +79,7 @@ the twelve months, so a dashboard has a shape to draw.
 | **Cancel** | any Quotation, Quotation Sent or unlocked Sales Order |
 | **Set to Quotation** | the 3 Cancelled orders and the 6 Quotation Sent ones |
 | **Mark as Sent** | the 9 Quotations |
-| **Deliver** | the 16 Sales Orders; 2 of them are part-delivered already (SMBD-PO-2026-0502, SRW-PO-2026-207) and 1 not delivered at all (HPSC-PO-2026-0788) |
+| **Deliver** | the 16 Sales Orders; 2 of them are part-delivered already (SMBD-PO-2026-0502, SRW-PO-2026-207) and 2 not delivered at all (HPSC-PO-2026-0788, TANWM-2026-0051). Delivery Status follows the lines by itself since 23 Sep 2026 (16 §15) |
 | **Apply Discount** | HPSC-RFQ-2026-0812 (Global Discount 10%), AWAN-RFQ-2026-0401 (Global Discount 5%), GGR-RFQ-93012 (**Fixed Amount** RM 500) — each already carrying the lines the button writes, one per tax group |
 | **Send Quotation** | every quotation; every customer has an Email |
 | **Share for Signature** | the open quotations. It is **withheld** on the two expired ones — SMBD-RFQ-2026-0611 (expired 12 days ago) and KTN-RFQ-2026-0288 (4 days ago) |
@@ -269,6 +269,7 @@ Days → 60.
 |---|---|
 | *Roll the lines up into the invoice* | an invoice's Untaxed Amount, Tax, Total, Amount Due |
 | the Order Lines 汇总 | an order's Untaxed Amount, Tax, Total |
+| *Orders: Delivery Status follows …* (three workflows, `delivery.py`) | an order's Delivery Status — from its lines' Quantity and Quantity Delivered, which **are** written |
 | *fill the account of a new line* | an invoice line's Account |
 | *create a new product's variant* | a product's first variant |
 | *copy a product's … to its active variant* | a multi-variant product's Internal Reference and Cost after creation |

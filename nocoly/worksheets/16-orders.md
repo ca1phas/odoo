@@ -1179,3 +1179,73 @@ computed on the save, as for any order.
 - A relation-read default on a switch stores `0` when nothing is chosen, as the static `0` did.
 
 The picker still offers **+ Record** (a new order made from inside the picker); left as is.
+
+## 15 · Delivery Status computed from the lines — built 23 Sep 2026 (`delivery.py`)
+
+The rule is *Delivery status* in §2. It is Invoice Status's mechanism (`o2i.py` step `status`, 21 §6.4) reused:
+a Dropdown cannot be a formula, so workflows write it, reading figures the server keeps on the order.
+
+| Where | Control | Id | What |
+|---|---|---|---|
+| Order Lines | **Left to Deliver** (the owner's, hidden `011`, function formula) | `6ab380817d58b0f4498fde44` | `IF(Display Type == "Product", MAX(0, Quantity − Quantity Delivered), 0)`, a never-written Quantity Delivered taken as 0. Alias `qty_to_deliver` |
+| Orders | **Units left to deliver** (汇总, sum, hidden) | `6ab39411e54d2a34faaaafa1` | Σ Left to Deliver over the product lines |
+| Orders | **Product lines with deliveries** (汇总, count, hidden) | `6ab39411e54d2a34faaaafa2` | product lines whose Quantity Delivered > 0 |
+| Orders | Product lines (o2i's, hidden) | `6ab2d077e54d2a34faaa9bbf` | product lines — reused |
+
+Both new 汇总 sit at **row 9999** (appended; placement is the owner's — hidden, so it barely matters).
+
+| Workflow | Id | Starts on |
+|---|---|---|
+| *Orders: Delivery Status follows the order's own Status* | `6ab396e194093ab76be5bdc3` | an order created, or its Status written |
+| *Orders: Delivery Status follows its lines* | `6ab3978894093ab76be5d12b` | a line created or updated with Orders, Display Type, Quantity or Quantity Delivered in the write |
+| *Orders: Delivery Status when a line is deleted* | `6ab397cc94093ab76be5e752` | a line deleted |
+
+Each: (the two line workflows inside *Does the line belong to an order?*, Orders not empty) → *Get the order as it
+now stands* → three number steps (product lines, units still to deliver, product lines with anything delivered) →
+*Which Delivery Status?*, whose paths are tried in order — *Every product line is delivered in full* (Sales Order,
+≥ 1 product line, 0 units left) · *Something is delivered* (Sales Order, ≥ 1 product line, ≥ 1 line with a delivery)
+· *Nothing is delivered yet* (Sales Order, ≥ 1 product line) · *Otherwise* — each ending in one update of Delivery
+Status. All three published and enabled.
+
+**The Deliver button needed no change**: its child workflow writes each line's Quantity Delivered, which starts the
+line workflow once per line; the last run sees every line delivered.
+
+**The owner's draft** *Set Delivery Status* (`6ab37f39a2c872a5c1474896`) started on Orders' *Order Lines* field,
+which a line edit never writes — which is why it never fired. It is renamed **ZZ obsolete – Set Delivery Status**,
+left unpublished and disabled, and nothing in it was changed or deleted.
+
+**Backfill.** Every order was worked out from its lines (both read paths) and written where it differed: 32 of 48
+orders. Before: Nothing to Deliver 2 · *empty* 31 · Fully 12 · Not 1 · Partially 2. After: Nothing to Deliver 24 ·
+Fully 15 · Not 5 · Partially 4. The only demo Sales Order that moved is **TANWM-2026-0051** (S00016), Nothing to
+Deliver → **Not Delivered**: a confirmed order with three undelivered product lines. `demo.json` now says so, and
+`demo.py` no longer writes or compares Delivery Status (the workflows own it, as Invoice Status is owned).
+
+**Selfcheck** (`delivery.py selfcheck`, CLI only, 23 Sep 2026) — every case OK. Where the answer equals the value
+already stored, a wrong value was written by hand first, so the workflow had to put it right:
+
+| TEST order | Action | Delivery Status |
+|---|---|---|
+| *TEST delivery status – no product lines* (a section only) | Status → Quotation; → Sales Order | Nothing to Deliver; Nothing to Deliver |
+| *TEST delivery status* (A qty 3, B qty 2, a section) | nothing delivered | Not Delivered |
+| | A 1 | Partially Delivered |
+| | A 5 (over-delivered), B 0 | **Partially Delivered** |
+| | B 2 | Fully Delivered |
+| | B 0 | Partially Delivered |
+| | line B deleted (soft delete, recycle bin) | Fully Delivered |
+| | Status → Cancelled; → Quotation; → Sales Order | Nothing to Deliver; Nothing to Deliver; Fully Delivered |
+| *TEST delivery status – Deliver button* (4 and 2.5) | before; **Deliver** pressed | Not Delivered; Fully Delivered |
+
+`delivery.py check` afterwards: Left to Deliver right on all 153 lines, and all 53 orders' Delivery Status agree
+with their lines and with their roll-ups. **Not verified in the browser.**
+
+**Found while building** (BUILDING.md):
+
+- `Quantity − Quantity Delivered` computes **empty** when Quantity Delivered was never written: 15 of 142 lines.
+  `IF(CONCAT(x, "") == "", 0, x)` fixes it. `MAX` works in a worksheet function formula.
+- Both 汇总 were appended **blank on all 46 existing orders**, and stayed blank. Saving each one's filter away and
+  back (two version-pinned saves) recomputed them on every order within seconds. A 汇总 **can** sum a function
+  formula.
+- hap-cli 0.9 refuses two shapes o2i was built with: `appType` in a search step's whole-step save, and
+  `not_empty` on a Relation in `batch-add`. `delivery.py` works around both.
+- By construction, not tested: a line moved from one order to another starts the line workflow for the **new**
+  order only; the old one keeps its value until its next change. Invoice Status has the same gap.

@@ -2060,7 +2060,7 @@
    "date_offset": -8,
    "expiry_offset": 22,
    "invoice_status": "To Invoice",
-   "delivery_status": "Nothing to Deliver",
+   "delivery_status": "Not Delivered",
    "locked": false,
    "invoicing_closed": false,
    "signed": null,
@@ -2080,7 +2080,7 @@
    "online_payment": false,
    "prepayment_percentage": null,
    "to_invoice_later": true,
-   "demonstrates": "Nothing to Deliver; newest confirmed order",
+   "demonstrates": "Not Delivered; newest confirmed order",
    "lines": [
     {
      "kind": "Product",
