@@ -1,7 +1,8 @@
 # CLAUDE.md
 
 This is an Odoo 19.0 fork. **Everything Claude works on lives in `nocoly/`** — building the Nocoly HAP app
-**ERP Master** as a replica of Odoo. Nothing here asks you to change Odoo itself; `addons/` is read as the
+**ERP Master** as a replica of Odoo. (The owner renamed the app **"CRM odoo"** on 23 Sep 2026; guards accept
+both through `hap.APP_NAMES`. "ERP Master" below means that app.) Nothing here asks you to change Odoo itself; `addons/` is read as the
 reference for Odoo's own behaviour.
 
 **The reference tenant casimir.odoo.com is gone** — its trial expired on 22 Sep 2026 and it answers only with a

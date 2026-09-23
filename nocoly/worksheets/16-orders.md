@@ -1092,3 +1092,50 @@ and every line's Subtotal, Tax rate, Tax Amount and Total, read through both pat
 **Scratch controls** used for the measurement are renamed `ZZ obsolete – …` and hidden (seven, `6ab353af…d9` to
 `6ab354ac…807`); nothing was deleted. **TEST records**: order `TEST live tax order` (S00038) with six `TEST live
 tax –` lines (ids in `ids.json` under `Order Lines: TEST live tax …`).
+
+## 14 · Start a quotation from a template — built 23 Sep 2026 (`templates.py`)
+
+The owner's design: a toggle **Create from Template** on a new quotation; ticking it shows **Quotation Template**, a
+Relation back to Orders that offers only templates; choosing one fills in the rest. Odoo's counterpart is
+`sale_management`'s `sale_order_template_id` (addons/sale_management/models/sale_order.py:14-120, 19.0 source): its
+onchange replaces the order lines with the template's, and its computes copy the note, require_signature,
+require_payment, prepayment_percent, validity_date and journal_id. Here a template is an order with Is Template ticked,
+so the Relation points at Orders itself. Recreate from the record menu still works as before.
+
+| Control | Type | Alias | Behaviour |
+|---|---|---|---|
+| Create from Template | Switch (`6ab39292bd43f5576224145d`) | — (not an Odoo field) | On a new quotation only: hidden once the order has a Number |
+| Quotation Template | Relation → Orders, single, one-way (`6ab39292bd43f5576224145e`) | `sale_order_template_id` | Shown while the toggle is ticked **or** a template is chosen; read-only once saved; picker filtered to Is Template ticked; shown by Template Name |
+
+**What fills, in the open form, before the save** (UI-verified 23 Sep 2026):
+
+| Target | How |
+|---|---|
+| Order Lines | the subtable's default is a **query worksheet** (`6ab3929d7d58b0f4498fe5a0`): Order Lines whose Orders is the chosen template, by Sequence; each row hands over Sequence, Display Type, Product, Description, Quantity, Unit, Unit Price, Discount, Taxes, Lead Time, Optional Line. Choosing the other template replaces the lines |
+| Terms and conditions · Journal · Online Signature · Online Payment · Prepayment Percentage | a dynamic default read through Quotation Template (`defsource` rcid), the shape Payment Terms uses through Customer |
+
+**Not copied, on purpose:** Customer and the addresses (an Odoo template has no customer); Payment Terms (follows the
+customer, and one default cannot read both); Expiration (Odoo adds the template's number of days to today; the
+existing today + N default stays); **Tax Mode** (required, with a static default — a template kept Tax Included would
+start a Tax Excluded quotation; both demo templates are Tax Excluded).
+
+**Proved:** S00047 (Customer Nocoly, Customer Reference *TEST from template*) was made in the browser from *Starter
+Classroom Pack*: six lines, the section row among them, Untaxed 27,137.00 / Tax 2,664.70 / Total 29,801.70 — the
+template's own figures. On the open form a copied line shows Tax Amount 0.00 until the save; the order's totals are
+computed on the save, as for any order.
+
+**Four things learnt on the platform:**
+
+- A query-worksheet default is stored per worksheet (`Worksheet/SaveQuery`, read with `GetQueryBySheetId`), and the
+  control points at it with `advancedSetting.defaulttype "2"` and `dynamicsrc {"id", "sourceId"}`. **`GetQueryBySheetId`
+  lists only the queries a control points at** — a saved query reads back only after the pointer is written. The CLI
+  has no command for it; `templates.py query` calls the API through the CLI's session.
+- **A view's hidden fields are hidden in the record form opened from that view too**, + Record included. Hiding the
+  two new controls from the All view's columns made the toggle vanish from All's create form; undone. All shows every
+  field as a column, these two included.
+- A rule does not see a field another rule has hidden: *show Quotation Template while the toggle is ticked* stopped
+  showing it on a saved order once *hide the toggle once there is a Number* applied. The show rule now reads "ticked,
+  or a template chosen".
+- A relation-read default on a switch stores `0` when nothing is chosen, as the static `0` did.
+
+The picker still offers **+ Record** (a new order made from inside the picker); left as is.

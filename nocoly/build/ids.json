@@ -419,7 +419,12 @@
   "Order Lines: Non-percentage taxes": "6ab35c91e54d2a34faaaa857",
   "Order Lines: Order Date": "6ab36202e54d2a34faaaa888",
   "Order Lines: Customer": "6ab36202e54d2a34faaaa889",
-  "Order Lines: Salesperson": "6ab36202e54d2a34faaaa88a"
+  "Order Lines: Salesperson": "6ab36202e54d2a34faaaa88a",
+  "Order Lines: Left to Deliver": "6ab380817d58b0f4498fde44",
+  "Orders: Create from Template": "6ab39292bd43f5576224145d",
+  "Orders: Quotation Template": "6ab39292bd43f5576224145e",
+  "Orders: Units left to deliver": "6ab39411e54d2a34faaaafa1",
+  "Orders: Product lines with deliveries": "6ab39411e54d2a34faaaafa2"
  },
  "rules": {
   "Journals: Payment Communications only for Sales": "6aa9dae5e54d2a34fa4dfde2",
@@ -1319,5 +1324,8 @@
   "Sales Dashboard: Order Lines: Order Date": "6ab36202e54d2a34faaaa888",
   "Sales Dashboard: Order Lines: Customer": "6ab36202e54d2a34faaaa889",
   "Sales Dashboard: Order Lines: Salesperson": "6ab36202e54d2a34faaaa88a"
+ },
+ "queries": {
+  "Orders: Order Lines from Quotation Template": "6ab3929d7d58b0f4498fe5a0"
  }
 }
