@@ -12,6 +12,7 @@ is where Odoo's behaviour is read from.
 | **Reviewing a worksheet** | [`REVIEWING.md`](REVIEWING.md) — access, how to review, the status of every worksheet |
 | **Building or changing one** | [`BUILDING.md`](BUILDING.md) — setup, the per-worksheet loop, conventions, HAP traps |
 | **Asking why** | [`DECISIONS.md`](DECISIONS.md) — every decision, with its reason and who made it |
+| **Removing Inventory from a client copy** | [`modules/inventory-removal.md`](modules/inventory-removal.md) — scoped removal/keep plan and source-ID manifest; fresh target checks required |
 
 ```
 worksheets/  one hand-off per worksheet: requirements, build, test results

@@ -1,0 +1,3303 @@
+{
+  "schema_version": 1,
+  "module": "inventory",
+  "status": "documentation_only_not_executable",
+  "prepared_date": "2026-10-12",
+  "intended_delivery": "Duplicate ERP Master, then remove Inventory from the CLIENT COPY while keeping CRM and Sales.",
+  "source": {
+    "app_id": "6cb4d051-a33c-4bf9-b56f-5f47f0e85dc9",
+    "host": "https://www.nocoly.com",
+    "configuration_snapshot_dates": [
+      "2026-10-06",
+      "2026-10-08",
+      "2026-10-10",
+      "2026-10-11"
+    ],
+    "repo_remote": "https://github.com/ca1phas/odoo.git",
+    "repo_baseline_ref": "19.0",
+    "repo_baseline_sha": "be5fa501109060bb6b08432589b34ccb51fbdde8",
+    "repo_remote_verified_date": "2026-10-12",
+    "live_app_refreshed_for_this_plan": false,
+    "evidence_files": [
+      {
+        "workspace_relative_path": "artifacts/odoo-inventory-2026-10-07/barcode/scan-requests-main-20261010/baseline.json",
+        "sha256": "54e60b275a41d3aa7875c4b46d2db9b9d0c717ec1239c22393f2113627fffdba"
+      },
+      {
+        "workspace_relative_path": "artifacts/odoo-inventory-2026-10-07/barcode/scan-requests-main-20261010/app-after-table.json",
+        "sha256": "4961bc76eb81d6a8842976d4a0e464da051a12b4317177c02600e97fb8377b72"
+      },
+      {
+        "workspace_relative_path": "artifacts/odoo-inventory-2026-10-05/views-pages/view-index.json",
+        "sha256": "4ccc27e5a341fc0406d0ffd94803548107ba51245f9b10b8434698422358de59"
+      },
+      {
+        "workspace_relative_path": "artifacts/odoo-inventory-2026-10-07/barcode/scan-requests-main-20261010/request-fields.json",
+        "sha256": "d81b3dff4771531944e6ea054fd4ebd99139916342dacf3af4b5838ce13a682c"
+      },
+      {
+        "workspace_relative_path": "artifacts/odoo-inventory-2026-10-07/barcode/scan-requests-main-20261010/recovery-r2-20261011-acceptance.json",
+        "sha256": "49aca54fb880ec39a880d6477ba2bbd6f09aaf870b6b87bff401bdb0ed014d1b"
+      }
+    ]
+  },
+  "applicability": {
+    "source_ids_are_locator_hints_not_client_deletion_targets": true,
+    "never_apply_to_source_master_app": true,
+    "requires_fresh_target_id_map": true,
+    "requires_backup_with_recovery_plan": true,
+    "requires_target_ownership_confirmation": true,
+    "requires_no_retained_stock_consumers": true,
+    "requires_serial_relation_changes": true
+  },
+  "counts": {
+    "remove_worksheets": 22,
+    "remove_workflows": 80,
+    "registered_views": 70,
+    "registered_reports": 35,
+    "remove_complete_dashboards": 2,
+    "remove_fields_on_retained_worksheets": 1,
+    "retain_worksheets": 41,
+    "retain_workflows": 130,
+    "cross_module_direct_relations": 32,
+    "direct_relations_from_retained_to_inventory": 0,
+    "registered_inventory_workflows": 79,
+    "additional_unbound_inventory_qa_workflows": 1
+  },
+  "remove": {
+    "worksheets": [
+      {
+        "source_id": "6ac303825e337edf2bf1b7b4",
+        "name": "Transfer",
+        "field_count": 57,
+        "decision": "remove_after_preflight",
+        "field_scope": "All owned fields, form sections, nested child controls, rules, actions and views; no shared target records."
+      },
+      {
+        "source_id": "6ac3239e6f62fbbb4fe6e662",
+        "name": "Batch Transfers",
+        "field_count": 21,
+        "decision": "remove_after_preflight",
+        "field_scope": "All owned fields, form sections, nested child controls, rules, actions and views; no shared target records."
+      },
+      {
+        "source_id": "6ac3253c6f62fbbb4fe6e6cc",
+        "name": "Scrap",
+        "field_count": 31,
+        "decision": "remove_after_preflight",
+        "field_scope": "All owned fields, form sections, nested child controls, rules, actions and views; no shared target records."
+      },
+      {
+        "source_id": "6ac3227691143e1169ecc09f",
+        "name": "Lots & Serial Numbers",
+        "field_count": 19,
+        "decision": "remove_after_preflight",
+        "field_scope": "All owned fields, form sections, nested child controls, rules, actions and views; no shared target records."
+      },
+      {
+        "source_id": "6ac323976f62fbbb4fe6e656",
+        "name": "Packages",
+        "field_count": 28,
+        "decision": "remove_after_preflight",
+        "field_scope": "All owned fields, form sections, nested child controls, rules, actions and views; no shared target records."
+      },
+      {
+        "source_id": "6ac3227b896787ba363048f6",
+        "name": "Warehouses",
+        "field_count": 16,
+        "decision": "remove_after_preflight",
+        "field_scope": "All owned fields, form sections, nested child controls, rules, actions and views; no shared target records."
+      },
+      {
+        "source_id": "6ac322810e590eb436fe2d65",
+        "name": "Locations",
+        "field_count": 27,
+        "decision": "remove_after_preflight",
+        "field_scope": "All owned fields, form sections, nested child controls, rules, actions and views; no shared target records."
+      },
+      {
+        "source_id": "6ac3228791143e1169ecc0aa",
+        "name": "Operation Types",
+        "field_count": 60,
+        "decision": "remove_after_preflight",
+        "field_scope": "All owned fields, form sections, nested child controls, rules, actions and views; no shared target records."
+      },
+      {
+        "source_id": "6ac3239291143e1169ecc0f8",
+        "name": "Package Types",
+        "field_count": 19,
+        "decision": "remove_after_preflight",
+        "field_scope": "All owned fields, form sections, nested child controls, rules, actions and views; no shared target records."
+      },
+      {
+        "source_id": "6ac324655e337edf2bf1be83",
+        "name": "Storage Categories",
+        "field_count": 12,
+        "decision": "remove_after_preflight",
+        "field_scope": "All owned fields, form sections, nested child controls, rules, actions and views; no shared target records."
+      },
+      {
+        "source_id": "6ac325585e337edf2bf1bee6",
+        "name": "Scrap Reasons",
+        "field_count": 5,
+        "decision": "remove_after_preflight",
+        "field_scope": "All owned fields, form sections, nested child controls, rules, actions and views; no shared target records."
+      },
+      {
+        "source_id": "6ac3222e5e337edf2bf1bdda",
+        "name": "Routes",
+        "field_count": 18,
+        "decision": "remove_after_preflight",
+        "field_scope": "All owned fields, form sections, nested child controls, rules, actions and views; no shared target records."
+      },
+      {
+        "source_id": "6ac325100e590eb436fe2eff",
+        "name": "Reordering Rules",
+        "field_count": 31,
+        "decision": "remove_after_preflight",
+        "field_scope": "All owned fields, form sections, nested child controls, rules, actions and views; no shared target records."
+      },
+      {
+        "source_id": "6ac324486f62fbbb4fe6e68f",
+        "name": "Putaway Rules",
+        "field_count": 13,
+        "decision": "remove_after_preflight",
+        "field_scope": "All owned fields, form sections, nested child controls, rules, actions and views; no shared target records."
+      },
+      {
+        "source_id": "6ac3228d6f62fbbb4fe6e613",
+        "name": "Stock Moves",
+        "field_count": 65,
+        "decision": "remove_after_preflight",
+        "field_scope": "All owned fields, form sections, nested child controls, rules, actions and views; no shared target records."
+      },
+      {
+        "source_id": "6ac323960e590eb436fe2dd9",
+        "name": "Stock Move Lines",
+        "field_count": 48,
+        "decision": "remove_after_preflight",
+        "field_scope": "All owned fields, form sections, nested child controls, rules, actions and views; no shared target records."
+      },
+      {
+        "source_id": "6ac323b20e590eb436fe2e1c",
+        "name": "Stock Balances",
+        "field_count": 42,
+        "decision": "remove_after_preflight",
+        "field_scope": "All owned fields, form sections, nested child controls, rules, actions and views; no shared target records."
+      },
+      {
+        "source_id": "6ac324096f62fbbb4fe6e66e",
+        "name": "Stock Rules",
+        "field_count": 22,
+        "decision": "remove_after_preflight",
+        "field_scope": "All owned fields, form sections, nested child controls, rules, actions and views; no shared target records."
+      },
+      {
+        "source_id": "6ac32486896787ba36304a3d",
+        "name": "Storage Capacity Lines",
+        "field_count": 8,
+        "decision": "remove_after_preflight",
+        "field_scope": "All owned fields, form sections, nested child controls, rules, actions and views; no shared target records."
+      },
+      {
+        "source_id": "6ac3239a896787ba36304950",
+        "name": "Package History",
+        "field_count": 24,
+        "decision": "remove_after_preflight",
+        "field_scope": "All owned fields, form sections, nested child controls, rules, actions and views; no shared target records."
+      },
+      {
+        "source_id": "6ac325820e590eb436fe2f39",
+        "name": "Stock References",
+        "field_count": 6,
+        "decision": "remove_after_preflight",
+        "field_scope": "All owned fields, form sections, nested child controls, rules, actions and views; no shared target records."
+      },
+      {
+        "source_id": "6aca5bb06f62fbbb4fe7cb54",
+        "name": "Scan Requests",
+        "field_count": 11,
+        "decision": "remove_after_preflight",
+        "field_scope": "All owned fields, form sections, nested child controls, rules, actions and views; no shared target records."
+      }
+    ],
+    "fields_on_retained_worksheets": [
+      {
+        "worksheet_id": "6aa8ea0c4a22ad87b728cf0b",
+        "worksheet_name": "Products",
+        "source_id": "6ac668b35e337edf2bf21647",
+        "name": "Tracking",
+        "alias": "x_inventory_tracking",
+        "decision": "remove_only_after_all_consumers_are_detached",
+        "owner_pack": "product-inventory-tracking",
+        "remove_enclosing_inventory_tab": false
+      }
+    ],
+    "workflows": [
+      {
+        "source_id": "6ac5ac57c95312eaa1687e27",
+        "name": "Inventory - Initialize Transfer Draft",
+        "trigger_worksheet_id": "6ac303825e337edf2bf1b7b4",
+        "trigger_worksheet_name": "Transfer",
+        "enabled_at_snapshot": true,
+        "start_app_type": 1,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac6299ca7d6780599a55742",
+        "name": "Inventory - Exact QA Packing Guard Setup",
+        "trigger_worksheet_id": "6ac303825e337edf2bf1b7b4",
+        "trigger_worksheet_name": "Transfer",
+        "enabled_at_snapshot": false,
+        "start_app_type": 1,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac5409cacc2cad9b030f1d0",
+        "name": "Moves",
+        "trigger_worksheet_id": "6ac303825e337edf2bf1b7b4",
+        "trigger_worksheet_name": "Transfer",
+        "enabled_at_snapshot": false,
+        "start_app_type": 8,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac540a2f43c1c6efbf04c90",
+        "name": "Returns",
+        "trigger_worksheet_id": "6ac303825e337edf2bf1b7b4",
+        "trigger_worksheet_name": "Transfer",
+        "enabled_at_snapshot": false,
+        "start_app_type": 8,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac540a65fa8a0f2966852d8",
+        "name": "Batch",
+        "trigger_worksheet_id": "6ac303825e337edf2bf1b7b4",
+        "trigger_worksheet_name": "Transfer",
+        "enabled_at_snapshot": false,
+        "start_app_type": 8,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac54577f43c1c6efbf06709",
+        "name": "Add a Product",
+        "trigger_worksheet_id": "6ac303825e337edf2bf1b7b4",
+        "trigger_worksheet_name": "Transfer",
+        "enabled_at_snapshot": false,
+        "start_app_type": 8,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac5a9a7a7d67805999c1b2e",
+        "name": "Validate",
+        "trigger_worksheet_id": "6ac303825e337edf2bf1b7b4",
+        "trigger_worksheet_name": "Transfer",
+        "enabled_at_snapshot": true,
+        "start_app_type": 8,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac5afa8f43c1c6efbf32dea",
+        "name": "Check Availability",
+        "trigger_worksheet_id": "6ac303825e337edf2bf1b7b4",
+        "trigger_worksheet_name": "Transfer",
+        "enabled_at_snapshot": true,
+        "start_app_type": 8,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac5b005a7d67805999c88c9",
+        "name": "Unreserve",
+        "trigger_worksheet_id": "6ac303825e337edf2bf1b7b4",
+        "trigger_worksheet_name": "Transfer",
+        "enabled_at_snapshot": true,
+        "start_app_type": 8,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac5b022acc2cad9b0352570",
+        "name": "Cancel Transfer",
+        "trigger_worksheet_id": "6ac303825e337edf2bf1b7b4",
+        "trigger_worksheet_name": "Transfer",
+        "enabled_at_snapshot": true,
+        "start_app_type": 8,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac5bd7aacc2cad9b036bb33",
+        "name": "Create Backorder",
+        "trigger_worksheet_id": "6ac303825e337edf2bf1b7b4",
+        "trigger_worksheet_name": "Transfer",
+        "enabled_at_snapshot": true,
+        "start_app_type": 8,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac5bd9da7d67805999d896b",
+        "name": "No Backorder",
+        "trigger_worksheet_id": "6ac303825e337edf2bf1b7b4",
+        "trigger_worksheet_name": "Transfer",
+        "enabled_at_snapshot": true,
+        "start_app_type": 8,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac62016c95312eaa177115e",
+        "name": "Create Return",
+        "trigger_worksheet_id": "6ac303825e337edf2bf1b7b4",
+        "trigger_worksheet_name": "Transfer",
+        "enabled_at_snapshot": true,
+        "start_app_type": 8,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac62743c95312eaa177af95",
+        "name": "Put In Pack",
+        "trigger_worksheet_id": "6ac303825e337edf2bf1b7b4",
+        "trigger_worksheet_name": "Transfer",
+        "enabled_at_snapshot": true,
+        "start_app_type": 8,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac628e0a7d6780599a532b3",
+        "name": "Mark as To Do",
+        "trigger_worksheet_id": "6ac303825e337edf2bf1b7b4",
+        "trigger_worksheet_name": "Transfer",
+        "enabled_at_snapshot": true,
+        "start_app_type": 8,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac70d90a7d6780599adf118",
+        "name": "QA Scan Queue Probe 20261008",
+        "trigger_worksheet_id": "6ac303825e337edf2bf1b7b4",
+        "trigger_worksheet_name": "Transfer",
+        "enabled_at_snapshot": false,
+        "start_app_type": 8,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac88589f43c1c6efb1d9aae",
+        "name": "QA Button Snapshot 20261009",
+        "trigger_worksheet_id": "6ac303825e337edf2bf1b7b4",
+        "trigger_worksheet_name": "Transfer",
+        "enabled_at_snapshot": false,
+        "start_app_type": 8,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac628f6f43c1c6efbfc45cd",
+        "name": "Inventory - reserve after confirmation",
+        "trigger_worksheet_id": "6ac303825e337edf2bf1b7b4",
+        "trigger_worksheet_name": "Transfer",
+        "enabled_at_snapshot": true,
+        "start_app_type": 1,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac6217cc95312eaa1772d23",
+        "name": "Inventory - initialize Batch Draft",
+        "trigger_worksheet_id": "6ac3239e6f62fbbb4fe6e662",
+        "trigger_worksheet_name": "Batch Transfers",
+        "enabled_at_snapshot": true,
+        "start_app_type": 1,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac540c55fa8a0f2966853c5",
+        "name": "Transfers",
+        "trigger_worksheet_id": "6ac3239e6f62fbbb4fe6e662",
+        "trigger_worksheet_name": "Batch Transfers",
+        "enabled_at_snapshot": false,
+        "start_app_type": 8,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac5be39c95312eaa172305b",
+        "name": "Validate",
+        "trigger_worksheet_id": "6ac3239e6f62fbbb4fe6e662",
+        "trigger_worksheet_name": "Batch Transfers",
+        "enabled_at_snapshot": true,
+        "start_app_type": 8,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac61dd2f43c1c6efbfbc366",
+        "name": "Confirm",
+        "trigger_worksheet_id": "6ac3239e6f62fbbb4fe6e662",
+        "trigger_worksheet_name": "Batch Transfers",
+        "enabled_at_snapshot": true,
+        "start_app_type": 8,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac61ef5f43c1c6efbfbeef2",
+        "name": "Cancel / Detach",
+        "trigger_worksheet_id": "6ac3239e6f62fbbb4fe6e662",
+        "trigger_worksheet_name": "Batch Transfers",
+        "enabled_at_snapshot": true,
+        "start_app_type": 8,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac5ac645fa8a0f2966b6637",
+        "name": "Inventory - Initialize Move Draft",
+        "trigger_worksheet_id": "6ac3228d6f62fbbb4fe6e613",
+        "trigger_worksheet_name": "Stock Moves",
+        "enabled_at_snapshot": true,
+        "start_app_type": 1,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac631e85fa8a0f29682b76f",
+        "name": "Inventory - QA Incoming Package History",
+        "trigger_worksheet_id": "6ac3228d6f62fbbb4fe6e613",
+        "trigger_worksheet_name": "Stock Moves",
+        "enabled_at_snapshot": false,
+        "start_app_type": 1,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac63c3cc95312eaa1785980",
+        "name": "Inventory - Package Posting History",
+        "trigger_worksheet_id": "6ac3228d6f62fbbb4fe6e613",
+        "trigger_worksheet_name": "Stock Moves",
+        "enabled_at_snapshot": true,
+        "start_app_type": 1,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac541baa7d678059998fe7f",
+        "name": "Detailed Operations",
+        "trigger_worksheet_id": "6ac3228d6f62fbbb4fe6e613",
+        "trigger_worksheet_name": "Stock Moves",
+        "enabled_at_snapshot": false,
+        "start_app_type": 8,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac5aa45a7d67805999c32d9",
+        "name": "Inventory - prepare move lines",
+        "trigger_worksheet_id": "6ac3228d6f62fbbb4fe6e613",
+        "trigger_worksheet_name": "Stock Moves",
+        "enabled_at_snapshot": true,
+        "start_app_type": 1,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac5afb6acc2cad9b0351645",
+        "name": "Inventory - prepare reservation details",
+        "trigger_worksheet_id": "6ac3228d6f62fbbb4fe6e613",
+        "trigger_worksheet_name": "Stock Moves",
+        "enabled_at_snapshot": true,
+        "start_app_type": 1,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac5bc13acc2cad9b036a3aa",
+        "name": "Inventory - calculate remaining demand",
+        "trigger_worksheet_id": "6ac3228d6f62fbbb4fe6e613",
+        "trigger_worksheet_name": "Stock Moves",
+        "enabled_at_snapshot": true,
+        "start_app_type": 1,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac5bc3ff43c1c6efbf4a414",
+        "name": "Inventory - create remaining moves",
+        "trigger_worksheet_id": "6ac3228d6f62fbbb4fe6e613",
+        "trigger_worksheet_name": "Stock Moves",
+        "enabled_at_snapshot": true,
+        "start_app_type": 1,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac5be8dc95312eaa1725432",
+        "name": "Inventory - settle completed moves",
+        "trigger_worksheet_id": "6ac3228d6f62fbbb4fe6e613",
+        "trigger_worksheet_name": "Stock Moves",
+        "enabled_at_snapshot": true,
+        "start_app_type": 1,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac62031a7d6780599a4178f",
+        "name": "Inventory - calculate return remaining",
+        "trigger_worksheet_id": "6ac3228d6f62fbbb4fe6e613",
+        "trigger_worksheet_name": "Stock Moves",
+        "enabled_at_snapshot": true,
+        "start_app_type": 1,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac6206da7d6780599a421f7",
+        "name": "Inventory - create reverse moves",
+        "trigger_worksheet_id": "6ac3228d6f62fbbb4fe6e613",
+        "trigger_worksheet_name": "Stock Moves",
+        "enabled_at_snapshot": true,
+        "start_app_type": 1,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac62902f43c1c6efbfc47c3",
+        "name": "Inventory - prepare reservation details",
+        "trigger_worksheet_id": "6ac3228d6f62fbbb4fe6e613",
+        "trigger_worksheet_name": "Stock Moves",
+        "enabled_at_snapshot": true,
+        "start_app_type": 1,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac5b16b5fa8a0f2966bab6c",
+        "name": "Inventory - Detailed Quantity in Move Unit",
+        "trigger_worksheet_id": "6ac323960e590eb436fe2dd9",
+        "trigger_worksheet_name": "Stock Move Lines",
+        "enabled_at_snapshot": true,
+        "start_app_type": 1,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac67574c95312eaa17b37d7",
+        "name": "Inventory - Serial Relation Query QA 20261008 (READ ONLY)",
+        "trigger_worksheet_id": "6ac323960e590eb436fe2dd9",
+        "trigger_worksheet_name": "Stock Move Lines",
+        "enabled_at_snapshot": false,
+        "start_app_type": 1,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac66736a7d6780599a7e73e",
+        "name": "Apply Putaway (QA PUT)",
+        "trigger_worksheet_id": "6ac323960e590eb436fe2dd9",
+        "trigger_worksheet_name": "Stock Move Lines",
+        "enabled_at_snapshot": true,
+        "start_app_type": 8,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac5aa4facc2cad9b0341471",
+        "name": "Inventory - prepare ledger lines",
+        "trigger_worksheet_id": "6ac323960e590eb436fe2dd9",
+        "trigger_worksheet_name": "Stock Move Lines",
+        "enabled_at_snapshot": true,
+        "start_app_type": 1,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac5afc3acc2cad9b0351903",
+        "name": "Inventory - allocate stock",
+        "trigger_worksheet_id": "6ac323960e590eb436fe2dd9",
+        "trigger_worksheet_name": "Stock Move Lines",
+        "enabled_at_snapshot": true,
+        "start_app_type": 1,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac5b227a7d67805999ca5b7",
+        "name": "Inventory - check posting availability",
+        "trigger_worksheet_id": "6ac323960e590eb436fe2dd9",
+        "trigger_worksheet_name": "Stock Move Lines",
+        "enabled_at_snapshot": true,
+        "start_app_type": 1,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac5b746acc2cad9b03641d2",
+        "name": "Inventory - scrap stage ledger",
+        "trigger_worksheet_id": "6ac323960e590eb436fe2dd9",
+        "trigger_worksheet_name": "Stock Move Lines",
+        "enabled_at_snapshot": true,
+        "start_app_type": 1,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac5e454a7d6780599a0aa4a",
+        "name": "Inventory - copy remaining tracking slots",
+        "trigger_worksheet_id": "6ac323960e590eb436fe2dd9",
+        "trigger_worksheet_name": "Stock Move Lines",
+        "enabled_at_snapshot": true,
+        "start_app_type": 1,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac62083a7d6780599a423d7",
+        "name": "Inventory - reverse tracking details",
+        "trigger_worksheet_id": "6ac323960e590eb436fe2dd9",
+        "trigger_worksheet_name": "Stock Move Lines",
+        "enabled_at_snapshot": true,
+        "start_app_type": 1,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac6276ca7d6780599a4ec65",
+        "name": "Inventory - pack preflight",
+        "trigger_worksheet_id": "6ac323960e590eb436fe2dd9",
+        "trigger_worksheet_name": "Stock Move Lines",
+        "enabled_at_snapshot": true,
+        "start_app_type": 1,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac62797a7d6780599a4fadb",
+        "name": "Inventory - pack preflight",
+        "trigger_worksheet_id": "6ac323960e590eb436fe2dd9",
+        "trigger_worksheet_name": "Stock Move Lines",
+        "enabled_at_snapshot": true,
+        "start_app_type": 1,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac62914f43c1c6efbfc49bc",
+        "name": "Inventory - allocate stock",
+        "trigger_worksheet_id": "6ac323960e590eb436fe2dd9",
+        "trigger_worksheet_name": "Stock Move Lines",
+        "enabled_at_snapshot": true,
+        "start_app_type": 1,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac631f15fa8a0f29682bef4",
+        "name": "Inventory - history each line",
+        "trigger_worksheet_id": "6ac323960e590eb436fe2dd9",
+        "trigger_worksheet_name": "Stock Move Lines",
+        "enabled_at_snapshot": true,
+        "start_app_type": 1,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac6330b5fa8a0f29682f3a6",
+        "name": "Inventory - scrap stage ledger",
+        "trigger_worksheet_id": "6ac323960e590eb436fe2dd9",
+        "trigger_worksheet_name": "Stock Move Lines",
+        "enabled_at_snapshot": true,
+        "start_app_type": 1,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac63cdaacc2cad9b046d174",
+        "name": "Inventory - history each line",
+        "trigger_worksheet_id": "6ac323960e590eb436fe2dd9",
+        "trigger_worksheet_name": "Stock Move Lines",
+        "enabled_at_snapshot": true,
+        "start_app_type": 1,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac540efacc2cad9b030f46c",
+        "name": "Stock Operation",
+        "trigger_worksheet_id": "6ac3253c6f62fbbb4fe6e6cc",
+        "trigger_worksheet_name": "Scrap",
+        "enabled_at_snapshot": false,
+        "start_app_type": 8,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac5b702acc2cad9b03635ca",
+        "name": "Validate Scrap (Native)",
+        "trigger_worksheet_id": "6ac3253c6f62fbbb4fe6e6cc",
+        "trigger_worksheet_name": "Scrap",
+        "enabled_at_snapshot": true,
+        "start_app_type": 8,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac632e15fa8a0f29682e66f",
+        "name": "Continue Scrap",
+        "trigger_worksheet_id": "6ac3253c6f62fbbb4fe6e6cc",
+        "trigger_worksheet_name": "Scrap",
+        "enabled_at_snapshot": true,
+        "start_app_type": 8,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac54192c95312eaa164e253",
+        "name": "Location",
+        "trigger_worksheet_id": "6ac3227691143e1169ecc09f",
+        "trigger_worksheet_name": "Lots & Serial Numbers",
+        "enabled_at_snapshot": false,
+        "start_app_type": 8,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac5c08bacc2cad9b0372348",
+        "name": "Refresh Contents",
+        "trigger_worksheet_id": "6ac323976f62fbbb4fe6e656",
+        "trigger_worksheet_name": "Packages",
+        "enabled_at_snapshot": true,
+        "start_app_type": 8,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac61d12f43c1c6efbfb7d0e",
+        "name": "Unpack",
+        "trigger_worksheet_id": "6ac323976f62fbbb4fe6e656",
+        "trigger_worksheet_name": "Packages",
+        "enabled_at_snapshot": true,
+        "start_app_type": 8,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac5414ba7d678059998fc2f",
+        "name": "Routes",
+        "trigger_worksheet_id": "6ac3227b896787ba363048f6",
+        "trigger_worksheet_name": "Warehouses",
+        "enabled_at_snapshot": false,
+        "start_app_type": 8,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac53eccacc2cad9b030e336",
+        "name": "Putaway Rules",
+        "trigger_worksheet_id": "6ac322810e590eb436fe2d65",
+        "trigger_worksheet_name": "Locations",
+        "enabled_at_snapshot": false,
+        "start_app_type": 8,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac53ef6f43c1c6efbf040f4",
+        "name": "Products",
+        "trigger_worksheet_id": "6ac322810e590eb436fe2d65",
+        "trigger_worksheet_name": "Locations",
+        "enabled_at_snapshot": false,
+        "start_app_type": 8,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac545a0acc2cad9b03111fd",
+        "name": "Add a Capacity",
+        "trigger_worksheet_id": "6ac3239291143e1169ecc0f8",
+        "trigger_worksheet_name": "Package Types",
+        "enabled_at_snapshot": false,
+        "start_app_type": 8,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac54172a7d678059998fd53",
+        "name": "Locations",
+        "trigger_worksheet_id": "6ac324655e337edf2bf1be83",
+        "trigger_worksheet_name": "Storage Categories",
+        "enabled_at_snapshot": false,
+        "start_app_type": 8,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac54592c95312eaa164fc1b",
+        "name": "Add a Capacity",
+        "trigger_worksheet_id": "6ac324655e337edf2bf1be83",
+        "trigger_worksheet_name": "Storage Categories",
+        "enabled_at_snapshot": false,
+        "start_app_type": 8,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac54585acc2cad9b0311119",
+        "name": "Add a Rule",
+        "trigger_worksheet_id": "6ac3222e5e337edf2bf1bdda",
+        "trigger_worksheet_name": "Routes",
+        "enabled_at_snapshot": false,
+        "start_app_type": 8,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac5aa9e5fa8a0f2966b591d",
+        "name": "Inventory Reordering: Snooze",
+        "trigger_worksheet_id": "6ac325100e590eb436fe2eff",
+        "trigger_worksheet_name": "Reordering Rules",
+        "enabled_at_snapshot": true,
+        "start_app_type": 8,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac5aaac5fa8a0f2966b598a",
+        "name": "Inventory Reordering: Undo Manual Quantity",
+        "trigger_worksheet_id": "6ac325100e590eb436fe2eff",
+        "trigger_worksheet_name": "Reordering Rules",
+        "enabled_at_snapshot": true,
+        "start_app_type": 8,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac5bab8f43c1c6efbf466d8",
+        "name": "Inventory Reordering: Refresh Replenishment",
+        "trigger_worksheet_id": "6ac325100e590eb436fe2eff",
+        "trigger_worksheet_name": "Reordering Rules",
+        "enabled_at_snapshot": true,
+        "start_app_type": 8,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac5be1dacc2cad9b036c5d4",
+        "name": "Inventory Reordering: Order",
+        "trigger_worksheet_id": "6ac325100e590eb436fe2eff",
+        "trigger_worksheet_name": "Reordering Rules",
+        "enabled_at_snapshot": true,
+        "start_app_type": 8,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac63376f43c1c6efbfca078",
+        "name": "Inventory Reordering: Automate",
+        "trigger_worksheet_id": "6ac325100e590eb436fe2eff",
+        "trigger_worksheet_name": "Reordering Rules",
+        "enabled_at_snapshot": true,
+        "start_app_type": 8,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac5b655acc2cad9b0361e64",
+        "name": "Record Count",
+        "trigger_worksheet_id": "6ac323b20e590eb436fe2e1c",
+        "trigger_worksheet_name": "Stock Balances",
+        "enabled_at_snapshot": true,
+        "start_app_type": 8,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac5b66cacc2cad9b036247e",
+        "name": "Clear",
+        "trigger_worksheet_id": "6ac323b20e590eb436fe2e1c",
+        "trigger_worksheet_name": "Stock Balances",
+        "enabled_at_snapshot": true,
+        "start_app_type": 8,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac5b679acc2cad9b03625ab",
+        "name": "Apply",
+        "trigger_worksheet_id": "6ac323b20e590eb436fe2e1c",
+        "trigger_worksheet_name": "Stock Balances",
+        "enabled_at_snapshot": true,
+        "start_app_type": 8,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac5b6cec95312eaa1719439",
+        "name": "Apply All",
+        "trigger_worksheet_id": "6ac323b20e590eb436fe2e1c",
+        "trigger_worksheet_name": "Stock Balances",
+        "enabled_at_snapshot": true,
+        "start_app_type": 8,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac5e76aa7d6780599a0c818",
+        "name": "Inventory - count selected balances",
+        "trigger_worksheet_id": "6ac323b20e590eb436fe2e1c",
+        "trigger_worksheet_name": "Stock Balances",
+        "enabled_at_snapshot": true,
+        "start_app_type": 8,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac61d3cf43c1c6efbfb94a0",
+        "name": "Inventory - package preflight",
+        "trigger_worksheet_id": "6ac323b20e590eb436fe2e1c",
+        "trigger_worksheet_name": "Stock Balances",
+        "enabled_at_snapshot": true,
+        "start_app_type": 1,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac61d62f43c1c6efbfb9f6b",
+        "name": "Inventory - package unpack ledger",
+        "trigger_worksheet_id": "6ac323b20e590eb436fe2e1c",
+        "trigger_worksheet_name": "Stock Balances",
+        "enabled_at_snapshot": true,
+        "start_app_type": 1,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac6229ba7d6780599a4712b",
+        "name": "Inventory - clear selected balances",
+        "trigger_worksheet_id": "6ac323b20e590eb436fe2e1c",
+        "trigger_worksheet_name": "Stock Balances",
+        "enabled_at_snapshot": true,
+        "start_app_type": 8,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac541d65fa8a0f29668592e",
+        "name": "Stock Moves",
+        "trigger_worksheet_id": "6ac325820e590eb436fe2f39",
+        "trigger_worksheet_name": "Stock References",
+        "enabled_at_snapshot": false,
+        "start_app_type": 8,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6aca5bd1a7d6780599e63ba8",
+        "name": "Inventory - Scan Requests Queue QA 20261010",
+        "trigger_worksheet_id": "6aca5bb06f62fbbb4fe7cb54",
+        "trigger_worksheet_name": "Scan Requests",
+        "enabled_at_snapshot": false,
+        "start_app_type": 1,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6aca5eb85fa8a0f296a647b7",
+        "name": "Inventory - Independent Scan Requests (QA only)",
+        "trigger_worksheet_id": "6aca5bb06f62fbbb4fe7cb54",
+        "trigger_worksheet_name": "Scan Requests",
+        "enabled_at_snapshot": false,
+        "start_app_type": 1,
+        "decision": "disable_and_drain_then_remove_after_consumer_audit"
+      },
+      {
+        "source_id": "6ac66b9fa7d6780599a86407",
+        "name": "Inventory - Barcode Decision QA 20261007 (UNPUBLISHED)",
+        "trigger_worksheet_id": null,
+        "trigger_worksheet_name": null,
+        "enabled_at_snapshot": false,
+        "start_app_type": 1,
+        "unbound_trigger": true,
+        "ownership_evidence": "Captured protected graph in the 10 Oct scan baseline and Inventory Barcode concurrency checkpoint (8 Oct); not returned in the app workflow list.",
+        "decision": "Remove if present in the client copy, only after explicit Inventory ownership and caller audit; do not infer ownership from a blank trigger."
+      }
+    ],
+    "registered_views": [
+      {
+        "source_id": "6ac303825e337edf2bf1b7b8",
+        "worksheet_id": "6ac303825e337edf2bf1b7b4",
+        "name": "All Transfers",
+        "type": 0
+      },
+      {
+        "source_id": "6ac3caab0e590eb436fe40e2",
+        "worksheet_id": "6ac303825e337edf2bf1b7b4",
+        "name": "Receipts",
+        "type": 0
+      },
+      {
+        "source_id": "6ac3caae0e590eb436fe40e5",
+        "worksheet_id": "6ac303825e337edf2bf1b7b4",
+        "name": "Receipts — Cards",
+        "type": 3
+      },
+      {
+        "source_id": "6ac3cab15e337edf2bf1cff4",
+        "worksheet_id": "6ac303825e337edf2bf1b7b4",
+        "name": "Receipts — Calendar",
+        "type": 4
+      },
+      {
+        "source_id": "6ac3cb6f6f62fbbb4fe6f83c",
+        "worksheet_id": "6ac303825e337edf2bf1b7b4",
+        "name": "Deliveries",
+        "type": 0
+      },
+      {
+        "source_id": "6ac3cb725e337edf2bf1cff6",
+        "worksheet_id": "6ac303825e337edf2bf1b7b4",
+        "name": "Deliveries — Cards",
+        "type": 3
+      },
+      {
+        "source_id": "6ac3cb75896787ba363061b2",
+        "worksheet_id": "6ac303825e337edf2bf1b7b4",
+        "name": "Deliveries — Calendar",
+        "type": 4
+      },
+      {
+        "source_id": "6ac3cb770e590eb436fe40eb",
+        "worksheet_id": "6ac303825e337edf2bf1b7b4",
+        "name": "Internal Transfers",
+        "type": 0
+      },
+      {
+        "source_id": "6ac3cb7a6f62fbbb4fe6f83f",
+        "worksheet_id": "6ac303825e337edf2bf1b7b4",
+        "name": "Internal Transfers — Cards",
+        "type": 3
+      },
+      {
+        "source_id": "6ac3cb7c0e590eb436fe40ed",
+        "worksheet_id": "6ac303825e337edf2bf1b7b4",
+        "name": "Internal Transfers — Calendar",
+        "type": 4
+      },
+      {
+        "source_id": "6ac3cb7f91143e1169ecd186",
+        "worksheet_id": "6ac303825e337edf2bf1b7b4",
+        "name": "To Process",
+        "type": 0
+      },
+      {
+        "source_id": "6ac3cb810e590eb436fe40ef",
+        "worksheet_id": "6ac303825e337edf2bf1b7b4",
+        "name": "Late Transfers",
+        "type": 0
+      },
+      {
+        "source_id": "6ac3cbeb6f62fbbb4fe6f846",
+        "worksheet_id": "6ac303825e337edf2bf1b7b4",
+        "name": "Ready Transfers",
+        "type": 0
+      },
+      {
+        "source_id": "6ac3cbee5e337edf2bf1cffa",
+        "worksheet_id": "6ac303825e337edf2bf1b7b4",
+        "name": "Waiting Transfers",
+        "type": 0
+      },
+      {
+        "source_id": "6ac3cbf25e337edf2bf1cffc",
+        "worksheet_id": "6ac303825e337edf2bf1b7b4",
+        "name": "Draft Transfers",
+        "type": 0
+      },
+      {
+        "source_id": "6ac3cbf56f62fbbb4fe6f848",
+        "worksheet_id": "6ac303825e337edf2bf1b7b4",
+        "name": "Done Transfers",
+        "type": 0
+      },
+      {
+        "source_id": "6ac3cbf85e337edf2bf1cfff",
+        "worksheet_id": "6ac303825e337edf2bf1b7b4",
+        "name": "Returns",
+        "type": 0
+      },
+      {
+        "source_id": "6ac3cbfb5e337edf2bf1d002",
+        "worksheet_id": "6ac303825e337edf2bf1b7b4",
+        "name": "Backorders",
+        "type": 0
+      },
+      {
+        "source_id": "6ac3cbfe6f62fbbb4fe6f84a",
+        "worksheet_id": "6ac303825e337edf2bf1b7b4",
+        "name": "Transfer Status Board",
+        "type": 1
+      },
+      {
+        "source_id": "6ac3cc016f62fbbb4fe6f84c",
+        "worksheet_id": "6ac303825e337edf2bf1b7b4",
+        "name": "Transfer Schedule",
+        "type": 4
+      },
+      {
+        "source_id": "6ac3cc04896787ba363061bb",
+        "worksheet_id": "6ac303825e337edf2bf1b7b4",
+        "name": "Responsible Worklist",
+        "type": 0
+      },
+      {
+        "source_id": "6ac3239e6f62fbbb4fe6e666",
+        "worksheet_id": "6ac3239e6f62fbbb4fe6e662",
+        "name": "Batch Transfers",
+        "type": 0
+      },
+      {
+        "source_id": "6ac3cc096f62fbbb4fe6f84e",
+        "worksheet_id": "6ac3239e6f62fbbb4fe6e662",
+        "name": "Batch Status Board",
+        "type": 1
+      },
+      {
+        "source_id": "6ac3cc0c5e337edf2bf1d007",
+        "worksheet_id": "6ac3239e6f62fbbb4fe6e662",
+        "name": "Batch Schedule",
+        "type": 4
+      },
+      {
+        "source_id": "6ac3cc0e5e337edf2bf1d009",
+        "worksheet_id": "6ac3239e6f62fbbb4fe6e662",
+        "name": "Wave Transfers",
+        "type": 0
+      },
+      {
+        "source_id": "6ac3253c6f62fbbb4fe6e6d0",
+        "worksheet_id": "6ac3253c6f62fbbb4fe6e6cc",
+        "name": "Scrap Orders",
+        "type": 0
+      },
+      {
+        "source_id": "6ac3cc145e337edf2bf1d00b",
+        "worksheet_id": "6ac3253c6f62fbbb4fe6e6cc",
+        "name": "Scrap Status Board",
+        "type": 1
+      },
+      {
+        "source_id": "6ac3cc176f62fbbb4fe6f852",
+        "worksheet_id": "6ac3253c6f62fbbb4fe6e6cc",
+        "name": "Scrap History",
+        "type": 0
+      },
+      {
+        "source_id": "6ac3227691143e1169ecc0a3",
+        "worksheet_id": "6ac3227691143e1169ecc09f",
+        "name": "Lots & Serial Numbers",
+        "type": 0
+      },
+      {
+        "source_id": "6ac3cc1b0e590eb436fe40f6",
+        "worksheet_id": "6ac3227691143e1169ecc09f",
+        "name": "Expiration Calendar",
+        "type": 4
+      },
+      {
+        "source_id": "6ac3cc1e6f62fbbb4fe6f854",
+        "worksheet_id": "6ac3227691143e1169ecc09f",
+        "name": "Expired Lots",
+        "type": 0
+      },
+      {
+        "source_id": "6ac323976f62fbbb4fe6e65a",
+        "worksheet_id": "6ac323976f62fbbb4fe6e656",
+        "name": "Packages",
+        "type": 0
+      },
+      {
+        "source_id": "6ac3cc236f62fbbb4fe6f856",
+        "worksheet_id": "6ac323976f62fbbb4fe6e656",
+        "name": "Package Cards",
+        "type": 3
+      },
+      {
+        "source_id": "6ac3cd720e590eb436fe40fb",
+        "worksheet_id": "6ac323976f62fbbb4fe6e656",
+        "name": "Package Hierarchy",
+        "type": 2
+      },
+      {
+        "source_id": "6ac3227b896787ba363048fa",
+        "worksheet_id": "6ac3227b896787ba363048f6",
+        "name": "Warehouses",
+        "type": 0
+      },
+      {
+        "source_id": "6ac3cd7691143e1169ecd199",
+        "worksheet_id": "6ac3227b896787ba363048f6",
+        "name": "Warehouse Cards",
+        "type": 3
+      },
+      {
+        "source_id": "6ac322810e590eb436fe2d69",
+        "worksheet_id": "6ac322810e590eb436fe2d65",
+        "name": "Locations",
+        "type": 0
+      },
+      {
+        "source_id": "6ac3cd7991143e1169ecd19b",
+        "worksheet_id": "6ac322810e590eb436fe2d65",
+        "name": "Location Hierarchy",
+        "type": 2
+      },
+      {
+        "source_id": "6ac3cd7b896787ba363061c1",
+        "worksheet_id": "6ac322810e590eb436fe2d65",
+        "name": "Internal Locations",
+        "type": 0
+      },
+      {
+        "source_id": "6ac3cd7d5e337edf2bf1d010",
+        "worksheet_id": "6ac322810e590eb436fe2d65",
+        "name": "Cycle Counts Due",
+        "type": 0
+      },
+      {
+        "source_id": "6ac3228791143e1169ecc0ae",
+        "worksheet_id": "6ac3228791143e1169ecc0aa",
+        "name": "Operation Types",
+        "type": 0
+      },
+      {
+        "source_id": "6ac3cd8191143e1169ecd19e",
+        "worksheet_id": "6ac3228791143e1169ecc0aa",
+        "name": "Operation Overview",
+        "type": 3
+      },
+      {
+        "source_id": "6ac3239291143e1169ecc0fc",
+        "worksheet_id": "6ac3239291143e1169ecc0f8",
+        "name": "Package Types",
+        "type": 0
+      },
+      {
+        "source_id": "6ac324655e337edf2bf1be87",
+        "worksheet_id": "6ac324655e337edf2bf1be83",
+        "name": "Storage Categories",
+        "type": 0
+      },
+      {
+        "source_id": "6ac3cd8791143e1169ecd1a0",
+        "worksheet_id": "6ac324655e337edf2bf1be83",
+        "name": "Storage Category Cards",
+        "type": 3
+      },
+      {
+        "source_id": "6ac325585e337edf2bf1beea",
+        "worksheet_id": "6ac325585e337edf2bf1bee6",
+        "name": "Scrap Reasons",
+        "type": 0
+      },
+      {
+        "source_id": "6ac3222e5e337edf2bf1bdde",
+        "worksheet_id": "6ac3222e5e337edf2bf1bdda",
+        "name": "Routes",
+        "type": 0
+      },
+      {
+        "source_id": "6ac325100e590eb436fe2f03",
+        "worksheet_id": "6ac325100e590eb436fe2eff",
+        "name": "Reordering Rules",
+        "type": 0
+      },
+      {
+        "source_id": "6ac3cd8f0e590eb436fe40ff",
+        "worksheet_id": "6ac325100e590eb436fe2eff",
+        "name": "Replenishment",
+        "type": 0
+      },
+      {
+        "source_id": "6ac3cd91896787ba363061c3",
+        "worksheet_id": "6ac325100e590eb436fe2eff",
+        "name": "Replenishment Cards",
+        "type": 3
+      },
+      {
+        "source_id": "6ac3cd926f62fbbb4fe6f866",
+        "worksheet_id": "6ac325100e590eb436fe2eff",
+        "name": "To Replenish",
+        "type": 0
+      },
+      {
+        "source_id": "6ac3cd955e337edf2bf1d018",
+        "worksheet_id": "6ac325100e590eb436fe2eff",
+        "name": "Manual Replenishment",
+        "type": 0
+      },
+      {
+        "source_id": "6ac324486f62fbbb4fe6e693",
+        "worksheet_id": "6ac324486f62fbbb4fe6e68f",
+        "name": "Putaway Rules",
+        "type": 0
+      },
+      {
+        "source_id": "6ac3228d6f62fbbb4fe6e617",
+        "worksheet_id": "6ac3228d6f62fbbb4fe6e613",
+        "name": "Moves Analysis — List",
+        "type": 0
+      },
+      {
+        "source_id": "6ac3cd9b91143e1169ecd1a7",
+        "worksheet_id": "6ac3228d6f62fbbb4fe6e613",
+        "name": "Moves Analysis — Cards",
+        "type": 3
+      },
+      {
+        "source_id": "6ac3cd9d5e337edf2bf1d01a",
+        "worksheet_id": "6ac3228d6f62fbbb4fe6e613",
+        "name": "Move Status Board",
+        "type": 1
+      },
+      {
+        "source_id": "6ac3cda091143e1169ecd1a9",
+        "worksheet_id": "6ac3228d6f62fbbb4fe6e613",
+        "name": "Move Schedule",
+        "type": 4
+      },
+      {
+        "source_id": "6ac323960e590eb436fe2ddd",
+        "worksheet_id": "6ac323960e590eb436fe2dd9",
+        "name": "Moves History",
+        "type": 0
+      },
+      {
+        "source_id": "6ac3cda45e337edf2bf1d01c",
+        "worksheet_id": "6ac323960e590eb436fe2dd9",
+        "name": "Moves History — Cards",
+        "type": 3
+      },
+      {
+        "source_id": "6ac3cda691143e1169ecd1ab",
+        "worksheet_id": "6ac323960e590eb436fe2dd9",
+        "name": "Completed Moves",
+        "type": 0
+      },
+      {
+        "source_id": "6ac3cda891143e1169ecd1ad",
+        "worksheet_id": "6ac323960e590eb436fe2dd9",
+        "name": "Inventory Adjustment History",
+        "type": 0
+      },
+      {
+        "source_id": "6ac323b20e590eb436fe2e20",
+        "worksheet_id": "6ac323b20e590eb436fe2e1c",
+        "name": "Stock",
+        "type": 0
+      },
+      {
+        "source_id": "6ac3cdac0e590eb436fe4105",
+        "worksheet_id": "6ac323b20e590eb436fe2e1c",
+        "name": "Physical Inventory",
+        "type": 0
+      },
+      {
+        "source_id": "6ac3cdae6f62fbbb4fe6f86c",
+        "worksheet_id": "6ac323b20e590eb436fe2e1c",
+        "name": "Counts Due",
+        "type": 0
+      },
+      {
+        "source_id": "6ac3cdb06f62fbbb4fe6f86e",
+        "worksheet_id": "6ac323b20e590eb436fe2e1c",
+        "name": "Recorded Counts",
+        "type": 0
+      },
+      {
+        "source_id": "6ac3cdb291143e1169ecd1af",
+        "worksheet_id": "6ac323b20e590eb436fe2e1c",
+        "name": "Reserved Stock",
+        "type": 0
+      },
+      {
+        "source_id": "6ac324096f62fbbb4fe6e672",
+        "worksheet_id": "6ac324096f62fbbb4fe6e66e",
+        "name": "Stock Rules",
+        "type": 0
+      },
+      {
+        "source_id": "6ac32486896787ba36304a41",
+        "worksheet_id": "6ac32486896787ba36304a3d",
+        "name": "Storage Capacities",
+        "type": 0
+      },
+      {
+        "source_id": "6ac3239a896787ba36304954",
+        "worksheet_id": "6ac3239a896787ba36304950",
+        "name": "Package History",
+        "type": 0
+      },
+      {
+        "source_id": "6ac325820e590eb436fe2f3d",
+        "worksheet_id": "6ac325820e590eb436fe2f39",
+        "name": "Stock References",
+        "type": 0
+      }
+    ],
+    "registered_reports": [
+      {
+        "source_id": "6ac3cdf4db996c7632b0b1d6",
+        "name": "Waiting",
+        "worksheet_id": "6ac303825e337edf2bf1b7b4",
+        "report_type": 10
+      },
+      {
+        "source_id": "6ac3cdf5db996c7632b0b1d7",
+        "name": "Ready",
+        "worksheet_id": "6ac303825e337edf2bf1b7b4",
+        "report_type": 10
+      },
+      {
+        "source_id": "6ac3cdf6db996c7632b0b1d8",
+        "name": "Late",
+        "worksheet_id": "6ac303825e337edf2bf1b7b4",
+        "report_type": 10
+      },
+      {
+        "source_id": "6ac3cdf7db996c7632b0b1d9",
+        "name": "Draft",
+        "worksheet_id": "6ac303825e337edf2bf1b7b4",
+        "report_type": 10
+      },
+      {
+        "source_id": "6ac3cdf8db996c7632b0b1da",
+        "name": "Done Transfers",
+        "worksheet_id": "6ac303825e337edf2bf1b7b4",
+        "report_type": 10
+      },
+      {
+        "source_id": "6ac3cdf91de2835cabae4648",
+        "name": "Waiting Transfers",
+        "worksheet_id": "6ac303825e337edf2bf1b7b4",
+        "report_type": 10
+      },
+      {
+        "source_id": "6ac3cdfa1de2835cabae4649",
+        "name": "Late Transfers",
+        "worksheet_id": "6ac303825e337edf2bf1b7b4",
+        "report_type": 10
+      },
+      {
+        "source_id": "6ac3cdfb1de2835cabae464a",
+        "name": "Open Backorders",
+        "worksheet_id": "6ac303825e337edf2bf1b7b4",
+        "report_type": 10
+      },
+      {
+        "source_id": "6ac3cdfcdb996c7632b0b1db",
+        "name": "Transfers by Operation Type",
+        "worksheet_id": "6ac303825e337edf2bf1b7b4",
+        "report_type": 1
+      },
+      {
+        "source_id": "6ac3cdfd1de2835cabae464b",
+        "name": "Transfers by Status",
+        "worksheet_id": "6ac303825e337edf2bf1b7b4",
+        "report_type": 3
+      },
+      {
+        "source_id": "6ac3cdfe1de2835cabae464c",
+        "name": "Completed Transfers by Week",
+        "worksheet_id": "6ac303825e337edf2bf1b7b4",
+        "report_type": 2
+      },
+      {
+        "source_id": "6ac3cdffdb996c7632b0b1dc",
+        "name": "Stock Balance Lines",
+        "worksheet_id": "6ac323b20e590eb436fe2e1c",
+        "report_type": 10
+      },
+      {
+        "source_id": "6ac3ce00db996c7632b0b1dd",
+        "name": "Reserved Stock Lines",
+        "worksheet_id": "6ac323b20e590eb436fe2e1c",
+        "report_type": 10
+      },
+      {
+        "source_id": "6ac3ce011de2835cabae464d",
+        "name": "Counts Due",
+        "worksheet_id": "6ac323b20e590eb436fe2e1c",
+        "report_type": 10
+      },
+      {
+        "source_id": "6ac3ce021de2835cabae464e",
+        "name": "To Replenish",
+        "worksheet_id": "6ac325100e590eb436fe2eff",
+        "report_type": 10
+      },
+      {
+        "source_id": "6ac3ce09db996c7632b0b246",
+        "name": "Stock Lines",
+        "worksheet_id": "6ac323b20e590eb436fe2e1c",
+        "report_type": 10
+      },
+      {
+        "source_id": "6ac3ce0a1de2835cabae464f",
+        "name": "Reserved Lines",
+        "worksheet_id": "6ac323b20e590eb436fe2e1c",
+        "report_type": 10
+      },
+      {
+        "source_id": "6ac3ce0b1de2835cabae4650",
+        "name": "Lots / Serial Numbers",
+        "worksheet_id": "6ac3227691143e1169ecc09f",
+        "report_type": 10
+      },
+      {
+        "source_id": "6ac3ce0c1de2835cabae4651",
+        "name": "Packages",
+        "worksheet_id": "6ac323976f62fbbb4fe6e656",
+        "report_type": 10
+      },
+      {
+        "source_id": "6ac3ce0d1de2835cabae4652",
+        "name": "Stock Lines by Product / Location",
+        "worksheet_id": "6ac323b20e590eb436fe2e1c",
+        "report_type": 8
+      },
+      {
+        "source_id": "6ac3ce0e1de2835cabae4653",
+        "name": "Scrap Quantities by Product / Unit",
+        "worksheet_id": "6ac3253c6f62fbbb4fe6e6cc",
+        "report_type": 8
+      },
+      {
+        "source_id": "6ac3ce0f1de2835cabae4654",
+        "name": "Stock Lines by Location",
+        "worksheet_id": "6ac323b20e590eb436fe2e1c",
+        "report_type": 1
+      },
+      {
+        "source_id": "6ac3ce101de2835cabae4655",
+        "name": "Planned Moves",
+        "worksheet_id": "6ac3228d6f62fbbb4fe6e613",
+        "report_type": 10
+      },
+      {
+        "source_id": "6ac3ce111de2835cabae4656",
+        "name": "Movement Lines",
+        "worksheet_id": "6ac323960e590eb436fe2dd9",
+        "report_type": 10
+      },
+      {
+        "source_id": "6ac3ce121de2835cabae4657",
+        "name": "Completed Lines",
+        "worksheet_id": "6ac323960e590eb436fe2dd9",
+        "report_type": 10
+      },
+      {
+        "source_id": "6ac3ce131de2835cabae4658",
+        "name": "Adjustment Lines",
+        "worksheet_id": "6ac323960e590eb436fe2dd9",
+        "report_type": 10
+      },
+      {
+        "source_id": "6ac3ce141de2835cabae4659",
+        "name": "Moves Analysis — Demand by Product / Unit",
+        "worksheet_id": "6ac3228d6f62fbbb4fe6e613",
+        "report_type": 8
+      },
+      {
+        "source_id": "6ac3ce151de2835cabae465a",
+        "name": "Movement Lines by Week",
+        "worksheet_id": "6ac323960e590eb436fe2dd9",
+        "report_type": 2
+      },
+      {
+        "source_id": "6ac3ce161de2835cabae465b",
+        "name": "Moves by Operation Type",
+        "worksheet_id": "6ac3228d6f62fbbb4fe6e613",
+        "report_type": 1
+      },
+      {
+        "source_id": "6ac3ce171de2835cabae465c",
+        "name": "Return Transfers",
+        "worksheet_id": "6ac303825e337edf2bf1b7b4",
+        "report_type": 10
+      },
+      {
+        "source_id": "6ac3ce191de2835cabae465d",
+        "name": "Completed Returns",
+        "worksheet_id": "6ac303825e337edf2bf1b7b4",
+        "report_type": 10
+      },
+      {
+        "source_id": "6ac3ce1b1de2835cabae465e",
+        "name": "Open Backorders",
+        "worksheet_id": "6ac303825e337edf2bf1b7b4",
+        "report_type": 10
+      },
+      {
+        "source_id": "6ac3ce1c1de2835cabae465f",
+        "name": "Returns by Status",
+        "worksheet_id": "6ac303825e337edf2bf1b7b4",
+        "report_type": 1
+      },
+      {
+        "source_id": "6ac3ce1d1de2835cabae4660",
+        "name": "Returns by Operation Type",
+        "worksheet_id": "6ac303825e337edf2bf1b7b4",
+        "report_type": 3
+      },
+      {
+        "source_id": "6ac3ce1e1de2835cabae4661",
+        "name": "Returns by Contact / Operation Type",
+        "worksheet_id": "6ac303825e337edf2bf1b7b4",
+        "report_type": 8
+      }
+    ],
+    "dashboards": [
+      {
+        "source_id": "6ac3cdf32c3553b4049313f5",
+        "name": "Inventory Operations Dashboard"
+      },
+      {
+        "source_id": "6ac3ce082c3553b4049313f7",
+        "name": "Inventory Reporting Dashboard"
+      }
+    ],
+    "shared_page_parts": [
+      {
+        "page_id": "6aba250de320fa9d4cd87cbd",
+        "page_name": "Configuration Dashboard",
+        "tab_id": "a6c75dd0-6283-448a-9d34-33d0b559ec56",
+        "tab_name": "Inventory",
+        "components": [
+          {
+            "source_id": "9bd33a29-fc6b-4c18-bdf1-3f2db350e34e",
+            "name": "Inventory introduction"
+          },
+          {
+            "source_id": "cccc31f1-2ed6-4a04-8cfd-1f21bc3ae95e",
+            "name": "Warehouse Setup"
+          },
+          {
+            "source_id": "08159172-b764-437a-a4fa-46bdd9e4e299",
+            "name": "Routes & Rules"
+          },
+          {
+            "source_id": "7898b5e4-39b9-4c69-8226-87ad885239d7",
+            "name": "Storage & Tracking"
+          }
+        ],
+        "preserve_page": true,
+        "preserve_tab_container_id": "6aba42393bd0d5cfc333ee8c",
+        "decision": "Remove these four components and only the Inventory tab entry; preserve other tabs, container and page config."
+      }
+    ],
+    "navigation": {
+      "root": {
+        "source_id": "6ac3036bbd1c7ff411530849",
+        "name": "Inventory"
+      },
+      "children": [
+        {
+          "source_id": "6ac33d6e4a71d8b6825a28d2",
+          "name": "Operations"
+        },
+        {
+          "source_id": "6ac33d714a71d8b6825a28d3",
+          "name": "Stock & Tracking"
+        },
+        {
+          "source_id": "6ac33d734a71d8b6825a28d4",
+          "name": "Warehouse Setup"
+        },
+        {
+          "source_id": "6ac33d76f83f4d606210ffd9",
+          "name": "Routes & Rules"
+        },
+        {
+          "source_id": "6ac33d78f83f4d606210ffda",
+          "name": "System Tables"
+        }
+      ],
+      "preserve_dashboards_group_id": "6aba24fae320fa9d4cd87cb6"
+    },
+    "print_templates": [
+      {
+        "name": "Picking Operations",
+        "worksheet_id": "6ac303825e337edf2bf1b7b4",
+        "source_id": null
+      },
+      {
+        "name": "Delivery Slip",
+        "worksheet_id": "6ac303825e337edf2bf1b7b4",
+        "source_id": null
+      }
+    ],
+    "rules": [
+      {
+        "worksheet_id": "6aca5bb06f62fbbb4fe7cb54",
+        "source_id": "6aca611a5e337edf2bf29fbc",
+        "name": "Saved scan inputs read-only",
+        "scope": "Inventory-owned"
+      }
+    ]
+  },
+  "retain": {
+    "worksheets": [
+      {
+        "source_id": "6ab09897e43d174ab3752d7b",
+        "name": "Orders"
+      },
+      {
+        "source_id": "6ab0c740e43d174ab37535b2",
+        "name": "Order Lines"
+      },
+      {
+        "source_id": "6aad111de43d174ab374fb5f",
+        "name": "Leads"
+      },
+      {
+        "source_id": "6aad0f727d58b0f4493141c4",
+        "name": "Sales Teams"
+      },
+      {
+        "source_id": "6aad0f8f7d58b0f4493141ce",
+        "name": "Campaigns"
+      },
+      {
+        "source_id": "6aad0f92e54d2a34fa4e5808",
+        "name": "Mediums"
+      },
+      {
+        "source_id": "6aad0f95bd43f55762c75833",
+        "name": "Sources"
+      },
+      {
+        "source_id": "6aad0f99e43d174ab374fb05",
+        "name": "CRM Tags"
+      },
+      {
+        "source_id": "6aacb149e43d174ab374e721",
+        "name": "Lost Reasons"
+      },
+      {
+        "source_id": "6aacb0f0805aef7032869597",
+        "name": "Stages"
+      },
+      {
+        "source_id": "6aa8a3b34a22ad87b728c4fe",
+        "name": "Contacts"
+      },
+      {
+        "source_id": "6ab29232e54d2a34faaa98bb",
+        "name": "Contact Tags"
+      },
+      {
+        "source_id": "6aacb572805aef7032869637",
+        "name": "Countries"
+      },
+      {
+        "source_id": "6aace374805aef7032869ec9",
+        "name": "States"
+      },
+      {
+        "source_id": "6ac33ac95e337edf2bf1c1d6",
+        "name": "Country Groups"
+      },
+      {
+        "source_id": "6aa8ea0c4a22ad87b728cf0b",
+        "name": "Products"
+      },
+      {
+        "source_id": "6aa90c161204328eb1af1b82",
+        "name": "Product Variants"
+      },
+      {
+        "source_id": "6abd1f7791143e1169ec64d0",
+        "name": "Pricelists"
+      },
+      {
+        "source_id": "6abd1f790e590eb436fdd8af",
+        "name": "Price Rules"
+      },
+      {
+        "source_id": "6aa8d14d4a73a3142152d3f6",
+        "name": "Units & Packagings"
+      },
+      {
+        "source_id": "6aaa60e17d58b0f44930f052",
+        "name": "Product Categories"
+      },
+      {
+        "source_id": "6aaa92ae805aef70328667da",
+        "name": "Chart of Accounts"
+      },
+      {
+        "source_id": "6aad1034805aef703286ac2f",
+        "name": "Taxes"
+      },
+      {
+        "source_id": "6aa8f5191204328eb1af162a",
+        "name": "Journals"
+      },
+      {
+        "source_id": "6ac33acc0e590eb436fe31d3",
+        "name": "Fiscal Positions"
+      },
+      {
+        "source_id": "6ac33ad06f62fbbb4fe6e8c6",
+        "name": "Fiscal Position Accounts"
+      },
+      {
+        "source_id": "6ac4735191143e1169ecd979",
+        "name": "Payment Methods"
+      },
+      {
+        "source_id": "6ac473560e590eb436fe48d5",
+        "name": "Payment Method Lines"
+      },
+      {
+        "source_id": "6aab893fe43d174ab374ce17",
+        "name": "Payment Terms"
+      },
+      {
+        "source_id": "6aab89417d58b0f449311705",
+        "name": "Payment Term Lines"
+      },
+      {
+        "source_id": "6ab28ec1e43d174ab3cd760a",
+        "name": "Incoterms"
+      },
+      {
+        "source_id": "6aa90facf363582dd37a62f7",
+        "name": "Invoices"
+      },
+      {
+        "source_id": "6aaa2b50e54d2a34fa4e0221",
+        "name": "Invoice Lines"
+      },
+      {
+        "source_id": "6ab64ff1e43d174ab36df730",
+        "name": "Payments"
+      },
+      {
+        "source_id": "6ab0cfb1805aef703286d929",
+        "name": "Activities"
+      },
+      {
+        "source_id": "6ab0cf6de54d2a34fa4e826e",
+        "name": "Activity Types"
+      },
+      {
+        "source_id": "6ab0cfa47d58b0f449316c8c",
+        "name": "Activity Plans"
+      },
+      {
+        "source_id": "6aacfa43e43d174ab374f862",
+        "name": "Recurring Plans"
+      },
+      {
+        "source_id": "6ab0cfaabd43f55762c78629",
+        "name": "Activity Plan Steps"
+      },
+      {
+        "source_id": "6ab361dbe54d2a34faaaa87b",
+        "name": "Activity Plan Launches"
+      },
+      {
+        "source_id": "6ac310e9896787ba3630455e",
+        "name": "Projects"
+      }
+    ],
+    "fields": [
+      {
+        "worksheet_id": "6ab09897e43d174ab3752d7b",
+        "worksheet_name": "Orders",
+        "source_id": "6ab0a141805aef703286cf85",
+        "name": "Delivery Address",
+        "alias": "partner_shipping_id"
+      },
+      {
+        "worksheet_id": "6ab09897e43d174ab3752d7b",
+        "worksheet_name": "Orders",
+        "source_id": "6ab0a9dabd43f55762c78047",
+        "name": "Delivery Date",
+        "alias": "commitment_date"
+      },
+      {
+        "worksheet_id": "6ab09897e43d174ab3752d7b",
+        "worksheet_name": "Orders",
+        "source_id": "6ab0a9dabd43f55762c78048",
+        "name": "Delivery Status",
+        "alias": "delivery_status"
+      },
+      {
+        "worksheet_id": "6ab09897e43d174ab3752d7b",
+        "worksheet_name": "Orders",
+        "source_id": "6ab39411e54d2a34faaaafa1",
+        "name": "Units left to deliver",
+        "alias": ""
+      },
+      {
+        "worksheet_id": "6ab09897e43d174ab3752d7b",
+        "worksheet_name": "Orders",
+        "source_id": "6ab39411e54d2a34faaaafa2",
+        "name": "Product lines with deliveries",
+        "alias": ""
+      },
+      {
+        "worksheet_id": "6ab0c740e43d174ab37535b2",
+        "worksheet_name": "Order Lines",
+        "source_id": "6ab0c864e43d174ab37535fc",
+        "name": "Quantity Invoiced",
+        "alias": "qty_invoiced"
+      },
+      {
+        "worksheet_id": "6ab0c740e43d174ab37535b2",
+        "worksheet_name": "Order Lines",
+        "source_id": "6ab0c864e43d174ab37535fd",
+        "name": "Quantity Delivered",
+        "alias": "qty_delivered"
+      },
+      {
+        "worksheet_id": "6ab0c740e43d174ab37535b2",
+        "worksheet_name": "Order Lines",
+        "source_id": "6ab0c984e43d174ab3753634",
+        "name": "Unit",
+        "alias": "product_uom_id"
+      },
+      {
+        "worksheet_id": "6ab0c740e43d174ab37535b2",
+        "worksheet_name": "Order Lines",
+        "source_id": "6ab0c984e43d174ab3753638",
+        "name": "Product Unit",
+        "alias": "product_uom_name"
+      },
+      {
+        "worksheet_id": "6ab0c740e43d174ab37535b2",
+        "worksheet_name": "Order Lines",
+        "source_id": "6ab0ca1be43d174ab3753657",
+        "name": "Unit Price",
+        "alias": "price_unit"
+      },
+      {
+        "worksheet_id": "6ab0c740e43d174ab37535b2",
+        "worksheet_name": "Order Lines",
+        "source_id": "6ab380817d58b0f4498fde44",
+        "name": "Left to Deliver",
+        "alias": "qty_to_deliver"
+      },
+      {
+        "worksheet_id": "6ab0c740e43d174ab37535b2",
+        "worksheet_name": "Order Lines",
+        "source_id": "6ab39f1ee54d2a34faaab141",
+        "name": "Product Type",
+        "alias": "product_type"
+      },
+      {
+        "worksheet_id": "6ab0c740e43d174ab37535b2",
+        "worksheet_name": "Order Lines",
+        "source_id": "6ab3a0957d58b0f4498fe705",
+        "name": "Goods line delivered",
+        "alias": ""
+      },
+      {
+        "worksheet_id": "6ab0c740e43d174ab37535b2",
+        "worksheet_name": "Order Lines",
+        "source_id": "6ab4b36dbd43f55762c4ba9a",
+        "name": "Printed Unit Price",
+        "alias": ""
+      },
+      {
+        "worksheet_id": "6ab0c740e43d174ab37535b2",
+        "worksheet_name": "Order Lines",
+        "source_id": "6abd25325e337edf2bf15973",
+        "name": "Unit factor",
+        "alias": ""
+      },
+      {
+        "worksheet_id": "6ab0c740e43d174ab37535b2",
+        "worksheet_name": "Order Lines",
+        "source_id": "6abfaa3d896787ba3630276d",
+        "name": "Product's unit",
+        "alias": ""
+      },
+      {
+        "worksheet_id": "6ab0c740e43d174ab37535b2",
+        "worksheet_name": "Order Lines",
+        "source_id": "6abfaa3d896787ba3630276f",
+        "name": "Product's packagings",
+        "alias": ""
+      },
+      {
+        "worksheet_id": "6ab0c740e43d174ab37535b2",
+        "worksheet_name": "Order Lines",
+        "source_id": "6abfaa3d896787ba36302771",
+        "name": "Variant's packagings",
+        "alias": ""
+      },
+      {
+        "worksheet_id": "6aa8ea0c4a22ad87b728cf0b",
+        "worksheet_name": "Products",
+        "source_id": "6aa8ea161204328eb1af1017",
+        "name": "Product Type",
+        "alias": "type"
+      },
+      {
+        "worksheet_id": "6aa8ea0c4a22ad87b728cf0b",
+        "worksheet_name": "Products",
+        "source_id": "6aa8ea161204328eb1af1019",
+        "name": "Cost",
+        "alias": "standard_price"
+      },
+      {
+        "worksheet_id": "6aa8ea0c4a22ad87b728cf0b",
+        "worksheet_name": "Products",
+        "source_id": "6aa8ea161204328eb1af101f",
+        "name": "Weight",
+        "alias": "weight"
+      },
+      {
+        "worksheet_id": "6aa8ea0c4a22ad87b728cf0b",
+        "worksheet_name": "Products",
+        "source_id": "6aa8ea161204328eb1af1020",
+        "name": "Volume",
+        "alias": "volume"
+      },
+      {
+        "worksheet_id": "6aa8ea0c4a22ad87b728cf0b",
+        "worksheet_name": "Products",
+        "source_id": "6aa8ea304720c515252be609",
+        "name": "Unit",
+        "alias": "uom_id"
+      },
+      {
+        "worksheet_id": "6aa8ea0c4a22ad87b728cf0b",
+        "worksheet_name": "Products",
+        "source_id": "6aa8ea304720c515252be60b",
+        "name": "Packagings",
+        "alias": "uom_ids"
+      },
+      {
+        "worksheet_id": "6aa8ea0c4a22ad87b728cf0b",
+        "worksheet_name": "Products",
+        "source_id": "6aaba8dde43d174ab374d607",
+        "name": "Delivery Time",
+        "alias": ""
+      },
+      {
+        "worksheet_id": "6aa8ea0c4a22ad87b728cf0b",
+        "worksheet_name": "Products",
+        "source_id": "6abd25365e337edf2bf1597a",
+        "name": "Unit factor",
+        "alias": ""
+      },
+      {
+        "worksheet_id": "6aa90c161204328eb1af1b82",
+        "worksheet_name": "Product Variants",
+        "source_id": "6aa90c161204328eb1af1b84",
+        "name": "Barcode",
+        "alias": "barcode"
+      },
+      {
+        "worksheet_id": "6aa90c161204328eb1af1b82",
+        "worksheet_name": "Product Variants",
+        "source_id": "6aa90c69f363582dd37a6229",
+        "name": "Cost",
+        "alias": "standard_price"
+      },
+      {
+        "worksheet_id": "6aa90c161204328eb1af1b82",
+        "worksheet_name": "Product Variants",
+        "source_id": "6aa90c69f363582dd37a622c",
+        "name": "Weight",
+        "alias": "weight"
+      },
+      {
+        "worksheet_id": "6aa90c161204328eb1af1b82",
+        "worksheet_name": "Product Variants",
+        "source_id": "6aa90c69f363582dd37a622d",
+        "name": "Volume",
+        "alias": "volume"
+      },
+      {
+        "worksheet_id": "6aa90c161204328eb1af1b82",
+        "worksheet_name": "Product Variants",
+        "source_id": "6aa90c7d4a22ad87b728e9f2",
+        "name": "Extra Packagings",
+        "alias": "extra_uom_ids"
+      },
+      {
+        "worksheet_id": "6aa90c161204328eb1af1b82",
+        "worksheet_name": "Product Variants",
+        "source_id": "6aa90c9f4a22ad87b728e9f9",
+        "name": "Product Type",
+        "alias": "type"
+      },
+      {
+        "worksheet_id": "6aa90c161204328eb1af1b82",
+        "worksheet_name": "Product Variants",
+        "source_id": "6aa90c9f4a22ad87b728e9fa",
+        "name": "Unit",
+        "alias": "uom_id"
+      }
+    ],
+    "field_policy": "Preserve every existing control on retained worksheets, except the one explicit Inventory Tracking extension listed above. Inventory-labelled pre-existing tabs do not prove Inventory ownership.",
+    "workflows": [
+      {
+        "source_id": "6ab28144e606b26d2601895f",
+        "name": "Signed: confirm the order",
+        "trigger_worksheet_id": "6ab09897e43d174ab3752d7b",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ab2d2c0a2c872a5c14057fc",
+        "name": "Orders: Invoice Status follows the order's own Status",
+        "trigger_worksheet_id": "6ab09897e43d174ab3752d7b",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ab396e194093ab76be5bdc3",
+        "name": "Orders: Delivery Status follows the order's own Status",
+        "trigger_worksheet_id": "6ab09897e43d174ab3752d7b",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ab3998a789584ded34ce3aa",
+        "name": "Orders: a record created as a template is ticked Is Template",
+        "trigger_worksheet_id": "6ab09897e43d174ab3752d7b",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ab631d3789584ded372464b",
+        "name": "Prepayment Amount follows the Prepayment",
+        "trigger_worksheet_id": "6ab09897e43d174ab3752d7b",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ab63224e606b26d2625e81e",
+        "name": "Prepayment follows a typed Prepayment Amount",
+        "trigger_worksheet_id": "6ab09897e43d174ab3752d7b",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ab9ded3a2c872a5c17e601a",
+        "name": "Printed tax lines follow the order's tax mode",
+        "trigger_worksheet_id": "6ab09897e43d174ab3752d7b",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6abd2901acc2cad9b0e7344a",
+        "name": "Orders: re-price the lines when the pricelist changes",
+        "trigger_worksheet_id": "6ab09897e43d174ab3752d7b",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6abd2947c95312eaa1160a48",
+        "name": "Orders: a pricelist for an order without one",
+        "trigger_worksheet_id": "6ab09897e43d174ab3752d7b",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ac342085fa8a0f29654e163",
+        "name": "Orders: fiscal position from the customer",
+        "trigger_worksheet_id": "6ab09897e43d174ab3752d7b",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ac34a685fa8a0f296565802",
+        "name": "Orders: swap the lines' taxes when the fiscal position changes",
+        "trigger_worksheet_id": "6ab09897e43d174ab3752d7b",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ab0aac1789584ded3230fe1",
+        "name": "Send Quotation",
+        "trigger_worksheet_id": "6ab09897e43d174ab3752d7b",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ab10707886e6e7c8b386eb3",
+        "name": "Confirm",
+        "trigger_worksheet_id": "6ab09897e43d174ab3752d7b",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ab1070a94093ab76bcc899e",
+        "name": "Cancel",
+        "trigger_worksheet_id": "6ab09897e43d174ab3752d7b",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ab1070d789584ded32f15e7",
+        "name": "Set to Quotation",
+        "trigger_worksheet_id": "6ab09897e43d174ab3752d7b",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ab10711a2c872a5c1305bae",
+        "name": "Mark as Sent",
+        "trigger_worksheet_id": "6ab09897e43d174ab3752d7b",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ab218bea2c872a5c138c9ca",
+        "name": "Deliver",
+        "trigger_worksheet_id": "6ab09897e43d174ab3752d7b",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ab235f0a2c872a5c13a8b06",
+        "name": "Apply Discount",
+        "trigger_worksheet_id": "6ab09897e43d174ab3752d7b",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ab27f10789584ded342675d",
+        "name": "Share for Signature",
+        "trigger_worksheet_id": "6ab09897e43d174ab3752d7b",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ab2d6a0a2c872a5c1408ae6",
+        "name": "Create Invoice",
+        "trigger_worksheet_id": "6ab09897e43d174ab3752d7b",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ab2d2df94093ab76bdda713",
+        "name": "Orders: Invoice Status follows its lines",
+        "trigger_worksheet_id": "6ab0c740e43d174ab37535b2",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ab2d2fe94093ab76bddae2f",
+        "name": "Orders: Invoice Status when a line is deleted",
+        "trigger_worksheet_id": "6ab0c740e43d174ab37535b2",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ab3978894093ab76be5d12b",
+        "name": "Orders: Delivery Status follows its lines",
+        "trigger_worksheet_id": "6ab0c740e43d174ab37535b2",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ab397cc94093ab76be5e752",
+        "name": "Orders: Delivery Status when a line is deleted",
+        "trigger_worksheet_id": "6ab0c740e43d174ab37535b2",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ab60b1994093ab76b0de551",
+        "name": "Printed tax lines follow the order lines",
+        "trigger_worksheet_id": "6ab0c740e43d174ab37535b2",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ab60d8294093ab76b0e0c76",
+        "name": "Printed tax lines when an order line is deleted",
+        "trigger_worksheet_id": "6ab0c740e43d174ab37535b2",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ab634fde606b26d26261ed1",
+        "name": "Prepayment Amount follows the order lines",
+        "trigger_worksheet_id": "6ab0c740e43d174ab37535b2",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ab6351994093ab76b0fae42",
+        "name": "Prepayment Amount when an order line is deleted",
+        "trigger_worksheet_id": "6ab0c740e43d174ab37535b2",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ab93df094093ab76b252d0d",
+        "name": "Tax-included price from the product",
+        "trigger_worksheet_id": "6ab0c740e43d174ab37535b2",
+        "enabled_at_snapshot": false
+      },
+      {
+        "source_id": "6ab9457694093ab76b256c70",
+        "name": "Discount lines count as delivered",
+        "trigger_worksheet_id": "6ab0c740e43d174ab37535b2",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6abd2862acc2cad9b0e71c1e",
+        "name": "Order Lines: price from the pricelist",
+        "trigger_worksheet_id": "6ab0c740e43d174ab37535b2",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ab218c1a2c872a5c138ca18",
+        "name": "Deliver: one product line",
+        "trigger_worksheet_id": "6ab0c740e43d174ab37535b2",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ab23689e606b26d26fe5ebb",
+        "name": "Apply Discount: one product line",
+        "trigger_worksheet_id": "6ab0c740e43d174ab37535b2",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ab23692e606b26d26fe5f0c",
+        "name": "Apply Discount: one tax group",
+        "trigger_worksheet_id": "6ab0c740e43d174ab37535b2",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ab2d7f5789584ded345986f",
+        "name": "Create Invoice: one order line",
+        "trigger_worksheet_id": "6ab0c740e43d174ab37535b2",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ab33d95886e6e7c8b4d894e",
+        "name": "Lead Rotting Alert",
+        "trigger_worksheet_id": "6aad111de43d174ab374fb5f",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6aad1469e606b26d26c89493",
+        "name": "Won",
+        "trigger_worksheet_id": "6aad111de43d174ab374fb5f",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6aad1474e606b26d26c894f7",
+        "name": "Lost",
+        "trigger_worksheet_id": "6aad111de43d174ab374fb5f",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ab1f901a2c872a5c137c663",
+        "name": "Restore",
+        "trigger_worksheet_id": "6aad111de43d174ab374fb5f",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ab3443d789584ded34a0d34",
+        "name": "New",
+        "trigger_worksheet_id": "6aad111de43d174ab374fb5f",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ab34759789584ded34a29af",
+        "name": "Qualified",
+        "trigger_worksheet_id": "6aad111de43d174ab374fb5f",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ab3475a789584ded34a29c3",
+        "name": "Proposition",
+        "trigger_worksheet_id": "6aad111de43d174ab374fb5f",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ab3475b789584ded34a29cf",
+        "name": "Won",
+        "trigger_worksheet_id": "6aad111de43d174ab374fb5f",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6aa8a7ff8475f61d4cc65bb9",
+        "name": "Contacts: copy company details to its contact",
+        "trigger_worksheet_id": "6aa8a3b34a22ad87b728c4fe",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6aa8a8048475f61d4cc65ebe",
+        "name": "Contacts: push company address and Tax ID to its contacts",
+        "trigger_worksheet_id": "6aa8a3b34a22ad87b728c4fe",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6aace7dfa1c923a16e17e49a",
+        "name": "Contacts: the Country follows the State",
+        "trigger_worksheet_id": "6aa8a3b34a22ad87b728c4fe",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6aace7ec16473257ad6b77cc",
+        "name": "Contacts: a State that belongs elsewhere is cleared",
+        "trigger_worksheet_id": "6aa8a3b34a22ad87b728c4fe",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6aa8a565e589b8933dd4cc6d",
+        "name": "Archive",
+        "trigger_worksheet_id": "6aa8a3b34a22ad87b728c4fe",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6aa8a567e589b8933dd4ccd7",
+        "name": "Unarchive",
+        "trigger_worksheet_id": "6aa8a3b34a22ad87b728c4fe",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6aacf9524f2a99acac2c1fff",
+        "name": "States: the key and the duplicate check",
+        "trigger_worksheet_id": "6aace374805aef7032869ec9",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6aa9117ce589b8933dd933da",
+        "name": "Product Variants: create a new product's variant",
+        "trigger_worksheet_id": "6aa8ea0c4a22ad87b728cf0b",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6aa91186e589b8933dd9367a",
+        "name": "Product Variants: copy a product's Internal Reference, Cost, Weight, Volume and Favorite to its variants",
+        "trigger_worksheet_id": "6aa8ea0c4a22ad87b728cf0b",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6aa9118ce589b8933dd93748",
+        "name": "Product Variants: archive and unarchive a product's variant with it",
+        "trigger_worksheet_id": "6aa8ea0c4a22ad87b728cf0b",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6aa8eb452fe3e8d6b31a6da2",
+        "name": "Archive",
+        "trigger_worksheet_id": "6aa8ea0c4a22ad87b728cf0b",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6aa8eb482fe3e8d6b31a6dc6",
+        "name": "Unarchive",
+        "trigger_worksheet_id": "6aa8ea0c4a22ad87b728cf0b",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6abd15ceacc2cad9b0e5fc4c",
+        "name": "Product Variants: a product left with one active variant takes its Internal Reference and Cost",
+        "trigger_worksheet_id": "6aa90c161204328eb1af1b82",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6aa90fc08475f61d4ccd0f8b",
+        "name": "Archive",
+        "trigger_worksheet_id": "6aa90c161204328eb1af1b82",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6aa90fc38475f61d4ccd0faf",
+        "name": "Unarchive",
+        "trigger_worksheet_id": "6aa90c161204328eb1af1b82",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6abfaed3c95312eaa12f285b",
+        "name": "Pricelists: chain and loop check",
+        "trigger_worksheet_id": "6abd1f7791143e1169ec64d0",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6abfafbfc95312eaa12f5059",
+        "name": "Pricelists: check the chains after a rename",
+        "trigger_worksheet_id": "6abd1f7791143e1169ec64d0",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6abd2301acc2cad9b0e6bfdf",
+        "name": "Archive",
+        "trigger_worksheet_id": "6abd1f7791143e1169ec64d0",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6abd23045fa8a0f29623757d",
+        "name": "Unarchive",
+        "trigger_worksheet_id": "6abd1f7791143e1169ec64d0",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6abfaf9cc95312eaa12f42af",
+        "name": "Price Rules: check the chains",
+        "trigger_worksheet_id": "6abd1f790e590eb436fdd8af",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6abfafb0c95312eaa12f4bfe",
+        "name": "Price Rules: check the chains after a deletion",
+        "trigger_worksheet_id": "6abd1f790e590eb436fdd8af",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6abfb4adc95312eaa12f83eb",
+        "name": "Price Rules: a fixed price takes no other pricelist",
+        "trigger_worksheet_id": "6abd1f790e590eb436fdd8af",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6aaa9397a1c923a16effd002",
+        "name": "Chart of Accounts: Payment Reconciliation follows Type",
+        "trigger_worksheet_id": "6aaa92ae805aef70328667da",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6aaa942487707da9d612e86a",
+        "name": "Archive",
+        "trigger_worksheet_id": "6aaa92ae805aef70328667da",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6aaa94274f2a99acac091db5",
+        "name": "Unarchive",
+        "trigger_worksheet_id": "6aaa92ae805aef70328667da",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6aad12174f2a99acac2d4f4c",
+        "name": "Taxes: the key and the duplicate check",
+        "trigger_worksheet_id": "6aad1034805aef703286ac2f",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6aad11fb8e75db182e9dccf4",
+        "name": "Archive",
+        "trigger_worksheet_id": "6aad1034805aef703286ac2f",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6aad11fd87707da9d62ab172",
+        "name": "Unarchive",
+        "trigger_worksheet_id": "6aad1034805aef703286ac2f",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6aab8d164f2a99acac144995",
+        "name": "Invoices: Due Date follows the Payment Terms",
+        "trigger_worksheet_id": "6aa90facf363582dd37a62f7",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6aab8f1016473257ad5c91e0",
+        "name": "Invoices: Payment Terms follow the Customer / Vendor",
+        "trigger_worksheet_id": "6aa90facf363582dd37a62f7",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6aab9e0d87707da9d61d3b82",
+        "name": "Invoices: Due Date of a new invoice with no Customer / Vendor",
+        "trigger_worksheet_id": "6aa90facf363582dd37a62f7",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ab51dac886e6e7c8b69be95",
+        "name": "Invoices: Payment Terms follow a change of Customer / Vendor",
+        "trigger_worksheet_id": "6aa90facf363582dd37a62f7",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ab9516e789584ded38767c9",
+        "name": "Switch off the payment link once paid",
+        "trigger_worksheet_id": "6aa90facf363582dd37a62f7",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ab9e01ce606b26d26402ab8",
+        "name": "Printed tax lines follow the invoice's tax mode",
+        "trigger_worksheet_id": "6aa90facf363582dd37a62f7",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ab9e0bb789584ded3944c51",
+        "name": "Roll the lines up when the tax mode changes",
+        "trigger_worksheet_id": "6aa90facf363582dd37a62f7",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ab9fa1e94093ab76b2bc09e",
+        "name": "Orders: Invoice Status when an invoice's Status changes",
+        "trigger_worksheet_id": "6aa90facf363582dd37a62f7",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ac342dd5fa8a0f296550b84",
+        "name": "Invoices: fiscal position from the customer",
+        "trigger_worksheet_id": "6aa90facf363582dd37a62f7",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ac438f9f43c1c6efbe429e9",
+        "name": "Invoices: swap the taxes of lines saved before the fiscal position",
+        "trigger_worksheet_id": "6aa90facf363582dd37a62f7",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ac47ecfa7d678059990bc0a",
+        "name": "Invoices: the payment method follows the customer",
+        "trigger_worksheet_id": "6aa90facf363582dd37a62f7",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6aa9f89b4f2a99acac043704",
+        "name": "Confirm",
+        "trigger_worksheet_id": "6aa90facf363582dd37a62f7",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6aa9f99016473257ad4d3bc6",
+        "name": "Cancel",
+        "trigger_worksheet_id": "6aa90facf363582dd37a62f7",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6aa9f9938e75db182e78a8b3",
+        "name": "Reset to Draft",
+        "trigger_worksheet_id": "6aa90facf363582dd37a62f7",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ab3581aa2c872a5c145b333",
+        "name": "Register Payment",
+        "trigger_worksheet_id": "6aa90facf363582dd37a62f7",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ab5c2d894093ab76b051810",
+        "name": "Send",
+        "trigger_worksheet_id": "6aa90facf363582dd37a62f7",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ab667fd789584ded373adfc",
+        "name": "Generate a Payment Link",
+        "trigger_worksheet_id": "6aa90facf363582dd37a62f7",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ac34f7ec95312eaa14b6cf8",
+        "name": "Update Taxes and Accounts",
+        "trigger_worksheet_id": "6aa90facf363582dd37a62f7",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6aaa2d6aa1c923a16efc81a7",
+        "name": "Roll the lines up into the invoice",
+        "trigger_worksheet_id": "6aaa2b50e54d2a34fa4e0221",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6aaa2ebba1c923a16efc8ecf",
+        "name": "Roll the lines up when a line is deleted",
+        "trigger_worksheet_id": "6aaa2b50e54d2a34fa4e0221",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6aab44254f2a99acac0f026f",
+        "name": "Invoice Lines: fill the account of a new line",
+        "trigger_worksheet_id": "6aaa2b50e54d2a34fa4e0221",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6aab447416473257ad590b41",
+        "name": "Invoice Lines: fill the account when the Product changes",
+        "trigger_worksheet_id": "6aaa2b50e54d2a34fa4e0221",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ab52c7d94093ab76b00b432",
+        "name": "Orders: Invoice Status when an invoice line is deleted",
+        "trigger_worksheet_id": "6aaa2b50e54d2a34fa4e0221",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ab60da594093ab76b0e11fd",
+        "name": "Printed tax lines follow the invoice lines",
+        "trigger_worksheet_id": "6aaa2b50e54d2a34fa4e0221",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ab60dcbe606b26d26238e3b",
+        "name": "Printed tax lines when an invoice line is deleted",
+        "trigger_worksheet_id": "6aaa2b50e54d2a34fa4e0221",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ac45bacacc2cad9b029b45d",
+        "name": "Invoice Lines: the price follows the Unit",
+        "trigger_worksheet_id": "6aaa2b50e54d2a34fa4e0221",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ac47926a7d6780599905412",
+        "name": "Payments: number it, and the invoice follows",
+        "trigger_worksheet_id": "6ab64ff1e43d174ab36df730",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ac479d2a7d67805999076fa",
+        "name": "Payments: the invoice follows a deleted payment",
+        "trigger_worksheet_id": "6ab64ff1e43d174ab36df730",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ac47d2bacc2cad9b02b1731",
+        "name": "Confirm",
+        "trigger_worksheet_id": "6ab64ff1e43d174ab36df730",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ac47d3cacc2cad9b02b17bd",
+        "name": "Reject",
+        "trigger_worksheet_id": "6ab64ff1e43d174ab36df730",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ac47d40acc2cad9b02b17e9",
+        "name": "Reset to Draft",
+        "trigger_worksheet_id": "6ab64ff1e43d174ab36df730",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ac47d44f43c1c6efbe97a12",
+        "name": "Mark as Sent",
+        "trigger_worksheet_id": "6ab64ff1e43d174ab36df730",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ac47d48a7d678059990b08e",
+        "name": "Unmark as Sent",
+        "trigger_worksheet_id": "6ab64ff1e43d174ab36df730",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ac47d4cc95312eaa15ddb44",
+        "name": "Cancel",
+        "trigger_worksheet_id": "6ab64ff1e43d174ab36df730",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ab10dc194093ab76bccc25b",
+        "name": "Notify Activity Assignee",
+        "trigger_worksheet_id": "6ab0cfb1805aef703286d929",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ab10e4da2c872a5c13097b2",
+        "name": "Notify Activity Reassignment",
+        "trigger_worksheet_id": "6ab0cfb1805aef703286d929",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ab22767a2c872a5c139db77",
+        "name": "Create Calendar Event for Meeting Activity",
+        "trigger_worksheet_id": "6ab0cfb1805aef703286d929",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ab10ee694093ab76bcccf21",
+        "name": "Activity Due Reminder",
+        "trigger_worksheet_id": "6ab0cfb1805aef703286d929",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ab0d5be886e6e7c8b368e14",
+        "name": "Mark Done",
+        "trigger_worksheet_id": "6ab0cfb1805aef703286d929",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ab0d5c5789584ded324d698",
+        "name": "Cancel",
+        "trigger_worksheet_id": "6ab0cfb1805aef703286d929",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ab3643d789584ded34b1941",
+        "name": "Process Activity Plan Launch",
+        "trigger_worksheet_id": "6ab361dbe54d2a34faaaa87b",
+        "enabled_at_snapshot": false
+      },
+      {
+        "source_id": "6ab3667394093ab76be367ea",
+        "name": "Expand Activity Plan Launch",
+        "trigger_worksheet_id": "6ab361dbe54d2a34faaaa87b",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ab3669c94093ab76be36cad",
+        "name": "Create Activity From Launch Step",
+        "trigger_worksheet_id": "6ab361dbe54d2a34faaaa87b",
+        "enabled_at_snapshot": false
+      },
+      {
+        "source_id": "6ab367ec94093ab76be38336",
+        "name": "Unnamed Subprocess",
+        "trigger_worksheet_id": "6ab361dbe54d2a34faaaa87b",
+        "enabled_at_snapshot": false
+      },
+      {
+        "source_id": "6ab367ec94093ab76be38358",
+        "name": "Unnamed Subprocess",
+        "trigger_worksheet_id": "6ab361dbe54d2a34faaaa87b",
+        "enabled_at_snapshot": false
+      },
+      {
+        "source_id": "6ab3688b94093ab76be38d5c",
+        "name": "Create Activity from Typed Launch Step",
+        "trigger_worksheet_id": "6ab361dbe54d2a34faaaa87b",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ab671aea2c872a5c1660d7a",
+        "name": "Book a Stripe payment",
+        "trigger_worksheet_id": null,
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ab96dc994093ab76b26ee88",
+        "name": "Calculated Probability",
+        "trigger_worksheet_id": null,
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6aa8d881e589b8933dd73bfb",
+        "name": "Archive",
+        "trigger_worksheet_id": "6aa8d14d4a73a3142152d3f6",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6aa8d889d91d10186df6ec14",
+        "name": "Unarchive",
+        "trigger_worksheet_id": "6aa8d14d4a73a3142152d3f6",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6aa9db3116473257ad4c471e",
+        "name": "Archive",
+        "trigger_worksheet_id": "6aa8f5191204328eb1af162a",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6aa9db348e75db182e77e1e2",
+        "name": "Unarchive",
+        "trigger_worksheet_id": "6aa8f5191204328eb1af162a",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ac33c71c95312eaa14ab3ae",
+        "name": "Archive",
+        "trigger_worksheet_id": "6ac33acc0e590eb436fe31d3",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ac33c81a7d678059983b340",
+        "name": "Unarchive",
+        "trigger_worksheet_id": "6ac33acc0e590eb436fe31d3",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6aab8a5116473257ad5c43d2",
+        "name": "Archive",
+        "trigger_worksheet_id": "6aab893fe43d174ab374ce17",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6aab8a554f2a99acac142214",
+        "name": "Unarchive",
+        "trigger_worksheet_id": "6aab893fe43d174ab374ce17",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ab28f71a2c872a5c13e59cb",
+        "name": "Archive",
+        "trigger_worksheet_id": "6ab28ec1e43d174ab3cd760a",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ab28f73789584ded3432c2d",
+        "name": "Unarchive",
+        "trigger_worksheet_id": "6ab28ec1e43d174ab3cd760a",
+        "enabled_at_snapshot": true
+      },
+      {
+        "source_id": "6ab3647de606b26d2609a254",
+        "name": "Create Activity From Plan Step",
+        "trigger_worksheet_id": "6ab0cfaabd43f55762c78629",
+        "enabled_at_snapshot": true
+      }
+    ],
+    "dashboards": [
+      {
+        "source_id": "6ab3ab4e2606f8c886a7e811",
+        "name": "CRM Pipeline Dashboard"
+      },
+      {
+        "source_id": "6ab7b6d9e320fa9d4cd873ec",
+        "name": "Sales Operations Dashboard"
+      },
+      {
+        "source_id": "6ab353b77e7f0f2333bec7d2",
+        "name": "Sales Performance Dashboard"
+      },
+      {
+        "source_id": "6abcad28bd1c7ff41152f308",
+        "name": "Sales Manager Dashboard"
+      },
+      {
+        "source_id": "6aba250de320fa9d4cd87cbd",
+        "name": "Configuration Dashboard",
+        "preserve_all_except_explicit_inventory_parts": true
+      }
+    ],
+    "global_assets": [
+      "All existing roles and memberships (remove only Inventory object grants).",
+      "Shared API library, OAuth authorizations, Teams/Google meeting connections and Stripe integration.",
+      "CRM/Sales/Finance print templates, navigation, reports, record data and attachments.",
+      "Existing Contacts, Product/Variant/Unit/Category, geography, pricing, tax and accounting records.",
+      "Deleted Removal Strategies worksheet in the recycle bin: no further action."
+    ],
+    "sales_fulfilment_mode": "Preserve the existing Sales-owned Deliver flow, Quantity Delivered, Delivery Status and their formulas. Do not reset historical quantities. No Inventory stock posting after removal."
+  },
+  "bridges": {
+    "cross_module_direct_relations": [
+      {
+        "source_worksheet_id": "6ac303825e337edf2bf1b7b4",
+        "source_worksheet_name": "Transfer",
+        "source_field_id": "6ac313b75e337edf2bf1ba05",
+        "name": "Contact",
+        "alias": "partner_id",
+        "target_worksheet_id": "6aa8a3b34a22ad87b728c4fe",
+        "target_worksheet_name": "Contacts",
+        "direction": "inventory_to_retained",
+        "required": false
+      },
+      {
+        "source_worksheet_id": "6ac303825e337edf2bf1b7b4",
+        "source_worksheet_name": "Transfer",
+        "source_field_id": "6ac313b75e337edf2bf1ba17",
+        "name": "Sales Order",
+        "alias": "sale_id",
+        "target_worksheet_id": "6ab09897e43d174ab3752d7b",
+        "target_worksheet_name": "Orders",
+        "direction": "inventory_to_retained",
+        "required": false
+      },
+      {
+        "source_worksheet_id": "6ac303825e337edf2bf1b7b4",
+        "source_worksheet_name": "Transfer",
+        "source_field_id": "6ac313b75e337edf2bf1ba1a",
+        "name": "Project",
+        "alias": "x_project_id",
+        "target_worksheet_id": "6ac310e9896787ba3630455e",
+        "target_worksheet_name": "Projects",
+        "direction": "inventory_to_retained",
+        "required": false
+      },
+      {
+        "source_worksheet_id": "6ac303825e337edf2bf1b7b4",
+        "source_worksheet_name": "Transfer",
+        "source_field_id": "6ac3275b896787ba36304b40",
+        "name": "Assign Owner",
+        "alias": "owner_id",
+        "target_worksheet_id": "6aa8a3b34a22ad87b728c4fe",
+        "target_worksheet_name": "Contacts",
+        "direction": "inventory_to_retained",
+        "required": false
+      },
+      {
+        "source_worksheet_id": "6ac3253c6f62fbbb4fe6e6cc",
+        "source_worksheet_name": "Scrap",
+        "source_field_id": "6ac3276791143e1169ecc245",
+        "name": "Owner",
+        "alias": "owner_id",
+        "target_worksheet_id": "6aa8a3b34a22ad87b728c4fe",
+        "target_worksheet_name": "Contacts",
+        "direction": "inventory_to_retained",
+        "required": false
+      },
+      {
+        "source_worksheet_id": "6ac3253c6f62fbbb4fe6e6cc",
+        "source_worksheet_name": "Scrap",
+        "source_field_id": "6ac3276791143e1169ecc24b",
+        "name": "Product",
+        "alias": "product_id",
+        "target_worksheet_id": "6aa90c161204328eb1af1b82",
+        "target_worksheet_name": "Product Variants",
+        "direction": "inventory_to_retained",
+        "required": true
+      },
+      {
+        "source_worksheet_id": "6ac3253c6f62fbbb4fe6e6cc",
+        "source_worksheet_name": "Scrap",
+        "source_field_id": "6ac3276791143e1169ecc24d",
+        "name": "Unit",
+        "alias": "product_uom_id",
+        "target_worksheet_id": "6aa8d14d4a73a3142152d3f6",
+        "target_worksheet_name": "Units & Packagings",
+        "direction": "inventory_to_retained",
+        "required": true
+      },
+      {
+        "source_worksheet_id": "6ac3227691143e1169ecc09f",
+        "source_worksheet_name": "Lots & Serial Numbers",
+        "source_field_id": "6ac327550e590eb436fe2f76",
+        "name": "Product",
+        "alias": "product_id",
+        "target_worksheet_id": "6aa90c161204328eb1af1b82",
+        "target_worksheet_name": "Product Variants",
+        "direction": "inventory_to_retained",
+        "required": true
+      },
+      {
+        "source_worksheet_id": "6ac3227b896787ba363048f6",
+        "source_worksheet_name": "Warehouses",
+        "source_field_id": "6ac3276c6f62fbbb4fe6e75d",
+        "name": "Address",
+        "alias": "partner_id",
+        "target_worksheet_id": "6aa8a3b34a22ad87b728c4fe",
+        "target_worksheet_name": "Contacts",
+        "direction": "inventory_to_retained",
+        "required": false
+      },
+      {
+        "source_worksheet_id": "6ac3228791143e1169ecc0aa",
+        "source_worksheet_name": "Operation Types",
+        "source_field_id": "6ac327605e337edf2bf1bff4",
+        "name": "Wave Product Categories",
+        "alias": "wave_category_ids",
+        "target_worksheet_id": "6aaa60e17d58b0f44930f052",
+        "target_worksheet_name": "Product Categories",
+        "direction": "inventory_to_retained",
+        "required": false
+      },
+      {
+        "source_worksheet_id": "6ac3222e5e337edf2bf1bdda",
+        "source_worksheet_name": "Routes",
+        "source_field_id": "6ac327670e590eb436fe2fd0",
+        "name": "Product Categories",
+        "alias": "categ_ids",
+        "target_worksheet_id": "6aaa60e17d58b0f44930f052",
+        "target_worksheet_name": "Product Categories",
+        "direction": "inventory_to_retained",
+        "required": false
+      },
+      {
+        "source_worksheet_id": "6ac3222e5e337edf2bf1bdda",
+        "source_worksheet_name": "Routes",
+        "source_field_id": "6ac327670e590eb436fe2fd2",
+        "name": "Products",
+        "alias": "product_ids",
+        "target_worksheet_id": "6aa8ea0c4a22ad87b728cf0b",
+        "target_worksheet_name": "Products",
+        "direction": "inventory_to_retained",
+        "required": false
+      },
+      {
+        "source_worksheet_id": "6ac325100e590eb436fe2eff",
+        "source_worksheet_name": "Reordering Rules",
+        "source_field_id": "6ac3276c91143e1169ecc267",
+        "name": "Product",
+        "alias": "product_id",
+        "target_worksheet_id": "6aa90c161204328eb1af1b82",
+        "target_worksheet_name": "Product Variants",
+        "direction": "inventory_to_retained",
+        "required": true
+      },
+      {
+        "source_worksheet_id": "6ac325100e590eb436fe2eff",
+        "source_worksheet_name": "Reordering Rules",
+        "source_field_id": "6ac3276c91143e1169ecc26b",
+        "name": "Multiple",
+        "alias": "replenishment_uom_id",
+        "target_worksheet_id": "6aa8d14d4a73a3142152d3f6",
+        "target_worksheet_name": "Units & Packagings",
+        "direction": "inventory_to_retained",
+        "required": false
+      },
+      {
+        "source_worksheet_id": "6ac324486f62fbbb4fe6e68f",
+        "source_worksheet_name": "Putaway Rules",
+        "source_field_id": "6ac327606f62fbbb4fe6e735",
+        "name": "Product Category",
+        "alias": "category_id",
+        "target_worksheet_id": "6aaa60e17d58b0f44930f052",
+        "target_worksheet_name": "Product Categories",
+        "direction": "inventory_to_retained",
+        "required": false
+      },
+      {
+        "source_worksheet_id": "6ac324486f62fbbb4fe6e68f",
+        "source_worksheet_name": "Putaway Rules",
+        "source_field_id": "6ac327606f62fbbb4fe6e73d",
+        "name": "Product",
+        "alias": "product_id",
+        "target_worksheet_id": "6aa90c161204328eb1af1b82",
+        "target_worksheet_name": "Product Variants",
+        "direction": "inventory_to_retained",
+        "required": false
+      },
+      {
+        "source_worksheet_id": "6ac3228d6f62fbbb4fe6e613",
+        "source_worksheet_name": "Stock Moves",
+        "source_field_id": "6ac327555e337edf2bf1bf58",
+        "name": "Packaging",
+        "alias": "packaging_uom_id",
+        "target_worksheet_id": "6aa8d14d4a73a3142152d3f6",
+        "target_worksheet_name": "Units & Packagings",
+        "direction": "inventory_to_retained",
+        "required": false
+      },
+      {
+        "source_worksheet_id": "6ac3228d6f62fbbb4fe6e613",
+        "source_worksheet_name": "Stock Moves",
+        "source_field_id": "6ac327555e337edf2bf1bf5a",
+        "name": "Destination Address",
+        "alias": "partner_id",
+        "target_worksheet_id": "6aa8a3b34a22ad87b728c4fe",
+        "target_worksheet_name": "Contacts",
+        "direction": "inventory_to_retained",
+        "required": false
+      },
+      {
+        "source_worksheet_id": "6ac3228d6f62fbbb4fe6e613",
+        "source_worksheet_name": "Stock Moves",
+        "source_field_id": "6ac327555e337edf2bf1bf62",
+        "name": "Product",
+        "alias": "product_id",
+        "target_worksheet_id": "6aa90c161204328eb1af1b82",
+        "target_worksheet_name": "Product Variants",
+        "direction": "inventory_to_retained",
+        "required": true
+      },
+      {
+        "source_worksheet_id": "6ac3228d6f62fbbb4fe6e613",
+        "source_worksheet_name": "Stock Moves",
+        "source_field_id": "6ac327555e337edf2bf1bf66",
+        "name": "Unit",
+        "alias": "product_uom",
+        "target_worksheet_id": "6aa8d14d4a73a3142152d3f6",
+        "target_worksheet_name": "Units & Packagings",
+        "direction": "inventory_to_retained",
+        "required": true
+      },
+      {
+        "source_worksheet_id": "6ac3228d6f62fbbb4fe6e613",
+        "source_worksheet_name": "Stock Moves",
+        "source_field_id": "6ac327555e337edf2bf1bf6a",
+        "name": "Owner",
+        "alias": "restrict_partner_id",
+        "target_worksheet_id": "6aa8a3b34a22ad87b728c4fe",
+        "target_worksheet_name": "Contacts",
+        "direction": "inventory_to_retained",
+        "required": false
+      },
+      {
+        "source_worksheet_id": "6ac3228d6f62fbbb4fe6e613",
+        "source_worksheet_name": "Stock Moves",
+        "source_field_id": "6ac327555e337edf2bf1bf70",
+        "name": "Sales Order Line",
+        "alias": "sale_line_id",
+        "target_worksheet_id": "6ab0c740e43d174ab37535b2",
+        "target_worksheet_name": "Order Lines",
+        "direction": "inventory_to_retained",
+        "required": false
+      },
+      {
+        "source_worksheet_id": "6ac323960e590eb436fe2dd9",
+        "source_worksheet_name": "Stock Move Lines",
+        "source_field_id": "6ac327555e337edf2bf1bfae",
+        "name": "Owner",
+        "alias": "owner_id",
+        "target_worksheet_id": "6aa8a3b34a22ad87b728c4fe",
+        "target_worksheet_name": "Contacts",
+        "direction": "inventory_to_retained",
+        "required": false
+      },
+      {
+        "source_worksheet_id": "6ac323960e590eb436fe2dd9",
+        "source_worksheet_name": "Stock Move Lines",
+        "source_field_id": "6ac327555e337edf2bf1bfb8",
+        "name": "Product",
+        "alias": "product_id",
+        "target_worksheet_id": "6aa90c161204328eb1af1b82",
+        "target_worksheet_name": "Product Variants",
+        "direction": "inventory_to_retained",
+        "required": false
+      },
+      {
+        "source_worksheet_id": "6ac323960e590eb436fe2dd9",
+        "source_worksheet_name": "Stock Move Lines",
+        "source_field_id": "6ac327555e337edf2bf1bfba",
+        "name": "Unit",
+        "alias": "product_uom_id",
+        "target_worksheet_id": "6aa8d14d4a73a3142152d3f6",
+        "target_worksheet_name": "Units & Packagings",
+        "direction": "inventory_to_retained",
+        "required": true
+      },
+      {
+        "source_worksheet_id": "6ac323b20e590eb436fe2e1c",
+        "source_worksheet_name": "Stock Balances",
+        "source_field_id": "6ac3276091143e1169ecc229",
+        "name": "Owner",
+        "alias": "owner_id",
+        "target_worksheet_id": "6aa8a3b34a22ad87b728c4fe",
+        "target_worksheet_name": "Contacts",
+        "direction": "inventory_to_retained",
+        "required": false
+      },
+      {
+        "source_worksheet_id": "6ac323b20e590eb436fe2e1c",
+        "source_worksheet_name": "Stock Balances",
+        "source_field_id": "6ac3276091143e1169ecc22d",
+        "name": "Product",
+        "alias": "product_id",
+        "target_worksheet_id": "6aa90c161204328eb1af1b82",
+        "target_worksheet_name": "Product Variants",
+        "direction": "inventory_to_retained",
+        "required": true
+      },
+      {
+        "source_worksheet_id": "6ac324096f62fbbb4fe6e66e",
+        "source_worksheet_name": "Stock Rules",
+        "source_field_id": "6ac327670e590eb436fe2fe8",
+        "name": "Partner Address",
+        "alias": "partner_address_id",
+        "target_worksheet_id": "6aa8a3b34a22ad87b728c4fe",
+        "target_worksheet_name": "Contacts",
+        "direction": "inventory_to_retained",
+        "required": false
+      },
+      {
+        "source_worksheet_id": "6ac32486896787ba36304a3d",
+        "source_worksheet_name": "Storage Capacity Lines",
+        "source_field_id": "6ac3276c5e337edf2bf1c006",
+        "name": "Product",
+        "alias": "product_id",
+        "target_worksheet_id": "6aa90c161204328eb1af1b82",
+        "target_worksheet_name": "Product Variants",
+        "direction": "inventory_to_retained",
+        "required": false
+      },
+      {
+        "source_worksheet_id": "6ac3239a896787ba36304950",
+        "source_worksheet_name": "Package History",
+        "source_field_id": "6ac5c072896787ba3630869c",
+        "name": "Product",
+        "alias": "x_pkg_history_product",
+        "target_worksheet_id": "6aa90c161204328eb1af1b82",
+        "target_worksheet_name": "Product Variants",
+        "direction": "inventory_to_retained",
+        "required": false
+      },
+      {
+        "source_worksheet_id": "6ac3239a896787ba36304950",
+        "source_worksheet_name": "Package History",
+        "source_field_id": "6ac5c072896787ba363086a0",
+        "name": "Owner",
+        "alias": "x_pkg_history_owner",
+        "target_worksheet_id": "6aa8a3b34a22ad87b728c4fe",
+        "target_worksheet_name": "Contacts",
+        "direction": "inventory_to_retained",
+        "required": false
+      },
+      {
+        "source_worksheet_id": "6ac3239a896787ba36304950",
+        "source_worksheet_name": "Package History",
+        "source_field_id": "6ac5c072896787ba363086a2",
+        "name": "Unit",
+        "alias": "x_pkg_history_unit",
+        "target_worksheet_id": "6aa8d14d4a73a3142152d3f6",
+        "target_worksheet_name": "Units & Packagings",
+        "direction": "inventory_to_retained",
+        "required": false
+      }
+    ],
+    "observation": "32 physical direct Relation fields originate in Inventory and target retained worksheets; no retained-to-Inventory physical Relation found in the 10 Oct snapshot. Expanded relationControls catalogues are not additional physical fields.",
+    "inventory_sales": {
+      "relation_fields": [
+        "6ac313b75e337edf2bf1ba17",
+        "6ac327555e337edf2bf1bf70"
+      ],
+      "inventory_owner_worksheets": [
+        "6ac303825e337edf2bf1b7b4",
+        "6ac3228d6f62fbbb4fe6e613"
+      ],
+      "preserve_sales_tables": [
+        "6ab09897e43d174ab3752d7b",
+        "6ab0c740e43d174ab37535b2"
+      ],
+      "automatic_delivered_quantity_writeback_status": "Not certified; audit latest target workflow graphs before any removal."
+    },
+    "inventory_project": {
+      "relation_field": "6ac313b75e337edf2bf1ba1a",
+      "preserve_target_worksheet": "6ac310e9896787ba3630455e"
+    },
+    "crm": "No direct CRM/Activities-to-Inventory Relation observed; preserve CRM-Sales and CRM-Activities relations and behavior."
+  },
+  "unresolved_before_execution": [
+    "Refresh all target schemas, workflow graphs/callers, custom actions, business rules, views, reports, custom pages, print-template IDs, role grants and external scheduled/integration consumers.",
+    "Map source IDs to the client copy; copied IDs may differ. Reject mismatched names/types/ownership and unlisted consumers.",
+    "Protect any retained Purchase, Manufacturing, POS, Repairs or stock-valuation consumer; Inventory removal is blocked until that dependency is removed or replaced by an approved plan.",
+    "Determine whether the two known print templates are transferred into the client copy; their exact IDs are not captured here.",
+    "Export business history and attachments and demonstrate recovery before destructive pruning; local schema snapshots alone are insufficient.",
+    "Freeze and drain/quarantine in-flight Inventory/Scan Requests processes; do not retry historical posting/scanning fixtures.",
+    "Remove/replace genuine Inventory references inside retained objects only after a separately reviewed field/node/component-level delta; never remove a mixed CRM/Sales workflow or page wholesale."
+  ],
+  "sequence": [
+    "Confirm and back up CLIENT COPY.",
+    "Freshly map targets and classify every dependency.",
+    "Freeze Inventory entry points; disable and drain Inventory processes.",
+    "Detach Inventory page/report/navigation/action callers and only approved bridge references.",
+    "Remove Inventory processes, then the explicit Products.Tracking extension.",
+    "Detach Inventory-internal reciprocal/child references as required, then recycle all 22 owned worksheets and their owned assets.",
+    "Remove the empty Inventory groups; remove only Inventory grants from existing roles.",
+    "Read back and smoke-test preserved CRM, Sales, Finance and shared masters."
+  ],
+  "acceptance": [
+    "No retained object or workflow references a removed target.",
+    "All 41 retained worksheet IDs and business data remain; existing field definitions remain except the explicitly approved Tracking removal.",
+    "All 130 baseline non-Inventory processes remain, with no new references to deleted Inventory objects.",
+    "CRM opportunity, stage, Activities/meeting, quotation, confirmation, Sales Deliver, discount, email/template, signature, invoicing and Stripe paths pass their scoped smoke tests.",
+    "Five retained pages remain and Configuration keeps all non-Inventory tabs; Inventory navigation/reports/buttons are gone.",
+    "No stock side effects or historical Sales quantity/status resets; backup/recovery evidence recorded."
+  ],
+  "execution_performed": false
+}
