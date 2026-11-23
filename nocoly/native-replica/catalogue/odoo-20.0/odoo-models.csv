@@ -1,0 +1,856 @@
+model,label,transient,modules
+_unknown,Unknown,f,base
+account.account,Account,f,account account_fleet point_of_sale spreadsheet_account
+account.account.tag,Account Tag,f,account
+account.accrued.orders.wizard,Accrued Orders Wizard,t,account purchase sale
+account.analytic.account,Analytic Account,f,analytic account project hr_expense purchase stock_account mrp_account
+account.analytic.applicability,Analytic Plan's Applicabilities,f,analytic account hr_expense purchase mrp_account project_stock_account sale hr_timesheet
+account.analytic.distribution.model,Analytic Distribution Model,f,analytic account
+account.analytic.line,Analytic Line,f,analytic account project mrp_account project_stock_account sale sale_project project_mrp_sale project_sale_expense sale_project_stock sale_purchase_project hr_timesheet website_timesheet project_timesheet_holidays sale_timesheet
+account.analytic.line.calendar.employee,Personal Filters on Employees for the Calendar view,f,hr_timesheet
+account.analytic.plan,Analytic Plan,f,analytic stock_account
+account.automatic.entry.wizard,Create Automatic Entries,t,account account_fleet
+account.autopost.bills.wizard,Autopost Bills Wizard,t,account
+account.bank.statement,Bank Statement,f,account point_of_sale
+account.bank.statement.line,Bank Transaction,f,account point_of_sale account_payment_custom pos_hr
+account.cash.rounding,Account Cash Rounding,f,account point_of_sale
+account.chart.template,Account Chart Template,f,account
+account.code.mapping,Mapping of account codes per company,f,account
+account.document.import.mixin,Business document import mixin,f,account
+account.edi.cii,Base helpers for CII,f,account_edi_ubl_cii
+account.edi.common,"Common functions for EDI documents: generate the data, the constraints, etc",f,account_edi_ubl_cii
+account.edi.ubl,Base helpers for UBL,f,account_edi_ubl_cii
+account.edi.ubl_cen_en16931,UBL CEN-EN16931,f,account_edi_ubl_cii
+account.edi.ubl_pint,UBL PINT,f,account_edi_ubl_cii
+account.edi.ubl_pint_eu,UBL PINT-EU Layer,f,account_edi_ubl_cii
+account.edi.xml.cii,Factur-x/ZUGFeRD CII 2.2.0,f,account_edi_ubl_cii
+account.edi.xml.ubl_20,UBL 2.0,f,account_edi_ubl_cii
+account.edi.xml.ubl_21,UBL 2.1,f,account_edi_ubl_cii
+account.edi.xml.ubl_a_nz,A-NZ BIS Billing 3.0,f,account_edi_ubl_cii
+account.edi.xml.ubl_bis3,UBL BIS Billing 3.0.12,f,account_edi_ubl_cii
+account.edi.xml.ubl_de,BIS3 DE (XRechnung),f,account_edi_ubl_cii
+account.edi.xml.ubl_efff,E-FFF (BE),f,account_edi_ubl_cii
+account.edi.xml.ubl_nl,SI-UBL 2.0 (NLCIUS),f,account_edi_ubl_cii
+account.edi.xml.ubl_sg,SG BIS Billing 3.0,f,account_edi_ubl_cii
+account.financial.year.op,Opening Balance of Financial Year,t,account
+account.fiscal.position,Fiscal Position,f,account point_of_sale
+account.fiscal.position.account,Accounts Mapping of Fiscal Position,f,account
+account.full.reconcile,Full Reconcile,f,account
+account.incoterms,Incoterms,f,account
+account.invoice.report,Invoices Statistics,f,account sale
+account.journal,Journal,f,account account_payment hr_expense point_of_sale
+account.journal.group,Account Journal Group,f,account
+account.lock_exception,Account Lock Exception,f,account
+account.merge.wizard,Account merge wizard,t,account
+account.merge.wizard.line,Account merge wizard line,t,account
+account.move,Journal Entry,f,account account_edi_ubl_cii account_fleet account_payment hr_expense point_of_sale purchase stock_account mrp_account pos_stock purchase_edi_ubl_bis3 sale sale_stock pos_sale repair sale_expense website_sale stock_landed_costs mrp_subcontracting_purchase sale_stock_product_expiry sale_timesheet
+account.move.line,Journal Item,f,account account_fleet hr_expense point_of_sale purchase stock_account mrp_account pos_stock purchase_stock sale sale_stock pos_sale repair sale_expense sale_expense_margin sale_project project_sale_expense pos_loyalty sale_loyalty stock_landed_costs mrp_subcontracting_purchase stock_dropshipping mrp_subcontracting_dropshipping sale_timesheet
+account.move.reversal,Journal Entry Reversal,t,account sale_timesheet
+account.move.send,Shared Send Invoice Wizard Functions,f,account account_edi_ubl_cii sale_timesheet
+account.move.send.batch.wizard,Send Invoice Batch Wizard,t,account
+account.move.send.wizard,Send Invoice Wizard,t,account account_edi_ubl_cii
+account.partial.reconcile,Partial Reconcile,f,account
+account.payment,Payment,f,account account_payment hr_expense point_of_sale pos_online_payment
+account.payment.method,Payment Method,f,account account_payment account_payment_custom
+account.payment.method.line,Payment Method Line,f,account account_payment
+account.payment.register,Pay,t,account account_payment hr_expense
+account.payment.term,Payment Terms,f,account
+account.payment.term.line,Payment Terms Line,f,account
+account.reconcile.model,Preset to create journal entries during a invoices and payments matching,f,account
+account.reconcile.model.line,Rules for the reconciliation model,f,account
+account.report,Accounting Report,f,account
+account.report.column,Accounting Report Column,f,account
+account.report.expression,Accounting Report Expression,f,account
+account.report.external.value,Accounting Report External Value,f,account
+account.report.line,Accounting Report Line,f,account
+account.resequence.wizard,Remake the sequence of Journal Entries.,t,account
+account.root,Account codes first 2 digits,f,account
+account.secure.entries.wizard,Secure Journal Entries,t,account
+account.setup.bank.manual.config,Bank setup manual config,t,account
+account.stock.valuation.report,Stock Valuation,f,account stock_account mrp_account
+account.tax,Tax,f,account account_edi_ubl_cii account_fleet hr_expense point_of_sale purchase
+account.tax.group,Tax Group,f,account point_of_sale
+account.tax.repartition.line,Tax Repartition Line,f,account
+analytic.mixin,Analytic Mixin,f,analytic
+analytic.plan.fields.mixin,Analytic Plan Fields,f,analytic
+applicant.get.refuse.reason,Get Refuse Reason,t,hr_recruitment
+applicant.refuse.single,Refuse a single applicant,t,hr_recruitment
+auth.passkey.key,Passkey,f,auth_passkey
+auth.passkey.key.create,Create a Passkey,t,auth_passkey
+auth.totp.rate.limit.log,TOTP rate limit logs,t,auth_totp
+auth_totp.device,Authentication Device,f,auth_totp auth_totp_mail
+auth_totp.wizard,2-Factor Setup Wizard,t,auth_totp
+avatar.mixin,Avatar Mixin,f,base
+barcode.nomenclature,Barcode Nomenclature,f,barcodes barcodes_gs1_nomenclature
+barcode.rule,Barcode Rule,f,barcodes barcodes_gs1_nomenclature stock point_of_sale pos_loyalty
+base,Base,f,base web base_import web_hierarchy html_editor mail phone_validation hr website
+base.document.layout,Company Document Layout,t,web account sale
+base.enable.profiling.wizard,Enable profiling for some time,t,base
+base.geo_provider,Geo Provider,f,base_geolocalize
+base.geocoder,Geo Coder,f,base_geolocalize
+base.import.module,Import Module,t,base_import_module
+base.language.export,Language Export,t,base
+base.language.import,Language Import,t,base
+base.language.install,Install Language,t,base website
+base.module.install.request,Module Activation Request,t,base_install_request
+base.module.install.review,Module Activation Review,t,base_install_request
+base.module.uninstall,Module Uninstall,t,base mail
+base.module.update,Update Module,t,base
+base.module.upgrade,Upgrade Module,t,base
+base.partner.merge.automatic.wizard,Merge Partner Wizard,t,base mail account website website_slides loyalty
+base.partner.merge.line,Merge Partner Line,t,base
+base_import.import,Base Import,t,base_import
+base_import.mapping,Base Import Mapping,f,base_import
+bill.to.po.wizard,Bill to Purchase Order,t,purchase
+blog.blog,Blog,f,website_blog
+blog.post,Blog Post,f,website_blog
+blog.tag,Blog Tag,f,website_blog
+blog.tag.category,Blog Tag Category,f,website_blog
+bus.bus,Communication Bus,f,bus mail
+bus.listener.mixin,Can send messages via bus.bus,f,bus mail
+bus.sync.mixin,Mixin for Bus Sync,f,mail
+calendar.alarm,Event Alarm,f,calendar calendar_sms
+calendar.alarm_manager,Event Alarm Manager,f,calendar calendar_sms
+calendar.attendee,Calendar Attendee Information,f,calendar
+calendar.calendar,User Calendar,f,calendar
+calendar.event,Calendar Event,f,calendar calendar_sms crm hr_calendar hr_recruitment hr_holidays
+calendar.event.archive.or.unlink.wizard,Calendar Event Archive Or Unlink Wizard,t,calendar
+calendar.event.multi.archive.or.unlink.wizard,Calendar Event Multi Archive Or Unlink Wizard,t,calendar
+calendar.event.type,Event Meeting Type,f,calendar
+calendar.filters,Calendar Filter,f,calendar
+calendar.recurrence,Event Recurrence Rule,f,calendar
+calendar.user,Calendar User Manager,f,calendar
+card.campaign,Marketing Card Campaign,f,marketing_card marketing_card_event
+card.campaign.tag,Marketing Card Campaign Tag,f,marketing_card
+card.card,Marketing Card,f,marketing_card
+card.template,Marketing Card Template,f,marketing_card
+change.password.own,"User, change own password wizard",t,base
+change.password.user,"User, Change Password Wizard",t,base
+change.password.wizard,Change Password Wizard,t,base
+change.production.qty,Change Production Qty,t,mrp mrp_subcontracting
+chatbot.message,Chatbot Message,f,im_livechat
+chatbot.script,Chatbot Script,f,im_livechat crm_livechat website_livechat
+chatbot.script.answer,Chatbot Script Answer,f,im_livechat
+chatbot.script.step,Chatbot Script Step,f,im_livechat crm_livechat website_livechat website_crm_livechat
+choose.delivery.carrier,Delivery Method Selection Wizard,t,delivery stock_delivery website_sale_stock
+clearing.label,Bank Account Clearing Number Label,f,base
+confirm.stock.sms,Confirm Stock SMS,t,stock_sms
+coupon.share,Create links that apply a coupon and redirect to a specific page,t,website_sale_loyalty
+crm.activity.report,CRM Activity Analysis,f,crm
+crm.iap.lead.helpers,Helper methods for crm_iap_mine modules,f,crm_iap_mine
+crm.iap.lead.industry,CRM IAP Lead Industry,f,crm_iap_mine
+crm.iap.lead.industry.division,CRM IAP Lead Industry Division,f,crm_iap_mine
+crm.iap.lead.mining.request,CRM Lead Mining Request,f,crm_iap_mine
+crm.iap.lead.role,People Role,f,crm_iap_mine
+crm.iap.lead.seniority,People Seniority,f,crm_iap_mine
+crm.lead,Lead,f,crm crm_livechat event_crm iap_crm mass_mailing_crm website_crm crm_iap_enrich crm_iap_mine website_crm_livechat sale_crm crm_sale_project
+crm.lead.lost,Get Lost Reason,t,crm
+crm.lead.pls.update,Update the probabilities,t,crm
+crm.lead.scoring.frequency,Lead Scoring Frequency,f,crm
+crm.lead.scoring.frequency.field,Fields that can be used for predictive lead scoring computation,f,crm
+crm.lead2opportunity.partner.mass,Convert Lead to Opportunity (in mass),t,crm
+crm.lost.reason,Opp. Lost Reason,f,crm
+crm.merge.opportunity,Merge Opportunities,t,crm
+crm.quotation.partner,Create new or use existing Customer on new Quotation,t,sale_crm
+crm.recurring.plan,CRM Recurring Revenue Plan,f,crm
+crm.stage,CRM Stage,f,crm
+crm.tag,CRM Tag,f,sales_team
+crm.team,Sales Team,f,sales_team crm sale sale_crm pos_sale website_sale
+crm.team.member,Sales Team Member,f,sales_team crm
+customer.product.reference,Customer Product Reference,f,sale_edi_ubl
+data_recycle.model,Recycling Model,f,data_recycle
+data_recycle.record,Recycling Record,f,data_recycle
+decimal.precision,Decimal Precision,f,base account point_of_sale
+delivery.carrier,Delivery Method,f,delivery stock_delivery website_sale website_sale_stock
+delivery.note.wizard,Delivery Note Wizard,t,delivery
+delivery.note.wizard.line,Delivery Note Line,t,delivery
+delivery.price.rule,Delivery Price Rules,f,delivery
+delivery.zip.prefix,Delivery Zip Prefix,f,delivery
+digest.digest,Digest,f,digest account crm event im_livechat project stock survey website hr_recruitment point_of_sale sale_management website_slides website_sale
+digest.test,Sample Digest Wizard,t,digest
+digest.tip,Digest Tip,f,digest
+discuss.call.history,Keep the call history,f,mail im_livechat
+discuss.category,Discussion Category,f,mail
+discuss.channel,Discussion Channel,f,mail calendar mail_bot portal_discuss crm hr im_livechat crm_livechat website_livechat website_crm_livechat
+discuss.channel.last.interest.update,Pending Channel Last Interest Update,f,mail
+discuss.channel.member,Channel Member,f,mail im_livechat website_livechat
+discuss.channel.rtc.session,Mail RTC session,f,mail im_livechat
+discuss.gif.favorite,Save favorite GIF from Tenor API,f,mail
+discuss.voice.metadata,Metadata for voice attachments,f,mail
+event.event,Event,f,event event_crm event_product mass_mailing_event hr_skills_event marketing_card_event mass_mailing_event_sms pos_event website_event event_sale pos_self_order_event website_event_sale
+event.event.configurator,Event Configurator,t,event_sale
+event.event.ticket,Event Ticket,f,event event_product pos_event event_sale website_event_sale
+event.lead.request,Event Lead Request,f,event_crm
+event.lead.rule,Event Lead Rules,f,event_crm
+event.mail,Event Automated Mailing,f,event event_sms
+event.mail.registration,Registration Mail Scheduler,f,event event_sms
+event.mail.slot,Slot Mail Scheduler,f,event
+event.question,Event Question,f,event pos_event
+event.question.answer,Event Question Answer,f,event event_crm pos_event
+event.registration,Event Registration,f,event event_crm event_product mass_mailing_event pos_event website_event website_event_crm event_sale event_crm_sale pos_event_sale
+event.registration.answer,Event Registration Answer,f,event pos_event
+event.sale.report,Event Sales Report,f,event_sale pos_event_sale website_event_sale
+event.slot,Event Slot,f,event pos_event website_event
+event.stage,Event Stage,f,event
+event.tag,Event Tag,f,event website_event
+event.tag.category,Event Tag Category,f,event website_event
+event.type,Event Template,f,event website_event
+event.type.mail,Mail Scheduling on Event Category,f,event event_sms
+event.type.ticket,Event Template Ticket,f,event event_product
+expense.attachment.selection.wizard,Attachment Selection,t,sale_expense
+expiry.picking.confirmation,Confirm Expiry,t,product_expiry mrp_product_expiry
+fetchmail.server,Incoming Mail Server,f,mail google_gmail microsoft_outlook
+fleet.service.type,Fleet Service Type,f,fleet
+fleet.vehicle,Vehicle,f,fleet fleet_maintenance account_fleet hr_fleet
+fleet.vehicle.assignation.log,Drivers history on a vehicle,f,fleet hr_fleet
+fleet.vehicle.cost.report,Fleet Analysis Report,f,fleet
+fleet.vehicle.log.contract,Vehicle Contract,f,fleet hr_fleet
+fleet.vehicle.log.services,Services for vehicles,f,fleet account_fleet hr_fleet
+fleet.vehicle.model,Model of a vehicle,f,fleet
+fleet.vehicle.model.brand,Brand of the vehicle,f,fleet
+fleet.vehicle.model.category,Category of the model,f,fleet
+fleet.vehicle.odometer,Odometer log for a vehicle,f,fleet hr_fleet
+fleet.vehicle.odometer.report,Fleet Odometer Analysis Report,f,fleet
+fleet.vehicle.send.mail,Send mails to Drivers,t,fleet
+fleet.vehicle.state,Vehicle Status,f,fleet
+fleet.vehicle.tag,Vehicle Tag,f,fleet
+format.address.mixin,Address Format,f,base
+format.vat.label.mixin,Country Specific VAT Label,f,base
+forum.forum,Forum,f,website_forum website_slides_forum
+forum.post,Forum Post,f,website_forum
+forum.post.comment,Forum Post Comment,f,website_forum
+forum.post.reason,Post Closing Reason,f,website_forum
+forum.post.vote,Post Vote,f,website_forum
+forum.tag,Forum Tag,f,website_forum
+gamification.badge,Gamification Badge,f,gamification survey hr_gamification website_profile
+gamification.badge.user,Gamification User Badge,f,gamification hr_gamification
+gamification.badge.user.wizard,Gamification User Badge Wizard,t,gamification hr_gamification
+gamification.challenge,Gamification Challenge,f,gamification survey website_forum website_slides
+gamification.challenge.line,Gamification generic goal for challenge,f,gamification
+gamification.goal,Gamification Goal,f,gamification
+gamification.goal.definition,Gamification Goal Definition,f,gamification
+gamification.goal.wizard,Gamification Goal Wizard,t,gamification
+gamification.karma.rank,Rank based on karma,f,gamification
+gamification.karma.tracking,Track Karma Changes,f,gamification website_forum website_slides
+google.gmail.mixin,Google Gmail Mixin,f,google_gmail
+homework.location.wizard,Set Homework Location Wizard,t,hr_calendar
+hr.applicant,Applicant,f,hr_recruitment hr_recruitment_skills hr_recruitment_sms website_hr_recruitment
+hr.applicant.category,Category of applicant,f,hr_recruitment
+hr.applicant.refuse.reason,Refuse Reason of Applicant,f,hr_recruitment
+hr.applicant.skill,Skill level for an applicant,f,hr_recruitment_skills
+hr.attendance,Attendance,f,hr_attendance hr_holidays_attendance
+hr.bank.account.allocation.wizard,Bank Account Allocation Wizard,t,hr
+hr.bank.account.allocation.wizard.line,Bank Account Allocation Line (Wizard),t,hr
+hr.department,Department,f,hr hr_expense hr_recruitment hr_holidays website_hr_recruitment
+hr.departure.reason,Departure Reason,f,hr
+hr.employee,Employee,f,hr hr_calendar hr_expense hr_fleet hr_gamification hr_maintenance hr_recruitment hr_skills hr_work_entry hr_attendance hr_holidays pos_hr hr_holidays_attendance hr_skills_slides hr_timesheet project_timesheet_holidays sale_timesheet
+hr.employee.category,Employee Category,f,hr
+hr.employee.create.version.wizard,Create New Employee Version Wizard,t,hr
+hr.employee.cv.wizard,Print Resume,t,hr_skills
+hr.employee.delete.wizard,Employee Delete Wizard,t,hr_timesheet
+hr.employee.departure,Employee Departure,f,hr hr_fleet hr_maintenance hr_holidays hr_timesheet project_timesheet_holidays sale_timesheet
+hr.employee.location,Employee Location,f,hr
+hr.employee.public,Public Employee,f,hr hr_expense hr_fleet hr_gamification hr_maintenance hr_skills hr_attendance hr_holidays hr_skills_slides hr_timesheet
+hr.employee.skill,Skill level for employee,f,hr_skills
+hr.employee.skill.history.report,Employee Skills Report,f,hr_skills
+hr.employee.skill.report,Employee Skills Report,f,hr_skills
+hr.employee.type,Employee Type,f,hr
+hr.expense,Expense,f,hr_expense project_hr_expense sale_expense project_sale_expense
+hr.expense.approve.duplicate,Expense Approve Duplicate,t,hr_expense
+hr.expense.product.job.position.limit,Expense Product Limit by Job Position,f,hr_expense
+hr.expense.refuse.wizard,Expense Refuse Reason Wizard,t,hr_expense
+hr.expense.split,Expense Split,t,hr_expense sale_expense
+hr.expense.split.wizard,Expense Split Wizard,t,hr_expense
+hr.export.work.entries,Export Work Entries,t,hr_work_entry
+hr.export.work.entries.employee,Work Entry Export Employee,t,hr_work_entry
+hr.holidays.cancel.leave,Cancel Time Off Wizard,t,hr_holidays
+hr.holidays.summary.employee,HR Time Off Summary Report By Employee,t,hr_holidays
+hr.individual.skill.mixin,Skill level,f,hr_skills
+hr.job,Job Position,f,hr hr_recruitment hr_skills hr_recruitment_skills website_hr_recruitment
+hr.job.platform,Job Platform,f,hr_recruitment
+hr.job.skill,Skill for job position,f,hr_skills
+hr.job.tag,Tag,f,hr_recruitment
+hr.leave,Time Off,f,hr_holidays hr_holidays_attendance project_timesheet_holidays
+hr.leave.accrual.level,Accrual Plan Level,f,hr_holidays hr_holidays_attendance
+hr.leave.accrual.plan,Accrual Plan,f,hr_holidays
+hr.leave.allocation,Time Off Allocation,f,hr_holidays hr_holidays_attendance
+hr.leave.allocation.generate.multi.wizard,Generate time off allocations for multiple employees,t,hr_holidays
+hr.leave.attendance.report,Attendance and Leave Analysis Report,f,hr_holidays_attendance
+hr.leave.display.name.mixin,Leave Display Name Mixin,f,hr_holidays
+hr.leave.employee.report,Time Off Per Employee Summary / Report,f,hr_holidays
+hr.leave.employee.type.report,Time Off Summary / Report,f,hr_holidays
+hr.leave.generate.multi.wizard,Generate time off for multiple employees,t,hr_holidays
+hr.leave.mandatory.day,Mandatory Day,f,hr_holidays
+hr.leave.report,Time Off Summary / Report,f,hr_holidays
+hr.leave.report.calendar,Time Off Calendar,f,hr_holidays
+hr.manager.department.report,Hr Manager Department Report,f,hr
+hr.mixin,hr.mixin,f,hr
+hr.payroll.structure.type,Salary Structure Type,f,hr
+hr.recruitment.degree,Applicant Degree,f,hr_recruitment
+hr.recruitment.source,Source of Applicants,f,hr_recruitment website_hr_recruitment
+hr.recruitment.stage,Recruitment Stage,f,hr_recruitment
+hr.resume.line,Resume line of an employee,f,hr_skills hr_skills_event hr_skills_survey hr_skills_slides
+hr.resume.line.type,Type of a resume line,f,hr_skills
+hr.skill,Skill,f,hr_skills
+hr.skill.level,Skill Level,f,hr_skills
+hr.skill.type,Skill Type,f,hr_skills
+hr.talent.pool,Talent Pool,f,hr_recruitment
+hr.time.rule,Time Rule,f,hr_work_entry hr_attendance hr_holidays hr_holidays_attendance
+hr.time.rule.allocation.log,Time Rule Allocation Credit Log,f,hr_holidays
+hr.time.rule.source.mixin,Time Rule Source Mixin,f,hr_work_entry hr_holidays
+hr.timesheet.attendance.report,Timesheet Attendance Report,f,hr_timesheet_attendance
+hr.user.work.entry.employee,Work Entries Employee,f,hr_work_entry
+hr.version,Employee Contract,f,hr hr_work_entry hr_attendance hr_holidays hr_holidays_attendance
+hr.work.entry.type,Time Type,f,hr_work_entry hr_holidays
+hr.work.location,Work Location,f,hr
+html.field.history.mixin,Field html History,f,html_editor
+html_editor.converter.test,Html Editor Converter Test,f,html_editor
+html_editor.converter.test.sub,Html Editor Converter Subtest,f,html_editor
+iap.account,IAP Account,f,iap iap_mail sms
+iap.autocomplete.api,IAP Partner Autocomplete API,f,partner_autocomplete
+iap.enrich.api,IAP Lead Enrichment API,f,iap
+iap.service,IAP Service,f,iap
+iap.service.pack,IAP Service Pack,f,iap
+im_livechat.channel,Livechat Channel,f,im_livechat website_livechat
+im_livechat.channel.member.history,Keep the channel member history,f,im_livechat
+im_livechat.channel.rule,Livechat Channel Rule,f,im_livechat
+im_livechat.expertise,Live Chat Expertise,f,im_livechat
+im_livechat.report.channel,Livechat Support Channel Report,f,im_livechat crm_livechat
+image.mixin,Image Mixin,f,base
+ir.access,Access,f,base mail website
+ir.actions.act_url,Action URL,f,base
+ir.actions.act_window,Action Window,f,base
+ir.actions.act_window.view,Action Window View,f,base web_hierarchy mail
+ir.actions.act_window_close,Action Window Close,f,base
+ir.actions.actions,Action,f,base
+ir.actions.client,Client Action,f,base
+ir.actions.report,Report Action,f,base base_report_wkhtmltox printer account stock account_edi_ubl_cii hr_expense purchase sale sale_pdf_quote_builder stock_delivery
+ir.actions.server,Server Action,f,base mail sms website
+ir.actions.server.history,Server Action History,f,base
+ir.actions.todo,Configuration Wizard,f,base
+ir.asset,Asset,f,base website
+ir.attachment,Attachment,f,base web api_doc attachment_indexation bus html_editor mail web_unsplash product account mass_mailing website hr_expense hr_fleet hr_recruitment website_forum
+ir.autovacuum,Automatic Vacuum,f,base
+ir.binary,File streaming helper model for controllers,f,base website
+ir.config_parameter,System Parameter,f,base mail analytic crm sale
+ir.cron,Scheduled Action,f,base mail
+ir.cron.progress,Progress of Scheduled Action,f,base
+ir.cron.trigger,Triggered Action,f,base
+ir.default,Default Value,f,base
+ir.demo,Demo,t,base
+ir.demo_failure,Demo failure,t,base
+ir.demo_failure.wizard,Demo Failure wizard,t,base
+ir.embedded.actions,Embedded Action,f,base
+ir.exports,Exports,f,base
+ir.exports.line,Exports Line,f,base
+ir.fields.converter,Fields Converter,f,base
+ir.filters,Filter,f,base
+ir.http,HTTP Routing,f,base web auth_totp barcodes base_import_module base_setup bus http_routing utm web_tour barcodes_gs1_nomenclature google_recaptcha html_editor mail auth_signup auth_totp_mail calendar partner_autocomplete portal payment portal_rating spreadsheet account im_livechat mail_plugin mass_mailing survey website point_of_sale website_livechat website_mail hr_attendance delivery pos_self_order website_forum pos_online_payment_self_order website_sale hr_timesheet
+ir.logging,Logging,f,base
+ir.mail_server,Mail Server,f,base mail google_gmail microsoft_outlook mass_mailing
+ir.model,Model,f,base web bus mail sms spreadsheet mass_mailing website marketing_card
+ir.model.constraint,Model Constraint,f,base
+ir.model.data,Model Data,f,base website
+ir.model.fields,Field,f,base mail website
+ir.model.fields.selection,Fields Selection,f,base
+ir.model.inherit,Model Inheritance Tree,f,base
+ir.model.relation,Relation Model,f,base
+ir.module.category,Application,f,base
+ir.module.module,Module,f,base base_import_module base_install_request account website delivery website_sale
+ir.module.module.dependency,Module dependency,f,base
+ir.module.module.exclusion,Module exclusion,f,base
+ir.profile,Profiling Result,f,base
+ir.profile.query,Profiling Query,f,base
+ir.qweb,Qweb,f,base bus http_routing html_editor html_builder mail portal im_livechat website
+ir.qweb.field,Qweb Field,f,base html_editor
+ir.qweb.field.barcode,Qweb Field Barcode,f,base
+ir.qweb.field.contact,Qweb Field Contact,f,base html_editor website
+ir.qweb.field.date,Qweb Field Date,f,base html_editor
+ir.qweb.field.datetime,Qweb Field Datetime,f,base html_editor
+ir.qweb.field.duration,Qweb Field Duration,f,base html_editor
+ir.qweb.field.float,Qweb Field Float,f,base html_editor
+ir.qweb.field.float_time,Qweb Field Float Time,f,base
+ir.qweb.field.html,Qweb Field HTML,f,base html_editor website
+ir.qweb.field.image,Qweb Field Image,f,base web html_editor web_unsplash
+ir.qweb.field.image_url,Qweb Field Image,f,base web
+ir.qweb.field.integer,Qweb Field Integer,f,base html_editor
+ir.qweb.field.many2many,Qweb field many2many,f,base
+ir.qweb.field.many2one,Qweb Field Many to One,f,base html_editor
+ir.qweb.field.monetary,Qweb Field Monetary,f,base html_editor
+ir.qweb.field.one2many,Qweb field one2many,f,base
+ir.qweb.field.qweb,Qweb Field qweb,f,base
+ir.qweb.field.relative,Qweb Field Relative,f,base
+ir.qweb.field.selection,Qweb Field Selection,f,base html_editor
+ir.qweb.field.text,Qweb Field Text,f,base html_editor
+ir.qweb.field.time,QWeb Field Time,f,base
+ir.sequence,Sequence,f,base point_of_sale
+ir.sequence.date_range,Sequence Date Range,f,base
+ir.ui.menu,Menu,f,base web mail hr project website hr_recruitment hr_holidays_attendance hr_timesheet hr_timesheet_attendance
+ir.ui.view,View,f,base web base_import_module web_hierarchy html_editor html_builder mail portal mass_mailing website point_of_sale pos_self_order
+ir.ui.view.custom,Custom View,f,base
+ir.websocket,websocket message handling,f,bus html_editor mail payment im_livechat hr_attendance
+job.add.applicants,Add applicants to a job,t,hr_recruitment
+kpi.provider,KPI Provider,f,base_setup mail account
+link.tracker,Link Tracker,f,link_tracker mass_mailing website_links
+link.tracker.click,Link Tracker Click,f,link_tracker mass_mailing mass_mailing_sms
+link.tracker.code,Link Tracker Code,f,link_tracker
+load.public.holiday.wizard,Public Holiday Preview Wizard,t,hr_holidays
+load.public.holiday.wizard.line,Public Holiday Preview Wizard Line,t,hr_holidays
+lot.label.layout,Choose the sheet layout to print lot labels,t,stock product_expiry
+loyalty.card,Loyalty Coupon,f,loyalty pos_loyalty sale_loyalty website_sale_loyalty
+loyalty.card.update.balance,Update Loyalty Card Points,t,loyalty
+loyalty.generate.wizard,Generate Coupons,t,loyalty
+loyalty.history,History for Loyalty cards and Ewallets,f,loyalty sale_loyalty
+loyalty.mail,Loyalty Communication,f,loyalty pos_loyalty
+loyalty.program,Loyalty Program,f,loyalty pos_loyalty sale_loyalty sale_loyalty_delivery website_sale_loyalty
+loyalty.reward,Loyalty Reward,f,loyalty pos_loyalty sale_loyalty sale_loyalty_delivery
+loyalty.rule,Loyalty Rule,f,loyalty pos_loyalty pos_sale_loyalty website_sale_loyalty
+lunch.alert,Lunch Alert,f,lunch
+lunch.cashmove,Lunch Cashmove,f,lunch
+lunch.cashmove.report,Cashmoves report,f,lunch
+lunch.location,Lunch Location,f,lunch
+lunch.order,Lunch Order,f,lunch
+lunch.product,Lunch Product,f,lunch
+lunch.product.category,Lunch Product Category,f,lunch
+lunch.supplier,Lunch Supplier,f,lunch
+lunch.topping,Lunch Extras,f,lunch
+mail.activity,Activity,f,mail calendar phone_validation crm hr project website_slides
+mail.activity.mixin,Activity Mixin,f,mail calendar phone_validation
+mail.activity.plan,Activity Plan,f,mail hr hr_recruitment
+mail.activity.plan.template,Activity plan template,f,mail hr
+mail.activity.schedule,Activity schedule plan Wizard,t,mail calendar phone_validation hr hr_recruitment
+mail.activity.schedule.line,Mail Activity Schedule Line,t,mail
+mail.activity.todo.create,Create activity and todo at the same time,t,project_todo
+mail.activity.type,Activity Type,f,mail calendar fleet hr_holidays
+mail.alias,Email Alias,f,mail hr
+mail.alias.domain,Email Domain,f,mail
+mail.alias.mixin,Email Aliases Mixin,f,mail
+mail.alias.mixin.optional,Email Aliases Mixin (light),f,mail
+mail.blacklist,Mail Blacklist,f,mail mass_mailing
+mail.blacklist.remove,Remove email from blacklist wizard,t,mail
+mail.bot,Mail Bot,f,mail_bot
+mail.call.artifact,Call Artifact,f,mail
+mail.canned.response,Canned Response,f,mail
+mail.compose.message,Email composition wizard,t,mail account mass_mailing marketing_card
+mail.composer.mixin,Mail Composer Mixin,f,mail
+mail.followers,Document Follower,f,mail sms
+mail.followers.edit,Followers edit wizard,t,mail
+mail.gateway.allowed,Mail Gateway Allowed,f,mail
+mail.guest,Guest,f,mail
+mail.ice.server,ICE Server,f,mail
+mail.link.preview,Store link preview data,f,mail
+mail.mail,Outgoing Mail,f,mail mass_mailing
+mail.message,Message,f,mail rating portal sms portal_rating account im_livechat project website_slides
+mail.message.link.preview,Link between link previews and messages,f,mail
+mail.message.reaction,Message Reaction,f,mail
+mail.message.schedule,Scheduled Message,f,mail
+mail.message.subtype,Message Subtype,f,mail hr_holidays
+mail.message.translation,Message Translation,f,mail
+mail.notification,Message Notification,f,mail sms
+mail.poll,Poll,f,mail
+mail.poll.option,Poll option,f,mail
+mail.poll.vote,Poll vote,f,mail
+mail.presence,User/Guest Presence,f,mail
+mail.push,Push Notification,f,mail
+mail.push.device,Push Notification Device,f,mail
+mail.render.mixin,Mail Render Mixin,f,mail link_tracker mass_mailing
+mail.scheduled.message,Scheduled Message,f,mail sms
+mail.template,Email Template,f,mail account event pos_self_order
+mail.template.preview,Email Template Preview,t,mail
+mail.template.reset,Mail Template Reset,t,mail
+mail.thread,Email Thread,f,mail rating portal sms mass_mailing website_forum
+mail.thread.blacklist,Mail Blacklist mixin,f,mail
+mail.thread.main.attachment,Mail Main Attachment management,f,mail
+mail.thread.phone,Phone Blacklist Mixin,f,phone_validation
+mail.thread.subject.suggested,Thread with suggested subject,f,mail
+mail.track.mixin,Mail Track Mixin,f,mail
+mail.tracking.duration.mixin,Mixin to compute the time a record has spent in each value a many2one field can take,f,mail
+mailing.contact,Mailing Contact,f,mass_mailing mass_mailing_sms
+mailing.contact.import,Mailing Contact Import,t,mass_mailing
+mailing.contact.to.list,Add (Mailing) Contacts to Mailing List,t,mass_mailing mass_mailing_sms
+mailing.filter,Mailing Dynamic List,f,mass_mailing
+mailing.list,Mailing List,f,mass_mailing mass_mailing_sms
+mailing.mailing,Mass Mailing,f,mass_mailing marketing_card mass_mailing_crm mass_mailing_sms marketing_card_event mass_mailing_sale
+mailing.mailing.schedule.date,schedule a mailing,t,mass_mailing
+mailing.mailing.test,Sample Mail Wizard,t,mass_mailing
+mailing.sms.test,Test SMS Mailing,t,mass_mailing_sms
+mailing.subscription,Mailing List Subscription,f,mass_mailing
+mailing.subscription.optout,Mailing Subscription Reason,f,mass_mailing
+mailing.trace,Mailing Statistics,f,mass_mailing mass_mailing_sms
+mailing.trace.report,Mass Mailing Statistics,f,mass_mailing
+maintenance.equipment,Maintenance Equipment,f,maintenance fleet_maintenance hr_maintenance stock_maintenance
+maintenance.equipment.category,Maintenance Equipment Category,f,maintenance
+maintenance.mixin,Maintenance Maintained Item,f,maintenance
+maintenance.request,Maintenance Request,f,maintenance hr_maintenance
+maintenance.stage,Maintenance Stage,f,maintenance
+maintenance.team,Maintenance Team,f,maintenance
+microsoft.outlook.mixin,Microsoft Outlook Mixin,f,microsoft_outlook
+mrp.account.wip.accounting,Wizard to post Manufacturing WIP journal entry,t,mrp_account
+mrp.account.wip.accounting.line,Journal item to be created when posting WIP journal entry,t,mrp_account
+mrp.bom,Bill of Material,f,mrp mrp_account project_mrp purchase_mrp sale_mrp mrp_subcontracting
+mrp.bom.byproduct,Byproduct,f,mrp
+mrp.bom.line,Bill of Material Line,f,mrp purchase_mrp
+mrp.consumption.warning,Wizard for warning about mismatching expected vs actual component consumption quantities for MOs,t,mrp
+mrp.consumption.warning.line,Line of issue consumption,t,mrp
+mrp.finished.product.label.layout,Finished Product Label Layout,t,mrp
+mrp.production,Manufacturing Order,f,mrp mrp_account project_mrp project_mrp_account purchase_mrp sale_mrp mrp_repair mrp_product_expiry mrp_subcontracting mrp_subcontracting_account mrp_subcontracting_purchase
+mrp.production.backorder,Wizard to mark as done or create back order,t,mrp
+mrp.production.backorder.line,Backorder Confirmation Line,t,mrp
+mrp.production.group,Production Group,f,mrp
+mrp.production.serials,Assign serial numbers to production order,t,mrp mrp_subcontracting
+mrp.production.split,Wizard to Split a Production,t,mrp
+mrp.production.split.line,Split Production Detail,t,mrp
+mrp.production.split.multi,Wizard to Split Multiple Productions,t,mrp
+mrp.routing.workcenter,Work Center Usage,f,mrp
+mrp.unbuild,Unbuild Order,f,mrp
+mrp.workcenter,Work Center,f,mrp mrp_account
+mrp.workcenter.capacity,Work Center Capacity,f,mrp
+mrp.workcenter.productivity,Workcenter Productivity Log,f,mrp mrp_account
+mrp.workcenter.productivity.loss,Workcenter Productivity Loss,f,mrp
+mrp.workcenter.productivity.loss.type,Workorder Productivity Loss Type,f,mrp
+mrp.workcenter.tag,Add tag for the workcenter,f,mrp
+mrp.workorder,Work Order,f,mrp mrp_account project_mrp_account
+mysubscription.mysubscription,Subscription Dashboard Helper,f,mysubscription
+onboarding.onboarding,Onboarding,f,onboarding
+onboarding.onboarding.step,Onboarding Step,f,onboarding account
+onboarding.progress,Onboarding Progress Tracker,f,onboarding
+onboarding.progress.step,Onboarding Progress Step Tracker,f,onboarding
+pay.on.delivery,Pay on Delivery,t,stock_delivery
+payment.capture.wizard,Payment Capture Wizard,t,payment
+payment.data,Pending payment data payload to process,f,payment
+payment.link.wizard,Generate Sales Payment Link,t,payment account_payment sale
+payment.method,Payment Method,f,payment delivery
+payment.provider,Payment Provider,f,payment payment_custom account_payment account_payment_custom sale website_payment delivery sale_loyalty_delivery payment_demo
+payment.refund.wizard,Payment Refund Wizard,t,account_payment
+payment.token,Payment Token,f,payment payment_demo
+payment.transaction,Payment Transaction,f,payment payment_custom account_payment account_payment_custom pos_online_payment sale delivery pos_online_payment_self_order website_sale payment_demo
+phone.blacklist,Phone Blacklist,f,phone_validation
+phone.blacklist.remove,Remove phone from blacklist,t,phone_validation
+picking.label.type,Choose whether to print product or lot/sn labels,t,stock mrp
+portal.entry,Portal Entry,f,portal payment portal_discuss
+portal.mixin,Portal Mixin,f,portal
+portal.share,Portal Sharing,t,portal project
+portal.wizard,Grant Portal Access,t,portal
+portal.wizard.user,Portal User Config,t,portal website
+pos.bill,Coin/Bill,f,point_of_sale
+pos.bus.mixin,Bus Mixin,f,point_of_sale
+pos.category,Point of Sale Category,f,point_of_sale pos_restaurant pos_self_order
+pos.config,Point of Sale Configuration,f,point_of_sale pos_event pos_hr pos_online_payment pos_restaurant pos_stock pos_self_order pos_online_payment_self_order pos_sale pos_self_order_event pos_loyalty
+pos.confirmation.wizard,Confirmation Wizard,t,point_of_sale
+pos.course,POS Course,f,pos_restaurant
+pos.daily.sales.reports.wizard,Point of Sale Daily Report,t,point_of_sale pos_hr
+pos.details.wizard,Point of Sale Details Report,t,point_of_sale
+pos.load.mixin,PoS data loading mixin,f,point_of_sale pos_self_order
+pos.make.invoice,Multiple order invoice creation,t,point_of_sale
+pos.make.payment,Point of Sale Make Payment Wizard,t,point_of_sale
+pos.note,PoS Note,f,point_of_sale
+pos.order,Point of Sale Order,f,point_of_sale pos_event pos_hr pos_online_payment pos_restaurant pos_stock pos_mrp pos_self_order pos_online_payment_self_order pos_sale pos_self_order_event pos_sale_delivery pos_sale_stock pos_loyalty
+pos.order.line,Point of Sale Order Line,f,point_of_sale pos_event pos_restaurant pos_stock pos_mrp pos_self_order pos_sale pos_sale_stock pos_loyalty
+pos.order.receipt,Point of Sale Order Receipt Generator,f,point_of_sale pos_hr pos_restaurant pos_stock pos_self_order pos_sale pos_loyalty
+pos.pack.operation.lot,Specify product lot/serial number in pos order line,f,pos_stock
+pos.payment,Point of Sale Payment,f,point_of_sale pos_hr pos_online_payment
+pos.payment.method,Point of Sale Payment Method,f,point_of_sale pos_online_payment pos_self_order pos_online_payment_self_order
+pos.prep.line,Pos Preparation Line,f,point_of_sale pos_self_order
+pos.prep.order,Pos Preparation Order,f,point_of_sale pos_self_order
+pos.preset,Easily load a set of configuration options,f,point_of_sale pos_restaurant pos_self_order
+pos.price.inclusion.wizard,Point of Sale Price Inclusion Wizard,t,point_of_sale
+pos.printer,Point of Sale Printer,f,point_of_sale
+pos.session,Point of Sale Session,f,point_of_sale pos_event pos_hr pos_restaurant pos_stock pos_self_order pos_sale pos_loyalty
+pos.snooze,Snoozed records for Point of Sale,f,point_of_sale pos_self_order
+pos_self_order.custom_link,Custom links that the restaurant can configure to be displayed on the self order screen,f,pos_self_order
+printer.printer,External Printer,f,printer
+privacy.log,Privacy Log,f,privacy_lookup
+privacy.lookup.wizard,Privacy Lookup Wizard,t,privacy_lookup
+privacy.lookup.wizard.line,Privacy Lookup Wizard Line,t,privacy_lookup
+product.attribute,Product Attribute,f,product point_of_sale website_sale
+product.attribute.category,Product Attribute Category,f,website_sale
+product.attribute.custom.value,Product Attribute Custom Value,f,product point_of_sale sale sale_management
+product.attribute.value,Attribute Value,f,product
+product.base.unit,Unit of Measure for price per unit on products.,f,product
+product.catalog.line.mixin,Product Catalog Line Mixin,f,product account
+product.catalog.mixin,Product Catalog Mixin,f,product account
+product.category,Product Category,f,product account stock point_of_sale purchase stock_account mrp_account pos_stock sale delivery
+product.combo,Product Combo,f,product point_of_sale website_sale
+product.combo.item,Product Combo Item,f,product point_of_sale
+product.document,Product Document,f,product sale sale_pdf_quote_builder website_sale
+product.feed,Product Feed,f,website_sale
+product.image,Product Image,f,website_sale
+product.label.layout,Choose the sheet layout to print the labels,t,product stock stock_delivery
+product.pricelist,Pricelist,f,product point_of_sale website_sale loyalty
+product.pricelist.item,Pricelist Rule,f,product point_of_sale sale website_sale website_event_sale
+product.product,Product Variant,f,product account stock event_product hr_expense mrp point_of_sale purchase stock_account mrp_account pos_hr purchase_stock sale pos_self_order sale_edi_ubl repair stock_delivery website_sale sale_project website_event_sale website_sale_stock loyalty product_expiry mrp_subcontracting pos_loyalty purchase_requisition mrp_subcontracting_account mrp_subcontracting_purchase stock_dropshipping website_sale_loyalty sale_timesheet
+product.public.category,Website Product Category,f,website_sale
+product.removal,Removal Strategy,f,stock pos_stock
+product.replenish,Product Replenish,t,stock mrp purchase_stock
+product.ribbon,Product ribbon,f,website_sale
+product.stock.notification,Product Stock Notification,f,website_sale
+product.supplierinfo,Supplier Pricelist,f,product purchase purchase_stock mrp_subcontracting purchase_requisition
+product.tag,Product Tag,f,product point_of_sale pos_self_order website_sale
+product.template,Product,f,product account stock event_product hr_expense mrp point_of_sale purchase stock_account mrp_account pos_restaurant pos_stock purchase_stock sale pos_self_order sale_purchase sale_stock event_sale pos_sale repair sale_expense stock_delivery website_sale sale_project website_event_sale website_sale_stock loyalty product_expiry pos_loyalty stock_landed_costs sale_timesheet
+product.template.attribute.line,Product Template Attribute Line,f,product point_of_sale website_sale
+product.template.attribute.value,Product Template Attribute Value,f,product point_of_sale website_sale
+product.uom,Link between products and their UoMs,f,product mrp point_of_sale
+product.value,Product Value,f,stock_account
+product.wishlist,Product Wishlist,f,website_sale
+project.collaborator,Collaborators in project shared,f,project hr_timesheet
+project.milestone,Project Milestone,f,project sale_project
+project.project,Project,f,project project_account project_sms project_stock project_hr_expense project_mrp project_purchase sale_project crm_sale_project sale_project_margin sale_project_stock hr_timesheet sale_timesheet
+project.project.stage,Project Stage,f,project project_sms
+project.project.stage.delete.wizard,Project Stage Delete Wizard,t,project
+project.role,Project Role,f,project
+project.sale.line.employee.map,"Project Sales line, employee mapping",f,sale_timesheet
+project.share.collaborator.wizard,Project Sharing Collaborator Wizard,t,project
+project.share.wizard,Project Sharing,t,project
+project.tags,Project Tag,f,project
+project.task,Task,f,project project_sms project_todo website_project project_hr_skills sale_project hr_timesheet project_timesheet_holidays sale_timesheet
+project.task.burndown.chart.report,Burndown Chart,f,project
+project.task.recurrence,Task Recurrence,f,project sale_project
+project.task.stage.personal,Personal Task Stage,f,project
+project.task.stage.report,Task time spent per stage,f,project
+project.task.type,Task Stage,f,project project_sms sale_project
+project.task.type.delete.wizard,Project Task Stage Delete Wizard,t,project
+project.template.create.wizard,Project Template create Wizard,t,project sale_project crm_sale_project
+project.template.role.to.users.map,Project role to users mapping,t,project
+project.update,Project Update,f,project hr_timesheet
+properties.base.definition,Properties Base Definition,f,base web
+properties.base.definition.mixin,Properties Base Definition Mixin,f,base
+publisher_warranty.contract,Publisher Warranty Contract,f,mail hr website_mail
+purchase.bill.line.match,Purchase Line and Vendor Bill line matching view,f,purchase
+purchase.bill.union,Purchases & Bills Union,f,purchase
+purchase.edi.xml.ubl_bis3,Purchase UBL BIS Ordering 3.5,f,purchase_edi_ubl_bis3
+purchase.order,Purchase Order,f,purchase project_purchase purchase_edi_ubl_bis3 purchase_stock purchase_mrp sale_purchase sale_purchase_stock purchase_repair purchase_requisition purchase_requisition_stock mrp_subcontracting_purchase stock_dropshipping mrp_subcontracting_dropshipping
+purchase.order.line,Purchase Order Line,f,purchase project_purchase purchase_stock project_purchase_stock purchase_mrp sale_purchase sale_purchase_stock purchase_requisition stock_landed_costs stock_dropshipping
+purchase.report,Purchase Report,f,purchase project_purchase purchase_stock
+purchase.requisition,Purchase Requisition,f,purchase_requisition purchase_requisition_stock
+purchase.requisition.line,Purchase Requisition Line,f,purchase_requisition purchase_requisition_stock
+quotation.document,Quotation's Headers & Footers,f,sale_pdf_quote_builder
+rating.mixin,Rating Mixin,f,rating
+rating.parent.mixin,Rating Parent Mixin,f,rating
+rating.rating,Rating,f,rating portal_rating
+registration.editor,Edit Attendee Details on Sales Confirmation,t,event_sale
+registration.editor.line,Edit Attendee Line on Sales Confirmation,t,event_sale
+repair.consumption.warning,Wizard for warning about mismatching expected vs actual component consumption quantities for ROs,t,repair
+repair.consumption.warning.line,Line of issue consumption,t,repair
+repair.order,Repair Order,f,repair mrp_repair purchase_repair
+repair.service.line,Repair Service Line,f,repair
+repair.tags,Repair Tag,f,repair
+report.account.report_hash_integrity,Get hash integrity result as PDF.,f,account
+report.account.report_invoice,Account report without payment lines,f,account
+report.account.report_invoice_with_payments,Account report with payment lines,f,account
+report.base.report_irmodulereference,Module Reference Report (base),f,base
+report.hr_holidays.report_holidayssummary,Holidays Summary Report,f,hr_holidays
+report.hr_skills.report_employee_cv,Employee Resume,f,hr_skills
+report.layout,Report Layout,f,base
+report.mrp.report_bom_structure,BOM Overview Report,f,mrp mrp_account purchase_mrp mrp_subcontracting mrp_subcontracting_purchase
+report.mrp.report_mo_overview,MO Overview Report,f,mrp mrp_account purchase_mrp mrp_subcontracting mrp_subcontracting_purchase
+report.paperformat,Paper Format Config,f,base
+report.point_of_sale.report_invoice,Point of Sale Invoice Report,f,point_of_sale
+report.point_of_sale.report_saledetails,Point of Sale Details,f,point_of_sale
+report.pos.order,Point of Sale Orders Report,f,point_of_sale pos_hr
+report.pos_hr.single_employee_sales_report,Session sales details for a single employee,f,pos_hr
+report.product.label.base,Base Label Report,f,product
+report.product.report_pricelist,Pricelist Report,f,product
+report.product.report_product_label_dymo,Label Dymo Report,f,product
+report.product.report_product_label_pdf,Label PDF Report,f,product
+report.product.report_product_label_zpl,Label ZPL Report,f,product
+report.project.task.user,Tasks Analysis,f,project project_hr_skills sale_project hr_timesheet sale_timesheet
+report.stock.quantity,Stock Quantity Report,f,stock product_expiry
+report.stock.report_stock_rule,Stock rule report,f,stock mrp purchase_stock sale_stock
+res.city,City,f,base_address_extended
+res.company,Company,f,base social_media web barcodes resource mail lunch product partner_autocomplete sms payment account hr mass_mailing stock website account_edi_ubl_cii hr_expense hr_recruitment hr_work_entry mrp point_of_sale purchase spreadsheet_account stock_account stock_sms hr_attendance hr_holidays mrp_account pos_stock purchase_stock sale hr_holidays_attendance sale_stock website_sale hr_timesheet mrp_subcontracting project_timesheet_holidays stock_landed_costs stock_dropshipping mrp_subcontracting_dropshipping
+res.config,Config,t,base
+res.config.settings,Config Settings,t,base web base_setup google_address_autocomplete base_geolocalize google_recaptcha iap mail web_unsplash analytic auth_signup auth_totp_mail fleet google_gmail lunch maintenance microsoft_outlook product partner_autocomplete portal digest payment account crm event hr mass_mailing project stock website account_payment hr_expense hr_recruitment hr_work_entry mrp point_of_sale purchase stock_account stock_sms website_address_autocomplete website_livechat crm_iap_enrich hr_attendance pos_hr pos_restaurant pos_stock purchase_stock sale website_payment delivery pos_self_order sale_management sale_stock website_slides pos_online_payment_self_order pos_sale website_sale pos_self_order_sale website_sale_mass_mailing website_sale_stock hr_timesheet product_expiry project_timesheet_holidays stock_landed_costs sale_timesheet
+res.country,Country,f,base base_address_extended portal payment point_of_sale pos_self_order
+res.country.group,Country Group,f,base product account
+res.country.state,Country state,f,base point_of_sale
+res.currency,Currency,f,base product spreadsheet account point_of_sale
+res.currency.rate,Currency Rate,f,base spreadsheet account
+res.currency.rate.consolidation.mixin,Enable multi company consolidation,f,account
+res.device,Device,f,base
+res.device.log,Device Log,f,base
+res.groups,Access Groups,f,base uom bus mail analytic lunch product account crm im_livechat mass_mailing project stock website hr_recruitment mrp point_of_sale purchase stock_account hr_attendance hr_holidays sale website_slides website_sale product_expiry
+res.groups.privilege,Privilege,f,base
+res.lang,Language,f,base http_routing spreadsheet survey website point_of_sale
+res.partner,Contact,f,base web base_address_extended bus google_address_autocomplete base_geolocalize mail auth_signup calendar contacts fleet phone_validation privacy_lookup product partner_autocomplete portal payment account crm event hr im_livechat mass_mailing project stock survey website account_edi_ubl_cii hr_calendar hr_recruitment mass_mailing_sms point_of_sale purchase website_partner hr_holidays pos_hr purchase_stock sale website_blog delivery pos_self_order website_slides pos_sale repair stock_delivery website_sale website_sale_stock loyalty mrp_subcontracting
+res.partner.bank,Bank Account,f,base account hr account_qr_code_sepa
+res.partner.category,Partner Tag,f,base
+res.partner.industry,Industry,f,base
+res.role,Represents a role in the system used to categorize users. Each role has a unique name and can be associated with multiple users. Roles can be mentioned in messages to notify all associated users.,f,mail
+res.session,Session,f,base
+res.users,User,f,base web auth_totp base_import base_setup bus resource web_tour auth_passkey mail web_unsplash auth_signup auth_totp_mail calendar contacts gamification google_gmail lunch mail_bot microsoft_outlook phone_validation sales_team auth_totp_portal digest crm hr im_livechat mass_mailing project stock website crm_livechat hr_gamification hr_recruitment mass_mailing_sms point_of_sale project_todo hr_attendance hr_holidays project_hr_skills website_profile sale_stock website_forum website_slides website_sale
+res.users.apikeys,User API Key,f,base
+res.users.apikeys.description,API Key Description,t,base portal
+res.users.apikeys.show,Show API Key,f,base
+res.users.deletion,Users Deletion Request,f,base
+res.users.identitycheck,Password Check Wizard,t,base auth_passkey
+res.users.log,Users Log,f,base
+res.users.settings,User Settings,f,base web bus mail calendar im_livechat project
+res.users.settings.embedded.action,User Settings for Embedded Actions,f,web
+res.users.settings.volumes,User Settings Volumes,f,mail
+reset.view.arch.wizard,Reset View Architecture Wizard,t,base
+resource.calendar,Resource Working Time,f,resource hr hr_work_entry hr_holidays
+resource.calendar.attendance,Work Detail,f,resource hr_work_entry point_of_sale
+resource.calendar.leaves,Resource Time Off Detail,f,resource hr hr_work_entry hr_holidays hr_holidays_attendance project_timesheet_holidays
+resource.mixin,Resource Mixin,f,resource
+resource.resource,Resource,f,resource resource_mail hr hr_skills hr_holidays
+restaurant.floor,Restaurant Floor,f,pos_restaurant pos_self_order
+restaurant.order.course,POS Restaurant Order Course,f,pos_restaurant
+restaurant.table,Restaurant Table,f,pos_restaurant pos_self_order
+return.reason,Return Reason,f,sale_stock
+sale.advance.payment.inv,Sales Advance Payment Invoice,t,sale sale_timesheet
+sale.edi.xml.ubl_bis3,Sale BIS Ordering 3.5,f,sale_edi_ubl
+sale.loyalty.coupon.wizard,Sale Loyalty - Apply Coupon Wizard,t,sale_loyalty
+sale.loyalty.reward.wizard,Sale Loyalty - Reward Selection Wizard,t,sale_loyalty
+sale.mass.cancel.orders,Cancel multiple quotations,t,sale
+sale.order,Sales Order,f,sale delivery mass_mailing_sale sale_crm sale_edi_ubl sale_management sale_purchase sale_stock event_sale pos_sale repair sale_expense sale_margin sale_mrp sale_pdf_quote_builder sale_purchase_stock stock_delivery website_sale pos_sale_stock sale_project website_event_sale website_sale_stock crm_sale_project website_sale_mrp sale_loyalty sale_loyalty_delivery stock_dropshipping website_sale_loyalty sale_timesheet
+sale.order.coupon.points,Sale Order Coupon Points - Keeps track of how a sale order impacts a coupon,f,sale_loyalty
+sale.order.discount,Discount Wizard,t,sale
+sale.order.line,Sales Order Line,f,sale delivery sale_edi_ubl sale_management sale_purchase sale_stock event_sale pos_sale repair sale_expense sale_margin sale_mrp sale_pdf_quote_builder sale_service stock_delivery website_sale pos_event_sale pos_repair pos_sale_stock sale_expense_margin sale_project sale_stock_margin website_event_sale sale_purchase_project sale_loyalty sale_stock_product_expiry pos_sale_loyalty stock_dropshipping website_sale_loyalty sale_timesheet sale_timesheet_margin
+sale.order.template,Order Templates,f,sale_management sale_pdf_quote_builder
+sale.order.template.line,Quotation Template Line,f,sale_management sale_margin sale_project
+sale.pdf.form.field,Form fields of inside quotation documents.,f,sale_pdf_quote_builder
+sale.report,Sales Analysis Report,f,sale sale_stock pos_sale sale_margin website_sale pos_sale_margin pos_sale_stock sale_project
+select.printers.wizard,Select printers to print the report on,t,printer
+sequence.mixin,Automatic sequence,f,account
+server.action.history.wizard,Server Action History Wizard,t,base
+slide.answer,Slide Question's Answer,f,website_slides
+slide.channel,Course,f,website_slides hr_skills_slides mass_mailing_slides website_slides_forum website_slides_survey
+slide.channel.invite,Channel Invitation Wizard,t,website_slides
+slide.channel.partner,Channel / Partners (Members),f,website_slides hr_skills_slides website_slides_survey
+slide.channel.tag,Channel/Course Tag,f,website_slides
+slide.channel.tag.group,Channel/Course Group,f,website_slides
+slide.embed,Embedded Slides View Counter,f,website_slides
+slide.question,Content Quiz Question,f,website_slides
+slide.slide,Slide,f,website_slides website_slides_survey
+slide.slide.partner,Slide / Partner decorated m2m,f,website_slides website_slides_survey
+slide.slide.resource,Additional resource for a particular slide,f,website_slides
+slide.tag,Slide Tag,f,website_slides
+sms.account.code,SMS Account Verification Code Wizard,t,sms
+sms.account.phone,SMS Account Registration Phone Number Wizard,t,sms
+sms.account.sender,SMS Account Sender Name Wizard,t,sms
+sms.composer,Send SMS Wizard,t,sms mass_mailing_sms
+sms.sms,Outgoing SMS,f,sms mass_mailing_sms
+sms.template,SMS Templates,f,sms event_sms
+sms.template.preview,SMS Template Preview,t,sms
+sms.template.reset,SMS Template Reset,t,sms
+sms.tracker,Link SMS to mailing/sms tracking models,f,sms mass_mailing_sms
+spreadsheet.dashboard,Spreadsheet Dashboard,f,spreadsheet_dashboard
+spreadsheet.dashboard.favorite.filters,Dashboard Favorite Filter,f,spreadsheet_dashboard
+spreadsheet.dashboard.group,Group of dashboards,f,spreadsheet_dashboard
+spreadsheet.dashboard.share,Copy of a shared dashboard,f,spreadsheet_dashboard
+spreadsheet.mixin,Spreadsheet mixin,f,spreadsheet
+stock.add.to.wave,Batch Transfer Line,t,stock
+stock.allocation.report,Stock Allocation Report,f,stock mrp purchase_stock
+stock.avco.report,Stock AVCO Justifier,f,stock_account
+stock.backorder.confirmation,Backorder Confirmation,t,stock
+stock.backorder.confirmation.line,Backorder Confirmation Line,t,stock
+stock.forecasted_product_product,Stock Replenishment Report,f,stock mrp stock_account purchase_stock sale_stock repair product_expiry
+stock.forecasted_product_template,Stock Replenishment Report,f,stock
+stock.inventory.adjustment.name,Inventory Adjustment Reference / Reason,t,stock stock_account
+stock.inventory.conflict,Conflict in Inventory,t,stock
+stock.inventory.warning,Inventory Adjustment Warning,t,stock
+stock.landed.cost,Stock Landed Cost,f,stock_landed_costs mrp_landed_costs mrp_subcontracting_landed_costs
+stock.landed.cost.lines,Stock Landed Cost Line,f,stock_landed_costs
+stock.location,Inventory Location,f,stock stock_account stock_maintenance mrp_subcontracting
+stock.location.label.layout,Prepare Location Labels,t,stock
+stock.lot,Lot/Serial,f,stock mrp stock_account purchase_stock sale_stock repair product_expiry stock_dropshipping
+stock.move,Stock Move,f,stock mrp stock_account mrp_account pos_stock project_mrp project_stock_account purchase_stock pos_mrp project_mrp_account project_purchase_stock purchase_mrp sale_stock repair sale_mrp sale_purchase_stock stock_delivery mrp_repair sale_project_stock sale_project_stock_account product_expiry mrp_subcontracting purchase_requisition_stock stock_landed_costs mrp_subcontracting_purchase mrp_subcontracting_dropshipping
+stock.move.line,Product Moves (Stock Move Line),f,stock mrp stock_account sale_stock repair stock_delivery mrp_delivery product_expiry mrp_subcontracting stock_dropshipping
+stock.orderpoint.snooze,Snooze Orderpoint,t,stock
+stock.orderpoint.suggest,Stock Orderpoint Min-Max Suggestion,t,stock
+stock.package,Package,f,stock mrp stock_delivery
+stock.package.destination,Stock Package Destination,t,stock
+stock.package.history,Stock Package History,f,stock mrp
+stock.package.label.layout,Prepare Package Labels,t,stock stock_delivery
+stock.package.type,Stock package type,f,stock stock_delivery
+stock.picking,Transfer,f,stock mrp project_stock stock_account stock_sms pos_stock purchase_stock sale_stock repair stock_delivery pos_repair pos_sale_stock website_sale_stock sale_project_stock product_expiry mrp_subcontracting mrp_subcontracting_purchase stock_dropshipping mrp_subcontracting_dropshipping
+stock.picking.batch,Batch Transfer,f,stock stock_delivery
+stock.picking.to.batch,Batch Transfer Line,t,stock
+stock.picking.type,Picking Type,f,stock mrp stock_account pos_stock project_stock_account project_mrp_account repair stock_delivery stock_dropshipping
+stock.picking.type.label.layout,Prepare Operation Type Labels,t,stock
+stock.put.in.pack,Put In Pack Wizard,t,stock stock_delivery
+stock.putaway.rule,Putaway Rule,f,stock
+stock.quant,Quant,f,stock mrp stock_account product_expiry mrp_subcontracting
+stock.quant.relocate,Stock Quantity Relocation,t,stock
+stock.reference,Reference between stock documents,f,stock mrp pos_stock purchase_stock sale_stock
+stock.replenish.mixin,Product Replenish Mixin,f,stock mrp purchase_stock stock_dropshipping mrp_subcontracting_dropshipping
+stock.replenishment.info,Stock delivery time information,t,stock mrp purchase_stock sale_stock
+stock.replenishment.option,Stock warehouse replenishment option,t,stock purchase_stock
+stock.request.count,Stock Request an Inventory Count,t,stock
+stock.route,Inventory Route,f,stock mrp purchase_stock sale_stock stock_delivery
+stock.rule,Stock Rule,f,stock mrp pos_stock project_mrp purchase_stock project_mrp_account project_purchase_stock purchase_mrp sale_stock sale_mrp sale_purchase_stock product_expiry mrp_subcontracting purchase_requisition_stock mrp_subcontracting_purchase stock_dropshipping mrp_subcontracting_dropshipping
+stock.rules.report,Stock Rules report,t,stock sale_stock
+stock.scrap.reason.tag,Scrap Reason Tag,f,stock
+stock.storage.category,Storage Category,f,stock
+stock.storage.category.capacity,Storage Category Capacity,f,stock
+stock.traceability.report,Traceability Report,t,stock mrp repair product_expiry mrp_subcontracting_dropshipping
+stock.valuation.adjustment.lines,Valuation Adjustment Line,f,stock_landed_costs project_stock_landed_costs project_mrp_stock_landed_costs
+stock.warehouse,Warehouse,f,stock mrp pos_stock purchase_stock repair mrp_subcontracting mrp_subcontracting_dropshipping
+stock.warehouse.orderpoint,Minimum Inventory Rule,f,stock mrp purchase_stock sale_mrp mrp_subcontracting_dropshipping
+stock.warn.insufficient.qty,Warn Insufficient Quantity,f,stock
+stock.warn.insufficient.qty.scrap,Warn Insufficient Scrap Quantity,t,stock
+stock.warn.insufficient.qty.unbuild,Warn Insufficient Unbuild Quantity,t,mrp
+stock.zero.demand.confirmation,Zero Demand Confirmation,t,stock
+survey.invite,Survey Invitation Wizard,t,survey
+survey.question,Survey Question,f,survey survey_crm
+survey.question.answer,Survey Label,f,survey survey_crm
+survey.survey,Survey,f,survey survey_crm hr_skills_survey website_slides_survey
+survey.user_input,Survey User Input,f,survey survey_crm hr_skills_survey website_slides_survey
+survey.user_input.line,Survey User Input Line,f,survey
+talent.pool.add.applicants,Add applicants to talent pool,t,hr_recruitment
+task.share.wizard,Task Sharing,t,project
+template.reset.mixin,Template Reset Mixin,f,mail
+theme.ir.asset,Theme Asset,f,website
+theme.ir.attachment,Theme Attachment,f,website
+theme.ir.ui.view,Theme UI View,f,website
+theme.utils,Theme Utils,f,website website_sale
+theme.website.menu,Website Theme Menu,f,website
+theme.website.page,Website Theme Page,f,website
+timesheets.analysis.report,Timesheets Analysis Report,f,hr_timesheet sale_timesheet
+uom.uom,Product Unit of Measure,f,uom product account stock account_edi_ubl_cii point_of_sale hr_timesheet
+update.product.attribute.value,Update product attribute value,t,product
+utm.campaign,UTM Campaign,f,utm link_tracker crm mass_mailing hr_recruitment mass_mailing_crm mass_mailing_sms mass_mailing_crm_sms sale mass_mailing_sale mass_mailing_sale_sms
+utm.medium,UTM Medium,f,utm mass_mailing
+utm.mixin,UTM Mixin,f,utm im_livechat mass_mailing_sms
+utm.source,UTM Source,f,utm mass_mailing hr_recruitment marketing_card
+utm.stage,Campaign Stage,f,utm
+utm.tag,UTM Tag,f,utm
+validate.account.move,Validate Journal Entry,t,account
+vendor.delay.report,Vendor Delay Report,f,purchase_stock
+web_tour.tour,Tour,f,web_tour
+web_tour.tour.step,Tour's step,f,web_tour
+website,Website,f,base website website_address_autocomplete website_crm website_livechat website_blog website_event website_hr_recruitment website_profile website_forum website_slides website_sale website_sale_mass_mailing website_sale_stock
+website.assets,Assets Utils,f,website
+website.checkout.alert.mixin,Website Checkout Alert Mixin,f,website_sale
+website.checkout.step,Website Checkout Step,f,website_sale
+website.configurator.feature,Website Configurator Feature,f,website
+website.controller.page,Model Page,f,website
+website.cover_properties.mixin,Cover Properties Website Mixin,f,website
+website.custom_blocked_third_party_domains,User list of blocked 3rd-party domains,t,website
+website.event.menu,Website Event Menu,f,website_event
+website.html.text.processor,HTML Text Processor Abstract Model,f,website
+website.llms,LLMs.txt Editor,t,website
+website.located.mixin,Website Located Mixin,f,website
+website.menu,Website Menu,f,website website_event website_sale
+website.multi.mixin,Multi Website Mixin,f,website
+website.page,Page,f,website
+website.page.properties,Page Property,t,website
+website.page.properties.base,Page Properties Base,t,website
+website.page_options.mixin,Website page/record specific options,f,website
+website.page_visibility_options.mixin,Website page/record specific visibility options,f,website
+website.published.mixin,Website Published Mixin,f,website
+website.published.multi.mixin,Website Published Mixin,f,website website_hr_recruitment
+website.rewrite,Website rewrite,f,website
+website.robots,Robots.txt Editor,t,website
+website.route,All Website Route,f,website
+website.sale.extra.field,E-Commerce Extra Info Shown on product page,f,website_sale
+website.searchable.mixin,Website Searchable Mixin,f,website
+website.seo.metadata,SEO metadata,f,website
+website.snippet.filter,Website Snippet Filter,f,website website_blog website_event website_sale
+website.structured_data.mixin,Website Structured Data Mixin,f,website
+website.technical.page,Website Technical Page,f,website
+website.track,Visited Page,f,website website_blog website_event website_slides website_sale
+website.trackable.mixin,Website Trackable Mixin,f,website
+website.visitor,Website Visitor,f,website website_crm website_livechat website_sms website_blog website_crm_sms website_event website_slides website_sale
+withdrawal.request,Withdrawal Request,f,website_sale website_sale_project
+wizard.ir.model.menu.create,Create Menu Wizard,t,base

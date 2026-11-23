@@ -1,0 +1,28 @@
+# Local Odoo 20 Community for reference only (UI and flows of the open-source modules).
+# Runs on this PC only; ports are bound to 127.0.0.1. Local test credentials, not real ones.
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: odoo
+      POSTGRES_PASSWORD: odoo
+      POSTGRES_DB: postgres
+    volumes:
+      - odoo20-db:/var/lib/postgresql/data
+    restart: unless-stopped
+  odoo:
+    image: ${ODOO_IMAGE:-odoo:20.0}
+    depends_on:
+      - db
+    environment:
+      HOST: db
+      USER: odoo
+      PASSWORD: odoo
+    ports:
+      - "127.0.0.1:8069:8069"
+    volumes:
+      - odoo20-data:/var/lib/odoo
+    restart: unless-stopped
+volumes:
+  odoo20-db:
+  odoo20-data:

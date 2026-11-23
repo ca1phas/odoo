@@ -1,0 +1,11 @@
+{
+  "note": "Workflow name prefix (text before ' - ') -> owner module, used when a workflow is not in a ledger. Partner logic lives in Odoo's base module, so 'Contacts' maps to base.",
+  "workflow_prefixes": {
+    "Contacts": "base",
+    "Settings": "base",
+    "Units": "uom",
+    "Products": "product",
+    "Activities": "mail",
+    "Register": "system"
+  }
+}

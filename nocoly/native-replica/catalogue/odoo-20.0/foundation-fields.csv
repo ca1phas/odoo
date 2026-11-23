@@ -1,0 +1,1599 @@
+model,name,ttype,relation,store,required,readonly,computed,is_related,label,modules
+mail.activity,id,integer,"",t,f,t,f,f,ID,mail calendar phone_validation crm hr project website_slides
+mail.activity,display_name,char,"",f,f,t,f,f,Display Name,mail calendar phone_validation crm hr project website_slides
+mail.activity,res_model_id,many2one,ir.model,t,f,f,f,f,Document Model,mail
+mail.activity,res_model,char,"",t,f,t,f,t,Related Document Model,mail
+mail.activity,res_model_name,char,"",f,f,t,f,t,Model,mail
+mail.activity,res_id,many2one_reference,"",t,f,f,f,f,Related Document ID,mail
+mail.activity,res_name,char,"",t,f,t,f,f,Document Name,mail
+mail.activity,res_access_read,boolean,"",f,f,t,f,f,Res Access Read,mail
+mail.activity,res_access_write,boolean,"",f,f,t,f,f,Res Access Write,mail
+mail.activity,res_access_create,boolean,"",f,f,t,f,f,Res Access Create,mail
+mail.activity,res_access_unlink,boolean,"",f,f,t,f,f,Res Access Unlink,mail
+mail.activity,activity_type_id,many2one,mail.activity.type,t,f,f,f,f,Activity Type,mail
+mail.activity,activity_category,selection,"",f,f,t,f,t,Action,mail
+mail.activity,activity_decoration,selection,"",f,f,t,f,t,Decoration Type,mail
+mail.activity,icon,char,"",f,f,t,f,t,Icon,mail
+mail.activity,activity_plan_id,many2one,mail.activity.plan,t,f,f,f,f,Plan,mail
+mail.activity,activity_template_id,many2one,mail.activity.plan.template,t,f,f,f,f,Generated From,mail
+mail.activity,phone,char,"",t,f,f,f,f,Phone,mail
+mail.activity,summary,char,"",t,f,f,f,f,Summary,mail
+mail.activity,note,html,"",t,f,f,f,f,Note,mail
+mail.activity,date_deadline,date,"",t,t,f,f,f,Due Date,mail
+mail.activity,date_done,date,"",t,f,t,f,f,Done Date,mail
+mail.activity,feedback,text,"",t,f,f,f,f,Feedback,mail
+mail.activity,automated,boolean,"",t,f,t,f,f,Automated activity,mail
+mail.activity,technical_usage,selection,"",t,f,t,f,f,Technical Usage,mail hr
+mail.activity,attachment_ids,many2many,ir.attachment,t,f,f,f,f,Attachments,mail
+mail.activity,user_id,many2one,res.users,t,f,f,f,f,Assigned to,mail
+mail.activity,role_id,many2one,res.role,t,f,f,f,f,Role,mail
+mail.activity,user_tz,selection,"",t,f,t,f,t,Timezone,mail
+mail.activity,state,selection,"",f,f,t,f,f,State,mail
+mail.activity,mail_template_ids,many2many,mail.template,f,f,t,f,t,Email templates,mail
+mail.activity,can_write,boolean,"",f,f,t,f,f,Can Write,mail
+mail.activity,active,boolean,"",t,f,f,f,f,Active,mail
+mail.activity,create_uid,many2one,res.users,t,f,t,f,f,Created by,mail
+mail.activity,create_date,datetime,"",t,f,t,f,f,Created on,mail
+mail.activity,write_uid,many2one,res.users,t,f,t,f,f,Last Updated by,mail
+mail.activity,write_date,datetime,"",t,f,t,f,f,Last Updated on,mail
+mail.activity,calendar_event_id,many2one,calendar.event,t,f,f,f,f,Calendar Meeting,calendar
+mail.activity,request_partner_id,many2one,res.partner,t,f,f,f,f,Requesting Partner,website_slides
+mail.activity.plan,id,integer,"",t,f,t,f,f,ID,mail hr hr_recruitment
+mail.activity.plan,display_name,char,"",f,f,t,f,f,Display Name,mail hr hr_recruitment
+mail.activity.plan,name,char,"",t,t,f,f,f,Name,mail
+mail.activity.plan,company_id,many2one,res.company,t,f,f,f,f,Company,mail
+mail.activity.plan,template_ids,one2many,mail.activity.plan.template,t,f,f,f,f,Activities,mail
+mail.activity.plan,active,boolean,"",t,f,f,f,f,Active,mail
+mail.activity.plan,res_model_id,many2one,ir.model,t,t,f,f,f,Applies to,mail
+mail.activity.plan,res_model,selection,"",t,t,f,f,f,Model,mail
+mail.activity.plan,steps_count,integer,"",f,f,t,f,f,Steps Count,mail
+mail.activity.plan,has_user_on_demand,boolean,"",f,f,t,f,f,Has on demand responsible,mail
+mail.activity.plan,create_uid,many2one,res.users,t,f,t,f,f,Created by,mail
+mail.activity.plan,create_date,datetime,"",t,f,t,f,f,Created on,mail
+mail.activity.plan,write_uid,many2one,res.users,t,f,t,f,f,Last Updated by,mail
+mail.activity.plan,write_date,datetime,"",t,f,t,f,f,Last Updated on,mail
+mail.activity.plan,department_id,many2one,hr.department,t,f,f,f,f,Department,hr
+mail.activity.plan,department_assignable,boolean,"",f,f,t,f,f,Department Assignable,hr
+mail.activity.plan.template,id,integer,"",t,f,t,f,f,ID,mail hr
+mail.activity.plan.template,display_name,char,"",f,f,t,f,f,Display Name,mail hr
+mail.activity.plan.template,plan_id,many2one,mail.activity.plan,t,t,f,f,f,Plan,mail
+mail.activity.plan.template,res_model,selection,"",f,f,t,f,t,Model,mail
+mail.activity.plan.template,company_id,many2one,res.company,f,f,t,f,t,Company,mail
+mail.activity.plan.template,sequence,integer,"",t,f,f,f,f,Sequence,mail
+mail.activity.plan.template,activity_type_id,many2one,mail.activity.type,t,t,f,f,f,Activity Type,mail
+mail.activity.plan.template,delay_count,integer,"",t,f,f,f,f,Interval,mail
+mail.activity.plan.template,delay_unit,selection,"",t,t,f,f,f,Delay units,mail
+mail.activity.plan.template,delay_from,selection,"",t,t,f,f,f,Trigger,mail
+mail.activity.plan.template,icon,char,"",f,f,t,f,t,Icon,mail
+mail.activity.plan.template,summary,char,"",t,f,f,f,f,Summary,mail
+mail.activity.plan.template,responsible_type,selection,"",t,t,f,f,f,Assignment,mail hr
+mail.activity.plan.template,responsible_id,many2one,res.users,t,f,f,f,f,Assigned to,mail
+mail.activity.plan.template,role_id,many2one,res.role,t,f,f,f,f,Role,mail
+mail.activity.plan.template,note,html,"",t,f,f,f,f,Note,mail
+mail.activity.plan.template,suggested_next_type_id,many2one,mail.activity.type,f,f,t,f,t,Suggested Next Activity,mail
+mail.activity.plan.template,create_uid,many2one,res.users,t,f,t,f,f,Created by,mail
+mail.activity.plan.template,create_date,datetime,"",t,f,t,f,f,Created on,mail
+mail.activity.plan.template,write_uid,many2one,res.users,t,f,t,f,f,Last Updated by,mail
+mail.activity.plan.template,write_date,datetime,"",t,f,t,f,f,Last Updated on,mail
+mail.activity.type,id,integer,"",t,f,t,f,f,ID,mail calendar fleet hr_holidays
+mail.activity.type,display_name,char,"",f,f,t,f,f,Display Name,mail calendar fleet hr_holidays
+mail.activity.type,name,char,"",t,t,f,f,f,Name,mail
+mail.activity.type,summary,char,"",t,f,f,f,f,Default Summary,mail
+mail.activity.type,sequence,integer,"",t,f,f,f,f,Sequence,mail
+mail.activity.type,active,boolean,"",t,f,f,f,f,Active,mail
+mail.activity.type,create_uid,many2one,res.users,t,f,f,f,f,Create Uid,mail
+mail.activity.type,delay_count,integer,"",t,f,f,f,f,Schedule,mail
+mail.activity.type,delay_unit,selection,"",t,t,f,f,f,Delay units,mail
+mail.activity.type,delay_label,char,"",f,f,t,f,f,Delay Label,mail
+mail.activity.type,delay_from,selection,"",t,t,f,f,f,Delay Type,mail
+mail.activity.type,icon,char,"",t,f,f,f,f,Icon,mail
+mail.activity.type,decoration_type,selection,"",t,f,f,f,f,Decoration Type,mail
+mail.activity.type,res_model,selection,"",t,f,f,f,f,Model,mail
+mail.activity.type,suggested_next_type_id,many2one,mail.activity.type,t,f,f,f,f,Suggest Next Activity,mail
+mail.activity.type,previous_type_ids,many2many,mail.activity.type,t,f,f,f,f,Preceding Activities,mail
+mail.activity.type,category,selection,"",t,f,f,f,f,Action,mail calendar
+mail.activity.type,mail_template_ids,many2many,mail.template,t,f,f,f,f,Email templates,mail
+mail.activity.type,default_user_id,many2one,res.users,t,f,f,f,f,Default User,mail
+mail.activity.type,default_role_id,many2one,res.role,t,f,f,f,f,Role,mail
+mail.activity.type,default_note,html,"",t,f,f,f,f,Default Note,mail
+mail.activity.type,kpi_provider_visibility,selection,"",t,f,f,f,f,KPI Provider Visibility,mail
+mail.activity.type,initial_res_model,selection,"",f,f,t,f,f,Initial model,mail
+mail.activity.type,res_model_change,boolean,"",f,f,f,f,f,Model has change,mail
+mail.activity.type,create_date,datetime,"",t,f,t,f,f,Created on,mail
+mail.activity.type,write_uid,many2one,res.users,t,f,t,f,f,Last Updated by,mail
+mail.activity.type,write_date,datetime,"",t,f,t,f,f,Last Updated on,mail
+product.attribute,id,integer,"",t,f,t,f,f,ID,product point_of_sale website_sale
+product.attribute,display_name,char,"",f,f,t,f,f,Display Name,product point_of_sale website_sale
+product.attribute,name,char,"",t,t,f,f,f,Attribute,product
+product.attribute,active,boolean,"",t,f,f,f,f,Active,product
+product.attribute,create_variant,selection,"",t,t,f,f,f,Variant Creation,product
+product.attribute,display_type,selection,"",t,t,f,f,f,Display Type,product
+product.attribute,sequence,integer,"",t,f,f,f,f,Sequence,product
+product.attribute,value_ids,one2many,product.attribute.value,t,f,f,f,f,Values,product
+product.attribute,template_value_ids,one2many,product.template.attribute.value,t,f,f,f,f,Template Values,product
+product.attribute,attribute_line_ids,one2many,product.template.attribute.line,t,f,f,f,f,Lines,product
+product.attribute,product_tmpl_ids,many2many,product.template,t,f,t,f,f,Related Products,product
+product.attribute,number_related_products,integer,"",f,f,t,f,f,Number Related Products,product
+product.attribute,create_uid,many2one,res.users,t,f,t,f,f,Created by,product
+product.attribute,create_date,datetime,"",t,f,t,f,f,Created on,product
+product.attribute,write_uid,many2one,res.users,t,f,t,f,f,Last Updated by,product
+product.attribute,write_date,datetime,"",t,f,t,f,f,Last Updated on,product
+product.attribute,category_id,many2one,product.attribute.category,t,f,f,f,f,Category,website_sale
+product.attribute,visibility,selection,"",t,f,f,f,f,Visibility,website_sale
+product.attribute,preview_variants,selection,"",t,f,f,f,f,On Product Cards,website_sale
+product.attribute,is_thumbnail_visible,boolean,"",t,f,f,f,f,Show Thumbnails,website_sale
+product.attribute,external_identifier,char,"",t,f,f,f,f,External Identifier,website_sale
+product.attribute.value,id,integer,"",t,f,t,f,f,ID,product
+product.attribute.value,display_name,char,"",f,f,t,f,f,Display Name,product
+product.attribute.value,name,char,"",t,t,f,f,f,Value,product
+product.attribute.value,sequence,integer,"",t,f,f,f,f,Sequence,product
+product.attribute.value,attribute_id,many2one,product.attribute,t,t,f,f,f,Attribute,product
+product.attribute.value,pav_attribute_line_ids,many2many,product.template.attribute.line,t,f,f,f,f,Lines,product
+product.attribute.value,default_extra_price,float,"",t,f,f,f,f,Default Extra Price,product
+product.attribute.value,is_custom,boolean,"",t,f,f,f,f,Free text,product
+product.attribute.value,html_color,char,"",t,f,f,f,f,Color,product
+product.attribute.value,display_type,selection,"",f,f,t,f,t,Display Type,product
+product.attribute.value,color,integer,"",t,f,f,f,f,Color Index,product
+product.attribute.value,image,binary,"",t,f,f,f,f,Image,product
+product.attribute.value,active,boolean,"",t,f,f,f,f,Active,product
+product.attribute.value,is_used_on_products,boolean,"",f,f,t,f,f,Used on Products,product
+product.attribute.value,default_extra_price_changed,boolean,"",f,f,t,f,f,Default Extra Price Changed,product
+product.attribute.value,create_uid,many2one,res.users,t,f,t,f,f,Created by,product
+product.attribute.value,create_date,datetime,"",t,f,t,f,f,Created on,product
+product.attribute.value,write_uid,many2one,res.users,t,f,t,f,f,Last Updated by,product
+product.attribute.value,write_date,datetime,"",t,f,t,f,f,Last Updated on,product
+product.category,id,integer,"",t,f,t,f,f,ID,product account stock point_of_sale purchase stock_account mrp_account pos_stock sale delivery
+product.category,display_name,char,"",f,f,t,f,f,Display Name,product account stock point_of_sale purchase stock_account mrp_account pos_stock sale delivery
+product.category,message_is_follower,boolean,"",f,f,t,f,f,Is Follower,product
+product.category,message_follower_ids,one2many,mail.followers,t,f,f,f,f,Followers,product
+product.category,message_partner_ids,many2many,res.partner,f,f,f,f,f,Followers (Partners),product
+product.category,message_ids,one2many,mail.message,t,f,f,f,f,Messages,product
+product.category,has_message,boolean,"",f,f,t,f,f,Has Message,product
+product.category,message_needaction,boolean,"",f,f,t,f,f,Action Needed,product
+product.category,message_needaction_counter,integer,"",f,f,t,f,f,Number of Actions,product
+product.category,message_has_error,boolean,"",f,f,t,f,f,Message Delivery error,product
+product.category,message_has_error_counter,integer,"",f,f,t,f,f,Number of errors,product
+product.category,message_attachment_count,integer,"",f,f,t,f,f,Attachment Count,product
+product.category,name,char,"",t,t,f,f,f,Name,product
+product.category,complete_name,char,"",f,f,t,f,f,Complete Name,product
+product.category,parent_id,many2one,product.category,t,f,f,f,f,Parent Category,product
+product.category,parent_path,char,"",t,f,f,f,f,Parent Path,product
+product.category,child_id,one2many,product.category,t,f,f,f,f,Child Categories,product
+product.category,product_count,integer,"",f,f,t,f,f,# Products,product
+product.category,product_properties_definition,properties_definition,"",t,f,f,f,f,Product Properties,product
+product.category,company_id,many2one,res.company,t,f,f,f,f,Company,product
+product.category,create_uid,many2one,res.users,t,f,t,f,f,Created by,product
+product.category,create_date,datetime,"",t,f,t,f,f,Created on,product
+product.category,write_uid,many2one,res.users,t,f,t,f,f,Last Updated by,product
+product.category,write_date,datetime,"",t,f,t,f,f,Last Updated on,product
+product.category,rating_ids,one2many,rating.rating,t,f,f,f,f,Ratings,rating
+product.category,message_has_sms_error,boolean,"",f,f,t,f,f,SMS Delivery error,sms
+product.category,property_account_income_categ_id,many2one,account.account,t,f,f,f,f,Income Account,account
+product.category,property_account_expense_categ_id,many2one,account.account,t,f,f,f,f,Expense Account,account
+product.category,property_valuation,selection,"",t,f,f,f,f,Inventory Valuation,account
+product.category,property_stock_valuation_account_id,many2one,account.account,t,f,f,f,f,Stock Valuation Account,account
+product.category,property_stock_valuation_account_active,boolean,"",f,f,t,f,t,Stock Valuation Account Active,account
+product.category,property_stock_journal,many2one,account.journal,t,f,f,f,f,Stock Journal,account
+product.category,account_stock_variation_id,many2one,account.account,f,f,f,f,t,Stock Variation Account,account
+product.category,account_stock_variation_active,boolean,"",f,f,t,f,t,Stock Variation Account Active,account
+product.category,property_cost_method,selection,"",t,f,f,f,f,Costing Method,account stock_account
+product.category,property_price_difference_account_id,many2one,account.account,t,f,f,f,f,Price Difference Account,account
+product.category,property_price_difference_account_active,boolean,"",f,f,t,f,t,Price Difference Account Active,account
+product.category,route_ids,many2many,stock.route,t,f,f,f,f,Routes,stock
+product.category,removal_strategy_id,many2one,product.removal,t,f,f,f,f,Force Removal Strategy,stock
+product.category,parent_route_ids,many2many,stock.route,f,f,t,f,f,Parent Routes,stock
+product.category,total_route_ids,many2many,stock.route,f,f,t,f,f,Total routes,stock
+product.category,putaway_rule_ids,one2many,stock.putaway.rule,t,f,f,f,f,Putaway Rules,stock
+product.category,packaging_reserve_method,selection,"",t,f,f,f,f,Reserve Packagings,stock
+product.category,filter_for_stock_putaway_rule,boolean,"",f,f,f,f,f,stock.putaway.rule,stock
+product.category,property_account_bills_to_receive_id,many2one,account.account,t,f,f,f,f,Bills to Receive Account,purchase
+product.category,property_account_bills_to_receive_active,boolean,"",f,f,t,f,t,Bills to Receive Account Active,purchase
+product.category,property_account_billed_not_received_id,many2one,account.account,t,f,f,f,f,Billed Not Received Account,purchase
+product.category,property_account_billed_not_received_active,boolean,"",f,f,t,f,t,Billed Not Received Account Active,purchase
+product.category,anglo_saxon_accounting,boolean,"",f,f,t,f,f,Use Anglo-Saxon Accounting,stock_account
+product.category,property_stock_account_production_cost_id,many2one,account.account,t,f,f,f,f,Production Account,mrp_account
+product.category,property_account_invoices_to_issue_id,many2one,account.account,t,f,f,f,f,Invoices to be Issued Account,sale
+product.category,property_account_invoices_to_issue_active,boolean,"",f,f,t,f,t,Invoices to be Issued Account Active,sale
+product.category,property_account_invoiced_not_delivered_id,many2one,account.account,t,f,f,f,f,Invoiced Not Delivered Account,sale
+product.category,property_account_invoiced_not_delivered_active,boolean,"",f,f,t,f,t,Invoiced Not Delivered Account Active,sale
+product.combo,id,integer,"",t,f,t,f,f,ID,product point_of_sale website_sale
+product.combo,display_name,char,"",f,f,t,f,f,Display Name,product point_of_sale website_sale
+product.combo,name,char,"",t,t,f,f,f,Name,product
+product.combo,sequence,integer,"",t,f,f,f,f,Sequence,product
+product.combo,company_id,many2one,res.company,t,f,f,f,f,Company,product
+product.combo,combo_item_ids,one2many,product.combo.item,t,f,f,f,f,Combo Item,product
+product.combo,combo_item_count,integer,"",f,f,t,f,f,Product Count,product
+product.combo,currency_id,many2one,res.currency,f,f,t,f,f,Currency,product
+product.combo,base_price,float,"",f,f,t,f,f,Combo Price,product
+product.combo,create_uid,many2one,res.users,t,f,t,f,f,Created by,product
+product.combo,create_date,datetime,"",t,f,t,f,f,Created on,product
+product.combo,write_uid,many2one,res.users,t,f,t,f,f,Last Updated by,product
+product.combo,write_date,datetime,"",t,f,t,f,f,Last Updated on,product
+product.combo,qty_max,integer,"",t,f,f,f,f,Maximum quantity,point_of_sale
+product.combo,qty_free,integer,"",t,f,f,f,f,Free quantity,point_of_sale
+product.combo,is_upsell,boolean,"",t,f,f,f,f,Is Upsell,point_of_sale
+product.combo.item,id,integer,"",t,f,t,f,f,ID,product point_of_sale
+product.combo.item,display_name,char,"",f,f,t,f,f,Display Name,product point_of_sale
+product.combo.item,company_id,many2one,res.company,t,f,t,f,t,Company,product
+product.combo.item,combo_id,many2one,product.combo,t,t,f,f,f,Combo,product
+product.combo.item,product_id,many2one,product.product,t,t,f,f,f,Options,product
+product.combo.item,currency_id,many2one,res.currency,f,f,t,f,t,Currency,product
+product.combo.item,lst_price,float,"",f,f,t,f,t,Original Price,product
+product.combo.item,extra_price,float,"",t,f,f,f,f,Extra Price,product
+product.combo.item,create_uid,many2one,res.users,t,f,t,f,f,Created by,product
+product.combo.item,create_date,datetime,"",t,f,t,f,f,Created on,product
+product.combo.item,write_uid,many2one,res.users,t,f,t,f,f,Last Updated by,product
+product.combo.item,write_date,datetime,"",t,f,t,f,f,Last Updated on,product
+product.pricelist,id,integer,"",t,f,t,f,f,ID,product point_of_sale website_sale loyalty
+product.pricelist,display_name,char,"",f,f,t,f,f,Display Name,product point_of_sale website_sale loyalty
+product.pricelist,activity_ids,one2many,mail.activity,t,f,f,f,f,Activities,product
+product.pricelist,activity_state,selection,"",f,f,t,f,f,Activity State,product
+product.pricelist,activity_user_id,many2one,res.users,f,f,t,f,f,Responsible User,product
+product.pricelist,activity_type_id,many2one,mail.activity.type,f,f,f,f,t,Next Activity Type,product
+product.pricelist,activity_type_icon,char,"",f,f,t,f,t,Activity Type Icon,product
+product.pricelist,activity_date_deadline,date,"",f,f,t,f,f,Next Activity Deadline,product
+product.pricelist,my_activity_date_deadline,date,"",f,f,t,f,f,My Activity Deadline,product
+product.pricelist,activity_summary,char,"",f,f,f,f,t,Next Activity Summary,product
+product.pricelist,activity_exception_decoration,selection,"",f,f,t,f,f,Activity Exception Decoration,product
+product.pricelist,activity_exception_icon,char,"",f,f,t,f,f,Icon,product
+product.pricelist,activity_plans_ids,many2many,mail.activity.plan,f,f,t,f,f,Activity Plans,product
+product.pricelist,activity_calendar_event_id,many2one,calendar.event,f,f,t,f,f,Next Activity Calendar Event,product
+product.pricelist,message_is_follower,boolean,"",f,f,t,f,f,Is Follower,product
+product.pricelist,message_follower_ids,one2many,mail.followers,t,f,f,f,f,Followers,product
+product.pricelist,message_partner_ids,many2many,res.partner,f,f,f,f,f,Followers (Partners),product
+product.pricelist,message_ids,one2many,mail.message,t,f,f,f,f,Messages,product
+product.pricelist,has_message,boolean,"",f,f,t,f,f,Has Message,product
+product.pricelist,message_needaction,boolean,"",f,f,t,f,f,Action Needed,product
+product.pricelist,message_needaction_counter,integer,"",f,f,t,f,f,Number of Actions,product
+product.pricelist,message_has_error,boolean,"",f,f,t,f,f,Message Delivery error,product
+product.pricelist,message_has_error_counter,integer,"",f,f,t,f,f,Number of errors,product
+product.pricelist,message_attachment_count,integer,"",f,f,t,f,f,Attachment Count,product
+product.pricelist,name,char,"",t,t,f,f,f,Pricelist Name,product
+product.pricelist,active,boolean,"",t,f,f,f,f,Active,product
+product.pricelist,sequence,integer,"",t,f,f,f,f,Sequence,product
+product.pricelist,currency_id,many2one,res.currency,t,t,f,f,f,Currency,product
+product.pricelist,company_id,many2one,res.company,t,f,f,f,f,Company,product
+product.pricelist,country_group_ids,many2many,res.country.group,t,f,f,f,f,Country Groups,product
+product.pricelist,item_ids,one2many,product.pricelist.item,t,f,f,f,f,Pricelist Rules,product
+product.pricelist,create_uid,many2one,res.users,t,f,t,f,f,Created by,product
+product.pricelist,create_date,datetime,"",t,f,t,f,f,Created on,product
+product.pricelist,write_uid,many2one,res.users,t,f,t,f,f,Last Updated by,product
+product.pricelist,write_date,datetime,"",t,f,t,f,f,Last Updated on,product
+product.pricelist,rating_ids,one2many,rating.rating,t,f,f,f,f,Ratings,rating
+product.pricelist,message_has_sms_error,boolean,"",f,f,t,f,f,SMS Delivery error,sms
+product.pricelist,website_id,many2one,website,t,f,f,f,f,Website,website_sale
+product.pricelist,code,char,"",t,f,f,f,f,Access Code,website_sale
+product.pricelist,selectable,boolean,"",t,f,f,f,f,Selectable,website_sale
+product.pricelist,tax_display,selection,"",t,f,f,f,f,eCommerce Price Display,website_sale
+product.pricelist.item,id,integer,"",t,f,t,f,f,ID,product point_of_sale sale website_sale website_event_sale
+product.pricelist.item,display_name,char,"",f,f,t,f,f,Display Name,product point_of_sale sale website_sale website_event_sale
+product.pricelist.item,pricelist_id,many2one,product.pricelist,t,f,f,f,f,Pricelist,product
+product.pricelist.item,is_pricelist_required,boolean,"",f,f,t,f,f,Is Pricelist Required,product
+product.pricelist.item,company_id,many2one,res.company,t,f,t,f,f,Company,product
+product.pricelist.item,currency_id,many2one,res.currency,t,f,t,f,f,Currency,product
+product.pricelist.item,date_start,datetime,"",t,f,f,f,f,Start Date,product
+product.pricelist.item,date_end,datetime,"",t,f,f,f,f,End Date,product
+product.pricelist.item,min_quantity,float,"",t,f,f,f,f,Min. Quantity,product
+product.pricelist.item,applied_on,selection,"",t,t,t,f,f,Apply On,product
+product.pricelist.item,categ_id,many2one,product.category,t,f,f,f,f,Category,product
+product.pricelist.item,product_tmpl_id,many2one,product.template,t,f,f,f,f,Product,product
+product.pricelist.item,product_id,many2one,product.product,t,f,f,f,f,Variant,product
+product.pricelist.item,product_uom_name,char,"",f,f,t,f,t,Unit Name,product
+product.pricelist.item,product_variant_count,integer,"",f,f,t,f,t,# Product Variants,product
+product.pricelist.item,uom_id,many2one,uom.uom,t,f,f,f,f,Packaging,product
+product.pricelist.item,allowed_uom_ids,many2many,uom.uom,f,f,t,f,f,Allowed Uom,product
+product.pricelist.item,base,selection,"",t,t,f,f,f,Based on,product
+product.pricelist.item,base_pricelist_id,many2one,product.pricelist,t,f,f,f,f,Other Pricelist,product
+product.pricelist.item,compute_price,selection,"",t,t,f,f,f,Compute Price,product
+product.pricelist.item,fixed_price,float,"",t,f,f,f,f,Fixed Price,product
+product.pricelist.item,price_discount,float,"",t,f,f,f,f,Price Discount,product
+product.pricelist.item,price_round,float,"",t,f,f,f,f,Price Rounding,product
+product.pricelist.item,price_surcharge,float,"",t,f,f,f,f,Extra Fee,product
+product.pricelist.item,price_markup,float,"",f,f,f,f,f,Surcharge,product
+product.pricelist.item,price_min_margin,float,"",t,f,f,f,f,Min. Price Margin,product
+product.pricelist.item,price_max_margin,float,"",t,f,f,f,f,Max. Price Margin,product
+product.pricelist.item,name,char,"",f,f,t,f,f,Name,product
+product.pricelist.item,price,char,"",f,f,t,f,f,Price,product
+product.pricelist.item,rule_tip,char,"",f,f,t,f,f,Rule Tip,product
+product.pricelist.item,is_plain_discount,boolean,"",f,f,t,f,f,Plain Discount,product
+product.pricelist.item,create_uid,many2one,res.users,t,f,t,f,f,Created by,product
+product.pricelist.item,create_date,datetime,"",t,f,t,f,f,Created on,product
+product.pricelist.item,write_uid,many2one,res.users,t,f,t,f,f,Last Updated by,product
+product.pricelist.item,write_date,datetime,"",t,f,t,f,f,Last Updated on,product
+product.product,id,integer,"",t,f,t,f,f,ID,product account stock event_product hr_expense mrp point_of_sale purchase stock_account mrp_account pos_hr purchase_stock sale pos_self_order sale_edi_ubl repair stock_delivery website_sale sale_project website_event_sale website_sale_stock loyalty product_expiry mrp_subcontracting pos_loyalty purchase_requisition mrp_subcontracting_account mrp_subcontracting_purchase stock_dropshipping website_sale_loyalty sale_timesheet
+product.product,display_name,char,"",f,f,t,f,f,Display Name,product account stock event_product hr_expense mrp point_of_sale purchase stock_account mrp_account pos_hr purchase_stock sale pos_self_order sale_edi_ubl repair stock_delivery website_sale sale_project website_event_sale website_sale_stock loyalty product_expiry mrp_subcontracting pos_loyalty purchase_requisition mrp_subcontracting_account mrp_subcontracting_purchase stock_dropshipping website_sale_loyalty sale_timesheet
+product.product,activity_ids,one2many,mail.activity,t,f,f,f,f,Activities,product
+product.product,activity_state,selection,"",f,f,t,f,f,Activity State,product
+product.product,activity_user_id,many2one,res.users,f,f,t,f,f,Responsible User,product
+product.product,activity_type_id,many2one,mail.activity.type,f,f,f,f,t,Next Activity Type,product
+product.product,activity_type_icon,char,"",f,f,t,f,t,Activity Type Icon,product
+product.product,activity_date_deadline,date,"",f,f,t,f,f,Next Activity Deadline,product
+product.product,my_activity_date_deadline,date,"",f,f,t,f,f,My Activity Deadline,product
+product.product,activity_summary,char,"",f,f,f,f,t,Next Activity Summary,product
+product.product,activity_exception_decoration,selection,"",f,f,t,f,f,Activity Exception Decoration,product
+product.product,activity_exception_icon,char,"",f,f,t,f,f,Icon,product
+product.product,activity_plans_ids,many2many,mail.activity.plan,f,f,t,f,f,Activity Plans,product
+product.product,activity_calendar_event_id,many2one,calendar.event,f,f,t,f,f,Next Activity Calendar Event,product
+product.product,message_is_follower,boolean,"",f,f,t,f,f,Is Follower,product
+product.product,message_follower_ids,one2many,mail.followers,t,f,f,f,f,Followers,product
+product.product,message_partner_ids,many2many,res.partner,f,f,f,f,f,Followers (Partners),product
+product.product,message_ids,one2many,mail.message,t,f,f,f,f,Messages,product
+product.product,has_message,boolean,"",f,f,t,f,f,Has Message,product
+product.product,message_needaction,boolean,"",f,f,t,f,f,Action Needed,product
+product.product,message_needaction_counter,integer,"",f,f,t,f,f,Number of Actions,product
+product.product,message_has_error,boolean,"",f,f,t,f,f,Message Delivery error,product
+product.product,message_has_error_counter,integer,"",f,f,t,f,f,Number of errors,product
+product.product,message_attachment_count,integer,"",f,f,t,f,f,Attachment Count,product
+product.product,price_extra,float,"",f,f,t,f,f,Variant Price Extra,product
+product.product,lst_price,float,"",t,f,f,f,f,Sales Price,product
+product.product,default_code,char,"",t,f,f,f,f,Internal Reference,product
+product.product,code,char,"",f,f,t,f,f,Reference,product
+product.product,partner_ref,char,"",f,f,t,f,f,Customer Ref,product
+product.product,active,boolean,"",t,f,f,f,f,Active,product
+product.product,product_tmpl_id,many2one,product.template,t,t,f,f,f,Product Template,product
+product.product,barcode,char,"",t,f,f,f,f,Barcode,product
+product.product,product_uom_ids,one2many,product.uom,t,f,f,f,f,Unit Barcode,product
+product.product,product_template_attribute_value_ids,many2many,product.template.attribute.value,t,f,f,f,f,Attribute Values,product
+product.product,product_template_variant_value_ids,many2many,product.template.attribute.value,t,f,f,f,f,Attributes,product
+product.product,import_attribute_values,char,"",f,f,f,f,f,Product Values,product
+product.product,combination_indices,char,"",t,f,t,f,f,Combination Indices,product
+product.product,is_product_variant,boolean,"",f,f,t,f,f,Is Product Variant,product
+product.product,extra_uom_ids,many2many,uom.uom,t,f,f,f,f,Extra Packagings,product
+product.product,standard_price,float,"",t,f,f,f,f,Cost,product
+product.product,volume,float,"",t,f,f,f,f,Volume,product
+product.product,weight,float,"",t,f,f,f,f,Weight,product
+product.product,qty_available,float,"",f,f,f,f,f,Quantity On Hand,product stock
+product.product,virtual_available,float,"",f,f,t,f,f,Forecasted Quantity,product stock product_expiry
+product.product,incoming_qty,float,"",f,f,t,f,f,Incoming,product stock
+product.product,outgoing_qty,float,"",f,f,t,f,f,Outgoing,product stock
+product.product,free_qty,float,"",f,f,t,f,f,Free To Use Quantity ,product stock product_expiry
+product.product,pricelist_rule_ids,one2many,product.pricelist.item,f,f,f,f,f,Pricelist Rules,product
+product.product,product_document_ids,one2many,product.document,t,f,f,f,f,Documents,product
+product.product,product_document_count,integer,"",f,f,t,f,f,Documents Count,product
+product.product,additional_product_tag_ids,many2many,product.tag,t,f,f,f,f,Variant Tags,product
+product.product,all_product_tag_ids,many2many,product.tag,f,f,t,f,f,All Product Tag,product
+product.product,image_variant_1920,binary,"",t,f,f,f,f,Variant Image,product
+product.product,image_variant_1024,binary,"",t,f,t,f,t,Variant Image 1024,product
+product.product,image_variant_512,binary,"",t,f,t,f,t,Variant Image 512,product
+product.product,image_variant_256,binary,"",t,f,t,f,t,Variant Image 256,product
+product.product,image_variant_128,binary,"",t,f,t,f,t,Variant Image 128,product
+product.product,can_image_variant_1024_be_zoomed,boolean,"",t,f,t,f,f,Can Variant Image 1024 be zoomed,product
+product.product,image_1920,binary,"",f,f,f,f,f,Image,product
+product.product,image_1024,binary,"",f,f,t,f,f,Image 1024,product
+product.product,image_512,binary,"",f,f,t,f,f,Image 512,product
+product.product,image_256,binary,"",f,f,t,f,f,Image 256,product
+product.product,image_128,binary,"",f,f,t,f,f,Image 128,product
+product.product,can_image_1024_be_zoomed,boolean,"",f,f,t,f,f,Can Image 1024 be zoomed,product
+product.product,write_date,datetime,"",t,f,t,f,f,Write Date,product
+product.product,is_favorite,boolean,"",t,f,f,f,t,Favorite,product
+product.product,base_unit_count,float,"",t,t,f,f,f,Reference Unit,product
+product.product,base_unit_id,many2one,product.base.unit,t,f,f,f,f,Custom Unit of Measure,product
+product.product,base_unit_price,monetary,"",f,f,t,f,f,Price Per Unit,product
+product.product,base_unit_name,char,"",f,f,t,f,f,Base Unit Name,product
+product.product,catalog_is_in_order,boolean,"",f,f,f,f,f,Catalog Is In Order,product
+product.product,create_uid,many2one,res.users,t,f,t,f,f,Created by,product
+product.product,create_date,datetime,"",t,f,t,f,f,Created on,product
+product.product,write_uid,many2one,res.users,t,f,t,f,f,Last Updated by,product
+product.product,name,char,"",f,t,f,f,t,Name,product
+product.product,sequence,integer,"",f,f,f,f,t,Sequence,product
+product.product,description,html,"",f,f,f,f,t,Description,product website_sale
+product.product,description_purchase,text,"",f,f,f,f,t,Purchase Description,product
+product.product,description_sale,text,"",f,f,f,f,t,Sales Description,product website_sale
+product.product,type,selection,"",f,t,f,f,t,Product Type,product
+product.product,combo_ids,many2many,product.combo,f,f,f,f,t,Combo Choices,product
+product.product,service_tracking,selection,"",f,t,f,f,t,Create on Order,product event_product sale_purchase repair sale_project
+product.product,categ_id,many2one,product.category,f,f,f,f,t,Product Category,product
+product.product,currency_id,many2one,res.currency,f,f,t,f,t,Currency,product
+product.product,cost_currency_id,many2one,res.currency,f,f,t,f,t,Cost Currency,product
+product.product,list_price,float,"",f,f,f,f,t,Sales Price,product
+product.product,is_storable,boolean,"",f,f,f,f,t,Track Inventory,product
+product.product,volume_uom_name,char,"",f,f,t,f,t,Volume unit of measure label,product
+product.product,weight_uom_name,char,"",f,f,t,f,t,Weight unit of measure label,product
+product.product,sale_ok,boolean,"",f,f,f,f,t,Sales,product
+product.product,purchase_ok,boolean,"",f,f,f,f,t,Purchase,product
+product.product,uom_id,many2one,uom.uom,f,t,f,f,t,Unit,product
+product.product,uom_ids,many2many,uom.uom,f,f,f,f,t,Packagings,product
+product.product,uom_name,char,"",f,f,t,f,t,Unit Name,product
+product.product,company_id,many2one,res.company,f,f,f,f,t,Company,product
+product.product,seller_ids,one2many,product.supplierinfo,f,f,f,f,t,Vendors,product
+product.product,variant_seller_ids,one2many,product.supplierinfo,f,f,f,f,t,Variant Seller,product
+product.product,color,integer,"",f,f,f,f,t,Color Index,product point_of_sale
+product.product,attribute_line_ids,one2many,product.template.attribute.line,f,f,f,f,t,Product Attributes,product
+product.product,valid_product_template_attribute_line_ids,many2many,product.template.attribute.line,f,f,t,f,t,Valid Product Attribute Lines,product
+product.product,product_variant_ids,one2many,product.product,f,t,f,f,t,Products,product
+product.product,product_variant_id,many2one,product.product,f,f,t,f,t,Product,product
+product.product,product_variant_count,integer,"",f,f,t,f,t,# Product Variants,product
+product.product,show_qty_update_button,boolean,"",f,f,t,f,f,Show Qty Update Button,product stock
+product.product,fixed_pricelist_rule_ids,one2many,product.pricelist.item,f,f,f,f,t,Fixed Pricelist Rule,product
+product.product,has_configurable_attributes,boolean,"",f,f,t,f,t,Is a configurable product,product
+product.product,is_dynamically_created,boolean,"",f,f,t,f,t,Is Dynamically Created,product
+product.product,product_tooltip,char,"",f,f,t,f,t,Product Tooltip,product
+product.product,product_tag_ids,many2many,product.tag,f,f,f,f,t,Tags,product
+product.product,product_properties,properties,"",f,f,f,f,t,Properties,product
+product.product,show_sales_price_page,boolean,"",f,f,t,f,t,Show Sales Price Page,product
+product.product,rating_ids,one2many,rating.rating,t,f,f,f,f,Ratings,rating
+product.product,message_has_sms_error,boolean,"",f,f,t,f,f,SMS Delivery error,sms
+product.product,catalog_is_in_selected_section,boolean,"",f,f,f,f,f,Catalog Is In Selected Section,account
+product.product,tax_string,char,"",f,f,t,f,f,Tax String,account
+product.product,taxes_id,many2many,account.tax,f,f,f,f,t,Sales Taxes,account
+product.product,supplier_taxes_id,many2many,account.tax,f,f,f,f,t,Purchase Taxes,account
+product.product,property_account_income_id,many2one,account.account,f,f,f,f,t,Income Account,account
+product.product,property_account_income_active,boolean,"",f,f,t,f,t,Income Account Active,account
+product.product,property_account_expense_id,many2one,account.account,f,f,f,f,t,Expense Account,account
+product.product,property_account_expense_active,boolean,"",f,f,t,f,t,Expense Account Active,account
+product.product,account_tag_ids,many2many,account.account.tag,f,f,f,f,t,Account Tags,account
+product.product,fiscal_country_codes,char,"",f,f,t,f,t,Fiscal Country Codes,account
+product.product,valuation,selection,"",f,f,t,f,t,Valuation,account
+product.product,cost_method,selection,"",f,f,t,f,t,Cost Method,account stock_account
+product.product,stock_quant_ids,one2many,stock.quant,t,f,f,f,f,Stock Quant,stock
+product.product,stock_move_ids,one2many,stock.move,t,f,f,f,f,Stock Move,stock
+product.product,orderpoint_ids,one2many,stock.warehouse.orderpoint,t,f,f,f,f,Minimum Stock Rules,stock
+product.product,nbr_moves_in,integer,"",f,f,t,f,f,Nbr Moves In,stock
+product.product,nbr_moves_out,integer,"",f,f,t,f,f,Nbr Moves Out,stock
+product.product,nbr_reordering_rules,integer,"",f,f,t,f,f,Reordering Rules,stock
+product.product,reordering_min_qty,float,"",f,f,t,f,f,Reordering Min Qty,stock
+product.product,reordering_max_qty,float,"",f,f,t,f,f,Reordering Max Qty,stock
+product.product,putaway_rule_ids,one2many,stock.putaway.rule,t,f,f,f,f,Putaway Rules,stock
+product.product,storage_category_capacity_ids,one2many,stock.storage.category.capacity,t,f,f,f,f,Storage Category Capacity,stock
+product.product,show_on_hand_qty_status_button,boolean,"",f,f,t,f,f,Show On Hand Qty Status Button,stock
+product.product,show_forecasted_qty_status_button,boolean,"",f,f,t,f,f,Show Forecasted Qty Status Button,stock
+product.product,valid_ean,boolean,"",f,f,t,f,f,Barcode is valid EAN,stock
+product.product,lot_properties_definition,properties_definition,"",t,f,f,f,f,Lot Properties,stock
+product.product,responsible_id,many2one,res.users,f,f,f,f,t,Responsible,stock
+product.product,property_stock_production,many2one,stock.location,f,f,f,f,t,Production,stock
+product.product,property_stock_inventory,many2one,stock.location,f,f,f,f,t,Inventory Adjustment,stock
+product.product,tracking,selection,"",f,f,f,f,t,Tracking Method,stock
+product.product,store_by,selection,"",f,t,f,f,t,Tracking,stock
+product.product,lot_sequence_id,many2one,ir.sequence,f,f,f,f,t,Serial/Lot Numbers Sequence,stock
+product.product,serial_prefix_format,char,"",f,f,f,f,t,Custom Lot/Serial,stock
+product.product,next_serial,char,"",f,f,t,f,t,Next Serial,stock
+product.product,description_picking,text,"",f,f,f,f,t,Description on Picking,stock
+product.product,description_pickingout,text,"",f,f,f,f,t,Description on Delivery Orders,stock
+product.product,description_pickingin,text,"",f,f,f,f,t,Description on Receptions,stock
+product.product,location_id,many2one,stock.location,f,f,f,f,t,Location,stock
+product.product,warehouse_id,many2one,stock.warehouse,f,f,f,f,t,Warehouse,stock
+product.product,has_available_route_ids,boolean,"",f,f,t,f,t,Routes can be selected on this product,stock
+product.product,route_ids,many2many,stock.route,f,f,f,f,t,Routes,stock
+product.product,route_from_categ_ids,many2many,stock.route,f,f,t,f,t,Category Routes,stock
+product.product,event_ticket_ids,one2many,event.event.ticket,t,f,f,f,f,Event Tickets,event_product website_event_sale
+product.product,expense_job_position_limit_ids,one2many,hr.expense.product.job.position.limit,t,f,f,f,f,Job Position Limits,hr_expense
+product.product,can_be_expensed,boolean,"",f,f,f,f,t,Expenses,hr_expense
+product.product,variant_bom_ids,one2many,mrp.bom,t,f,f,f,f,BOM Product Variants,mrp
+product.product,bom_line_ids,one2many,mrp.bom.line,t,f,f,f,f,BoM Components,mrp
+product.product,bom_count,integer,"",f,f,t,f,f,# Bill of Material,mrp
+product.product,used_in_bom_count,integer,"",f,f,t,f,f,# BoM Where Used,mrp
+product.product,mrp_product_qty,float,"",f,f,t,f,f,Manufactured,mrp
+product.product,is_kits,boolean,"",f,f,t,f,f,Is Kits,mrp
+product.product,bom_ids,one2many,mrp.bom,f,f,f,f,t,Bill of Materials,mrp
+product.product,available_in_pos,boolean,"",f,f,f,f,t,Available in POS,point_of_sale
+product.product,to_weight,boolean,"",f,f,f,f,t,To Weigh,point_of_sale
+product.product,pos_categ_ids,many2many,pos.category,f,f,f,f,t,Point of Sale Category,point_of_sale
+product.product,public_description,html,"",f,f,f,f,t,Product Description,point_of_sale
+product.product,pos_optional_product_ids,many2many,product.template,f,f,f,f,t,POS Optional Products,point_of_sale
+product.product,pos_sequence,integer,"",f,f,f,f,t,POS Sequence,point_of_sale
+product.product,purchased_product_qty,float,"",f,f,t,f,f,Purchased,purchase
+product.product,sold_by_vendor_id,many2one,res.partner,f,f,f,f,f,Vendor,purchase
+product.product,purchase_method,selection,"",f,f,f,f,t,Control Policy,purchase
+product.product,purchase_line_warn_msg,text,"",f,f,f,f,t,Message for Purchase Order Line,purchase
+product.product,avg_cost,monetary,"",f,f,t,f,f,Average Cost,stock_account
+product.product,total_value,monetary,"",f,f,t,f,f,Total Value,stock_account
+product.product,company_currency_id,many2one,res.currency,f,f,t,f,f,Valuation Currency,stock_account
+product.product,lot_valuated,boolean,"",f,f,f,f,t,Valuation by Lot/Serial,stock_account
+product.product,purchase_order_line_ids,one2many,purchase.order.line,t,f,f,f,f,PO Lines,purchase_stock
+product.product,monthly_demand,float,"",f,f,t,f,f,Monthly Demand,purchase_stock
+product.product,suggested_qty,integer,"",f,f,t,f,f,Suggested Qty,purchase_stock
+product.product,suggest_estimated_price,float,"",f,f,t,f,f,Suggest Estimated Price,purchase_stock
+product.product,sales_count,float,"",f,f,t,f,f,Sold,sale
+product.product,previously_bought_by_customer,boolean,"",f,f,f,f,f,Previously Bought By Customer,sale
+product.product,service_type,selection,"",f,f,f,f,t,Track Service,sale sale_project sale_timesheet
+product.product,sale_line_warn_msg,text,"",f,f,f,f,t,Sales Order Line Warning,sale
+product.product,reinvoice_policy,selection,"",f,f,f,f,t,Re-Invoice Costs,sale
+product.product,visible_reinvoice_policy,boolean,"",f,f,t,f,t,Re-Invoice Policy visible,sale
+product.product,invoice_policy,selection,"",f,t,f,f,t,Invoicing Policy,sale
+product.product,optional_product_ids,many2many,product.template,f,f,f,f,t,Optional Products,sale
+product.product,sale_delay,integer,"",f,f,f,f,t,Delivery Time,sale
+product.product,self_order_available,boolean,"",f,f,f,f,t,Available in Self Order,pos_self_order
+product.product,self_order_visible,boolean,"",f,f,t,f,t,Self Order Visible,pos_self_order
+product.product,expense_policy_tooltip,char,"",f,f,t,f,t,Expense Policy Tooltip,sale_expense
+product.product,hs_code,char,"",t,f,f,f,f,HS Code,stock_delivery
+product.product,country_of_origin,many2one,res.country,t,f,f,f,f,Origin of Goods,stock_delivery
+product.product,variant_ribbon_id,many2one,product.ribbon,t,f,f,f,f,Variant Ribbon,website_sale
+product.product,website_id,many2one,website,f,f,f,f,t,Website,website_sale
+product.product,product_template_image_ids,one2many,product.image,f,f,f,f,t,Extra Product Media,website_sale
+product.product,variant_image_ids,many2many,product.image,t,f,t,f,f,Variant Extra Images,website_sale
+product.product,website_url,char,"",f,f,t,f,f,Website URL,website_sale
+product.product,website_absolute_url,char,"",f,f,t,f,t,Website Absolute URL,
+product.product,website_published,boolean,"",f,f,f,f,t,Visible on current website,
+product.product,is_published,boolean,"",f,f,f,f,t,Is Published,website_sale
+product.product,publish_on,datetime,"",f,f,f,f,t,Auto publish on,
+product.product,published_date,datetime,"",f,f,f,f,t,Published date,
+product.product,can_publish,boolean,"",f,f,t,f,t,Can Publish,
+product.product,is_seo_optimized,boolean,"",f,f,t,f,t,SEO optimized,
+product.product,website_meta_title,char,"",f,f,f,f,t,Website meta title,
+product.product,website_meta_description,text,"",f,f,f,f,t,Website meta description,
+product.product,website_meta_keywords,char,"",f,f,f,f,t,Website meta keywords,
+product.product,website_meta_og_img,char,"",f,f,f,f,t,Website opengraph image,
+product.product,seo_name,char,"",f,f,f,f,t,Seo name,
+product.product,rating_last_value,float,"",f,f,t,f,t,Rating Last Value,
+product.product,rating_last_feedback,text,"",f,f,t,f,t,Rating Last Feedback,
+product.product,rating_last_image,binary,"",f,f,t,f,t,Rating Last Image,
+product.product,rating_count,integer,"",f,f,t,f,t,Rating count,
+product.product,rating_avg,float,"",f,f,t,f,t,Average Rating,
+product.product,rating_avg_text,selection,"",f,f,t,f,t,Rating Avg Text,
+product.product,rating_percentage_satisfaction,float,"",f,f,t,f,t,Rating Satisfaction,
+product.product,rating_last_text,selection,"",f,f,t,f,t,Rating Text,
+product.product,website_description,html,"",f,f,f,f,t,Description for the website,website_sale
+product.product,description_ecommerce,html,"",f,f,f,f,t,eCommerce Description,website_sale
+product.product,dropzone_above_price,html,"",f,f,f,f,t,Drop Zone Above Price,website_sale
+product.product,dropzone_above_specification,html,"",f,f,f,f,t,Drop Zone Above Specification,website_sale
+product.product,alternative_product_ids,many2many,product.template,f,f,f,f,t,Alternative Products,website_sale
+product.product,accessory_product_ids,many2many,product.product,f,f,f,f,t,Accessory Products,website_sale
+product.product,suggest_optional_products,boolean,"",f,f,f,f,t,Suggest Optional Products,website_sale
+product.product,suggest_accessory_products,boolean,"",f,f,f,f,t,Suggest Accessory Products,website_sale
+product.product,suggest_alternative_products,boolean,"",f,f,f,f,t,Suggest Alternative Products,website_sale
+product.product,suggested_products_last_update,datetime,"",f,f,f,f,t,Last update of suggested products,website_sale
+product.product,website_size_x,integer,"",f,f,f,f,t,Size X,website_sale
+product.product,website_size_y,integer,"",f,f,f,f,t,Size Y,website_sale
+product.product,website_ribbon_id,many2one,product.ribbon,f,f,f,f,t,Ribbon,website_sale
+product.product,minimum_quantity,integer,"",f,f,f,f,t,Minimum Quantity,website_sale
+product.product,website_sequence,integer,"",f,f,f,f,t,Website Sequence,website_sale
+product.product,public_categ_ids,many2many,product.public.category,f,f,f,f,t,Website Product Category,website_sale
+product.product,publish_date,datetime,"",f,t,t,f,t,Publish Date,website_sale
+product.product,compare_list_price,monetary,"",f,f,f,f,t,Compare to Price,website_sale
+product.product,variants_default_code,char,"",f,f,t,f,t,Variants Default Code,website_sale
+product.product,allow_out_of_stock_order,boolean,"",f,f,f,f,t,Sell when Out-of-Stock,website_sale
+product.product,available_threshold,float,"",f,f,f,f,t,Show Threshold,website_sale
+product.product,show_availability,boolean,"",f,f,f,f,t,Show availability Qty,website_sale
+product.product,out_of_stock_message,html,"",f,f,f,f,t,Out-of-Stock Message,website_sale
+product.product,project_id,many2one,project.project,f,f,f,f,t,Project,sale_project sale_timesheet
+product.product,project_template_id,many2one,project.project,f,f,f,f,t,Project Template,sale_project sale_timesheet
+product.product,task_template_id,many2one,project.task,f,f,f,f,t,Task Template,sale_project
+product.product,service_policy,selection,"",f,f,f,f,t,Service Invoicing Policy,sale_project
+product.product,use_expiration_date,boolean,"",f,f,f,f,t,Use Expiration Date,product_expiry
+product.product,expiration_time,integer,"",f,f,f,f,t,Expiration Date,product_expiry
+product.product,use_time,integer,"",f,f,f,f,t,Best Before Date,product_expiry
+product.product,removal_time,integer,"",f,f,f,f,t,Removal Date,product_expiry
+product.product,alert_time,integer,"",f,f,f,f,t,Alert Date,product_expiry
+product.product,landed_cost_ok,boolean,"",f,f,f,f,t,Is a Landed Cost,stock_landed_costs
+product.product,split_method_landed_cost,selection,"",f,f,f,f,t,Default Split Method,stock_landed_costs
+product.product,landed_cost_on_product_ids,many2many,product.product,f,f,f,f,t,Apply Landed Cost On,stock_landed_costs
+product.product,service_upsell_threshold,float,"",f,f,f,f,t,Threshold,sale_timesheet
+product.product,service_upsell_threshold_ratio,char,"",f,f,t,f,t,Service Upsell Threshold Ratio,sale_timesheet
+product.supplierinfo,id,integer,"",t,f,t,f,f,ID,product purchase purchase_stock mrp_subcontracting purchase_requisition
+product.supplierinfo,display_name,char,"",f,f,t,f,f,Display Name,product purchase purchase_stock mrp_subcontracting purchase_requisition
+product.supplierinfo,partner_id,many2one,res.partner,t,t,f,f,f,Vendor,product
+product.supplierinfo,product_name,char,"",t,f,f,f,f,Vendor Product Name,product
+product.supplierinfo,product_code,char,"",t,f,f,f,f,Vendor Product Code,product
+product.supplierinfo,sequence,integer,"",t,f,f,f,f,Sequence,product
+product.supplierinfo,uom_id,many2one,uom.uom,t,t,f,f,f,Unit,product
+product.supplierinfo,min_qty,float,"",t,t,f,f,f,Quantity,product
+product.supplierinfo,price,float,"",t,f,f,f,f,Unit Price,product
+product.supplierinfo,price_discounted,float,"",f,f,t,f,f,Discounted Price,product
+product.supplierinfo,company_id,many2one,res.company,t,f,f,f,f,Company,product
+product.supplierinfo,currency_id,many2one,res.currency,t,t,f,f,f,Currency,product
+product.supplierinfo,date_start,date,"",t,f,f,f,f,Start Date,product
+product.supplierinfo,date_end,date,"",t,f,f,f,f,End Date,product
+product.supplierinfo,product_id,many2one,product.product,t,f,f,f,f,Product Variant,product
+product.supplierinfo,product_tmpl_id,many2one,product.template,t,t,f,f,f,Product Template,product
+product.supplierinfo,product_variant_count,integer,"",f,f,t,f,t,Variant Count,product
+product.supplierinfo,delay,integer,"",t,t,f,f,f,Lead Time,product
+product.supplierinfo,discount,float,"",t,f,f,f,f,Discount (%),product
+product.supplierinfo,create_uid,many2one,res.users,t,f,t,f,f,Created by,product
+product.supplierinfo,create_date,datetime,"",t,f,t,f,f,Created on,product
+product.supplierinfo,write_uid,many2one,res.users,t,f,t,f,f,Last Updated by,product
+product.supplierinfo,write_date,datetime,"",t,f,t,f,f,Last Updated on,product
+product.supplierinfo,last_purchase_date,date,"",f,f,t,f,f,Last Purchase,purchase_stock
+product.supplierinfo,show_set_supplier_button,boolean,"",f,f,t,f,f,Show Set Supplier Button,purchase_stock
+product.supplierinfo,is_subcontractor,boolean,"",f,f,t,f,f,Subcontracted,mrp_subcontracting
+product.supplierinfo,purchase_requisition_id,many2one,purchase.requisition,f,f,t,f,t,Agreement,purchase_requisition
+product.supplierinfo,purchase_requisition_line_id,many2one,purchase.requisition.line,t,f,f,f,f,Purchase Requisition Line,purchase_requisition
+product.tag,id,integer,"",t,f,t,f,f,ID,product point_of_sale pos_self_order website_sale
+product.tag,display_name,char,"",f,f,t,f,f,Display Name,product point_of_sale pos_self_order website_sale
+product.tag,name,char,"",t,t,f,f,f,Name,product
+product.tag,sequence,integer,"",t,f,f,f,f,Sequence,product
+product.tag,color,char,"",t,f,f,f,f,Color,product
+product.tag,product_template_ids,many2many,product.template,t,f,f,f,f,Product Templates,product
+product.tag,product_product_ids,many2many,product.product,t,f,f,f,f,Product Variants,product
+product.tag,product_ids,many2many,product.product,f,f,t,f,f,All Product Variants using this Tag,product
+product.tag,visible_to_customers,boolean,"",t,f,f,f,f,Visible to customers,product
+product.tag,image,binary,"",t,f,f,f,f,Image,product
+product.tag,create_uid,many2one,res.users,t,f,t,f,f,Created by,product
+product.tag,create_date,datetime,"",t,f,t,f,f,Created on,product
+product.tag,write_uid,many2one,res.users,t,f,t,f,f,Last Updated by,product
+product.tag,write_date,datetime,"",t,f,t,f,f,Last Updated on,product
+product.tag,pos_description,html,"",t,f,f,f,f,Description,point_of_sale
+product.tag,has_image,boolean,"",f,f,t,f,f,Has Image,point_of_sale
+product.tag,website_id,many2one,website,t,f,f,f,f,Website,website_sale
+product.template,id,integer,"",t,f,t,f,f,ID,product account stock event_product hr_expense mrp point_of_sale purchase stock_account mrp_account pos_restaurant pos_stock purchase_stock sale pos_self_order sale_purchase sale_stock event_sale pos_sale repair sale_expense stock_delivery website_sale sale_project website_event_sale website_sale_stock loyalty product_expiry pos_loyalty stock_landed_costs sale_timesheet
+product.template,display_name,char,"",f,f,t,f,f,Display Name,product account stock event_product hr_expense mrp point_of_sale purchase stock_account mrp_account pos_restaurant pos_stock purchase_stock sale pos_self_order sale_purchase sale_stock event_sale pos_sale repair sale_expense stock_delivery website_sale sale_project website_event_sale website_sale_stock loyalty product_expiry pos_loyalty stock_landed_costs sale_timesheet
+product.template,image_1920,binary,"",t,f,f,f,f,Image,product
+product.template,image_1024,binary,"",t,f,t,f,t,Image 1024,product
+product.template,image_512,binary,"",t,f,t,f,t,Image 512,product
+product.template,image_256,binary,"",t,f,t,f,t,Image 256,product
+product.template,image_128,binary,"",t,f,t,f,t,Image 128,product
+product.template,activity_ids,one2many,mail.activity,t,f,f,f,f,Activities,product
+product.template,activity_state,selection,"",f,f,t,f,f,Activity State,product
+product.template,activity_user_id,many2one,res.users,f,f,t,f,f,Responsible User,product
+product.template,activity_type_id,many2one,mail.activity.type,f,f,f,f,t,Next Activity Type,product
+product.template,activity_type_icon,char,"",f,f,t,f,t,Activity Type Icon,product
+product.template,activity_date_deadline,date,"",f,f,t,f,f,Next Activity Deadline,product
+product.template,my_activity_date_deadline,date,"",f,f,t,f,f,My Activity Deadline,product
+product.template,activity_summary,char,"",f,f,f,f,t,Next Activity Summary,product
+product.template,activity_exception_decoration,selection,"",f,f,t,f,f,Activity Exception Decoration,product
+product.template,activity_exception_icon,char,"",f,f,t,f,f,Icon,product
+product.template,activity_plans_ids,many2many,mail.activity.plan,f,f,t,f,f,Activity Plans,product
+product.template,activity_calendar_event_id,many2one,calendar.event,f,f,t,f,f,Next Activity Calendar Event,product
+product.template,message_is_follower,boolean,"",f,f,t,f,f,Is Follower,product website_sale
+product.template,message_follower_ids,one2many,mail.followers,t,f,f,f,f,Followers,product website_sale
+product.template,message_partner_ids,many2many,res.partner,f,f,f,f,f,Followers (Partners),product website_sale
+product.template,message_ids,one2many,mail.message,t,f,f,f,f,Messages,product website_sale
+product.template,has_message,boolean,"",f,f,t,f,f,Has Message,product website_sale
+product.template,message_needaction,boolean,"",f,f,t,f,f,Action Needed,product website_sale
+product.template,message_needaction_counter,integer,"",f,f,t,f,f,Number of Actions,product website_sale
+product.template,message_has_error,boolean,"",f,f,t,f,f,Message Delivery error,product website_sale
+product.template,message_has_error_counter,integer,"",f,f,t,f,f,Number of errors,product website_sale
+product.template,message_attachment_count,integer,"",f,f,t,f,f,Attachment Count,product website_sale
+product.template,name,char,"",t,t,f,f,f,Name,product
+product.template,sequence,integer,"",t,f,f,f,f,Sequence,product
+product.template,description,html,"",t,f,f,f,f,Description,product website_sale
+product.template,description_purchase,text,"",t,f,f,f,f,Purchase Description,product
+product.template,description_sale,text,"",t,f,f,f,f,Sales Description,product website_sale
+product.template,type,selection,"",t,t,f,f,f,Product Type,product
+product.template,combo_ids,many2many,product.combo,t,f,f,f,f,Combo Choices,product
+product.template,service_tracking,selection,"",t,t,f,f,f,Create on Order,product event_product sale_purchase repair sale_project
+product.template,categ_id,many2one,product.category,t,f,f,f,f,Product Category,product
+product.template,currency_id,many2one,res.currency,f,f,t,f,f,Currency,product
+product.template,cost_currency_id,many2one,res.currency,f,f,t,f,f,Cost Currency,product
+product.template,list_price,float,"",t,f,f,f,f,Sales Price,product
+product.template,standard_price,float,"",f,f,f,f,f,Cost,product
+product.template,is_storable,boolean,"",t,f,f,f,f,Track Inventory,product
+product.template,qty_available,float,"",f,f,f,f,f,Quantity On Hand,product stock
+product.template,virtual_available,float,"",f,f,t,f,f,Forecasted Quantity,product
+product.template,incoming_qty,float,"",f,f,t,f,f,Incoming,product
+product.template,outgoing_qty,float,"",f,f,t,f,f,Outgoing,product
+product.template,free_qty,float,"",f,f,t,f,f,Free To Use,product
+product.template,volume,float,"",t,f,f,f,f,Volume,product
+product.template,volume_uom_name,char,"",f,f,t,f,f,Volume unit of measure label,product
+product.template,weight,float,"",t,f,f,f,f,Weight,product
+product.template,weight_uom_name,char,"",f,f,t,f,f,Weight unit of measure label,product
+product.template,sale_ok,boolean,"",t,f,f,f,f,Sales,product
+product.template,purchase_ok,boolean,"",t,f,f,f,f,Purchase,product
+product.template,uom_id,many2one,uom.uom,t,t,f,f,f,Unit,product
+product.template,uom_ids,many2many,uom.uom,t,f,f,f,f,Packagings,product
+product.template,uom_name,char,"",f,f,t,f,t,Unit Name,product
+product.template,company_id,many2one,res.company,t,f,f,f,f,Company,product
+product.template,seller_ids,one2many,product.supplierinfo,t,f,f,f,f,Vendors,product
+product.template,variant_seller_ids,one2many,product.supplierinfo,t,f,f,f,f,Variant Seller,product
+product.template,active,boolean,"",t,f,f,f,f,Active,product
+product.template,color,integer,"",t,f,f,f,f,Color Index,product point_of_sale
+product.template,is_product_variant,boolean,"",f,f,t,f,f,Is a product variant,product
+product.template,attribute_line_ids,one2many,product.template.attribute.line,t,f,f,f,f,Product Attributes,product
+product.template,valid_product_template_attribute_line_ids,many2many,product.template.attribute.line,f,f,t,f,f,Valid Product Attribute Lines,product
+product.template,import_attribute_values,char,"",f,f,f,f,f,Product Values,product
+product.template,product_variant_ids,one2many,product.product,t,t,f,f,f,Products,product
+product.template,product_variant_id,many2one,product.product,f,f,t,f,f,Product,product
+product.template,product_variant_count,integer,"",f,f,t,f,f,# Product Variants,product
+product.template,show_qty_update_button,boolean,"",f,f,t,f,f,Show Qty Update Button,product
+product.template,barcode,char,"",t,f,f,f,f,Barcode,product
+product.template,default_code,char,"",t,f,f,f,f,Internal Reference,product
+product.template,pricelist_rule_ids,one2many,product.pricelist.item,t,f,f,f,f,Pricelist Rules,product
+product.template,fixed_pricelist_rule_ids,one2many,product.pricelist.item,t,f,f,f,f,Fixed Pricelist Rule,product
+product.template,product_document_ids,one2many,product.document,t,f,f,f,f,Documents,product
+product.template,product_document_count,integer,"",f,f,t,f,f,Documents Count,product
+product.template,can_image_1024_be_zoomed,boolean,"",t,f,t,f,f,Can Image 1024 be zoomed,product
+product.template,has_configurable_attributes,boolean,"",t,f,t,f,f,Is a configurable product,product
+product.template,is_dynamically_created,boolean,"",f,f,t,f,f,Is Dynamically Created,product
+product.template,product_tooltip,char,"",f,f,t,f,f,Product Tooltip,product
+product.template,is_favorite,boolean,"",t,f,f,f,f,Favorite,product
+product.template,product_tag_ids,many2many,product.tag,t,f,f,f,f,Tags,product
+product.template,product_properties,properties,"",t,f,f,f,f,Properties,product
+product.template,show_sales_price_page,boolean,"",f,f,t,f,f,Show Sales Price Page,product
+product.template,base_unit_count,float,"",t,t,f,f,f,Reference Unit,product
+product.template,base_unit_id,many2one,product.base.unit,t,f,f,f,f,Custom Unit of Measure,product
+product.template,base_unit_price,monetary,"",f,f,t,f,f,Price Per Unit,product
+product.template,base_unit_name,char,"",f,f,t,f,f,Base Unit Name,product
+product.template,create_uid,many2one,res.users,t,f,t,f,f,Created by,product
+product.template,create_date,datetime,"",t,f,t,f,f,Created on,product
+product.template,write_uid,many2one,res.users,t,f,t,f,f,Last Updated by,product
+product.template,write_date,datetime,"",t,f,t,f,f,Last Updated on,product
+product.template,rating_ids,one2many,rating.rating,t,f,f,f,f,Ratings,rating website_sale
+product.template,message_has_sms_error,boolean,"",f,f,t,f,f,SMS Delivery error,sms website_sale
+product.template,taxes_id,many2many,account.tax,t,f,f,f,f,Sales Taxes,account
+product.template,tax_string,char,"",f,f,t,f,f,Tax String,account
+product.template,supplier_taxes_id,many2many,account.tax,t,f,f,f,f,Purchase Taxes,account
+product.template,property_account_income_id,many2one,account.account,t,f,f,f,f,Income Account,account
+product.template,property_account_income_active,boolean,"",f,f,t,f,t,Income Account Active,account
+product.template,property_account_expense_id,many2one,account.account,t,f,f,f,f,Expense Account,account
+product.template,property_account_expense_active,boolean,"",f,f,t,f,t,Expense Account Active,account
+product.template,account_tag_ids,many2many,account.account.tag,t,f,f,f,f,Account Tags,account
+product.template,fiscal_country_codes,char,"",f,f,t,f,f,Fiscal Country Codes,account
+product.template,valuation,selection,"",f,f,t,f,f,Valuation,account
+product.template,cost_method,selection,"",f,f,t,f,f,Cost Method,account stock_account
+product.template,responsible_id,many2one,res.users,t,f,f,f,f,Responsible,stock
+product.template,property_stock_production,many2one,stock.location,t,f,f,f,f,Production,stock
+product.template,property_stock_inventory,many2one,stock.location,t,f,f,f,f,Inventory Adjustment,stock
+product.template,tracking,selection,"",t,f,f,f,f,Tracking Method,stock
+product.template,store_by,selection,"",f,t,f,f,f,Tracking,stock
+product.template,lot_sequence_id,many2one,ir.sequence,t,f,f,f,f,Serial/Lot Numbers Sequence,stock
+product.template,serial_prefix_format,char,"",f,f,f,f,f,Custom Lot/Serial,stock
+product.template,next_serial,char,"",f,f,t,f,f,Next Serial,stock
+product.template,description_picking,text,"",t,f,f,f,f,Description on Picking,stock
+product.template,description_pickingout,text,"",t,f,f,f,f,Description on Delivery Orders,stock
+product.template,description_pickingin,text,"",t,f,f,f,f,Description on Receptions,stock
+product.template,location_id,many2one,stock.location,f,f,f,f,f,Location,stock
+product.template,warehouse_id,many2one,stock.warehouse,f,f,f,f,f,Warehouse,stock
+product.template,has_available_route_ids,boolean,"",f,f,t,f,f,Routes can be selected on this product,stock
+product.template,route_ids,many2many,stock.route,t,f,f,f,f,Routes,stock
+product.template,nbr_moves_in,integer,"",f,f,t,f,f,Nbr Moves In,stock
+product.template,nbr_moves_out,integer,"",f,f,t,f,f,Nbr Moves Out,stock
+product.template,nbr_reordering_rules,integer,"",f,f,t,f,f,Reordering Rules,stock
+product.template,reordering_min_qty,float,"",f,f,t,f,f,Reordering Min Qty,stock
+product.template,reordering_max_qty,float,"",f,f,t,f,f,Reordering Max Qty,stock
+product.template,route_from_categ_ids,many2many,stock.route,f,f,t,f,t,Category Routes,stock
+product.template,show_on_hand_qty_status_button,boolean,"",f,f,t,f,f,Show On Hand Qty Status Button,stock
+product.template,show_forecasted_qty_status_button,boolean,"",f,f,t,f,f,Show Forecasted Qty Status Button,stock
+product.template,can_be_expensed,boolean,"",t,f,f,f,f,Expenses,hr_expense
+product.template,bom_line_ids,one2many,mrp.bom.line,t,f,f,f,f,BoM Components,mrp
+product.template,bom_ids,one2many,mrp.bom,t,f,f,f,f,Bill of Materials,mrp
+product.template,bom_count,integer,"",f,f,t,f,f,# Bill of Material,mrp
+product.template,used_in_bom_count,integer,"",f,f,t,f,f,# of BoM Where is Used,mrp
+product.template,mrp_product_qty,float,"",f,f,t,f,f,Manufactured,mrp
+product.template,is_kits,boolean,"",f,f,t,f,f,Is Kits,mrp
+product.template,available_in_pos,boolean,"",t,f,f,f,f,Available in POS,point_of_sale
+product.template,to_weight,boolean,"",t,f,f,f,f,To Weigh,point_of_sale
+product.template,pos_categ_ids,many2many,pos.category,t,f,f,f,f,Point of Sale Category,point_of_sale
+product.template,public_description,html,"",t,f,f,f,f,Product Description,point_of_sale
+product.template,pos_optional_product_ids,many2many,product.template,t,f,f,f,f,POS Optional Products,point_of_sale
+product.template,pos_sequence,integer,"",t,f,f,f,f,POS Sequence,point_of_sale
+product.template,purchased_product_qty,float,"",f,f,t,f,f,Purchased,purchase
+product.template,purchase_method,selection,"",t,f,f,f,f,Control Policy,purchase
+product.template,purchase_line_warn_msg,text,"",t,f,f,f,f,Message for Purchase Order Line,purchase
+product.template,lot_valuated,boolean,"",t,f,f,f,f,Valuation by Lot/Serial,stock_account
+product.template,service_type,selection,"",t,f,f,f,f,Track Service,sale sale_project sale_timesheet
+product.template,sale_line_warn_msg,text,"",t,f,f,f,f,Sales Order Line Warning,sale
+product.template,reinvoice_policy,selection,"",t,f,f,f,f,Re-Invoice Costs,sale
+product.template,visible_reinvoice_policy,boolean,"",f,f,t,f,f,Re-Invoice Policy visible,sale
+product.template,sales_count,float,"",f,f,t,f,f,Sold,sale
+product.template,invoice_policy,selection,"",t,t,f,f,f,Invoicing Policy,sale
+product.template,optional_product_ids,many2many,product.template,t,f,f,f,f,Optional Products,sale
+product.template,sale_delay,integer,"",t,f,f,f,f,Delivery Time,sale
+product.template,self_order_available,boolean,"",t,f,f,f,f,Available in Self Order,pos_self_order
+product.template,self_order_visible,boolean,"",f,f,t,f,f,Self Order Visible,pos_self_order
+product.template,expense_policy_tooltip,char,"",f,f,t,f,f,Expense Policy Tooltip,sale_expense
+product.template,hs_code,char,"",f,f,f,f,f,HS Code,stock_delivery
+product.template,country_of_origin,many2one,res.country,f,f,f,f,f,Origin of Goods,stock_delivery
+product.template,website_id,many2one,website,t,f,f,f,f,Website,website_sale
+product.template,website_url,char,"",f,f,t,f,f,Website URL,website_sale
+product.template,website_absolute_url,char,"",f,f,t,f,f,Website Absolute URL,website_sale
+product.template,website_published,boolean,"",f,f,f,f,f,Visible on current website,website_sale
+product.template,is_published,boolean,"",t,f,f,f,f,Is Published,website_sale
+product.template,publish_on,datetime,"",t,f,f,f,f,Auto publish on,website_sale
+product.template,published_date,datetime,"",t,f,f,f,f,Published date,website_sale
+product.template,can_publish,boolean,"",f,f,t,f,f,Can Publish,website_sale
+product.template,is_seo_optimized,boolean,"",t,f,t,f,f,SEO optimized,website_sale
+product.template,website_meta_title,char,"",t,f,f,f,f,Website meta title,website_sale
+product.template,website_meta_description,text,"",t,f,f,f,f,Website meta description,website_sale
+product.template,website_meta_keywords,char,"",t,f,f,f,f,Website meta keywords,website_sale
+product.template,website_meta_og_img,char,"",t,f,f,f,f,Website opengraph image,website_sale
+product.template,seo_name,char,"",t,f,f,f,f,Seo name,website_sale
+product.template,rating_last_value,float,"",t,f,t,f,f,Rating Last Value,website_sale
+product.template,rating_last_feedback,text,"",f,f,t,f,t,Rating Last Feedback,website_sale
+product.template,rating_last_image,binary,"",f,f,t,f,t,Rating Last Image,website_sale
+product.template,rating_count,integer,"",f,f,t,f,f,Rating count,website_sale
+product.template,rating_avg,float,"",f,f,t,f,f,Average Rating,website_sale
+product.template,rating_avg_text,selection,"",f,f,t,f,f,Rating Avg Text,website_sale
+product.template,rating_percentage_satisfaction,float,"",f,f,t,f,f,Rating Satisfaction,website_sale
+product.template,rating_last_text,selection,"",f,f,t,f,t,Rating Text,website_sale
+product.template,website_description,html,"",t,f,f,f,f,Description for the website,website_sale
+product.template,description_ecommerce,html,"",t,f,f,f,f,eCommerce Description,website_sale
+product.template,dropzone_above_price,html,"",t,f,f,f,f,Drop Zone Above Price,website_sale
+product.template,dropzone_above_specification,html,"",t,f,f,f,f,Drop Zone Above Specification,website_sale
+product.template,alternative_product_ids,many2many,product.template,t,f,f,f,f,Alternative Products,website_sale
+product.template,accessory_product_ids,many2many,product.product,t,f,f,f,f,Accessory Products,website_sale
+product.template,suggest_optional_products,boolean,"",t,f,f,f,f,Suggest Optional Products,website_sale
+product.template,suggest_accessory_products,boolean,"",t,f,f,f,f,Suggest Accessory Products,website_sale
+product.template,suggest_alternative_products,boolean,"",t,f,f,f,f,Suggest Alternative Products,website_sale
+product.template,suggested_products_last_update,datetime,"",t,f,f,f,f,Last update of suggested products,website_sale
+product.template,website_size_x,integer,"",t,f,f,f,f,Size X,website_sale
+product.template,website_size_y,integer,"",t,f,f,f,f,Size Y,website_sale
+product.template,website_ribbon_id,many2one,product.ribbon,t,f,f,f,f,Ribbon,website_sale
+product.template,minimum_quantity,integer,"",t,f,f,f,f,Minimum Quantity,website_sale
+product.template,website_sequence,integer,"",t,f,f,f,f,Website Sequence,website_sale
+product.template,public_categ_ids,many2many,product.public.category,t,f,f,f,f,Website Product Category,website_sale
+product.template,publish_date,datetime,"",t,t,t,f,f,Publish Date,website_sale
+product.template,product_template_image_ids,one2many,product.image,t,f,f,f,f,Extra Product Media,website_sale
+product.template,compare_list_price,monetary,"",t,f,f,f,f,Compare to Price,website_sale
+product.template,variants_default_code,char,"",t,f,t,f,f,Variants Default Code,website_sale
+product.template,allow_out_of_stock_order,boolean,"",t,f,f,f,f,Sell when Out-of-Stock,website_sale
+product.template,available_threshold,float,"",t,f,f,f,f,Show Threshold,website_sale
+product.template,show_availability,boolean,"",t,f,f,f,f,Show availability Qty,website_sale
+product.template,out_of_stock_message,html,"",t,f,f,f,f,Out-of-Stock Message,website_sale
+product.template,project_id,many2one,project.project,t,f,f,f,f,Project,sale_project sale_timesheet
+product.template,project_template_id,many2one,project.project,t,f,f,f,f,Project Template,sale_project sale_timesheet
+product.template,task_template_id,many2one,project.task,t,f,f,f,f,Task Template,sale_project
+product.template,service_policy,selection,"",f,f,f,f,f,Service Invoicing Policy,sale_project
+product.template,use_expiration_date,boolean,"",t,f,f,f,f,Use Expiration Date,product_expiry
+product.template,expiration_time,integer,"",t,f,f,f,f,Expiration Date,product_expiry
+product.template,use_time,integer,"",t,f,f,f,f,Best Before Date,product_expiry
+product.template,removal_time,integer,"",t,f,f,f,f,Removal Date,product_expiry
+product.template,alert_time,integer,"",t,f,f,f,f,Alert Date,product_expiry
+product.template,landed_cost_ok,boolean,"",t,f,f,f,f,Is a Landed Cost,stock_landed_costs
+product.template,split_method_landed_cost,selection,"",t,f,f,f,f,Default Split Method,stock_landed_costs
+product.template,landed_cost_on_product_ids,many2many,product.product,t,f,f,f,f,Apply Landed Cost On,stock_landed_costs
+product.template,service_upsell_threshold,float,"",t,f,f,f,f,Threshold,sale_timesheet
+product.template,service_upsell_threshold_ratio,char,"",f,f,t,f,f,Service Upsell Threshold Ratio,sale_timesheet
+product.template.attribute.line,id,integer,"",t,f,t,f,f,ID,product point_of_sale website_sale
+product.template.attribute.line,display_name,char,"",f,f,t,f,f,Display Name,product point_of_sale website_sale
+product.template.attribute.line,active,boolean,"",t,f,f,f,f,Active,product
+product.template.attribute.line,product_tmpl_id,many2one,product.template,t,t,f,f,f,Product Template,product
+product.template.attribute.line,sequence,integer,"",t,f,f,f,f,Sequence,product
+product.template.attribute.line,attribute_id,many2one,product.attribute,t,t,f,f,f,Attribute,product
+product.template.attribute.line,value_ids,many2many,product.attribute.value,t,f,f,f,f,Values,product
+product.template.attribute.line,value_count,integer,"",t,f,t,f,f,Value Count,product
+product.template.attribute.line,product_template_value_ids,one2many,product.template.attribute.value,t,f,f,f,f,Product Attribute Values,product
+product.template.attribute.line,create_uid,many2one,res.users,t,f,t,f,f,Created by,product
+product.template.attribute.line,create_date,datetime,"",t,f,t,f,f,Created on,product
+product.template.attribute.line,write_uid,many2one,res.users,t,f,t,f,f,Last Updated by,product
+product.template.attribute.line,write_date,datetime,"",t,f,t,f,f,Last Updated on,product
+product.template.attribute.value,id,integer,"",t,f,t,f,f,ID,product point_of_sale website_sale
+product.template.attribute.value,display_name,char,"",f,f,t,f,f,Display Name,product point_of_sale website_sale
+product.template.attribute.value,ptav_active,boolean,"",t,f,f,f,f,Active,product
+product.template.attribute.value,name,char,"",f,f,t,f,t,Value,product
+product.template.attribute.value,sequence,integer,"",t,f,f,f,f,Sequence,product
+product.template.attribute.value,product_attribute_value_id,many2one,product.attribute.value,t,t,f,f,f,Attribute Value,product
+product.template.attribute.value,attribute_line_id,many2one,product.template.attribute.line,t,t,f,f,f,Attribute Line,product
+product.template.attribute.value,price_extra,float,"",t,f,f,f,f,Extra Price,product
+product.template.attribute.value,currency_id,many2one,res.currency,f,f,t,f,t,Currency,product
+product.template.attribute.value,show_price_extra,boolean,"",t,f,f,f,f,Show Extra Price,product
+product.template.attribute.value,excluded_value_ids,many2many,product.template.attribute.value,t,f,f,f,f,Exclude For,product
+product.template.attribute.value,product_tmpl_id,many2one,product.template,t,f,t,f,t,Product Template,product
+product.template.attribute.value,attribute_id,many2one,product.attribute,t,f,t,f,t,Attribute,product
+product.template.attribute.value,ptav_product_variant_ids,many2many,product.product,t,f,t,f,f,Related Variants,product
+product.template.attribute.value,html_color,char,"",f,f,t,f,t,HTML Color Index,product
+product.template.attribute.value,is_custom,boolean,"",f,f,t,f,t,Free text,product
+product.template.attribute.value,display_type,selection,"",f,f,t,f,t,Display Type,product
+product.template.attribute.value,color,integer,"",t,f,f,f,f,Color,product
+product.template.attribute.value,image,binary,"",f,f,t,f,t,Image,product
+product.template.attribute.value,create_uid,many2one,res.users,t,f,t,f,f,Created by,product
+product.template.attribute.value,create_date,datetime,"",t,f,t,f,f,Created on,product
+product.template.attribute.value,write_uid,many2one,res.users,t,f,t,f,f,Last Updated by,product
+product.template.attribute.value,write_date,datetime,"",t,f,t,f,f,Last Updated on,product
+res.company,id,integer,"",t,f,t,f,f,ID,base social_media web barcodes resource mail lunch product partner_autocomplete sms payment account hr mass_mailing stock website account_edi_ubl_cii hr_expense hr_recruitment hr_work_entry mrp point_of_sale purchase spreadsheet_account stock_account stock_sms hr_attendance hr_holidays mrp_account pos_stock purchase_stock sale hr_holidays_attendance sale_stock website_sale hr_timesheet mrp_subcontracting project_timesheet_holidays stock_landed_costs stock_dropshipping mrp_subcontracting_dropshipping
+res.company,display_name,char,"",f,f,t,f,f,Display Name,base social_media web barcodes resource mail lunch product partner_autocomplete sms payment account hr mass_mailing stock website account_edi_ubl_cii hr_expense hr_recruitment hr_work_entry mrp point_of_sale purchase spreadsheet_account stock_account stock_sms hr_attendance hr_holidays mrp_account pos_stock purchase_stock sale hr_holidays_attendance sale_stock website_sale hr_timesheet mrp_subcontracting project_timesheet_holidays stock_landed_costs stock_dropshipping mrp_subcontracting_dropshipping
+res.company,name,char,"",t,t,f,f,t,Company Name,base
+res.company,active,boolean,"",t,f,f,f,f,Active,base
+res.company,sequence,integer,"",t,f,f,f,f,Sequence,base
+res.company,parent_id,many2one,res.company,t,f,f,f,f,Parent Company,base
+res.company,child_ids,one2many,res.company,t,f,f,f,f,Branches,base
+res.company,all_child_ids,one2many,res.company,t,f,f,f,f,All Child,base
+res.company,parent_path,char,"",t,f,f,f,f,Parent Path,base
+res.company,parent_ids,many2many,res.company,f,f,t,f,f,Parent,base
+res.company,root_id,many2one,res.company,f,f,t,f,f,Root,base
+res.company,partner_id,many2one,res.partner,t,t,f,f,f,Partner,base
+res.company,report_header,html,"",t,f,f,f,f,Company Tagline,base
+res.company,report_footer,html,"",t,f,f,f,f,Report Footer,base
+res.company,company_details,html,"",t,f,f,f,f,Company Details,base
+res.company,is_company_details_empty,boolean,"",f,f,t,f,f,Is Company Details Empty,base
+res.company,logo,binary,"",f,f,f,f,t,Company Logo,base
+res.company,logo_web,binary,"",t,f,t,f,f,Logo Web,base
+res.company,uses_default_logo,boolean,"",t,f,t,f,f,Uses Default Logo,base
+res.company,currency_id,many2one,res.currency,t,t,f,f,f,Currency,base
+res.company,user_ids,many2many,res.users,t,f,f,f,f,Accepted Users,base
+res.company,street,char,"",f,f,f,f,f,Street,base
+res.company,street2,char,"",f,f,f,f,f,Street2,base
+res.company,zip,char,"",f,f,f,f,f,Zip,base
+res.company,city,char,"",f,f,f,f,f,City,base
+res.company,state_id,many2one,res.country.state,f,f,f,f,f,Fed. State,base
+res.company,bank_ids,one2many,res.partner.bank,f,f,f,f,t,Banks,base
+res.company,country_id,many2one,res.country,f,f,f,f,f,Country,base
+res.company,country_code,char,"",f,f,t,f,t,Country Code,base
+res.company,email,char,"",t,f,f,f,t,Email,base
+res.company,phone,char,"",t,f,f,f,t,Phone,base
+res.company,website,char,"",f,f,f,f,t,Website Link,base
+res.company,vat,char,"",f,f,f,f,t,Tax ID,base
+res.company,has_vat,boolean,"",f,f,t,f,t,Has Tax ID,base
+res.company,additional_identifiers,json,"",f,f,f,f,t,Additional Identifiers,base
+res.company,available_additional_identifiers_metadata,json,"",f,f,t,f,t,Available Additional Identifiers Metadata,base
+res.company,paperformat_id,many2one,report.paperformat,t,f,f,f,f,Paper format,base
+res.company,external_report_layout_id,many2one,ir.ui.view,t,f,f,f,f,Document Template,base
+res.company,report_tables_id,selection,"",t,f,f,f,f,Table Design,base
+res.company,font,selection,"",t,f,f,f,f,Font,base
+res.company,primary_color,char,"",t,f,f,f,f,Primary Color,base
+res.company,secondary_color,char,"",t,f,f,f,f,Secondary Color,base
+res.company,color,integer,"",f,f,f,f,f,Color,base
+res.company,uninstalled_l10n_module_ids,many2many,ir.module.module,f,f,t,f,f,Uninstalled L10N Module,base
+res.company,create_uid,many2one,res.users,t,f,t,f,f,Created by,base
+res.company,create_date,datetime,"",t,f,t,f,f,Created on,base
+res.company,write_uid,many2one,res.users,t,f,t,f,f,Last Updated by,base
+res.company,write_date,datetime,"",t,f,t,f,f,Last Updated on,base
+res.company,social_twitter,char,"",t,f,f,f,f,X Account,social_media
+res.company,social_facebook,char,"",t,f,f,f,f,Facebook Account,social_media
+res.company,social_github,char,"",t,f,f,f,f,GitHub Account,social_media
+res.company,social_linkedin,char,"",t,f,f,f,f,LinkedIn Account,social_media
+res.company,social_youtube,char,"",t,f,f,f,f,Youtube Account,social_media
+res.company,social_instagram,char,"",t,f,f,f,f,Instagram Account,social_media
+res.company,social_tiktok,char,"",t,f,f,f,f,TikTok Account,social_media
+res.company,social_discord,char,"",t,f,f,f,f,Discord Account,social_media
+res.company,nomenclature_id,many2one,barcode.nomenclature,t,f,f,f,f,Nomenclature,barcodes
+res.company,resource_calendar_ids,one2many,resource.calendar,t,f,f,f,f,Working Hours,resource
+res.company,resource_calendar_id,many2one,resource.calendar,t,f,f,f,f,Default Working Hours,resource
+res.company,tz,selection,"",t,f,f,f,f,Timezone,resource
+res.company,alias_domain_id,many2one,mail.alias.domain,t,f,f,f,f,Email Domain,mail
+res.company,bounce_email,char,"",f,f,t,f,f,Bounce Email,mail
+res.company,bounce_formatted,char,"",f,f,t,f,f,Bounce,mail
+res.company,catchall_email,char,"",f,f,t,f,f,Catchall Email,mail
+res.company,catchall_formatted,char,"",f,f,t,f,f,Catchall,mail
+res.company,default_from_email,char,"",f,f,t,f,t,Default From,mail
+res.company,email_formatted,char,"",f,f,t,f,f,Formatted Email,mail
+res.company,email_primary_color,char,"",t,f,f,f,f,Email Button Text,mail
+res.company,email_secondary_color,char,"",t,f,f,f,f,Email Button Color,mail
+res.company,lunch_minimum_threshold,float,"",t,f,f,f,f,Lunch Minimum Threshold,lunch
+res.company,lunch_notify_message,html,"",t,f,f,f,f,Lunch Notify Message,lunch
+res.company,iap_enrich_auto_done,boolean,"",t,f,f,f,f,Enrich Done,partner_autocomplete
+res.company,onboarding_payment_module,selection,"",f,f,t,f,f,Onboarding Payment Module,payment
+res.company,pay_now_label,char,"",t,f,f,f,f,Pay Now Label,payment
+res.company,pay_later_label,char,"",t,f,f,f,f,Pay Later Label,payment
+res.company,message_is_follower,boolean,"",f,f,t,f,f,Is Follower,account
+res.company,message_follower_ids,one2many,mail.followers,t,f,f,f,f,Followers,account
+res.company,message_partner_ids,many2many,res.partner,f,f,f,f,f,Followers (Partners),account
+res.company,message_ids,one2many,mail.message,t,f,f,f,f,Messages,account
+res.company,has_message,boolean,"",f,f,t,f,f,Has Message,account
+res.company,message_needaction,boolean,"",f,f,t,f,f,Action Needed,account
+res.company,message_needaction_counter,integer,"",f,f,t,f,f,Number of Actions,account
+res.company,message_has_error,boolean,"",f,f,t,f,f,Message Delivery error,account
+res.company,message_has_error_counter,integer,"",f,f,t,f,f,Number of errors,account
+res.company,message_attachment_count,integer,"",f,f,t,f,f,Attachment Count,account
+res.company,rating_ids,one2many,rating.rating,t,f,f,f,f,Ratings,account
+res.company,message_has_sms_error,boolean,"",f,f,t,f,f,SMS Delivery error,account
+res.company,fiscalyear_last_day,integer,"",t,t,f,f,f,Fiscalyear Last Day,account
+res.company,fiscalyear_last_month,selection,"",t,t,f,f,f,Fiscalyear Last Month,account
+res.company,fiscalyear_lock_date,date,"",t,f,f,f,f,Global Lock Date,account
+res.company,tax_lock_date,date,"",t,f,f,f,f,Tax Return Lock Date,account
+res.company,sale_lock_date,date,"",t,f,f,f,f,Sales Lock Date,account
+res.company,purchase_lock_date,date,"",t,f,f,f,f,Purchase Lock date,account
+res.company,hard_lock_date,date,"",t,f,f,f,f,Hard Lock Date,account
+res.company,user_fiscalyear_lock_date,date,"",f,f,t,f,f,User Fiscalyear Lock Date,account
+res.company,user_tax_lock_date,date,"",f,f,t,f,f,User Tax Lock Date,account
+res.company,user_sale_lock_date,date,"",f,f,t,f,f,User Sale Lock Date,account
+res.company,user_purchase_lock_date,date,"",f,f,t,f,f,User Purchase Lock Date,account
+res.company,user_hard_lock_date,date,"",f,f,t,f,f,User Hard Lock Date,account
+res.company,transfer_account_id,many2one,account.account,t,f,f,f,f,Inter-Banks Transfer Account,account
+res.company,expects_chart_of_accounts,boolean,"",t,f,f,f,f,Expects a Chart of Accounts,account
+res.company,chart_template,selection,"",t,f,f,f,f,Chart Template,account
+res.company,bank_account_code_prefix,char,"",t,f,f,f,f,Prefix of the bank accounts,account
+res.company,cash_account_code_prefix,char,"",t,f,f,f,f,Prefix of the cash accounts,account
+res.company,default_cash_difference_income_account_id,many2one,account.account,t,f,f,f,f,Cash Difference Income,account
+res.company,default_cash_difference_expense_account_id,many2one,account.account,t,f,f,f,f,Cash Difference Expense,account
+res.company,account_journal_suspense_account_id,many2one,account.account,t,f,f,f,f,Journal Suspense Account,account
+res.company,account_journal_early_pay_discount_gain_account_id,many2one,account.account,t,f,f,f,f,Cash Discount Write-Off Gain Account,account
+res.company,account_journal_early_pay_discount_loss_account_id,many2one,account.account,t,f,f,f,f,Cash Discount Write-Off Loss Account,account
+res.company,transfer_account_code_prefix,char,"",t,f,f,f,f,Prefix of the transfer accounts,account
+res.company,account_sale_tax_id,many2one,account.tax,t,f,f,f,f,Default Sale Tax,account
+res.company,account_purchase_tax_id,many2one,account.tax,t,f,f,f,f,Default Purchase Tax,account
+res.company,account_purchase_receipt_fiscal_position_id,many2one,account.fiscal.position,t,f,f,f,f,Default Purchase Receipt Fiscal Position,account
+res.company,tax_calculation_rounding_method,selection,"",t,f,f,f,f,Tax Calculation Rounding Method,account
+res.company,currency_exchange_journal_id,many2one,account.journal,t,f,f,f,f,Exchange Gain or Loss Journal,account
+res.company,income_currency_exchange_account_id,many2one,account.account,t,f,f,f,f,Gain Exchange Rate Account,account
+res.company,expense_currency_exchange_account_id,many2one,account.account,t,f,f,f,f,Loss Exchange Rate Account,account
+res.company,anglo_saxon_accounting,boolean,"",t,f,f,f,f,Use anglo-saxon accounting,account
+res.company,bank_journal_ids,one2many,account.journal,t,f,f,f,f,Bank Journals,account
+res.company,incoterm_id,many2one,account.incoterms,t,f,f,f,f,Default incoterm,account
+res.company,qr_code,boolean,"",t,f,f,f,f,Display QR-code on invoices,account
+res.company,link_qr_code,boolean,"",t,f,f,f,f,Display Link QR-code,account
+res.company,display_invoice_amount_total_words,boolean,"",t,f,f,f,f,Total amount of invoice in words,account
+res.company,display_invoice_tax_company_currency,boolean,"",t,f,f,f,f,Taxes in company currency,account
+res.company,account_use_credit_limit,boolean,"",t,f,f,f,f,Sales Credit Limit,account
+res.company,account_credit_limit,float,"",f,f,f,f,f,Default Credit Limit,account
+res.company,batch_payment_sequence_id,many2one,ir.sequence,t,f,t,f,f,Batch Payment Sequence,account
+res.company,vat_check_vies,boolean,"",t,f,f,f,f,Verify VAT Numbers with VIES,account
+res.company,account_opening_move_id,many2one,account.move,t,f,f,f,f,Opening Journal Entry,account
+res.company,account_opening_journal_id,many2one,account.journal,f,f,f,f,t,Opening Journal,account
+res.company,account_opening_date,date,"",t,f,f,f,f,Opening Entry,account
+res.company,invoice_terms,html,"",t,f,f,f,f,Default Terms and Conditions,account
+res.company,terms_type,selection,"",t,f,f,f,f,Terms & Conditions format,account
+res.company,invoice_terms_html,html,"",t,f,f,f,f,Default Terms and Conditions as a Web page,account
+res.company,account_default_pos_receivable_account_id,many2one,account.account,t,f,f,f,f,Default PoS Receivable Account,account
+res.company,expense_accrual_account_id,many2one,account.account,t,f,f,f,f,Expense Accrual Account,account
+res.company,revenue_accrual_account_id,many2one,account.account,t,f,f,f,f,Revenue Accrual Account,account
+res.company,automatic_entry_default_journal_id,many2one,account.journal,t,f,f,f,f,Automatic Entry Default Journal,account
+res.company,domestic_fiscal_position_id,many2one,account.fiscal.position,t,f,t,f,f,Domestic Fiscal Position,account
+res.company,account_fiscal_country_id,many2one,res.country,t,f,f,f,f,Fiscal Country,account
+res.company,account_fiscal_country_group_codes,json,"",f,f,t,f,f,Account Fiscal Country Group Codes,account
+res.company,account_enabled_tax_country_ids,many2many,res.country,f,f,t,f,f,l10n-used countries,account
+res.company,vat_disabled,boolean,"",t,f,f,f,f,Not Subject to VAT,account
+res.company,vat_disabled_available,boolean,"",f,f,t,f,f,'Not Subject to VAT' Available,account
+res.company,tax_exigibility,boolean,"",t,f,f,f,f,Use Cash Basis,account
+res.company,tax_cash_basis_journal_id,many2one,account.journal,t,f,f,f,f,Cash Basis Journal,account
+res.company,account_cash_basis_base_account_id,many2one,account.account,t,f,f,f,f,Base Tax Received Account,account
+res.company,account_storno,boolean,"",t,f,f,f,f,Storno accounting,account
+res.company,display_account_storno,boolean,"",f,f,t,f,f,Display Account Storno,account
+res.company,fiscal_position_ids,one2many,account.fiscal.position,t,f,f,f,f,Fiscal Position,account
+res.company,multi_vat_foreign_country_ids,many2many,res.country,f,f,t,f,f,Foreign Tax ID countries,account
+res.company,quick_edit_mode_enabled,boolean,"",t,f,f,f,f,Quick encoding,account
+res.company,quick_edit_mode,selection,"",t,f,f,f,f,Quick Edit Mode,account
+res.company,document_sequence_editable,boolean,"",t,f,f,f,f,Document's sequence editable,account
+res.company,set_to_review_documents,boolean,"",t,f,f,f,f,Review data,account
+res.company,account_discount_income_allocation_id,many2one,account.account,t,f,f,f,f,Separate account for income discount,account
+res.company,account_discount_expense_allocation_id,many2one,account.account,t,f,f,f,f,Separate account for expense discount,account
+res.company,restrictive_audit_trail,boolean,"",t,f,f,f,f,Restrictive Audit Trail,account
+res.company,force_restrictive_audit_trail,boolean,"",f,f,t,f,f,Force Audit Trail,account
+res.company,autopost_bills,boolean,"",t,f,f,f,f,Auto-validate bills,account
+res.company,account_price_include,selection,"",t,t,f,f,f,Default Sales Price Include,account
+res.company,company_vat_placeholder,char,"",f,f,t,f,f,Company Vat Placeholder,account
+res.company,income_account_id,many2one,account.account,f,f,f,f,f,Income Account,account
+res.company,expense_account_id,many2one,account.account,f,f,f,f,f,Expense Account,account
+res.company,receivable_account_id,many2one,account.account,f,f,f,f,f,Receivable Account,account
+res.company,payable_account_id,many2one,account.account,f,f,f,f,f,Payable Account,account
+res.company,price_difference_account_id,many2one,account.account,t,f,f,f,f,Price Difference Account,account
+res.company,account_stock_valuation_id,many2one,account.account,f,f,f,f,f,Stock Valuation Account,account
+res.company,inventory_valuation,selection,"",f,f,f,f,f,Valuation,account
+res.company,account_stock_journal_id,many2one,account.journal,f,f,f,f,f,Stock Journal,account
+res.company,inventory_period,selection,"",t,t,f,f,f,Inventory Period,account
+res.company,cost_method,selection,"",f,t,f,f,f,Cost Method,account stock_account
+res.company,cash_rounding_profit_account_id,many2one,account.account,f,f,f,f,f,Cash Rounding Profit Account,account
+res.company,cash_rounding_loss_account_id,many2one,account.account,f,f,f,f,f,Cash Rounding Loss Account,account
+res.company,has_ledger,boolean,"",f,f,t,f,f,Has Ledger,account
+res.company,hr_presence_control_email_amount,integer,"",t,f,f,f,f,# emails to send,hr
+res.company,hr_presence_control_ip_list,char,"",t,f,f,f,f,Valid IP addresses,hr
+res.company,employee_properties_definition,properties_definition,"",t,f,f,f,f,Employee Properties,hr
+res.company,hr_presence_control_login,boolean,"",t,f,f,f,f,Based on user status in system,hr
+res.company,hr_presence_control_email,boolean,"",t,f,f,f,f,Based on number of emails sent,hr
+res.company,hr_presence_control_ip,boolean,"",t,f,f,f,f,Based on IP Address,hr
+res.company,hr_presence_control_attendance,boolean,"",t,f,f,f,f,Based on attendances,hr
+res.company,contract_expiration_notice_period,integer,"",t,f,f,f,f,Contract Expiry Notice Period,hr
+res.company,work_permit_expiration_notice_period,integer,"",t,f,f,f,f,Work Permit Expiry Notice Period,hr
+res.company,internal_transit_location_id,many2one,stock.location,t,f,f,f,f,Internal Transit Location,stock
+res.company,scrap_location_id,many2one,stock.location,f,f,t,f,f,Scrap Location,stock
+res.company,default_stock_location_id,many2one,stock.location,f,f,t,f,f,Default Stock Location,stock
+res.company,stock_move_email_validation,boolean,"",t,f,f,f,f,Email Confirmation picking,stock
+res.company,stock_mail_confirmation_template_id,many2one,mail.template,t,f,f,f,f,Email Template confirmation picking,stock
+res.company,annual_inventory_month,selection,"",t,f,f,f,f,Annual Inventory Month,stock
+res.company,annual_inventory_day,integer,"",t,f,f,f,f,Day of the month,stock
+res.company,horizon_days,integer,"",t,t,f,f,f,Replenishment Horizon,stock
+res.company,stock_text_confirmation,boolean,"",t,f,f,f,f,Stock Text Confirmation,stock
+res.company,stock_confirmation_type,selection,"",t,f,f,f,f,Stock Confirmation Type,stock
+res.company,picking_policy,selection,"",t,t,f,f,f,Picking Policy,stock
+res.company,website_id,many2one,website,t,f,t,f,f,Website,website
+res.company,routing_scheme,selection,"",f,f,f,f,t,Routing ID,account_edi_ubl_cii
+res.company,routing_endpoint,char,"",f,f,f,f,t,Routing Endpoint,account_edi_ubl_cii
+res.company,routing_identifier,char,"",f,f,f,f,t,EDI Routing Address,account_edi_ubl_cii
+res.company,expense_journal_id,many2one,account.journal,t,f,f,f,f,Default Expense Journal,hr_expense
+res.company,company_expense_allowed_payment_method_line_ids,many2many,account.payment.method.line,t,f,f,f,f,Payment methods available for expenses paid by company,hr_expense
+res.company,job_properties_definition,properties_definition,"",t,f,f,f,f,Job Properties,hr_recruitment
+res.company,applicant_properties_definition,properties_definition,"",t,f,f,f,f,Applicant Properties,hr_recruitment
+res.company,external_code,char,"",t,f,f,f,f,External Code,hr_work_entry
+res.company,allowed_work_entry_type_ids,many2many,hr.work.entry.type,f,f,t,f,f,Allowed Work Entry Type,hr_work_entry
+res.company,point_of_sale_use_ticket_qr_code,boolean,"",t,f,f,f,f,Self-service invoicing,point_of_sale
+res.company,point_of_sale_ticket_unique_code,boolean,"",t,f,f,f,f,Generate a code on ticket,point_of_sale
+res.company,point_of_sale_ticket_portal_url_display_mode,selection,"",t,t,f,f,f,Print,point_of_sale
+res.company,receipt_address,char,"",f,f,t,f,f,Receipt Address,point_of_sale
+res.company,account_bills_to_receive_id,many2one,account.account,f,f,f,f,f,Bills to Receive Account,purchase
+res.company,account_billed_not_received_id,many2one,account.account,f,f,f,f,f,Billed Not Received Account,purchase
+res.company,po_lock,selection,"",t,f,f,f,f,Purchase Order Modification,purchase
+res.company,po_double_validation,selection,"",t,f,f,f,f,Levels of Approvals,purchase
+res.company,po_double_validation_amount,monetary,"",t,f,f,f,f,Double validation amount,purchase
+res.company,account_production_wip_account_id,many2one,account.account,t,f,f,f,f,Production WIP Account,stock_account
+res.company,account_production_wip_overhead_account_id,many2one,account.account,t,f,f,f,f,Production WIP Overhead Account,stock_account
+res.company,stock_sms_confirmation_template_id,many2one,sms.template,t,f,f,f,f,SMS Template,stock_sms
+res.company,has_received_warning_stock_sms,boolean,"",t,f,f,f,f,Has Received Warning Stock Sms,stock_sms
+res.company,attendance_kiosk_mode,selection,"",t,f,f,f,f,Attendance Mode,hr_attendance
+res.company,attendance_barcode_source,selection,"",t,f,f,f,f,Barcode Source,hr_attendance
+res.company,attendance_kiosk_delay,integer,"",t,f,f,f,f,Attendance Kiosk Delay,hr_attendance
+res.company,attendance_kiosk_key,char,"",t,f,f,f,f,Attendance Kiosk Key,hr_attendance
+res.company,attendance_kiosk_url,char,"",f,f,t,f,f,Attendance Kiosk Url,hr_attendance
+res.company,attendance_kiosk_use_pin,boolean,"",t,f,f,f,f,Employee PIN Identification,hr_attendance
+res.company,attendance_from_systray,boolean,"",t,f,f,f,f,Attendance From Systray,hr_attendance
+res.company,auto_check_out,boolean,"",t,f,f,f,f,Automatic Check Out,hr_attendance
+res.company,single_check_in,boolean,"",t,f,f,f,f,Single Check-In Attendance System,hr_attendance
+res.company,auto_check_out_mode,selection,"",t,f,f,f,f,Auto Check Out Mode,hr_attendance
+res.company,auto_check_out_tolerance,float,"",t,f,f,f,f,Auto Check Out Tolerance,hr_attendance
+res.company,auto_check_out_specific_time,float,"",t,f,f,f,f,Auto Check Out Specific Time,hr_attendance
+res.company,absence_management,boolean,"",t,f,f,f,f,Absence Management,hr_attendance
+res.company,attendance_validation,selection,"",t,f,f,f,f,Attendance Validation,hr_attendance
+res.company,attendance_validation_tolerance,float,"",t,f,f,f,f,Validation Tolerance (Hours),hr_attendance
+res.company,attendance_work_entry_type_id,many2one,hr.work.entry.type,t,f,f,f,f,Attendance Time Type,hr_attendance hr_holidays_attendance
+res.company,attendance_device_tracking,boolean,"",t,f,f,f,f,Device & Location Tracking,hr_attendance
+res.company,attendance_capture_check_in,boolean,"",t,f,f,f,f,Take Pictures on Check-In,hr_attendance
+res.company,attendance_break_management,boolean,"",t,f,f,f,f,Break Management on Checkout,hr_attendance
+res.company,attendance_based,boolean,"",t,f,f,f,f,Attendance Based,hr_attendance
+res.company,stock_account_production_cost_id,many2one,account.account,f,f,f,f,f,Production Account,mrp_account
+res.company,point_of_sale_update_stock_quantities,selection,"",t,f,f,f,f,Update quantities in stock,pos_stock
+res.company,days_to_purchase,integer,"",t,f,f,f,f,Days to Purchase,purchase_stock
+res.company,account_invoices_to_issue_id,many2one,account.account,f,f,f,f,f,Invoices to be Issued Account,sale
+res.company,account_invoiced_not_delivered_id,many2one,account.account,f,f,f,f,f,Invoiced Not Delivered Account,sale
+res.company,portal_confirmation_sign,boolean,"",t,f,f,f,f,Online Signature,sale
+res.company,portal_confirmation_pay,boolean,"",t,f,f,f,f,Online Payment,sale
+res.company,prepayment_percent,float,"",t,f,f,f,f,Prepayment,sale
+res.company,display_product_images_on_so,boolean,"",t,f,f,f,f,Display Product Images,sale
+res.company,quotation_validity_days,integer,"",t,f,f,f,f,Default Quotation Validity,sale
+res.company,sale_discount_product_id,many2one,product.product,t,f,f,f,f,Discount Product,sale
+res.company,sale_onboarding_payment_method,selection,"",t,f,f,f,f,Sale onboarding selected payment method,sale
+res.company,downpayment_account_id,many2one,account.account,t,f,f,f,f,Downpayment Account,sale
+res.company,show_sol_numbers,boolean,"",t,f,f,f,f,Line Numbers,sale
+res.company,sale_invoice_policy,selection,"",t,t,f,f,f,Invoicing Policy,sale
+res.company,sale_automatic_invoice,boolean,"",t,f,f,f,f,Automatic Invoicing,sale
+res.company,allow_spontaneous_returns,boolean,"",t,f,f,f,f,Allow Spontaneous Returns,sale_stock
+res.company,return_validity_days,integer,"",t,f,f,f,f,Return Validity Days,sale_stock
+res.company,security_lead,integer,"",t,t,f,f,f,Sales Safety Days,sale_stock
+res.company,free_order_label,char,"",t,f,f,f,f,Free Order Label,website_sale
+res.company,project_time_mode_id,many2one,uom.uom,t,f,f,f,f,Project Time Unit,hr_timesheet
+res.company,timesheet_encode_uom_id,many2one,uom.uom,t,f,f,f,f,Timesheet Encoding Unit,hr_timesheet
+res.company,internal_project_id,many2one,project.project,t,f,f,f,f,Internal Project,hr_timesheet
+res.company,subcontracting_location_id,many2one,stock.location,t,f,f,f,f,Subcontracting Location,mrp_subcontracting
+res.company,leave_timesheet_task_id,many2one,project.task,t,f,f,f,f,Time Off Task,project_timesheet_holidays
+res.company,lc_journal_id,many2one,account.journal,t,f,f,f,f,Lc Journal,stock_landed_costs
+res.company,dropship_subcontractor_pick_type_id,many2one,stock.picking.type,t,f,f,f,f,Dropship Subcontractor Pick Type,mrp_subcontracting_dropshipping
+res.country,id,integer,"",t,f,t,f,f,ID,base base_address_extended portal payment point_of_sale pos_self_order
+res.country,display_name,char,"",f,f,t,f,f,Display Name,base base_address_extended portal payment point_of_sale pos_self_order
+res.country,name,char,"",t,t,f,f,f,Country Name,base
+res.country,code,char,"",t,t,f,f,f,Country Code,base
+res.country,address_format,text,"",t,f,f,f,f,Layout in Reports,base
+res.country,address_view_id,many2one,ir.ui.view,t,f,f,f,f,Input View,base
+res.country,currency_id,many2one,res.currency,t,f,f,f,f,Currency,base
+res.country,image_url,char,"",f,f,t,f,f,Flag,base
+res.country,phone_code,integer,"",t,f,f,f,f,Phone Prefix,base
+res.country,country_group_ids,many2many,res.country.group,t,f,f,f,f,Country Groups,base
+res.country,country_group_codes,json,"",f,f,t,f,f,Country Group Codes,base
+res.country,state_ids,one2many,res.country.state,t,f,f,f,f,States,base
+res.country,name_position,selection,"",t,f,f,f,f,Customer Name Position,base
+res.country,vat_label,char,"",t,f,f,f,f,Vat Label,base
+res.country,state_required,boolean,"",t,f,f,f,f,State Required,base
+res.country,zip_applicability,selection,"",t,t,f,f,f,Zip,base
+res.country,create_uid,many2one,res.users,t,f,t,f,f,Created by,base
+res.country,create_date,datetime,"",t,f,t,f,f,Created on,base
+res.country,write_uid,many2one,res.users,t,f,t,f,f,Last Updated by,base
+res.country,write_date,datetime,"",t,f,t,f,f,Last Updated on,base
+res.country,enforce_cities,boolean,"",t,f,f,f,f,Enforce Cities,base_address_extended
+res.country,is_mercado_pago_supported_country,boolean,"",f,f,t,f,f,Is Mercado Pago Supported Country,payment
+res.country,is_stripe_supported_country,boolean,"",f,f,t,f,f,Is Stripe Supported Country,payment
+res.country.group,id,integer,"",t,f,t,f,f,ID,base product account
+res.country.group,display_name,char,"",f,f,t,f,f,Display Name,base product account
+res.country.group,name,char,"",t,t,f,f,f,Name,base
+res.country.group,code,char,"",t,f,f,f,f,Code,base
+res.country.group,country_ids,many2many,res.country,t,f,f,f,f,Countries,base
+res.country.group,create_uid,many2one,res.users,t,f,t,f,f,Created by,base
+res.country.group,create_date,datetime,"",t,f,t,f,f,Created on,base
+res.country.group,write_uid,many2one,res.users,t,f,t,f,f,Last Updated by,base
+res.country.group,write_date,datetime,"",t,f,t,f,f,Last Updated on,base
+res.country.group,pricelist_ids,many2many,product.pricelist,t,f,f,f,f,Pricelists,product
+res.country.group,exclude_state_ids,many2many,res.country.state,t,f,f,f,f,Fiscal Exceptions,account
+res.country.state,id,integer,"",t,f,t,f,f,ID,base point_of_sale
+res.country.state,display_name,char,"",f,f,t,f,f,Display Name,base point_of_sale
+res.country.state,country_id,many2one,res.country,t,t,f,f,f,Country,base
+res.country.state,name,char,"",t,t,f,f,f,State Name,base
+res.country.state,code,char,"",t,t,f,f,f,State Code,base
+res.country.state,create_uid,many2one,res.users,t,f,t,f,f,Created by,base
+res.country.state,create_date,datetime,"",t,f,t,f,f,Created on,base
+res.country.state,write_uid,many2one,res.users,t,f,t,f,f,Last Updated by,base
+res.country.state,write_date,datetime,"",t,f,t,f,f,Last Updated on,base
+res.currency,id,integer,"",t,f,t,f,f,ID,base product spreadsheet account point_of_sale
+res.currency,display_name,char,"",f,f,t,f,f,Display Name,base product spreadsheet account point_of_sale
+res.currency,name,char,"",t,t,f,f,f,Currency,base
+res.currency,iso_numeric,integer,"",t,f,f,f,f,Currency numeric code.,base
+res.currency,full_name,char,"",t,f,f,f,f,Name,base
+res.currency,symbol,char,"",t,t,f,f,f,Symbol,base
+res.currency,rate,float,"",f,f,t,f,f,Current Rate,base
+res.currency,inverse_rate,float,"",f,f,t,f,f,Inverse Rate,base
+res.currency,rate_string,char,"",f,f,t,f,f,Rate String,base
+res.currency,rate_date,date,"",f,f,t,f,f,Last Rate Update,base
+res.currency,rate_ids,one2many,res.currency.rate,t,f,f,f,f,Rates,base
+res.currency,rounding,float,"",t,f,f,f,f,Rounding Factor,base
+res.currency,decimal_places,integer,"",t,f,t,f,f,Decimal Places,base
+res.currency,active,boolean,"",t,f,f,f,f,Active,base
+res.currency,position,selection,"",t,f,f,f,f,Symbol Position,base
+res.currency,currency_unit_label,char,"",t,f,f,f,f,Currency Unit,base
+res.currency,currency_subunit_label,char,"",t,f,f,f,f,Currency Subunit,base
+res.currency,is_current_company_currency,boolean,"",f,f,t,f,f,Is Current Company Currency,base
+res.currency,create_uid,many2one,res.users,t,f,t,f,f,Created by,base
+res.currency,create_date,datetime,"",t,f,t,f,f,Created on,base
+res.currency,write_uid,many2one,res.users,t,f,t,f,f,Last Updated by,base
+res.currency,write_date,datetime,"",t,f,t,f,f,Last Updated on,base
+res.currency,display_rounding_warning,boolean,"",f,f,t,f,f,Display Rounding Warning,account
+res.currency,fiscal_country_codes,char,"",f,f,f,f,f,Fiscal Country Codes,account
+res.currency.rate,id,integer,"",t,f,t,f,f,ID,base spreadsheet account
+res.currency.rate,display_name,char,"",f,f,t,f,f,Display Name,base spreadsheet account
+res.currency.rate,name,date,"",t,t,f,f,f,Date,base
+res.currency.rate,rate,float,"",t,f,f,f,f,Technical Rate,base
+res.currency.rate,company_rate,float,"",f,f,f,f,f,Company Rate,base
+res.currency.rate,inverse_company_rate,float,"",f,f,f,f,f,Inverse Company Rate,base
+res.currency.rate,currency_id,many2one,res.currency,t,t,t,f,f,Currency,base
+res.currency.rate,company_id,many2one,res.company,t,f,f,f,f,Company,base
+res.currency.rate,company_currency_id,many2one,res.currency,f,f,t,f,f,Company Currency,base
+res.currency.rate,create_uid,many2one,res.users,t,f,t,f,f,Created by,base
+res.currency.rate,create_date,datetime,"",t,f,t,f,f,Created on,base
+res.currency.rate,write_uid,many2one,res.users,t,f,t,f,f,Last Updated by,base
+res.currency.rate,write_date,datetime,"",t,f,t,f,f,Last Updated on,base
+res.partner,id,integer,"",t,f,t,f,f,ID,base web base_address_extended bus google_address_autocomplete base_geolocalize mail auth_signup calendar contacts fleet phone_validation privacy_lookup product partner_autocomplete portal payment account crm event hr im_livechat mass_mailing project stock survey website account_edi_ubl_cii hr_calendar hr_recruitment mass_mailing_sms point_of_sale purchase website_partner hr_holidays pos_hr purchase_stock sale website_blog delivery pos_self_order website_slides pos_sale repair stock_delivery website_sale website_sale_stock loyalty mrp_subcontracting
+res.partner,display_name,char,"",f,f,t,f,f,Display Name,base web base_address_extended bus google_address_autocomplete base_geolocalize mail auth_signup calendar contacts fleet phone_validation privacy_lookup product partner_autocomplete portal payment account crm event hr im_livechat mass_mailing project stock survey website account_edi_ubl_cii hr_calendar hr_recruitment mass_mailing_sms point_of_sale purchase website_partner hr_holidays pos_hr purchase_stock sale website_blog delivery pos_self_order website_slides pos_sale repair stock_delivery website_sale website_sale_stock loyalty mrp_subcontracting
+res.partner,properties,properties,"",t,f,f,f,f,Properties,base
+res.partner,properties_base_definition_id,many2one,properties.base.definition,f,f,t,f,f,Properties Base Definition,base
+res.partner,image_1920,binary,"",t,f,f,f,f,Image,base
+res.partner,image_1024,binary,"",t,f,t,f,t,Image 1024,base
+res.partner,image_512,binary,"",t,f,t,f,t,Image 512,base
+res.partner,image_256,binary,"",t,f,t,f,t,Image 256,base
+res.partner,image_128,binary,"",t,f,t,f,t,Image 128,base
+res.partner,avatar_1920,binary,"",f,f,t,f,f,Avatar,base
+res.partner,avatar_1024,binary,"",f,f,t,f,f,Avatar 1024,base
+res.partner,avatar_512,binary,"",f,f,t,f,f,Avatar 512,base
+res.partner,avatar_256,binary,"",f,f,t,f,f,Avatar 256,base
+res.partner,avatar_128,binary,"",f,f,t,f,f,Avatar 128,base
+res.partner,name,char,"",t,f,f,f,f,Name,base mail account
+res.partner,complete_name,char,"",t,f,t,f,f,Complete Name,base
+res.partner,parent_id,many2one,res.partner,t,f,f,f,f,Related Company,base mail
+res.partner,parent_name,char,"",f,f,t,f,t,Parent name,base
+res.partner,child_ids,one2many,res.partner,t,f,f,f,f,Related Contacts,base
+res.partner,ref,char,"",t,f,f,f,f,Reference,base
+res.partner,lang,selection,"",t,f,f,f,f,Language,base
+res.partner,active_lang_count,integer,"",f,f,t,f,f,Active Lang Count,base
+res.partner,tz,selection,"",t,f,f,f,f,Timezone,base
+res.partner,tz_offset,char,"",f,f,t,f,f,Timezone offset,base
+res.partner,user_id,many2one,res.users,t,f,f,f,f,Salesperson,base mail
+res.partner,vat,char,"",t,f,f,f,f,Tax ID,base mail
+res.partner,has_vat,boolean,"",f,f,t,f,f,Has Tax ID,base
+res.partner,additional_identifiers,json,"",t,f,f,f,f,Additional Identifiers,base
+res.partner,available_additional_identifiers_metadata,json,"",f,f,t,f,f,Available Additional Identifiers Metadata,base
+res.partner,vat_label,char,"",f,f,t,f,f,Tax ID Label,base
+res.partner,same_vat_partner_id,many2one,res.partner,f,f,t,f,f,Partner with same Tax ID,base
+res.partner,bank_ids,one2many,res.partner.bank,t,f,f,f,f,Banks,base
+res.partner,website,char,"",t,f,f,f,f,Website Link,base
+res.partner,comment,html,"",t,f,f,f,f,Notes,base
+res.partner,category_id,many2many,res.partner.category,t,f,f,f,f,Tags,base
+res.partner,active,boolean,"",t,f,f,f,f,Active,base
+res.partner,employee,boolean,"",t,f,f,f,f,Employee,base hr
+res.partner,function,char,"",t,f,f,f,f,Job Position,base
+res.partner,type,selection,"",t,f,f,f,f,Address Type,base
+res.partner,type_address_label,char,"",f,f,t,f,f,Address Type Description,base
+res.partner,street,char,"",t,f,f,f,f,Street,base
+res.partner,street2,char,"",t,f,f,f,f,Street2,base
+res.partner,zip,char,"",t,f,f,f,f,Zip,base
+res.partner,city,char,"",t,f,f,f,f,City,base
+res.partner,state_id,many2one,res.country.state,t,f,f,f,f,State,base
+res.partner,country_id,many2one,res.country,t,f,f,f,f,Country,base
+res.partner,country_code,char,"",f,f,t,f,t,Country Code,base
+res.partner,partner_latitude,float,"",t,f,f,f,f,Latitude,base
+res.partner,partner_longitude,float,"",t,f,f,f,f,Longitude,base
+res.partner,email,char,"",t,f,f,f,f,Email,base mail
+res.partner,email_formatted,char,"",f,f,t,f,f,Formatted Email,base
+res.partner,phone,char,"",t,f,f,f,f,Phone,base mail
+res.partner,is_company,boolean,"",t,f,t,f,f,Is a Company,base
+res.partner,is_public,boolean,"",f,f,t,f,f,Is Public,base
+res.partner,industry_id,many2one,res.partner.industry,t,f,f,f,f,Industry,base
+res.partner,company_id,many2one,res.company,t,f,f,f,f,Company,base
+res.partner,color,integer,"",t,f,f,f,f,Color Index,base
+res.partner,user_ids,one2many,res.users,t,f,f,f,f,Users,base
+res.partner,main_user_id,many2one,res.users,f,f,t,f,f,Main User,base
+res.partner,partner_share,boolean,"",t,f,t,f,f,Share Partner,base
+res.partner,contact_address,char,"",f,f,t,f,f,Complete Address,base
+res.partner,address,char,"",f,f,t,f,f,Address (without name),base
+res.partner,contact_address_inline,char,"",f,f,t,f,f,Complete Address inline,base mail
+res.partner,address_inline,char,"",f,f,t,f,f,Address inline (without name),base
+res.partner,commercial_partner_id,many2one,res.partner,t,f,t,f,f,Commercial Entity,base
+res.partner,commercial_company_name,char,"",t,f,t,f,t,Company Name Entity,base
+res.partner,barcode,char,"",t,f,f,f,f,Barcode,base
+res.partner,self,many2one,res.partner,f,f,t,f,f,Self,base
+res.partner,application_statistics,json,"",f,f,t,f,f,Stats,base
+res.partner,create_uid,many2one,res.users,t,f,t,f,f,Created by,base
+res.partner,create_date,datetime,"",t,f,t,f,f,Created on,base
+res.partner,write_uid,many2one,res.users,t,f,t,f,f,Last Updated by,base
+res.partner,write_date,datetime,"",t,f,t,f,f,Last Updated on,base
+res.partner,street_name,char,"",t,f,f,f,f,Street Name,base_address_extended
+res.partner,street_number,char,"",t,f,f,f,f,House,base_address_extended
+res.partner,street_number2,char,"",t,f,f,f,f,Door,base_address_extended
+res.partner,city_id,many2one,res.city,t,f,f,f,f,City ID,base_address_extended
+res.partner,country_enforce_cities,boolean,"",f,f,t,f,t,Enforce Cities,base_address_extended
+res.partner,date_localization,date,"",t,f,f,f,f,Geolocation Updated On,base_geolocalize
+res.partner,should_be_geolocalized,boolean,"",t,f,f,f,f,Should Be Geolocalized,base_geolocalize
+res.partner,activity_ids,one2many,mail.activity,t,f,f,f,f,Activities,mail
+res.partner,activity_state,selection,"",f,f,t,f,f,Activity State,mail
+res.partner,activity_user_id,many2one,res.users,f,f,t,f,f,Responsible User,mail
+res.partner,activity_type_id,many2one,mail.activity.type,f,f,f,f,t,Next Activity Type,mail
+res.partner,activity_type_icon,char,"",f,f,t,f,t,Activity Type Icon,mail
+res.partner,activity_date_deadline,date,"",f,f,t,f,f,Next Activity Deadline,mail
+res.partner,my_activity_date_deadline,date,"",f,f,t,f,f,My Activity Deadline,mail
+res.partner,activity_summary,char,"",f,f,f,f,t,Next Activity Summary,mail
+res.partner,activity_exception_decoration,selection,"",f,f,t,f,f,Activity Exception Decoration,mail
+res.partner,activity_exception_icon,char,"",f,f,t,f,f,Icon,mail
+res.partner,activity_plans_ids,many2many,mail.activity.plan,f,f,t,f,f,Activity Plans,mail
+res.partner,channel_ids,many2many,discuss.channel,t,f,f,f,f,Channels,mail
+res.partner,channel_member_ids,one2many,discuss.channel.member,t,f,f,f,f,Channel Member,mail
+res.partner,is_in_call,boolean,"",f,f,t,f,f,Is In Call,mail
+res.partner,rtc_session_ids,one2many,discuss.channel.rtc.session,t,f,f,f,f,Rtc Session,mail
+res.partner,message_is_follower,boolean,"",f,f,t,f,f,Is Follower,mail phone_validation
+res.partner,message_follower_ids,one2many,mail.followers,t,f,f,f,f,Followers,mail phone_validation
+res.partner,message_partner_ids,many2many,res.partner,f,f,f,f,f,Followers (Partners),mail phone_validation
+res.partner,message_ids,one2many,mail.message,t,f,f,f,f,Messages,mail phone_validation
+res.partner,has_message,boolean,"",f,f,t,f,f,Has Message,mail phone_validation
+res.partner,message_needaction,boolean,"",f,f,t,f,f,Action Needed,mail phone_validation
+res.partner,message_needaction_counter,integer,"",f,f,t,f,f,Number of Actions,mail phone_validation
+res.partner,message_has_error,boolean,"",f,f,t,f,f,Message Delivery error,mail phone_validation
+res.partner,message_has_error_counter,integer,"",f,f,t,f,f,Number of errors,mail phone_validation
+res.partner,message_attachment_count,integer,"",f,f,t,f,f,Attachment Count,mail phone_validation
+res.partner,email_normalized,char,"",t,f,t,f,f,Normalized Email,mail
+res.partner,is_blacklisted,boolean,"",f,f,t,f,f,Blacklist,mail
+res.partner,message_bounce,integer,"",t,f,f,f,f,Bounce,mail
+res.partner,signup_type,char,"",t,f,f,f,f,Signup Token Type,auth_signup
+res.partner,activity_calendar_event_id,many2one,calendar.event,f,f,t,f,f,Next Activity Calendar Event,calendar
+res.partner,meeting_count,integer,"",f,f,t,f,f,# Meetings,calendar
+res.partner,meeting_ids,many2many,calendar.event,t,f,f,f,f,Meetings,calendar
+res.partner,meeting_next_date,date,"",f,f,t,f,f,Next Meeting,calendar
+res.partner,meeting_display_label,char,"",f,f,t,f,f,Meeting Display Label,calendar
+res.partner,calendar_last_notif_ack,datetime,"",t,f,f,f,f,Last notification marked as read from base Calendar,calendar
+res.partner,partner_cars_count,integer,"",f,f,t,f,f,Cars Count,fleet
+res.partner,phone_sanitized,char,"",t,f,t,f,f,Sanitized Number,phone_validation
+res.partner,phone_formatted,char,"",f,f,t,f,f,Formatted Number,phone_validation
+res.partner,phone_sanitized_blacklisted,boolean,"",f,f,t,f,f,Phone Blacklisted,phone_validation
+res.partner,phone_blacklisted,boolean,"",f,f,t,f,f,Blacklisted Phone is Phone,phone_validation
+res.partner,phone_mobile_search,char,"",f,f,f,f,f,Phone Number,phone_validation
+res.partner,property_product_pricelist,many2one,product.pricelist,f,f,f,f,f,Pricelist,product
+res.partner,specific_property_product_pricelist,many2one,product.pricelist,t,f,f,f,f,Assigned Pricelist,product
+res.partner,is_pricelist_manually_set,boolean,"",f,f,t,f,f,Is Pricelist Manually Set,product
+res.partner,rating_ids,one2many,rating.rating,t,f,f,f,f,Ratings,rating
+res.partner,message_has_sms_error,boolean,"",f,f,t,f,f,SMS Delivery error,sms
+res.partner,payment_token_ids,one2many,payment.token,t,f,f,f,f,Payment Tokens,payment
+res.partner,payment_token_count,integer,"",f,f,t,f,f,Payment Token Count,payment
+res.partner,fiscal_country_codes,char,"",f,f,t,f,f,Fiscal Country Codes,account
+res.partner,fiscal_country_group_codes,json,"",f,f,t,f,f,Fiscal Country Group Codes,account
+res.partner,partner_vat_placeholder,char,"",f,f,t,f,f,Partner Vat Placeholder,account
+res.partner,duplicate_bank_partner_ids,many2many,res.partner,f,f,t,f,f,Duplicate Bank Partner,account
+res.partner,qr_code_method,selection,"",t,f,f,f,f,Payment QR-code,account
+res.partner,credit,monetary,"",f,f,t,f,f,Total Receivable,account
+res.partner,credit_to_invoice,monetary,"",f,f,t,f,f,Credit To Invoice,account
+res.partner,credit_limit,float,"",t,f,f,f,f,Credit Limit,account
+res.partner,use_partner_credit_limit,boolean,"",f,f,f,f,f,Partner Limit,account
+res.partner,show_credit_limit,boolean,"",f,f,t,f,f,Show Credit Limit,account
+res.partner,days_sales_outstanding,float,"",f,f,t,f,f,Days Sales Outstanding (DSO),account
+res.partner,debit,monetary,"",f,f,t,f,f,Total Payable,account
+res.partner,total_invoiced,monetary,"",f,f,t,f,f,Total Invoiced,account
+res.partner,currency_id,many2one,res.currency,f,f,t,f,f,Currency,account
+res.partner,property_account_payable_id,many2one,account.account,t,f,f,f,f,Account Payable,account
+res.partner,property_account_payable_active,boolean,"",f,f,t,f,t,Account Payable Active,account
+res.partner,property_account_receivable_id,many2one,account.account,t,f,f,f,f,Account Receivable,account
+res.partner,property_account_receivable_active,boolean,"",f,f,t,f,t,Account Receivable Active,account
+res.partner,property_account_position_id,many2one,account.fiscal.position,t,f,f,f,f,Fiscal Position,account
+res.partner,property_payment_term_id,many2one,account.payment.term,t,f,f,f,f,Customer Payment Terms,account
+res.partner,property_supplier_payment_term_id,many2one,account.payment.term,t,f,f,f,f,Vendor Payment Terms,account
+res.partner,ref_company_ids,one2many,res.company,t,f,f,f,f,Companies that refers to partner,account
+res.partner,supplier_invoice_count,integer,"",f,f,t,f,f,# Vendor Bills,account
+res.partner,account_move_count,integer,"",f,f,t,f,f,Account Move Count,account
+res.partner,invoice_ids,one2many,account.move,t,f,t,f,f,Invoices,account
+res.partner,contract_ids,one2many,account.analytic.account,t,f,t,f,f,Partner Contracts,account
+res.partner,bank_account_count,integer,"",f,f,t,f,f,Bank,account
+res.partner,trust,selection,"",t,f,f,f,f,Degree of trust you have in this debtor,account
+res.partner,ignore_abnormal_invoice_date,boolean,"",t,f,f,f,f,Ignore Abnormal Invoice Date,account
+res.partner,ignore_abnormal_invoice_amount,boolean,"",t,f,f,f,f,Ignore Abnormal Invoice Amount,account
+res.partner,global_location_number,char,"",f,f,f,f,f,GLN,account
+res.partner,invoice_sending_method,selection,"",t,f,f,f,f,Invoice sending,account
+res.partner,invoice_edi_format,selection,"",f,f,f,f,f,eInvoice format,account account_edi_ubl_cii
+res.partner,invoice_edi_format_store,char,"",t,f,f,f,f,Invoice Edi Format Store,account
+res.partner,display_invoice_edi_format,boolean,"",f,f,f,f,f,Display Invoice Edi Format,account
+res.partner,invoice_template_pdf_report_id,many2one,ir.actions.report,t,f,f,f,f,Invoice report,account
+res.partner,available_invoice_template_pdf_report_ids,one2many,ir.actions.report,f,f,t,f,f,Available Invoice Template Pdf Report,account
+res.partner,display_invoice_template_pdf_report_id,boolean,"",f,f,t,f,f,Display Invoice Template Pdf Report,account
+res.partner,supplier_rank,integer,"",t,f,f,f,f,Supplier Rank,account
+res.partner,customer_rank,integer,"",t,f,f,f,f,Customer Rank,account
+res.partner,autopost_bills,selection,"",t,t,f,f,f,Auto-post bills,account
+res.partner,property_outbound_payment_method_line_id,many2one,account.payment.method.line,t,f,f,f,f,Property Outbound Payment Method Line,account
+res.partner,property_inbound_payment_method_line_id,many2one,account.payment.method.line,t,f,f,f,f,Property Inbound Payment Method Line,account
+res.partner,opportunity_ids,one2many,crm.lead,t,f,f,f,f,Opportunities,crm
+res.partner,opportunity_count,integer,"",f,f,t,f,f,Opportunity Count,crm
+res.partner,event_count,integer,"",f,f,t,f,f,# Events,event
+res.partner,static_map_url,char,"",f,f,t,f,f,Static Map Url,event
+res.partner,static_map_url_is_valid,boolean,"",f,f,t,f,f,Static Map Url Is Valid,event
+res.partner,employee_ids,one2many,hr.employee,t,f,f,f,f,Employees,hr
+res.partner,employees_count,integer,"",f,f,t,f,f,Employees Count,hr
+res.partner,user_livechat_username,char,"",f,f,t,f,f,User Livechat Username,im_livechat
+res.partner,chatbot_script_ids,one2many,chatbot.script,t,f,f,f,f,Chatbot Script,im_livechat
+res.partner,livechat_channel_count,integer,"",f,f,t,f,f,Livechat Channel Count,im_livechat
+res.partner,mailing_contact_id,many2one,mailing.contact,f,f,t,f,f,Contact,mass_mailing
+res.partner,mailing_contact_ids,one2many,mailing.contact,t,f,f,f,f,Contacts,mass_mailing
+res.partner,project_ids,one2many,project.project,t,f,f,f,f,Projects,project
+res.partner,task_ids,one2many,project.task,t,f,f,f,f,Tasks,project
+res.partner,task_count,integer,"",f,f,t,f,f,# Tasks,project
+res.partner,property_stock_customer,many2one,stock.location,t,f,f,f,f,Customer Location,stock
+res.partner,property_stock_supplier,many2one,stock.location,t,f,f,f,f,Vendor Location,stock
+res.partner,picking_warn_msg,text,"",t,f,f,f,f,Message for Stock Picking,stock
+res.partner,certifications_count,integer,"",f,f,t,f,f,Certifications Count,survey
+res.partner,certifications_company_count,integer,"",f,f,t,f,f,Company Certifications Count,survey
+res.partner,website_id,many2one,website,t,f,f,f,f,Website,website
+res.partner,website_url,char,"",f,f,t,f,f,Website URL,website
+res.partner,website_absolute_url,char,"",f,f,t,f,f,Website Absolute URL,website
+res.partner,website_published,boolean,"",f,f,f,f,f,Visible on current website,website
+res.partner,is_published,boolean,"",t,f,f,f,f,Is Published,website website_partner
+res.partner,publish_on,datetime,"",t,f,f,f,f,Auto publish on,website
+res.partner,published_date,datetime,"",t,f,f,f,f,Published date,website
+res.partner,can_publish,boolean,"",f,f,t,f,f,Can Publish,website
+res.partner,visitor_ids,one2many,website.visitor,t,f,f,f,f,Visitors,website
+res.partner,is_ubl_format,boolean,"",f,f,t,f,f,Is Ubl Format,account_edi_ubl_cii
+res.partner,routing_scheme,selection,"",t,f,f,f,f,Routing ID,account_edi_ubl_cii
+res.partner,routing_endpoint,char,"",t,f,f,f,f,Routing Endpoint,account_edi_ubl_cii
+res.partner,routing_identifier,char,"",f,f,f,f,f,EDI Routing Address,account_edi_ubl_cii
+res.partner,available_routing_schemes,json,"",f,f,t,f,f,Available Routing Schemes,account_edi_ubl_cii
+res.partner,applicant_ids,one2many,hr.applicant,t,f,f,f,f,Applicants,hr_recruitment
+res.partner,pos_order_count,integer,"",f,f,t,f,f,Pos Order Count,point_of_sale
+res.partner,pos_order_ids,one2many,pos.order,t,f,t,f,f,Pos Order,point_of_sale
+res.partner,invoice_emails,char,"",f,f,t,f,f,Invoice Emails,point_of_sale
+res.partner,fiscal_position_id,many2one,account.fiscal.position,f,f,t,f,f,Automatic Fiscal Position,point_of_sale
+res.partner,property_purchase_currency_id,many2one,res.currency,t,f,f,f,f,Supplier Currency,purchase
+res.partner,purchase_order_count,integer,"",f,f,t,f,f,Purchase Order Count,purchase
+res.partner,purchase_warn_msg,text,"",t,f,f,f,f,Message for Purchase Order,purchase
+res.partner,receipt_reminder_email,boolean,"",t,f,f,f,f,Receipt Reminder,purchase
+res.partner,reminder_date_before_receipt,integer,"",t,f,f,f,f,Days Before Receipt,purchase
+res.partner,buyer_id,many2one,res.users,t,f,f,f,f,Buyer,purchase
+res.partner,purchase_incoterm_location,char,"",t,f,f,f,f,Vendor Incoterm Location,purchase
+res.partner,purchase_incoterm_id,many2one,account.incoterms,t,f,f,f,f,Vendor Incoterm,purchase
+res.partner,is_seo_optimized,boolean,"",t,f,t,f,f,SEO optimized,website_partner
+res.partner,website_meta_title,char,"",t,f,f,f,f,Website meta title,website_partner
+res.partner,website_meta_description,text,"",t,f,f,f,f,Website meta description,website_partner
+res.partner,website_meta_keywords,char,"",t,f,f,f,f,Website meta keywords,website_partner
+res.partner,website_meta_og_img,char,"",t,f,f,f,f,Website opengraph image,website_partner
+res.partner,seo_name,char,"",t,f,f,f,f,Seo name,website_partner
+res.partner,website_description,html,"",t,f,f,f,f,Website Partner Full Description,website_partner
+res.partner,website_short_description,text,"",t,f,f,f,f,Website Partner Short Description,website_partner
+res.partner,leave_date_to,date,"",f,f,t,f,f,Leave Date To,hr_holidays
+res.partner,purchase_line_ids,one2many,purchase.order.line,t,f,f,f,f,Purchase Lines,purchase_stock
+res.partner,on_time_rate,float,"",f,f,t,f,f,On-Time Delivery Rate,purchase_stock
+res.partner,suggest_based_on,char,"",t,f,f,f,f,Suggest Based On,purchase_stock
+res.partner,suggest_days,integer,"",t,f,f,f,f,Suggest Days,purchase_stock
+res.partner,suggest_percent,integer,"",t,f,f,f,f,Suggest Percent,purchase_stock
+res.partner,group_rfq,selection,"",t,t,f,f,f,Group RFQ,purchase_stock
+res.partner,group_on,selection,"",t,t,f,f,f,Week Day,purchase_stock
+res.partner,sale_order_count,integer,"",f,f,t,f,f,Sale Order Count,sale
+res.partner,sale_order_ids,one2many,sale.order,t,f,f,f,f,Sales Order,sale
+res.partner,sale_warn_msg,text,"",t,f,f,f,f,Message for Sales Order,sale
+res.partner,incoterm_id,many2one,account.incoterms,t,f,f,f,f,Incoterm,sale
+res.partner,incoterm_location,char,"",t,f,f,f,f,Incoterm Location,sale
+res.partner,blog_post_ids,one2many,blog.post,t,f,f,f,f,Blog Posts,website_blog
+res.partner,property_delivery_carrier_id,many2one,delivery.carrier,t,f,f,f,f,Delivery Method,delivery
+res.partner,slide_channel_ids,many2many,slide.channel,f,f,t,f,f,eLearning Courses,website_slides
+res.partner,slide_channel_completed_ids,one2many,slide.channel,f,f,t,f,f,Completed Courses,website_slides
+res.partner,slide_channel_count,integer,"",f,f,t,f,f,Course Count,website_slides
+res.partner,slide_channel_company_count,integer,"",f,f,t,f,f,Company Course Count,website_slides
+res.partner,repair_order_count,integer,"",f,f,t,f,f,Repair Order Count,repair
+res.partner,pickup_location_data,json,"",t,f,f,f,f,Pickup Location Data,stock_delivery
+res.partner,wishlist_ids,one2many,product.wishlist,t,f,f,f,f,Wishlist,website_sale
+res.partner,pickup_delivery_method_id,many2one,delivery.carrier,t,f,f,f,f,Pickup Delivery Method,website_sale_stock
+res.partner,loyalty_card_count,integer,"",f,f,t,f,f,Active loyalty cards,loyalty
+res.partner,property_stock_subcontractor,many2one,stock.location,t,f,f,f,f,Subcontractor Location,mrp_subcontracting
+res.partner,is_subcontractor,boolean,"",f,f,t,f,f,Subcontractor,mrp_subcontracting
+res.partner,bom_ids,many2many,mrp.bom,f,f,t,f,f,BoMs for which the Partner is one of the subcontractors,mrp_subcontracting
+res.partner,production_ids,many2many,mrp.production,f,f,t,f,f,MRP Productions for which the Partner is the subcontractor,mrp_subcontracting
+res.partner,picking_ids,many2many,stock.picking,f,f,t,f,f,Stock Pickings for which the Partner is the subcontractor,mrp_subcontracting
+res.partner.bank,id,integer,"",t,f,t,f,f,ID,base account hr account_qr_code_sepa
+res.partner.bank,display_name,char,"",f,f,t,f,f,Display Name,base account hr account_qr_code_sepa
+res.partner.bank,active,boolean,"",t,f,f,f,f,Active,base account
+res.partner.bank,account_type,selection,"",f,f,t,f,f,Type,base account
+res.partner.bank,account_number,char,"",t,t,f,f,f,Account Number,base account
+res.partner.bank,sanitized_account_number,char,"",t,f,t,f,f,Sanitized Account Number,base
+res.partner.bank,holder_name,char,"",t,f,f,f,f,Holder Name,base account
+res.partner.bank,partner_id,many2one,res.partner,t,t,f,f,f,Partner,base account
+res.partner.bank,allow_out_payment,boolean,"",t,f,f,f,f,Trust Bank Account,base account
+res.partner.bank,bank_name,char,"",t,f,f,f,f,Bank Name,base
+res.partner.bank,street,char,"",t,f,f,f,f,Street,base
+res.partner.bank,street2,char,"",t,f,f,f,f,Street2,base
+res.partner.bank,zip,char,"",t,f,f,f,f,Zip,base
+res.partner.bank,city,char,"",t,f,f,f,f,City,base
+res.partner.bank,state_id,many2one,res.country.state,t,f,f,f,f,Fed. State,base
+res.partner.bank,country_id,many2one,res.country,t,f,f,f,f,Country,base
+res.partner.bank,country_code,char,"",f,f,t,f,t,Country Code,base
+res.partner.bank,bank_bic,char,"",t,f,f,f,f,BIC/SWIFT,base account
+res.partner.bank,clearing_label_id,many2one,clearing.label,t,t,f,f,f,Clearing Label,base
+res.partner.bank,clearing_number,char,"",t,f,f,f,f,Clearing Number,base account
+res.partner.bank,show_clearing_number,boolean,"",f,f,t,f,f,Show Clearing Number,base
+res.partner.bank,sequence,integer,"",t,f,f,f,f,Sequence,base
+res.partner.bank,company_id,many2one,res.company,t,f,f,f,f,Company,base
+res.partner.bank,note,text,"",t,f,f,f,f,Notes,base
+res.partner.bank,color,integer,"",f,f,t,f,f,Color,base
+res.partner.bank,create_uid,many2one,res.users,t,f,t,f,f,Created by,base
+res.partner.bank,create_date,datetime,"",t,f,t,f,f,Created on,base
+res.partner.bank,write_uid,many2one,res.users,t,f,t,f,f,Last Updated by,base
+res.partner.bank,write_date,datetime,"",t,f,t,f,f,Last Updated on,base
+res.partner.bank,activity_ids,one2many,mail.activity,t,f,f,f,f,Activities,account
+res.partner.bank,activity_state,selection,"",f,f,t,f,f,Activity State,account
+res.partner.bank,activity_user_id,many2one,res.users,f,f,t,f,f,Responsible User,account
+res.partner.bank,activity_type_id,many2one,mail.activity.type,f,f,f,f,t,Next Activity Type,account
+res.partner.bank,activity_type_icon,char,"",f,f,t,f,t,Activity Type Icon,account
+res.partner.bank,activity_date_deadline,date,"",f,f,t,f,f,Next Activity Deadline,account
+res.partner.bank,my_activity_date_deadline,date,"",f,f,t,f,f,My Activity Deadline,account
+res.partner.bank,activity_summary,char,"",f,f,f,f,t,Next Activity Summary,account
+res.partner.bank,activity_exception_decoration,selection,"",f,f,t,f,f,Activity Exception Decoration,account
+res.partner.bank,activity_exception_icon,char,"",f,f,t,f,f,Icon,account
+res.partner.bank,activity_plans_ids,many2many,mail.activity.plan,f,f,t,f,f,Activity Plans,account
+res.partner.bank,activity_calendar_event_id,many2one,calendar.event,f,f,t,f,f,Next Activity Calendar Event,account
+res.partner.bank,message_is_follower,boolean,"",f,f,t,f,f,Is Follower,account
+res.partner.bank,message_follower_ids,one2many,mail.followers,t,f,f,f,f,Followers,account
+res.partner.bank,message_partner_ids,many2many,res.partner,f,f,f,f,f,Followers (Partners),account
+res.partner.bank,message_ids,one2many,mail.message,t,f,f,f,f,Messages,account
+res.partner.bank,has_message,boolean,"",f,f,t,f,f,Has Message,account
+res.partner.bank,message_needaction,boolean,"",f,f,t,f,f,Action Needed,account
+res.partner.bank,message_needaction_counter,integer,"",f,f,t,f,f,Number of Actions,account
+res.partner.bank,message_has_error,boolean,"",f,f,t,f,f,Message Delivery error,account
+res.partner.bank,message_has_error_counter,integer,"",f,f,t,f,f,Number of errors,account
+res.partner.bank,message_attachment_count,integer,"",f,f,t,f,f,Attachment Count,account
+res.partner.bank,rating_ids,one2many,rating.rating,t,f,f,f,f,Ratings,account
+res.partner.bank,message_has_sms_error,boolean,"",f,f,t,f,f,SMS Delivery error,account
+res.partner.bank,journal_id,one2many,account.journal,t,f,t,f,f,Account Journal,account
+res.partner.bank,has_phishing_warnings,boolean,"",t,f,t,f,f,Has Phishing Warnings,account
+res.partner.bank,phishing_warnings,json,"",f,f,t,f,f,Phishing Warnings,account
+res.partner.bank,partner_supplier_rank,integer,"",f,f,t,f,t,Supplier Rank,account
+res.partner.bank,partner_customer_rank,integer,"",f,f,t,f,t,Customer Rank,account
+res.partner.bank,related_moves,one2many,account.move,t,f,f,f,f,Related Moves,account
+res.partner.bank,user_has_group_validate_bank_account,boolean,"",f,f,t,f,f,User Has Group Validate Bank Account,account
+res.partner.bank,lock_trust_fields,boolean,"",f,f,t,f,f,Lock Trust Fields,account
+res.partner.bank,duplicate_bank_partner_ids,many2many,res.partner,f,f,t,f,f,Duplicate Bank Partner,account
+res.partner.bank,employee_id,many2many,hr.employee,f,f,t,f,f,Employee,hr
+res.partner.bank,employee_salary_amount,float,"",f,f,t,f,f,Salary Allocation,hr
+res.partner.bank,employee_salary_amount_is_percentage,boolean,"",f,f,t,f,f,Employee Salary Amount Is Percentage,hr
+res.partner.bank,currency_symbol,char,"",f,f,t,f,t,Symbol,hr
+res.partner.bank,employee_has_multiple_bank_accounts,boolean,"",f,f,t,f,t,Has Multiple Bank Accounts,hr
+res.partner.category,id,integer,"",t,f,t,f,f,ID,base
+res.partner.category,display_name,char,"",f,f,t,f,f,Display Name,base
+res.partner.category,name,char,"",t,t,f,f,f,Name,base
+res.partner.category,color,integer,"",t,f,f,f,f,Color,base
+res.partner.category,parent_id,many2one,res.partner.category,t,f,f,f,f,Category,base
+res.partner.category,child_ids,one2many,res.partner.category,t,f,f,f,f,Child Tags,base
+res.partner.category,active,boolean,"",t,f,f,f,f,Active,base
+res.partner.category,parent_path,char,"",t,f,f,f,f,Parent Path,base
+res.partner.category,partner_ids,many2many,res.partner,t,f,f,f,f,Partners,base
+res.partner.category,create_uid,many2one,res.users,t,f,t,f,f,Created by,base
+res.partner.category,create_date,datetime,"",t,f,t,f,f,Created on,base
+res.partner.category,write_uid,many2one,res.users,t,f,t,f,f,Last Updated by,base
+res.partner.category,write_date,datetime,"",t,f,t,f,f,Last Updated on,base
+res.partner.industry,id,integer,"",t,f,t,f,f,ID,base
+res.partner.industry,display_name,char,"",f,f,t,f,f,Display Name,base
+res.partner.industry,name,char,"",t,f,f,f,f,Name,base
+res.partner.industry,full_name,char,"",t,f,f,f,f,Full Name,base
+res.partner.industry,active,boolean,"",t,f,f,f,f,Active,base
+res.partner.industry,create_uid,many2one,res.users,t,f,t,f,f,Created by,base
+res.partner.industry,create_date,datetime,"",t,f,t,f,f,Created on,base
+res.partner.industry,write_uid,many2one,res.users,t,f,t,f,f,Last Updated by,base
+res.partner.industry,write_date,datetime,"",t,f,t,f,f,Last Updated on,base
+resource.calendar,id,integer,"",t,f,t,f,f,ID,resource hr hr_work_entry hr_holidays
+resource.calendar,display_name,char,"",f,f,t,f,f,Display Name,resource hr hr_work_entry hr_holidays
+resource.calendar,name,char,"",t,t,f,f,f,Name,resource
+resource.calendar,active,boolean,"",t,f,f,f,f,Active,resource
+resource.calendar,attendance_ids,one2many,resource.calendar.attendance,t,f,f,f,f,Working Time,resource
+resource.calendar,company_id,many2one,res.company,t,f,f,f,f,Company,resource
+resource.calendar,country_id,many2one,res.country,f,f,t,f,t,Country,resource
+resource.calendar,country_code,char,"",f,f,t,f,t,Country Code,resource
+resource.calendar,leave_ids,one2many,resource.calendar.leaves,t,f,f,f,f,Time Off,resource
+resource.calendar,full_time_required_hours,float,"",t,f,f,f,f,Full Time Equivalent,resource
+resource.calendar,global_leave_ids,one2many,resource.calendar.leaves,t,f,f,f,f,Global Time Off,resource
+resource.calendar,days_per_week,float,"",t,f,f,f,f,Days per Week,resource
+resource.calendar,hours_per_day,float,"",t,f,f,f,f,Average Hour per Day,resource
+resource.calendar,hours_per_week,float,"",t,f,f,f,f,Hours per Week,resource
+resource.calendar,is_fulltime,boolean,"",f,f,t,f,f,Is Full Time,resource
+resource.calendar,work_resources_count,integer,"",f,f,t,f,f,Work Resources count,resource
+resource.calendar,work_time_rate,float,"",t,f,t,f,f,Work Time Rate,resource
+resource.calendar,calendar_type,selection,"",t,t,f,f,f,Calendar Type,resource
+resource.calendar,reference_calendar_id,many2one,resource.calendar,t,f,f,f,f,Reference Calendar,resource
+resource.calendar,create_uid,many2one,res.users,t,f,t,f,f,Created by,resource
+resource.calendar,create_date,datetime,"",t,f,t,f,f,Created on,resource
+resource.calendar,write_uid,many2one,res.users,t,f,t,f,f,Last Updated by,resource
+resource.calendar,write_date,datetime,"",t,f,t,f,f,Last Updated on,resource
+resource.calendar,version_ids,one2many,hr.version,t,f,t,f,f,Version,hr
+resource.calendar,employees_count,integer,"",f,f,t,f,f,Employees Count,hr
+resource.calendar,material_resources_count,integer,"",f,f,t,f,f,Material Resources Count,hr
+resource.calendar,associated_leaves_count,integer,"",f,f,t,f,f,Time Off Count,hr_holidays
+resource.calendar,leave_accrual_plan_id,many2one,hr.leave.accrual.plan,t,f,f,f,f,Accrual Plan,hr_holidays
+uom.uom,id,integer,"",t,f,t,f,f,ID,uom product account stock account_edi_ubl_cii point_of_sale hr_timesheet
+uom.uom,display_name,char,"",f,f,t,f,f,Display Name,uom product account stock account_edi_ubl_cii point_of_sale hr_timesheet
+uom.uom,name,char,"",t,t,f,f,f,Unit Name,uom
+uom.uom,sequence,integer,"",t,f,f,f,f,Sequence,uom
+uom.uom,relative_factor,float,"",t,t,f,f,f,Contains,uom
+uom.uom,active,boolean,"",t,f,f,f,f,Active,uom
+uom.uom,relative_uom_id,many2one,uom.uom,t,f,f,f,f,Reference Unit,uom
+uom.uom,related_uom_ids,one2many,uom.uom,t,f,f,f,f,Related UoMs,uom
+uom.uom,factor,float,"",t,f,t,f,f,Absolute Quantity,uom
+uom.uom,parent_path,char,"",t,f,f,f,f,Parent Path,uom
+uom.uom,create_uid,many2one,res.users,t,f,t,f,f,Created by,uom
+uom.uom,create_date,datetime,"",t,f,t,f,f,Created on,uom
+uom.uom,write_uid,many2one,res.users,t,f,t,f,f,Last Updated by,uom
+uom.uom,write_date,datetime,"",t,f,t,f,f,Last Updated on,uom
+uom.uom,product_uom_ids,one2many,product.uom,t,f,f,f,f,Barcodes,product
+uom.uom,fiscal_country_codes,char,"",f,f,t,f,f,Fiscal Country Codes,account
+uom.uom,package_type_id,many2one,stock.package.type,t,f,f,f,f,Package Type,stock
+uom.uom,route_ids,many2many,stock.route,f,f,t,f,t,Routes,stock
+uom.uom,unece_code,char,"",t,f,f,f,f,UN/ECE Code,account_edi_ubl_cii
+uom.uom,is_unece_code_supported,boolean,"",f,f,t,f,f,Is Unece Code Supported,account_edi_ubl_cii
+uom.uom,is_pos_groupable,boolean,"",t,f,f,f,f,Group Products in POS,point_of_sale
+uom.uom,timesheet_widget,char,"",t,f,f,f,f,Widget,hr_timesheet

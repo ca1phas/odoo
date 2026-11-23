@@ -1,0 +1,669 @@
+module,name,kind,apps (top),apps (all in closure),depends,auto_install,application,category,installable,license,summary
+account,Invoicing,app,account,account,base_setup onboarding product analytic portal digest,no,yes,Accounting/Accounting,yes,LGPL-3,Invoices & Payments
+account_check_printing,Check Printing Base,extension,account,account,account,no,,Accounting/Accounting,yes,LGPL-3,Check printing basic features
+account_debit_note,Debit Notes,extension,account,account,account,no,,Accounting/Accounting,yes,LGPL-3,Debit Notes
+account_edi,Import/Export Invoices From XML/PDF,extension,account,account,account,no,,Accounting/Accounting,yes,LGPL-3,
+account_edi_proxy_client,Proxy features for account_edi,extension,account,account,account certificate,no,,Accounting/Accounting,yes,LGPL-3,
+account_edi_ubl_cii,Import/Export electronic invoices with UBL/CII,extension,account,account,account,yes,,Accounting/Accounting,yes,LGPL-3,
+account_fleet,Accounting/Fleet bridge,bridge,account + fleet,account + fleet,fleet account,yes,,Accounting/Accounting,yes,LGPL-3,Manage accounting with fleets
+account_payment,Payment - Account,extension,account,account,account payment,if account,,Accounting/Accounting,yes,LGPL-3,Enable customers to pay invoices on the portal and post payments when transactions are processed.
+account_payment_custom,Payment Custom / Account Payment,extension,account,account,account_payment payment_custom,yes,,Accounting/Payment Custom,yes,LGPL-3,Bridge between payment_custom and account_payment.
+account_payment_interco,Intercompany Payment - Account,extension,account,account,account_payment,no,,Accounting/Accounting,yes,LGPL-3,Enable Intercompany payments to reconcile with their invoices on post.
+account_peppol,Peppol,extension,account,account,account_edi_proxy_client account_edi_ubl_cii,if account_edi_ubl_cii,,Accounting/Accounting,yes,LGPL-3,This module is used to send/receive documents with Peppol
+account_qr_code_emv,account_qr_code_emv,extension,account,account,account,no,,Accounting/Payment,yes,LGPL-3,
+account_qr_code_sepa,Account SEPA QR Code,extension,account,account,account,yes,,Accounting/Payment,yes,LGPL-3,
+account_tax_python,Define Taxes as Python Code,extension,account,account,account,no,,Accounting/Accounting,yes,LGPL-3,Use python code to define taxes
+account_test,Accounting Consistency Tests,extension,account,account,account,no,,Accounting/Accounting,yes,LGPL-3,
+account_update_tax_tags,Account - Allow updating tax grids,extension,account,account,account,no,,Accounting/Accounting,yes,LGPL-3,Allow updating tax grids on existing entries
+analytic,Analytic Accounting,foundation,,,base mail uom,no,,Accounting/Accounting,yes,LGPL-3,
+api_doc,API Documentation,foundation,,,web,yes,,Hidden,yes,LGPL-3,
+attachment_indexation,Attachments List and Document Indexation,foundation,,,web,no,,Hidden/Tools,yes,LGPL-3,
+auth_ldap,Authentication via LDAP,foundation,,,base base_setup,no,,Hidden/Tools,yes,LGPL-3,
+auth_oauth,OAuth2 Authentication,foundation,,,base web base_setup auth_signup,no,,Hidden/Tools,yes,LGPL-3,
+auth_passkey,Passkeys,foundation,,,base_setup web,yes,,Hidden/Tools,yes,LGPL-3,Log in with a Passkey
+auth_passkey_portal,Passkeys Portal,foundation,,,auth_passkey portal,yes,,Hidden/Tools,yes,LGPL-3,Passkeys for portal users
+auth_password_policy,Password Policy,foundation,,,base_setup web,no,,Hidden/Tools,yes,LGPL-3,Implement basic password policy configuration & check
+auth_password_policy_portal,Password Policy support for Signup,foundation,,,auth_password_policy portal,yes,,Tools,yes,LGPL-3,
+auth_password_policy_signup,Password Policy support for Signup,foundation,,,auth_password_policy auth_signup,yes,,Hidden/Tools,yes,LGPL-3,
+auth_signup,Signup,foundation,,,base_setup mail web,yes,,Hidden/Tools,yes,LGPL-3,
+auth_timeout,Auth Timeout,foundation,,,auth_totp auth_totp_mail auth_passkey bus,no,,Hidden/Tools,yes,LGPL-3,Ask for authentication after user inactivity
+auth_totp,Two-Factor Authentication (TOTP),foundation,,,web,yes,,Extra Tools,yes,LGPL-3,
+auth_totp_mail,2FA Invite mail,foundation,,,auth_totp mail,yes,,Extra Tools,yes,LGPL-3,
+auth_totp_portal,TOTPortal,foundation,,,portal auth_totp,yes,,Hidden,yes,LGPL-3,
+barcodes,Barcode,foundation,,,web,no,,Supply Chain/Inventory,yes,LGPL-3,Scan and Parse Barcodes
+barcodes_gs1_nomenclature,Barcode - GS1 Nomenclature,foundation,,,barcodes uom,no,,Supply Chain/Inventory,yes,LGPL-3,Parse barcodes according to the GS1-128 specifications
+base,Base,foundation,,,,yes,,Hidden,yes,LGPL-3,
+base_address_extended,Extended Addresses,foundation,,,web,no,,Sales/Sales,yes,LGPL-3,Add extra fields on addresses
+base_automation,Automation Rules,foundation,,,base digest resource mail sms,no,,Sales/Sales,yes,LGPL-3,
+base_geolocalize,Partners Geolocation,foundation,,,base_setup,no,,Sales/Sales,yes,LGPL-3,
+base_import,Base import,foundation,,,web,yes,,Hidden/Tools,yes,LGPL-3,
+base_import_module,Base import module,foundation,,,web,yes,,Hidden/Tools,yes,LGPL-3,
+base_install_request,Base - Module Install Request,foundation,,,mail,yes,,Hidden,yes,LGPL-3,
+base_report_paper_muncher,Report Engine: Paper Muncher,foundation,,,base_setup,no,,Hidden/Tools,yes,LGPL-3,Paper Muncher Engine
+base_report_wkhtmltox,Report Engine: wkhtmltopdf/wkhtmltoimage,foundation,,,,yes,,Hidden/Tools,yes,LGPL-3,wkhtmltopdf rendering engine
+base_setup,Initial Setup Tools,foundation,,,base web,yes,,Hidden,yes,LGPL-3,
+base_sparse_field,Sparse Fields,foundation,,,base,no,,Hidden,yes,LGPL-3,Implementation of sparse fields.
+board,Dashboards,foundation,,,spreadsheet_dashboard,no,,Productivity,yes,LGPL-3,Build your own dashboards
+bus,IM Bus,foundation,,,base web,yes,,Hidden,yes,LGPL-3,
+calendar,Calendar,foundation app,,,base mail,no,yes,Productivity/Calendar,yes,LGPL-3,Schedule employees' meetings
+calendar_sms,Calendar - SMS,foundation,,,calendar sms,yes,,Productivity/Calendar,yes,LGPL-3,Send text messages as event reminders
+certificate,Certificate,foundation,,,base_setup,no,,Hidden/Tools,yes,LGPL-3,Manage certificate
+cloud_storage,Cloud Storage,foundation,,,base_setup mail,no,,Technical Settings,yes,LGPL-3,Store chatter attachments in the cloud
+cloud_storage_azure,Cloud Storage Azure,foundation,,,cloud_storage,no,,Technical Settings,yes,LGPL-3,Store chatter attachments in the Azure cloud
+cloud_storage_google,Cloud Storage Google,foundation,,,cloud_storage,no,,Technical Settings,yes,LGPL-3,Store chatter attachments in the Google cloud
+cloud_storage_migration,Cloud Storage Migration,foundation,,,cloud_storage,no,,Technical Settings,yes,LGPL-3,Migrate local attachments to cloud storage
+contacts,Contacts,foundation app,,,base_address_extended mail web_hierarchy,no,yes,Sales/CRM,yes,LGPL-3,Centralize your address book
+crm,CRM,app,crm,crm,base_setup base_install_request sales_team mail calendar resource utm web_tour contacts digest phone_validation,no,yes,Sales/CRM,yes,LGPL-3,Track leads and close opportunities
+crm_iap_enrich,Lead Enrichment,extension,crm,crm,iap_crm iap_mail,yes,,Sales/CRM,yes,LGPL-3,Enrich Leads/Opportunities using email address domain
+crm_iap_mine,Lead Generation,extension,crm,crm,iap_crm iap_mail,yes,,Sales/CRM,yes,LGPL-3,"Generate Leads/Opportunities based on country, industries, size, etc."
+crm_livechat,CRM Livechat,bridge,crm + im_livechat,crm + im_livechat,crm im_livechat,yes,,Sales/CRM,yes,LGPL-3,Create lead from livechat conversation
+crm_mail_plugin,CRM Mail Plugin,extension,crm,crm,crm mail_plugin,yes,,Sales/CRM,yes,LGPL-3,Turn emails received in your mailbox into leads and log their content as internal notes.
+crm_sale_project,CRM - Project,bridge,crm + project + sale_management,account + crm + project + sale_management,sale_project crm,yes,,Sales/CRM,yes,LGPL-3,Project Generation from Opportunities
+crm_sms,SMS in CRM,extension,crm,crm,crm sms,yes,,Sales/CRM,yes,LGPL-3,Add SMS capabilities to CRM
+data_recycle,Data Recycle,app,data_recycle,data_recycle,mail,no,yes,Productivity/Data Cleaning,yes,LGPL-3,Find old records and archive/delete them
+delivery,Delivery Costs,extension,sale_management,account + sale_management,sale payment_custom,no,,Sales/Delivery,yes,LGPL-3,
+digest,KPI Digests,foundation,,,mail portal resource,no,,Marketing,yes,LGPL-3,
+event,Events Organization,app core,website_event,website + website_event,barcodes base_setup digest mail phone_validation portal utm,no,,Marketing/Events,yes,LGPL-3,"Trainings, Conferences, Meetings, Exhibitions, Registrations"
+event_booth,Events Booths,extension,website_event,website + website_event,event,no,,Marketing/Events,yes,LGPL-3,Manage event booths
+event_booth_sale,Events Booths Sales,bridge,sale_management + website_event,account + sale_management + website + website_event,event_booth event_sale,yes,,Marketing/Events,yes,LGPL-3,Manage event booths sale
+event_crm,Event CRM,bridge,crm + website_event,crm + website + website_event,event crm,yes,,Marketing/Events,yes,LGPL-3,
+event_crm_sale,Event CRM Sale,bridge,crm + sale_management + website_event,account + crm + sale_management + website + website_event,event_crm event_sale,yes,,Marketing/Events,yes,LGPL-3,
+event_product,Events Product,bridge,account + website_event,account + website + website_event,event product account,yes,,Marketing/Events,yes,LGPL-3,
+event_sale,Events Sales,bridge,sale_management + website_event,account + sale_management + website + website_event,event_product sale_management,yes,,Marketing/Events,yes,LGPL-3,
+event_sms,SMS on Events,extension,website_event,website + website_event,event sms,yes,,Marketing/Events,yes,LGPL-3,
+fleet,Fleet,app,fleet,fleet,base mail,no,yes,Human Resources/Fleet,yes,LGPL-3,Manage your fleet and track car costs
+fleet_maintenance,Maintenance - Fleet,bridge,fleet + maintenance,fleet + maintenance,fleet maintenance,yes,,Human Resources,yes,LGPL-3,Integrates Fleet and Maintenance
+gamification,Gamification,foundation,,,mail,no,,Human Resources,yes,LGPL-3,
+gamification_sale_crm,CRM Gamification,bridge,crm + sale_management,account + crm + sale_management,gamification sale_crm,yes,,Sales/CRM,yes,LGPL-3,
+google_account,Google Users,foundation,,,base_setup,no,,Hidden/Tools,yes,LGPL-3,
+google_address_autocomplete,Google Address Autocomplete,foundation,,,web,no,,Hidden/Tools,yes,LGPL-3,Assist with automatic completion & suggestions when filling address
+google_calendar,Google Calendar,foundation,,,google_account calendar,no,,Productivity,yes,LGPL-3,
+google_gmail,Google Gmail,foundation,,,mail,yes,,Hidden,yes,LGPL-3,
+google_recaptcha,Google reCAPTCHA integration,foundation,,,base_setup,no,,Hidden,yes,LGPL-3,
+hr,Employees,app,hr,hr,auth_signup base_setup digest phone_validation resource_mail web_hierarchy,no,yes,Human Resources/Employees,yes,LGPL-3,Centralize employee information
+hr_address_extended,HR Address Extended,extension,hr,hr,hr base_address_extended,no,,Human Resources/Employees,yes,LGPL-3,Centralize employee information
+hr_attendance,Attendances,app,hr_attendance,hr + hr_attendance,hr hr_work_entry barcodes base_geolocalize,no,yes,Human Resources/Attendances,yes,LGPL-3,Track employee attendance
+hr_calendar,Display Working Hours in Calendar,extension,hr,hr,hr calendar,yes,,Human Resources/Employees,yes,LGPL-3,
+hr_calendar_google,HR Calendar with Google Calendar,extension,hr,hr,hr_calendar google_calendar,yes,,Human Resources/Remote Work,yes,LGPL-3,
+hr_expense,Expenses,app,hr_expense,account + hr + hr_expense,account web_tour hr,no,yes,Human Resources/Expenses,yes,LGPL-3,"Submit, validate and reinvoice employee expenses"
+hr_fleet,Fleet History,bridge,fleet + hr,fleet + hr,hr fleet,yes,,Human Resources,yes,LGPL-3,Get history of driven cars by employees
+hr_gamification,HR Gamification,extension,hr,hr,gamification hr,yes,,Human Resources,yes,LGPL-3,
+hr_holidays,Time Off,app,hr_holidays,hr + hr_holidays,hr_work_entry hr_calendar resource,no,yes,Human Resources/Time Off,yes,LGPL-3,Allocate time off and follow leave requests
+hr_holidays_attendance,HR Attendance Holidays,bridge,hr_attendance + hr_holidays,hr + hr_attendance + hr_holidays,hr_attendance hr_holidays,yes,,Human Resources,yes,LGPL-3,Attendance Holidays
+hr_livechat,HR - Livechat,bridge,hr + im_livechat,hr + im_livechat,hr im_livechat,yes,,Human Resources,yes,LGPL-3,
+hr_maintenance,Maintenance - HR,bridge,hr + maintenance,hr + maintenance,hr maintenance,yes,,Human Resources,yes,LGPL-3,"Equipment, Assets, Internal Hardware, Allocation Tracking"
+hr_presence,Employee Presence Control,extension,hr_holidays,hr + hr_holidays,hr hr_holidays sms,no,,Human Resources,yes,LGPL-3,
+hr_recruitment,Recruitment,app,hr_recruitment,hr + hr_recruitment,hr calendar utm attachment_indexation web_tour digest,no,yes,Human Resources/Recruitment,yes,LGPL-3,Track your recruitment pipeline
+hr_recruitment_skills,Recruitment - Skills Management,bridge,hr_recruitment + hr_skills,hr + hr_recruitment + hr_skills,hr_skills hr_recruitment,yes,,Human Resources/Recruitment,yes,LGPL-3,Manage skills of your employees
+hr_recruitment_sms,Recruitment - SMS,extension,hr_recruitment,hr + hr_recruitment,hr_recruitment sms,yes,,Human Resources/Recruitment,yes,LGPL-3,Mass mailing sms to job applicants
+hr_recruitment_survey,Hr Recruitment Interview Forms,bridge,hr_recruitment + survey,hr + hr_recruitment + survey,survey hr_recruitment,no,,Human Resources,yes,LGPL-3,Surveys
+hr_skills,Skills Management,app,hr_skills,hr + hr_skills,hr,yes,yes,Human Resources/Employees,yes,LGPL-3,"Manage skills, knowledge and resume of your employees"
+hr_skills_event,Skills Events,bridge,hr_skills + website_event,hr + hr_skills + website + website_event,hr_skills event,yes,,Hidden,yes,LGPL-3,Link training events to resume of your employees
+hr_skills_slides,Skills e-learning,bridge,hr_skills + website_slides,hr + hr_skills + website + website_slides,hr_skills website_slides,yes,,Human Resources/Employees,yes,LGPL-3,Add completed courses to resume of your employees
+hr_skills_survey,Skills Certification,bridge,hr_skills + survey,hr + hr_skills + survey,hr_skills survey,yes,,Human Resources/Employees,yes,LGPL-3,Add certification to resume of your employees
+hr_timesheet,Task Logs,bridge,hr + project,hr + project,hr analytic project uom,no,,Services/Timesheets,yes,LGPL-3,Track employee time on tasks
+hr_timesheet_attendance,Timesheets/attendances reporting,bridge,hr_attendance + project,hr + hr_attendance + project,hr_timesheet hr_attendance,yes,,Human Resources/Attendances,yes,LGPL-3,
+hr_work_entry,Work Entries,extension,hr,hr,hr,no,,Human Resources/Employees,yes,LGPL-3,Manage work entries
+html_builder,HTML Builder,foundation,,,html_editor,no,,,yes,LGPL-3,Generic html builder
+html_editor,HTML Editor,foundation,,,base bus web,yes,,Hidden,yes,LGPL-3,A Html Editor component and plugin system.
+http_routing,Web Routing,foundation,,,web,no,,Hidden,yes,LGPL-3,Web Routing
+iap,In-App Purchase,foundation,,,web base_setup,yes,,Hidden/Tools,yes,LGPL-3,Basic models and helpers to support In-App Purchase.
+iap_crm,IAP / CRM,extension,crm,crm,crm iap_mail,yes,,Hidden/Tools,yes,LGPL-3,Bridge between IAP and CRM
+iap_mail,IAP / Mail,foundation,,,iap mail,yes,,Hidden/Tools,yes,LGPL-3,Bridge between IAP and mail
+im_livechat,Live Chat,app,im_livechat,im_livechat,mail digest utm phone_validation,no,yes,Website/Live Chat,yes,LGPL-3,Chat with your website visitors
+iot_drivers,Hardware Proxy,foundation,,,,no,,Hidden,no,LGPL-3,Connect the Web Client to Hardware Peripherals
+iot_webserial,Web Serial IoT devices,foundation,,,web,no,,Administration/IoT,yes,LGPL-3,Interface with serial devices directly via the browser using Web Serial.
+l10n_account_edi_ubl_cii_tests,Testing the Import/Export invoices with UBL/CII,localisation,account,account,account_edi_ubl_cii l10n_fr_account l10n_be l10n_de l10n_nl l10n_au,no,,Accounting/Accounting,yes,LGPL-3,
+l10n_account_withholding_tax,Withholding Tax,localisation,account,account,account,no,,Accounting/Localizations,yes,LGPL-3,
+l10n_account_withholding_tax_pos,Withholding Tax on Payment - PoS,localisation,point_of_sale,account + point_of_sale,l10n_account_withholding_tax point_of_sale,yes,,Accounting/Localizations,yes,LGPL-3,
+l10n_ae,United Arab Emirates - Accounting,localisation,account,account,account l10n_gcc_invoice,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_ae_pos,United Arab Emirates - Point of Sale,localisation,point_of_sale,account + point_of_sale,l10n_gcc_pos l10n_ae,yes,,Accounting/Localizations/Point of Sale,yes,LGPL-3,
+l10n_ae_ubl_pint,United Arab Emirates - UBL PINT,localisation,account,account,account_edi_ubl_cii account_peppol l10n_ae,no,,Accounting/Localizations/EDI,yes,LGPL-3,
+l10n_anz_ubl_pint,Australia & New Zealand - UBL PINT,localisation,account,account,account_edi_ubl_cii,no,,Accounting/Localizations/EDI,yes,LGPL-3,
+l10n_ar,Argentina - Accounting,localisation,account,account,l10n_latam_invoice_document account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_ar_pos,Argentinean - Point of Sale with AR Doc,localisation,point_of_sale,account + point_of_sale,l10n_ar point_of_sale,yes,,Accounting/Localizations/Point of Sale,yes,LGPL-3,
+l10n_ar_stock,Argentinean - Stock,localisation,account + stock,account + stock,l10n_ar stock_account,yes,,Accounting/Localizations,yes,LGPL-3,
+l10n_ar_website_sale,Argentinean eCommerce,localisation,website_sale,account + sale_management + website + website_sale,website_sale l10n_ar,yes,,Accounting/Localizations/Website,yes,LGPL-3,
+l10n_ar_withholding,Argentina - Payment Withholdings,localisation,account,account,l10n_ar l10n_latam_check l10n_account_withholding_tax,no,,Accounting/Localizations,yes,LGPL-3,
+l10n_at,Austria - Accounting,localisation,account,account,account account_edi_ubl_cii l10n_din5008,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,Austrian Standardized Charts & Tax
+l10n_au,Australia - Accounting,localisation,account,account,account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_bd,Bangladesh - Accounting,localisation,account,account,account l10n_account_withholding_tax,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_be,Belgium - Accounting,localisation,account,account,account account_edi_ubl_cii,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_be_pos,BE POS Localization,localisation,point_of_sale,account + point_of_sale,point_of_sale l10n_be account,yes,,Sales/Point of Sale,yes,LGPL-3,Link module between point_of_sale and l10n_be
+l10n_be_pos_restaurant,Belgian POS Restaurant Localization,localisation,pos_restaurant,account + point_of_sale + pos_restaurant,pos_restaurant l10n_be,yes,,Sales/Point of Sale,yes,LGPL-3,
+l10n_be_pos_sale,l10n_be_pos_sale,localisation,point_of_sale + sale_management,account + point_of_sale + sale_management,pos_sale l10n_be,yes,,Sales/Point of Sale,yes,LGPL-3,Link module between pos_sale and l10n_be
+l10n_bf,Burkina Faso - Accounting,localisation,account,account,l10n_syscohada account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_bg,Bulgaria - Accounting,localisation,account,account,account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_bg_ledger,Bulgaria - Report ledger,localisation,account,account,l10n_bg,yes,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_bh,Bahrain - Accounting,localisation,account,account,account l10n_gcc_invoice,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_bh_pos,Bahrain - Point of Sale,localisation,point_of_sale,account + point_of_sale,l10n_gcc_pos l10n_bh,yes,,Accounting/Localizations/Point of Sale,yes,LGPL-3,
+l10n_bj,Benin - Accounting,localisation,account,account,l10n_syscohada account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_bo,Bolivia - Accounting,localisation,account,account,account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_br,Brazilian - Accounting,localisation,account,account,account account_qr_code_emv l10n_latam_invoice_document,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_br_sales,Brazil - Sale,localisation,sale_management,account + sale_management,l10n_br sale,yes,,Sales/Sales,yes,LGPL-3,
+l10n_br_website_sale,Brazil - Website Sale,localisation,website_sale,account + sale_management + website + website_sale,l10n_br website_sale,yes,,Sales/Sales,yes,LGPL-3,
+l10n_ca,Canada - Accounting,localisation,account,account,account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_cd,Democratic Republic of the Congo - Accounting,localisation,account,account,l10n_syscohada account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_cf,Central African Republic - Accounting,localisation,account,account,l10n_syscohada account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_cg,Congo - Accounting,localisation,account,account,l10n_syscohada account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_ch,Switzerland - Accounting,localisation,account,account,account account_edi_ubl_cii l10n_din5008,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_ch_pos,Swiss - Point of Sale,localisation,point_of_sale,account + point_of_sale,l10n_ch point_of_sale,yes,,Accounting/Localizations/Point of Sale,yes,LGPL-3,
+l10n_ci,Ivory Coast - Accounting,localisation,account,account,l10n_syscohada account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_cl,Chile - Accounting,localisation,account,account,contacts l10n_latam_invoice_document uom account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_cm,Cameroon - Accounting,localisation,account,account,l10n_syscohada account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_cn,China - Accounting,localisation,account,account,base account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_co,Colombia - Accounting,localisation,account,account,account_debit_note account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_co_pos,Colombian - Point of Sale,localisation,point_of_sale,account + point_of_sale,l10n_co point_of_sale,yes,,Accounting/Localizations/Point of Sale,yes,LGPL-3,
+l10n_cr,Costa Rica - Accounting,localisation,account,account,account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_cy,Cyprus - Accounting,localisation,account,account,account account_edi_ubl_cii,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_cz,Czech - Accounting,localisation,account,account,account account_edi_ubl_cii,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_de,Germany - Accounting,localisation,account,account,l10n_din5008 account account_edi_ubl_cii,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_din5008,DIN 5008,localisation,account,account,account,yes,,Accounting/Localizations,yes,LGPL-3,
+l10n_din5008_expense,DIN 5008 - Expenses,localisation,hr_expense,account + hr + hr_expense,l10n_din5008 hr_expense,yes,,Accounting/Localizations,yes,LGPL-3,
+l10n_din5008_purchase,DIN 5008 - Purchase,localisation,purchase,account + purchase,l10n_din5008 purchase,yes,,Accounting/Localizations,yes,LGPL-3,
+l10n_din5008_repair,DIN 5008 - Repair,localisation,repair,account + repair + sale_management + stock,l10n_din5008 repair,yes,,Accounting/Localizations,yes,LGPL-3,
+l10n_din5008_sale,DIN 5008 - Sale,localisation,sale_management,account + sale_management,l10n_din5008 sale,yes,,Accounting/Localizations,yes,LGPL-3,
+l10n_din5008_stock,DIN 5008 - Stock,localisation,account + stock,account + stock,l10n_din5008 stock,yes,,Accounting/Localizations,yes,LGPL-3,
+l10n_dk,Denmark - Accounting,localisation,account,account,account account_edi_proxy_client account_edi_ubl_cii,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_dk_fik,Denmark - FIK Number,localisation,account,account,l10n_dk,yes,,Accounting/Localizations,yes,LGPL-3,Use FIK Number as Payment reference
+l10n_do,Dominican Republic - Accounting,localisation,account,account,account l10n_latam_invoice_document,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_dz,Algeria - Accounting,localisation,account,account,account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_ec,Ecuadorian Accounting,localisation,account,account,base account_debit_note l10n_latam_invoice_document account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_ec_sale,Ecuador - Sale,localisation,sale_management,account + sale_management,l10n_ec sale,yes,,Accounting/Localizations/Sale,yes,LGPL-3,
+l10n_ee,Estonia - Accounting,localisation,account,account,account account_edi_ubl_cii,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_eg,Egypt - Accounting,localisation,account,account,account l10n_account_withholding_tax,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_eg_edi_eta,Egypt E-Invoicing,localisation,account,account,l10n_eg,no,,account,yes,LGPL-3,Egypt Tax Authority Invoice Integration
+l10n_eg_edi_pos,Egypt E-Receipts (POS),localisation,point_of_sale,account + point_of_sale,point_of_sale l10n_eg_edi_eta,yes,,Accounting/Localizations/EDI,yes,LGPL-3,Submit POS receipts to the Egyptian Tax Authority
+l10n_es,Spain - Accounting (PGCE 2008),localisation,account,account,account account_edi_ubl_cii,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_es_edi_facturae,Spain - Facturae EDI,localisation,account,account,certificate l10n_es,no,,Accounting/Localizations/EDI,yes,LGPL-3,
+l10n_es_edi_sii,Spain - SII EDI Suministro de Libros,localisation,account,account,certificate l10n_es,no,,Accounting/Localizations/EDI,yes,LGPL-3,
+l10n_es_edi_tbai,Spain - TicketBAI,localisation,account,account,l10n_es certificate,no,,Accounting/Localizations/EDI,yes,LGPL-3,
+l10n_es_edi_tbai_pos,Spain - Point of Sale + TicketBAI,localisation,point_of_sale,account + point_of_sale,l10n_es_edi_tbai point_of_sale,yes,,Accounting/Localizations/Point of Sale,yes,LGPL-3,
+l10n_es_edi_verifactu,Spain - Veri*Factu,localisation,account,account,l10n_es certificate,no,,Accounting/Localizations/EDI,yes,LGPL-3,Module for sending Spanish Veri*Factu XML to the AEAT
+l10n_es_edi_verifactu_pos,Spain - Veri*Factu for Point of Sale,localisation,point_of_sale,account + point_of_sale,l10n_es_edi_verifactu point_of_sale,yes,,Accounting/Localizations/Point of Sale,yes,LGPL-3,Add Veri*Factu support to Point of Sale
+l10n_es_pos,[Deprecated] Spain - Point of Sale,localisation,point_of_sale,account + point_of_sale,point_of_sale l10n_es,no,,Accounting/Localizations/Point of Sale,yes,LGPL-3,Spanish localization for Point of Sale
+l10n_es_stock,Spain - Stock - DeCA,localisation,account + stock,account + stock,l10n_es stock,no,,Accounting/Localizations,yes,LGPL-3,
+l10n_es_stock_batch,Spain - Stock - DeCA Batch Transfers,localisation,account + stock,account + stock,l10n_es_stock,yes,,Accounting/Localizations,yes,LGPL-3,
+l10n_es_website_sale,Spain - ECommerce,localisation,website_sale,account + sale_management + website + website_sale,l10n_es website_sale,no,,Accounting/Localizations/Website,yes,LGPL-3,
+l10n_es_website_sale_id_type,Spain - eCommerce ID Types,localisation,website_sale,account + sale_management + website + website_sale,l10n_es_website_sale,yes,,Accounting/Localizations/Website,yes,LGPL-3,Let customers pick the type of their identification document at checkout
+l10n_et,Ethiopia - Accounting,localisation,account,account,account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_eu_account_vies,VAT VIES Validation,localisation,account,account,account,no,,Accounting/Accounting,yes,LGPL-3,
+l10n_eu_oss,EU One Stop Shop (OSS),localisation,account,account,account,no,,Accounting/Localizations,yes,LGPL-3,
+l10n_fi,Finland - Accounting,localisation,account,account,account account_edi_ubl_cii,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_fi_sale,Finland - Sale,localisation,sale_management,account + sale_management,l10n_fi sale,yes,,Sales/Sales,yes,LGPL-3,
+l10n_fr,France - Localizations,localisation,,,base,no,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_fr_account,France - Accounting,localisation,account,account,account account_edi_ubl_cii l10n_fr,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_fr_facturx_chorus_pro,France - BIS3 integration for Chorus Pro,localisation,account,account,account account_edi_ubl_cii l10n_fr_account,no,,Accounting/Localizations/EDI,yes,LGPL-3,
+l10n_fr_hr_holidays,France - Time Off,localisation,hr_holidays,hr + hr_holidays,hr_holidays,yes,,Human Resources/Time Off,yes,LGPL-3,Management of leaves for part-time workers in France
+l10n_fr_payment,France - Worldline Payment Branding,localisation,,,l10n_fr payment,yes,,,yes,LGPL-3,Applies CAWL/Worldline branding rules for French companies.
+l10n_fr_pdp,France - E-Invoicing (Approved Platform),localisation,account,account,l10n_fr_account account_peppol iap,if l10n_fr_account,,Accounting/Localizations/EDI,yes,LGPL-3,
+l10n_fr_pdp_penalty_rate,France - PDP Late Payment Penalty Rate,localisation,account,account,l10n_fr_pdp,if l10n_fr_pdp,,Accounting/Localizations/EDI,yes,LGPL-3,
+l10n_fr_pdp_pos,France - E-reporting for POS,localisation,point_of_sale,account + point_of_sale,l10n_fr_pdp point_of_sale,yes,,Accounting/Localizations/Reporting,yes,LGPL-3,Flux 10 e-reporting for POS
+l10n_fr_pos_cert,France - VAT Anti-Fraud Certification for Point of Sale (CGI 286 I-3 bis),localisation,point_of_sale,account + point_of_sale,l10n_fr_account point_of_sale,yes,,Accounting/Localizations/Point of Sale,yes,LGPL-3,
+l10n_ga,Gabon - Accounting,localisation,account,account,l10n_syscohada account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_gcc_invoice,Gulf Cooperation Council - Invoice,localisation,account,account,account,no,,Accounting/Localizations,yes,LGPL-3,
+l10n_gcc_invoice_stock_account,Gulf Cooperation Council WMS Accounting,localisation,account + stock,account + stock,l10n_gcc_invoice stock_account,yes,,Accounting/Localizations,yes,LGPL-3,
+l10n_gcc_pos,Gulf Cooperation Council - Point of Sale,localisation,point_of_sale,account + point_of_sale,point_of_sale l10n_gcc_invoice,yes,,Accounting/Localizations/Point of Sale,yes,LGPL-3,
+l10n_ge,Georgia - Accounting,localisation,account,account,account,no,,Accounting/Localizations/Account Charts,yes,LGPL-3,Georgian accounting localization package
+l10n_gf,Guyana - Accounting,localisation,account,account,l10n_fr_account account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_gn,Guinea - Accounting,localisation,account,account,l10n_syscohada account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_gp,Guadeloupe - Accounting,localisation,account,account,l10n_fr_account account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_gq,Guinea Equatorial - Accounting,localisation,account,account,l10n_syscohada account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_gr,Greece - Accounting,localisation,account,account,account account_edi_ubl_cii,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_gr_edi,Greece - myDATA,localisation,account,account,account_edi_ubl_cii l10n_gr,yes,,Accounting/Localizations,yes,LGPL-3,Connect to myDATA API implementation for Greece
+l10n_gr_edi_delivery_note,Greece - myDATA Delivery Note,localisation,sale_management + stock,account + sale_management + stock,l10n_gr_edi stock sale sale_stock,yes,,Accounting/Localizations,yes,LGPL-3,Transmit Greece myDATA EDI for Delivery Notes
+l10n_gr_edi_e_invoo,Greece - myDATA E-invoicing through e-invoo,localisation,account,account,account_edi_proxy_client l10n_gr_edi,if l10n_gr_edi,,Accounting/Localizations/EDI,yes,LGPL-3,
+l10n_gr_edi_e_invoo_bridge,Greece - myDATA E-invoicing through e-invoo (direct API),localisation,account,account,l10n_gr_edi l10n_gr_edi_e_invoo,yes,,Accounting/Localizations/EDI,yes,LGPL-3,
+l10n_gt,Guatemala - Accounting,localisation,account,account,account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_gw,Guinea-Bissau - Accounting,localisation,account,account,l10n_syscohada account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_hk,Hong Kong - Accounting,localisation,account,account,account_qr_code_emv account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_hn,Honduras - Accounting,localisation,account,account,base account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_hr,Croatia - Accounting (Euro),localisation,account,account,account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_hr_edi,Croatia - e-invoicing,localisation,account,account,l10n_hr account_edi_ubl_cii,no,,Accounting/Localizations/Reporting,yes,LGPL-3,
+l10n_hr_kuna,Croatia - Accounting (Kuna),localisation,account,account,account,no,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_hu,Hungary - Accounting,localisation,account,account,account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_hu_edi,Hungary - E-invoicing,localisation,account,account,account_debit_note l10n_hu,if l10n_hu,,Accounting/Localizations/EDI,yes,LGPL-3,
+l10n_id,Indonesian - Accounting,localisation,account,account,account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_id_efaktur_coretax,Indonesia E-faktur (Coretax),localisation,account,account,l10n_id,yes,,Accounting/Localizations/EDI,yes,LGPL-3,
+l10n_id_pos,Indonesia - Point of Sale,localisation,point_of_sale,account + point_of_sale,l10n_id point_of_sale,yes,,Accounting/Localizations/Point of Sale,yes,LGPL-3,
+l10n_id_pos_self_order_qris,Indonesia - POS Self Order QRIS,localisation,pos_restaurant,account + point_of_sale + pos_restaurant,pos_self_order l10n_id_pos,yes,,Sales/Point of Sale,yes,LGPL-3,Accept QRIS QR code payments in a kiosk.
+l10n_ie,Ireland - Accounting,localisation,account,account,account account_edi_ubl_cii,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_il,Israel - Accounting,localisation,account,account,account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_in,Indian - Accounting,localisation,account,account,account_tax_python account_debit_note account l10n_account_withholding_tax iap,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_in_boe,Indian - Bill Of Entry,localisation,purchase + stock,account + purchase + stock,l10n_in stock_landed_costs,no,,Accounting/Localizations,yes,LGPL-3,
+l10n_in_edi,Indian - E-invoicing,localisation,account,account,l10n_in,no,,Accounting/Localizations/EDI,yes,LGPL-3,
+l10n_in_ewaybill,Indian - E-waybill,localisation,account,account,l10n_in,no,,Accounting/Localizations,yes,LGPL-3,
+l10n_in_ewaybill_irn,Indian - E-waybill thru IRN,localisation,account,account,l10n_in_ewaybill l10n_in_edi,yes,,Accounting/Localizations,yes,LGPL-3,
+l10n_in_ewaybill_stock,Indian - E-waybill Stock,localisation,account + stock,account + stock,l10n_in_stock l10n_in_ewaybill,yes,,Accounting/Localizations/EDI,yes,LGPL-3,
+l10n_in_hr_holidays,India - Time Off,localisation,hr_holidays,hr + hr_holidays,hr_holidays,if hr_holidays,,Human Resources/Time Off,yes,LGPL-3,Leave Management of Indian Localization
+l10n_in_pos,Indian - Point of Sale,localisation,point_of_sale,account + point_of_sale,l10n_in point_of_sale,yes,,Accounting/Localizations/Point of Sale,yes,LGPL-3,
+l10n_in_purchase_stock,India Purchase and Warehouse Management,localisation,purchase + stock,account + purchase + stock,l10n_in_stock purchase_stock,yes,,Accounting/Localizations/Purchase,yes,LGPL-3,Get warehouse address if the bill is created from Purchase Order
+l10n_in_sale,Indian - Sale Report(GST),localisation,sale_management,account + sale_management,l10n_in sale,yes,,Accounting/Localizations/Sale,yes,LGPL-3,
+l10n_in_sale_stock,India Sales and Warehouse Management,localisation,sale_management + stock,account + sale_management + stock,l10n_in_sale l10n_in_stock sale_stock,yes,,Accounting/Localizations/Sale,yes,LGPL-3,Get warehouse address if the invoice is created from Sale Order
+l10n_in_stock,Indian - Stock Report(GST),localisation,account + stock,account + stock,l10n_in stock stock_account,yes,,Accounting/Localizations,yes,LGPL-3,
+l10n_iq,Iraq - Accounting,localisation,account,account,account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_it,Italy - Accounting,localisation,account,account,account account_edi_ubl_cii,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_it_edi,Italy - E-invoicing,localisation,account,account,l10n_it account_edi_proxy_client account_debit_note,if l10n_it,,Accounting/Localizations/EDI,yes,LGPL-3,
+l10n_it_edi_doi,Italy - Declaration of Intent,localisation,sale_management,account + sale_management,l10n_it_edi sale,no,,Accounting/Localizations,yes,LGPL-3,
+l10n_it_edi_sale,Italy - Sale E-invoicing,localisation,sale_management,account + sale_management,l10n_it_edi sale,yes,,Accounting/Localizations/EDI,yes,LGPL-3,
+l10n_it_stock_ddt,Italy - Stock DDT,localisation,sale_management + stock,account + sale_management + stock,l10n_it_edi stock_delivery stock_account,yes,,Accounting/Localizations/EDI,yes,LGPL-3,
+l10n_jo,Jordan - Accounting,localisation,account,account,account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_jo_edi,Jordan E-Invoicing,localisation,account,account,account_edi_ubl_cii l10n_jo,if l10n_jo,,Accounting/Localizations/EDI,yes,LGPL-3,Electronic Invoicing for Jordan UBL 2.1
+l10n_jo_edi_pos,Jordan Accounting EDI for POS,localisation,point_of_sale,account + point_of_sale,l10n_jo_edi pos_edi_ubl,yes,,Accounting/Localizations/EDI,yes,LGPL-3,
+l10n_jp,Japan - Accounting,localisation,account,account,account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_jp_ubl_pint,Japan - UBL PINT,localisation,account,account,account_edi_ubl_cii,no,,Accounting/Localizations/EDI,yes,LGPL-3,
+l10n_ke,Kenya - Accounting,localisation,account,account,account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_ke_edi_tremol,Kenya Tremol Device EDI Integration,localisation,account,account,l10n_ke,no,,Accounting/Localizations/EDI,yes,LGPL-3,Kenya Tremol Device EDI Integration
+l10n_kh,Cambodia - Accounting,localisation,account,account,account_qr_code_emv l10n_account_withholding_tax,no,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_km,Comoros - Accounting,localisation,account,account,l10n_syscohada account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_kr,Republic of Korea - Accounting,localisation,account,account,account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_kr_sale,Republic of Korea - Sales,localisation,sale_management,account + sale_management,sale l10n_kr,yes,,Accounting/Localizations/Sale,yes,LGPL-3,
+l10n_kw,Kuwait - Accounting,localisation,account,account,account l10n_gcc_invoice,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_kz,Kazakhstan - Accounting,localisation,account,account,account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_la,Laos - Accounting,localisation,account,account,account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,"Chart of accounts, VAT taxes and monthly VAT return for Laos"
+l10n_latam_check,Third Party and Deferred/Electronic Checks Management,localisation,account,account,account,no,,Accounting/Localizations,yes,LGPL-3,Checks Management
+l10n_latam_invoice_document,LATAM Document,localisation,account,account,account account_debit_note,no,,Accounting/Localizations,yes,LGPL-3,LATAM Document Types
+l10n_lb_account,Lebanon - Accounting,localisation,account,account,account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_lk,Sri Lanka - Accounting,localisation,account,account,account l10n_account_withholding_tax,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,Provides accounting localizations for Sri Lanka.
+l10n_lt,Lithuania - Accounting,localisation,account,account,account account_edi_ubl_cii,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_lu,Luxembourg - Accounting,localisation,account,account,account account_edi_ubl_cii,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_lv,Latvia - Accounting,localisation,account,account,account account_edi_ubl_cii,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_ma,Morocco - Accounting,localisation,account,account,base account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_mc,Monaco - Accounting,localisation,account,account,l10n_fr_account account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_mk,North Macedonia - Accounting,localisation,account,account,account,no,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_ml,Mali - Accounting,localisation,account,account,l10n_syscohada account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_mm,Myanmar - Accounting,localisation,account,account,account_qr_code_emv l10n_account_withholding_tax,no,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_mn,Mongolia - Accounting,localisation,account,account,account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_mq,Martinique - Accounting,localisation,account,account,l10n_fr_account account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_mr,Mauritania - Accounting,localisation,account,account,account,no,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_mt,Malta - Accounting,localisation,account,account,account account_edi_ubl_cii,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_mt_pos,Malta - Point of Sale,localisation,point_of_sale,account + point_of_sale,point_of_sale,yes,,Accounting/Localizations/Point of Sale,yes,LGPL-3,
+l10n_mu_account,Mauritius - Accounting,localisation,account,account,account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_mx,Mexico - Accounting,localisation,account,account,account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_my,Malaysia - Accounting,localisation,account,account,account account_tax_python,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_my_edi,Malaysia - E-invoicing,localisation,account,account,l10n_my l10n_my_ubl_pint account_edi_proxy_client,if l10n_my,,Accounting/Localizations/EDI,yes,LGPL-3,E-invoicing using MyInvois
+l10n_my_edi_pos,Malaysia - E-invoicing (POS),localisation,point_of_sale,account + point_of_sale,l10n_my_edi point_of_sale,yes,,Accounting/Localizations/EDI,yes,LGPL-3,Consolidated E-invoicing using MyInvois
+l10n_my_ubl_pint,Malaysia - UBL PINT,localisation,account,account,account_edi_ubl_cii,no,,Accounting/Localizations/EDI,yes,LGPL-3,
+l10n_mz,Mozambique - Accounting,localisation,account,account,base account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_ne,Niger - Accounting,localisation,account,account,l10n_syscohada account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_ng,Nigeria - Accounting,localisation,account,account,account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_nl,Netherlands - Accounting,localisation,account,account,account account_edi_ubl_cii,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_no,Norway - Accounting,localisation,account,account,account account_edi_ubl_cii,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_nz,New Zealand - Accounting,localisation,account,account,account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_om,Oman - Accounting,localisation,account,account,account l10n_gcc_invoice,yes,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_pa,Panama - Accounting,localisation,account,account,account base_address_extended contacts l10n_latam_invoice_document,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_pe,Peru - Accounting,localisation,account,account,l10n_latam_invoice_document account_debit_note account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_pe_pos,Peruvian - Point of Sale with Pe Doc,localisation,point_of_sale,account + point_of_sale,l10n_pe point_of_sale,yes,,Accounting/Localizations/Point of Sale,yes,LGPL-3,
+l10n_ph,Philippines - Accounting,localisation,account,account,account l10n_account_withholding_tax,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,This is the module to manage the accounting chart for The Philippines.
+l10n_ph_invoice,Philippines - Discount Privileges on Invoice,localisation,account,account,l10n_ph,no,,Accounting/Localizations,yes,LGPL-3,Apply Philippine SC/PWD discount privileges on customer invoices and credit notes.
+l10n_ph_sale,Philippines - Discount Privileges on Sale Orders,localisation,sale_management,account + sale_management,l10n_ph_invoice sale,no,,Accounting/Localizations,yes,LGPL-3,Apply Philippine SC/PWD discount privileges on quotations and sale orders.
+l10n_pk,Pakistan - Accounting,localisation,account,account,account account_tax_python l10n_account_withholding_tax product,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_pk_edi,Pakistan - E-invoicing,localisation,sale_management + stock,account + sale_management + stock,account_debit_note iap l10n_pk stock_delivery,no,,Accounting/Localizations/EDI,yes,LGPL-3,Electronic Invoicing for Pakistan FBR(v1.12)
+l10n_pk_edi_pos,Pakistan - Point of Sale,localisation,point_of_sale + sale_management + stock,account + point_of_sale + sale_management + stock,l10n_pk pos_discount iap stock_delivery,no,,Accounting/Localizations/Point of Sale,yes,LGPL-3,
+l10n_pl,Poland - Accounting,localisation,account,account,account account_edi_ubl_cii,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_pl_edi,Polish E-Invoicing FA(3),localisation,account,account,l10n_pl certificate,if l10n_pl,,Accounting/Localizations,yes,LGPL-3,Support for FA(3) electronic invoices in Poland via KSeF
+l10n_pl_edi_batch,Polish E-Invoicing Batch Download,localisation,account,account,l10n_pl_edi,if l10n_pl_edi,,Accounting/Localizations,yes,LGPL-3,Download the KSeF vendor bills in batches
+l10n_pl_edi_jst,Polish E-Invoicing FA(3) LGU support,localisation,account,account,l10n_pl l10n_pl_edi,yes,,Accounting/Localizations,yes,LGPL-3,Support for Local Government Unit (LGU) in the FA(3) format
+l10n_pt,Portugal - Accounting,localisation,account,account,base account account_edi_ubl_cii,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_qa,Qatar - Accounting,localisation,account,account,account l10n_gcc_invoice,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_re,Reunion - Accounting,localisation,account,account,l10n_fr_account account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_ro,Romania - Accounting,localisation,account,account,account account_edi_ubl_cii,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_ro_edi,Romania - E-invoicing,localisation,account,account,account_edi_ubl_cii l10n_ro,yes,,Accounting/Localizations/EDI,yes,LGPL-3,E-Invoice implementation for Romania
+l10n_ro_edi_stock,Romania - E-Transport,localisation,sale_management + stock,account + sale_management + stock,stock_delivery l10n_ro_edi,no,,Accounting/Localizations/EDI,yes,LGPL-3,
+l10n_rs,Serbia - Accounting,localisation,account,account,account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_rs_edi,Serbia - eFaktura E-invoicing,localisation,account,account,account_edi_ubl_cii l10n_rs,yes,,Accounting/Localizations/EDI,yes,LGPL-3,E-Invoice implementation for Serbia
+l10n_rw,Rwanda - Accounting,localisation,account,account,account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_sa,Saudi Arabia - Accounting,localisation,account,account,l10n_gcc_invoice account account_debit_note l10n_account_withholding_tax,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_sa_edi,Saudi Arabia - E-invoicing,localisation,account,account,account_edi_ubl_cii l10n_sa certificate,no,,Accounting/Localizations/EDI,yes,LGPL-3,"E-Invoicing, Universal Business Language"
+l10n_sa_edi_pos,Saudi Arabia - E-invoicing (Simplified),localisation,point_of_sale,account + point_of_sale,l10n_sa_pos l10n_sa_edi,no,,Accounting/Localizations/EDI,yes,LGPL-3,"ZATCA E-Invoicing, support for PoS"
+l10n_sa_pos,Saudi Arabia - Point of Sale,localisation,point_of_sale,account + point_of_sale,l10n_gcc_pos l10n_sa,yes,,Accounting/Localizations/Point of Sale,yes,LGPL-3,
+l10n_se,Sweden - Accounting,localisation,account,account,account account_edi_ubl_cii,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_sg,Singapore - Accounting,localisation,account,account,account_qr_code_emv account account_edi_ubl_cii account_peppol,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_sg_ubl_pint,Singapore - UBL PINT,localisation,account,account,l10n_sg,yes,,Accounting/Localizations/EDI,yes,LGPL-3,
+l10n_si,Slovenian - Accounting,localisation,account,account,account account_edi_ubl_cii,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_sk,Slovak - Accounting,localisation,account,account,account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_sn,Sénégal - Accounting,localisation,account,account,l10n_syscohada account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_syscohada,OHADA - Accounting,localisation,account,account,account,no,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_td,Tchad - Accounting,localisation,account,account,l10n_syscohada account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_test_pos_qr_payment,POS QR Tests,localisation,point_of_sale,account + point_of_sale,point_of_sale account_qr_code_sepa l10n_be l10n_ch l10n_hk l10n_br,no,,Sales/Point of Sale,yes,LGPL-3,
+l10n_tg,Togo - Accounting,localisation,account,account,l10n_syscohada account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_th,Thailand - Accounting,localisation,account,account,account_qr_code_emv account l10n_account_withholding_tax,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_tn,Tunisia - Accounting,localisation,account,account,account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_tr,Türkiye - Accounting,localisation,account,account,account contacts,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_tw,Taiwan - Accounting,localisation,account,account,account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_tw_edi_ecpay,Taiwan - E-invoicing,localisation,account,account,l10n_tw,no,,Accounting/Localizations/EDI,yes,LGPL-3,E-invoicing using ECpay
+l10n_tw_edi_ecpay_pos,Taiwan - E-invoicing Pos,localisation,point_of_sale,account + point_of_sale,point_of_sale l10n_tw_edi_ecpay,yes,,Point of sale/Localizations/EDI,yes,LGPL-3,ECpay E-invoice bridge module for POS
+l10n_tw_edi_ecpay_sale,Taiwan - E-invoicing Sales,localisation,sale_management,account + sale_management,sale l10n_tw_edi_ecpay,yes,,Website Sale/Localizations/EDI,yes,LGPL-3,ECPay E-invoice bridge module for Sales
+l10n_tw_edi_ecpay_website_sale,Taiwan - E-invoicing Ecommerce,localisation,website_sale,account + sale_management + website + website_sale,website_sale l10n_tw_edi_ecpay_sale,yes,,Website Sale/Localizations/EDI,yes,LGPL-3,ECpay E-invoice bridge module for Ecommerce
+l10n_tz_account,Tanzania - Accounting,localisation,account,account,account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_ua,Ukraine - Accounting,localisation,account,account,account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_ug,Uganda - Accounting,localisation,account,account,account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_uk,United Kingdom - Accounting,localisation,account,account,account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_us,United States - Localizations,localisation,,,base base_address_extended,no,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_us_account,United States - Accounting,localisation,account,account,l10n_us account base_address_extended,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_uy,Uruguay - Accounting,localisation,account,account,account l10n_latam_invoice_document,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_uz,Uzbekistan - Accounting,localisation,account,account,account,no,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_ve,Venezuela - Accounting,localisation,account,account,account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_vn,Vietnam - Accounting,localisation,account,account,account_qr_code_emv account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_vn_edi_viettel,Vietnam - E-invoicing,localisation,account,account,l10n_vn,no,,Accounting/Localizations/EDI,yes,LGPL-3,E-invoicing using SInvoice by Viettel
+l10n_vn_edi_viettel_pos,Vietnam - POS E-invoicing,localisation,point_of_sale,account + point_of_sale,l10n_vn_edi_viettel point_of_sale,yes,,Accounting/Localizations/EDI,yes,LGPL-3,POS E-invoicing using SInvoice by Viettel
+l10n_vn_edi_viettel_stock,Vietnam - Delivery E-invoicing,localisation,account + stock,account + stock,l10n_vn_edi_viettel stock,yes,,Accounting/Localizations/EDI,yes,LGPL-3,Delivery E-invoicing using SInvoice by Viettel
+l10n_yt,Mayotte - Accounting,localisation,account,account,l10n_fr_account account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_za,South Africa - Accounting,localisation,account,account,account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+l10n_zm_account,Zambia - Accounting,localisation,account,account,account,if account,,Accounting/Localizations/Account Charts,yes,LGPL-3,
+link_tracker,Link Tracker,foundation,,,utm mail,no,,Marketing,yes,LGPL-3,
+loyalty,Coupons & Loyalty,extension,account,account,product portal account,no,,Sales,yes,LGPL-3,"Use discounts, gift cards, eWallets and loyalty programs in your sales channels"
+lunch,Lunch,app,lunch,lunch,mail,no,yes,Human Resources/Lunch,yes,LGPL-3,Handle lunch orders of your employees
+mail,Discuss,foundation app,,,base base_setup bus web_tour html_editor,no,yes,Productivity/Discuss,yes,LGPL-3,"Chat, mail gateway and private channels"
+mail_bot,OdooBot,foundation,,,mail,yes,,Productivity/Discuss,yes,LGPL-3,Add OdooBot in discussions
+mail_bot_hr,OdooBot - HR,extension,hr,hr,mail_bot hr,yes,,Productivity/Discuss,yes,LGPL-3,Bridge module between hr and mailbot.
+mail_group,Mail Group,foundation,,,mail portal,no,,,yes,LGPL-3,Manage your mailing lists
+mail_plugin,Mail Plugin,foundation,,,digest web contacts,yes,,Sales/CRM,yes,LGPL-3,Allows integration with mail plugins.
+mail_tracking,Discuss Tracking,foundation,,,mail,no,,Productivity/Discuss,yes,LGPL-3,Technical tracking of discussion and message-related data
+mail_tracking_mass_mailing,Mass Mailing Tracking,extension,mass_mailing,mass_mailing,mail_tracking mass_mailing,yes,,Productivity/Discuss,yes,LGPL-3,Track source of messages by mass mailing
+mail_tracking_sms,SMS Message Tracking,foundation,,,mail_tracking sms,yes,,Productivity/Discuss,yes,LGPL-3,Track source of messages by sms
+maintenance,Maintenance,app,maintenance,maintenance,mail,no,yes,Supply Chain/Maintenance,yes,LGPL-3,Track equipment and manage maintenance requests
+marketing_card,Marketing Card,app,marketing_card,marketing_card + mass_mailing + website,link_tracker mass_mailing website base_report_wkhtmltox,no,yes,Marketing/Marketing Card,yes,LGPL-3,Generate dynamic shareable cards
+marketing_card_event,Marketing Card For Events,bridge,marketing_card + website_event,marketing_card + mass_mailing + website + website_event,marketing_card event,yes,,Marketing/Marketing Card,yes,LGPL-3,Generate dynamic shareable cards for entities linked to events.
+mass_mailing,Email Marketing,app,mass_mailing,mass_mailing,contacts mail html_builder utm link_tracker social_media web_tour digest,no,yes,Marketing/Email Marketing,yes,LGPL-3,"Design, send and track emails"
+mass_mailing_crm,Mass mailing on lead / opportunities,bridge,crm + mass_mailing,crm + mass_mailing,crm mass_mailing,yes,,Marketing/Email Marketing,yes,LGPL-3,Add lead / opportunities UTM info on mass mailing
+mass_mailing_crm_sms,Mass mailing sms on lead / opportunities,bridge,crm + mass_mailing_sms,crm + mass_mailing + mass_mailing_sms,mass_mailing_crm mass_mailing_sms,yes,,Marketing/Email Marketing,yes,LGPL-3,Add lead / opportunities info on mass mailing sms
+mass_mailing_event,Mass mailing on attendees,bridge,mass_mailing + website_event,mass_mailing + website + website_event,event mass_mailing,yes,,Marketing/Email Marketing,yes,LGPL-3,
+mass_mailing_event_sms,Event Attendees SMS Marketing,bridge,mass_mailing_sms + website_event,mass_mailing + mass_mailing_sms + website + website_event,event mass_mailing mass_mailing_event mass_mailing_sms sms,yes,,Marketing/Email Marketing,yes,LGPL-3,
+mass_mailing_event_track,Mass mailing on track speakers,bridge,mass_mailing + website_event,mass_mailing + website + website_event,website_event_track mass_mailing,yes,,Marketing/Email Marketing,yes,LGPL-3,
+mass_mailing_event_track_sms,Track Speakers SMS Marketing,bridge,mass_mailing_sms + website_event,mass_mailing + mass_mailing_sms + website + website_event,mass_mailing mass_mailing_sms sms website_event_track,yes,,Marketing/Email Marketing,yes,LGPL-3,
+mass_mailing_sale,Mass mailing on sale orders,bridge,mass_mailing + sale_management,account + mass_mailing + sale_management,sale mass_mailing,yes,,Marketing/Email Marketing,yes,LGPL-3,Add sale order UTM info on mass mailing
+mass_mailing_sale_sms,Mass mailing sms on sale orders,bridge,mass_mailing_sms + sale_management,account + mass_mailing + mass_mailing_sms + sale_management,mass_mailing_sale mass_mailing_sms,yes,,Marketing/Email Marketing,yes,LGPL-3,Add sale order info on mass mailing sms
+mass_mailing_slides,Mass mailing on course members,bridge,mass_mailing + website_slides,mass_mailing + website + website_slides,website_slides mass_mailing,yes,,Marketing/Email Marketing,yes,LGPL-3,
+mass_mailing_sms,SMS Marketing,app,mass_mailing_sms,mass_mailing + mass_mailing_sms,portal mass_mailing sms,no,yes,Marketing/Email Marketing,yes,LGPL-3,"Design, send and track SMS"
+mass_mailing_themes,Mass Mailing Themes,extension,mass_mailing,mass_mailing,mass_mailing,yes,,Marketing/Email Marketing,yes,LGPL-3,Design gorgeous mails
+microsoft_account,Microsoft Users,foundation,,,base_setup,no,,Hidden/Tools,yes,LGPL-3,
+microsoft_calendar,Outlook Calendar,foundation,,,microsoft_account calendar,no,,Productivity,yes,LGPL-3,
+microsoft_outlook,Microsoft Outlook,foundation,,,mail,yes,,Hidden,yes,LGPL-3,
+mrp,Manufacturing,app,mrp,mrp + stock,product stock resource,no,yes,Supply Chain/Manufacturing,yes,LGPL-3,Manufacturing Orders & BOMs
+mrp_account,Accounting - MRP,bridge,account + mrp,account + mrp + stock,mrp stock_account,yes,,Supply Chain/Manufacturing,yes,LGPL-3,Analytic accounting in Manufacturing
+mrp_delivery,Delivery and MRP Management,bridge,mrp + sale_management,account + mrp + sale_management + stock,mrp stock_delivery,yes,,Shipping Connectors,yes,LGPL-3,Carrier with kits
+mrp_landed_costs,Landed Costs On MO,bridge,mrp + purchase,account + mrp + purchase + stock,stock_landed_costs mrp,yes,,Supply Chain/Manufacturing,yes,LGPL-3,Landed Costs on Manufacturing Order
+mrp_product_expiry,Manufacturing Expiry,extension,mrp,mrp + stock,mrp product_expiry,yes,,Supply Chain/Manufacturing,yes,LGPL-3,Manufacturing Expiry
+mrp_repair,Mrp Repairs,bridge,mrp + repair,account + mrp + repair + sale_management + stock,repair mrp,yes,,Supply Chain/Inventory,yes,LGPL-3,
+mrp_subcontracting,MRP Subcontracting,extension,mrp,mrp + stock,mrp,no,,Supply Chain/Manufacturing,yes,LGPL-3,Subcontract Productions
+mrp_subcontracting_account,Subcontracting Management with Stock Valuation,bridge,account + mrp,account + mrp + stock,mrp_subcontracting mrp_account,yes,,Supply Chain/Manufacturing,yes,LGPL-3,
+mrp_subcontracting_dropshipping,Dropship and Subcontracting Management,bridge,mrp + purchase + sale_management,account + mrp + purchase + sale_management + stock,mrp_subcontracting stock_dropshipping,yes,,Supply Chain/Purchase,yes,LGPL-3,
+mrp_subcontracting_landed_costs,Landed Costs With Subcontracting order,bridge,mrp + purchase,account + mrp + purchase + stock,mrp_landed_costs mrp_subcontracting,yes,,Supply Chain/Manufacturing,yes,LGPL-3,Advanced views to manage landed cost for subcontracting orders
+mrp_subcontracting_purchase,Purchase and Subcontracting Management,bridge,mrp + purchase,account + mrp + purchase + stock,mrp_subcontracting_account purchase_mrp,yes,,Supply Chain/Purchase,yes,LGPL-3,
+mysubscription,My Subscription,foundation,,,base web,yes,,Sales,yes,LGPL-3,Backend Subscription App
+onboarding,Onboarding Toolbox,foundation,,,web,no,,Hidden,yes,LGPL-3,
+partner_autocomplete,Partner Autocomplete,foundation,,,iap_mail,yes,,Hidden/Tools,yes,LGPL-3,Auto-complete partner companies' data
+partnership,Partnership / Membership,bridge,crm + sale_management,account + crm + sale_management,crm sale,no,,Sales/CRM,yes,LGPL-3,
+payment,Payment Engine,foundation,,,onboarding portal,no,,Hidden,yes,LGPL-3,The payment engine used by payment provider modules.
+payment_adyen,Payment Provider: Adyen,foundation,,,payment,no,,Accounting/Payment Providers,yes,LGPL-3,A Dutch payment provider covering Europe and the US.
+payment_aps,Payment Provider: Amazon Payment Services,foundation,,,payment,no,,Accounting/Payment Providers,yes,LGPL-3,An Amazon payment provider covering the MENA region.
+payment_asiapay,Payment Provider: AsiaPay,foundation,,,payment,no,,Accounting/Payment Providers,yes,LGPL-3,An payment provider based in Hong Kong covering most Asian countries.
+payment_authorize,Payment Provider: Authorize.Net,foundation,,,payment,no,,Accounting/Payment Providers,yes,LGPL-3,"An payment provider covering the US, Australia, and Canada."
+payment_buckaroo,Payment Provider: Buckaroo,foundation,,,payment,no,,Accounting/Payment Providers,yes,LGPL-3,A Dutch payment provider covering several countries in Europe.
+payment_custom,Payment Provider: Custom Payment Modes,foundation,,,payment,no,,Accounting/Payment Providers,yes,LGPL-3,A payment provider for custom flows like wire transfers.
+payment_demo,Payment Provider: Demo,foundation,,,payment,no,,Accounting/Accounting,yes,LGPL-3,A payment provider for running fake payment flows for demo purposes.
+payment_dpo,Payment Provider: DPO,foundation,,,payment,no,,Accounting/Payment Providers,yes,LGPL-3,A Kenyan payment provider covering several African countries.
+payment_ecpay,Payment Provider: ECPay,foundation,,,payment,no,,Accounting/Payment Providers,yes,LGPL-3,A payment provider covering the Taiwanese market.
+payment_flutterwave,Payment Provider: Flutterwave,foundation,,,payment,no,,Accounting/Payment Providers,yes,LGPL-3,A Nigerian payment provider covering several African countries.
+payment_iyzico,Payment Provider: Iyzico,foundation,,,payment,no,,Accounting/Payment Providers,yes,LGPL-3,A payment provider covering Turkey.
+payment_mercado_pago,Payment Provider: Mercado Pago,foundation,,,payment,no,,Accounting/Payment Providers,yes,LGPL-3,A payment provider covering several countries in Latin America.
+payment_mollie,Payment Provider: Mollie,foundation,,,payment,no,,Accounting/Payment Providers,yes,LGPL-3,A Dutch payment provider covering several European countries.
+payment_nuvei,Payment Provider: Nuvei,foundation,,,payment,no,,Accounting/Payment Providers,yes,LGPL-3,A payment provider covering Latin America.
+payment_paymob,Payment Provider: Paymob,foundation,,,payment,no,,Accounting/Payment Providers,yes,LGPL-3,An Egyptian payment provider for the Middle East.
+payment_paypal,Payment Provider: Paypal,foundation,,,payment,no,,Accounting/Payment Providers,yes,LGPL-3,An American payment provider for online payments all over the world.
+payment_payu,Payment Provider: PayU,foundation,,,payment,no,,Accounting/Payment Providers,yes,LGPL-3,A payment provider covering India.
+payment_qfpay,Payment Provider: QFPay,foundation,,,payment,no,,Accounting/Payment Providers,yes,LGPL-3,A payment provider covering the Hong Kong market.
+payment_razorpay,Payment Provider: Razorpay,foundation,,,payment,no,,Accounting/Payment Providers,yes,LGPL-3,A payment provider covering India.
+payment_redsys,Payment Provider: Redsys,foundation,,,payment,no,,Accounting/Payment Providers,yes,LGPL-3,A payment provider covering the Spanish market.
+payment_stripe,Payment Provider: Stripe,foundation,,,payment,no,,Accounting/Payment Providers,yes,LGPL-3,An Irish-American payment provider covering the US and many others.
+payment_toss_payments,Payment Provider: Toss Payments,foundation,,,payment,no,,Accounting/Payment Providers,yes,LGPL-3,A payment provider covering the South Korea market
+payment_worldline,Payment Provider: Worldline,foundation,,,payment,no,,Accounting/Payment Providers,yes,LGPL-3,A French payment provider covering several European countries.
+payment_xendit,Payment Provider: Xendit,foundation,,,payment,no,,Accounting/Payment Providers,yes,LGPL-3,A payment provider for Indonesian and the Philippines.
+phone_validation,Phone Numbers Validation,foundation,,,base mail,yes,,Hidden,yes,LGPL-3,Validate and format phone numbers
+point_of_sale,Point of Sale,app,point_of_sale,account + point_of_sale,resource product account barcodes_gs1_nomenclature html_editor digest phone_validation google_address_autocomplete base_report_wkhtmltox iot_webserial,no,yes,Sales/Point of Sale,yes,LGPL-3,Handle checkouts and payments for shops and restaurants.
+populate,Populate,foundation,,,base,no,,Hidden/Tools,yes,LGPL-3,Generate synthetic data for an Odoo database
+portal,Customer Portal,foundation,,,auth_signup base_address_extended html_editor http_routing mail web,no,,Hidden,yes,LGPL-3,Customer Portal
+portal_discuss,Portal Discuss,foundation,,,mail portal,yes,,Services,yes,LGPL-3,
+portal_rating,Portal Rating,foundation,,,portal rating,yes,,Services,yes,LGPL-3,
+pos_account_tax_python,Allow custom taxes in POS,extension,point_of_sale,account + point_of_sale,account_tax_python point_of_sale,yes,,Accounting/Accounting,yes,LGPL-3,
+pos_adyen,POS Adyen,extension,point_of_sale,account + point_of_sale,point_of_sale payment_adyen,no,,Sales/Point of Sale,yes,LGPL-3,Integrate your POS with an Adyen payment terminal
+pos_bancontact_pay,POS Bancontact Pay & Wero,extension,point_of_sale,account + point_of_sale,point_of_sale,no,,Sales/Point of Sale,yes,LGPL-3,Accept Bancontact Pay and Wero QR code payments in POS (Payconiq).
+pos_cashdro,POS Cashdro Cash Machines,extension,point_of_sale,account + point_of_sale,point_of_sale,no,,Sales/Point of Sale,yes,LGPL-3,Integrate your POS with a Cashdro automatic cash payment device
+pos_cashmatic,POS Cashmatic Cash Machines,extension,point_of_sale,account + point_of_sale,point_of_sale,no,,Sales/Point of Sale,yes,LGPL-3,Integrate your POS with a cash matic automatic cash payment device
+pos_discount,Point of Sale Discounts,extension,point_of_sale,account + point_of_sale,point_of_sale,no,,Sales/Point of Sale,yes,LGPL-3,Simple Discounts in the Point of Sale
+pos_dpopay,PoS DPO Pay,extension,point_of_sale,account + point_of_sale,point_of_sale,no,,Sales/Point of Sale,yes,LGPL-3,Integrate your POS with DPO payment terminal.
+pos_edi_ubl,Point of Sale UBL,extension,point_of_sale,account + point_of_sale,point_of_sale account_edi_ubl_cii,no,,Sales/Point of Sale,yes,LGPL-3,UBL in the Point of Sale
+pos_event,POS - Event,bridge,point_of_sale + website_event,account + point_of_sale + website + website_event,point_of_sale event_product,yes,,Technical,yes,LGPL-3,Link module between Point of Sale and Event
+pos_event_sale,PoS - Event Sale,bridge,point_of_sale + sale_management + website_event,account + point_of_sale + sale_management + website + website_event,pos_event pos_sale event_sale,yes,,Technical,yes,LGPL-3,Link module between pos_sale and pos_event
+pos_glory_cash,POS Glory Cash Machines,extension,point_of_sale,account + point_of_sale,point_of_sale,no,,Sales/Point of Sale,yes,LGPL-3,Integrate your POS with a Glory automatic cash payment device
+pos_hr,POS - HR,bridge,hr + point_of_sale,account + hr + point_of_sale,point_of_sale hr,yes,,Sales/Point of Sale,yes,LGPL-3,Link module between Point of Sale and HR
+pos_hr_restaurant,POS HR Restaurant,bridge,hr + pos_restaurant,account + hr + point_of_sale + pos_restaurant,pos_hr pos_restaurant,yes,,Sales/Point of Sale,yes,LGPL-3,Link module between pos_hr and pos_restaurant
+pos_imin,POS iMin,extension,point_of_sale,account + point_of_sale,point_of_sale,no,,Sales/Point of Sale,yes,LGPL-3,iMin ePOS Printers in PoS
+pos_loyalty,Point of Sale - Coupons & Loyalty,extension,point_of_sale,account + point_of_sale,loyalty point_of_sale,yes,,Sales/Point Of Sale,yes,LGPL-3,"Use Coupons, Gift Cards and Loyalty programs in Point of Sale"
+pos_mercado_pago,POS Mercado Pago,extension,point_of_sale,account + point_of_sale,point_of_sale,no,,Sales/Point of Sale,yes,LGPL-3,Integrate your POS with the Mercado Pago Smart Point terminal
+pos_mollie,POS Mollie,extension,point_of_sale,account + point_of_sale,point_of_sale payment_mollie,no,,Sales/Point of Sale,yes,LGPL-3,Integrate your POS with a Mollie payment terminal
+pos_mrp,pos_mrp,bridge,mrp + point_of_sale,account + mrp + point_of_sale + stock,pos_stock mrp,yes,,Sales/Point of Sale,yes,LGPL-3,Link module between Point of Sale and Mrp
+pos_online_payment,Point of Sale online payment,extension,point_of_sale,account + point_of_sale,point_of_sale account_payment,yes,,,yes,LGPL-3,
+pos_online_payment_self_order,POS Self-Order / Online Payment,extension,pos_restaurant,account + point_of_sale + pos_restaurant,pos_online_payment pos_self_order,yes,,Sales/Point of Sale,yes,LGPL-3,Support online payment in self-order
+pos_partner_autocomplete,POS Partner Autocomplete,extension,point_of_sale,account + point_of_sale,partner_autocomplete point_of_sale,yes,,Sales/Point of Sale,yes,LGPL-3,Link module between Partner Autocomplete and Point of Sale
+pos_pine_labs,POS Pine Labs,extension,point_of_sale,account + point_of_sale,point_of_sale,no,,Sales/Point of Sale,yes,LGPL-3,Integrate your POS with Pine Labs payment terminals
+pos_qfpay,POS QFPay,extension,point_of_sale,account + point_of_sale,point_of_sale,no,,Sales/Point of Sale,yes,LGPL-3,Integrate your POS with the QFPay terminal in Hong Kong
+pos_razorpay,POS Razorpay,extension,point_of_sale,account + point_of_sale,point_of_sale,no,,Sales/Point of Sale,yes,LGPL-3,Integrate your POS with a Razorpay payment terminal
+pos_repair,POS - Repair,bridge,point_of_sale + repair,account + point_of_sale + repair + sale_management + stock,pos_stock repair,yes,,Technical,yes,LGPL-3,Link module between Point of Sale and Repair
+pos_restaurant,Restaurant,app,pos_restaurant,account + point_of_sale + pos_restaurant,point_of_sale,no,yes,Sales/Point of Sale,yes,LGPL-3,Restaurant extensions for the Point of Sale
+pos_restaurant_loyalty,POS - Restaurant Loyalty,extension,pos_restaurant,account + point_of_sale + pos_restaurant,pos_restaurant pos_loyalty,yes,,Sales/Point of Sale,yes,LGPL-3,Link module between pos_restaurant and pos_loyalty
+pos_safaricom,POS Safaricom,extension,point_of_sale,account + point_of_sale,point_of_sale,no,,Sales/Point of Sale,yes,LGPL-3,Integrate your POS with the Safaricom Payment Provider
+pos_sale,POS - Sales,bridge,point_of_sale + sale_management,account + point_of_sale + sale_management,point_of_sale sale_management,yes,,Sales/Point of Sale,yes,LGPL-3,Link module between Point of Sale and Sales
+pos_sale_delivery,POS - Sales Delivery,bridge,point_of_sale + sale_management + stock,account + point_of_sale + sale_management + stock,pos_sale stock_delivery,yes,,Hidden,yes,LGPL-3,
+pos_sale_loyalty,POS - Sales Loyalty,bridge,point_of_sale + sale_management,account + point_of_sale + sale_management,pos_sale pos_loyalty,yes,,Sales/Point of Sale,yes,LGPL-3,Link module between pos_sale and pos_loyalty
+pos_sale_margin,POS - Sale Margin,bridge,point_of_sale + sale_management,account + point_of_sale + sale_management,pos_sale sale_margin,yes,,Sales/Point of Sale,yes,LGPL-3,Link module between Point of Sale and Sales Margin
+pos_sale_stock,POS - Sales Stock,bridge,point_of_sale + sale_management + stock,account + point_of_sale + sale_management + stock,pos_stock pos_sale,yes,,Sales/Point of Sale,yes,LGPL-3,Link module between PoS Stock and Sales
+pos_self_order,POS Self Order,extension,pos_restaurant,account + point_of_sale + pos_restaurant,pos_restaurant http_routing link_tracker google_address_autocomplete base_geolocalize,if pos_restaurant,,Sales/Point Of Sale,yes,LGPL-3,Addon for the POS App that allows customers to view the menu on their smartphone.
+pos_self_order_bancontact_pay,POS Self Order Bancontact Pay & Wero,extension,pos_restaurant,account + point_of_sale + pos_restaurant,pos_self_order pos_bancontact_pay,yes,,Sales/Point of Sale,yes,LGPL-3,Accept Bancontact Pay and Wero QR code payments in a kiosk (Payconiq).
+pos_self_order_event,POS Self Order - Event,bridge,pos_restaurant + website_event,account + point_of_sale + pos_restaurant + website + website_event,pos_self_order pos_event,yes,,Sales/Point Of Sale,yes,LGPL-3,Link module between PoS Self Order and PoS Event
+pos_self_order_pine_labs,POS Self Order Pine Labs,extension,pos_restaurant,account + point_of_sale + pos_restaurant,pos_pine_labs pos_self_order,yes,,Sales/Point Of Sale,yes,LGPL-3,An addon for the Self Order App (KIOSK) that allows customers to pay using the Pine Labs POS Terminal.
+pos_self_order_qfpay,POS Self Order QFPay,extension,pos_restaurant,account + point_of_sale + pos_restaurant,pos_qfpay pos_self_order,yes,,Sales/Point Of Sale,yes,LGPL-3,Addon for the Self Order App that allows customers to pay by QFPay.
+pos_self_order_razorpay,POS Self Order Razorpay,extension,pos_restaurant,account + point_of_sale + pos_restaurant,pos_razorpay pos_self_order,yes,,Sales/Point Of Sale,yes,LGPL-3,Addon for the Self Order App that allows customers to pay by Razorpay POS Terminal.
+pos_self_order_sale,POS Self Order Sale,bridge,pos_restaurant + sale_management,account + point_of_sale + pos_restaurant + sale_management,pos_sale pos_self_order,yes,,Sales/Point Of Sale,yes,LGPL-3,
+pos_self_order_sms,POS Self Order SMS,extension,pos_restaurant,account + point_of_sale + pos_restaurant,pos_self_order pos_sms,yes,,Sales/Point Of Sale,yes,LGPL-3,
+pos_sms,POS - SMS,extension,point_of_sale,account + point_of_sale,point_of_sale sms,no,,Send sms to customer for order confirmation,yes,LGPL-3,
+pos_stock,PoS - Stock,bridge,point_of_sale + stock,account + point_of_sale + stock,point_of_sale stock_account,yes,,Sales/Point of Sale,yes,LGPL-3,Stock integration for PoS
+pos_stripe,POS Stripe,extension,point_of_sale,account + point_of_sale,point_of_sale payment_stripe,no,,Sales/Point of Sale,yes,LGPL-3,Integrate your POS with a Stripe payment terminal
+pos_sumup,POS SumUp,extension,point_of_sale,account + point_of_sale,point_of_sale,no,,Sales/Point of Sale,yes,LGPL-3,Integrate your POS with a SumUp payment terminal
+pos_viva_com,PoS Viva.com,extension,point_of_sale,account + point_of_sale,point_of_sale,no,,Sales/Point of Sale,yes,LGPL-3,Integrate your PoS with a Viva.com payment terminal
+printer,Printer,foundation,,,base,no,,,yes,LGPL-3,"Base module to manage external printers (e.g. ePOS, ZPL)"
+privacy_lookup,Privacy,foundation,,,mail,yes,,Hidden,yes,LGPL-3,
+product,Products & Pricelists,foundation,,,base mail uom,no,,Sales/Sales,yes,LGPL-3,
+product_email_template,Product Email Template,extension,account,account,account,no,,Accounting/Accounting,yes,LGPL-3,
+product_expiry,Products Expiration Date,extension,stock,stock,stock,no,,Supply Chain/Inventory,yes,LGPL-3,
+product_margin,Margins by Products,extension,account,account,account,no,,Sales/Sales,yes,LGPL-3,
+product_matrix,Product Matrix,extension,account,account,account,no,,Sales/Sales,yes,LGPL-3,Technical module: Matrix Implementation
+project,Project,app,project,project,analytic base_setup mail portal_rating resource web web_tour digest,no,yes,Services/Project,yes,LGPL-3,Manage tasks and collaborate on projects
+project_account,Project - Account,bridge,account + project,account + project,account project,yes,,Accounting/Accounting,yes,LGPL-3,project profitability items computation
+project_hr_expense,Project Expenses,bridge,hr_expense + project,account + hr + hr_expense + project,project_account hr_expense,yes,,Services/expenses,yes,LGPL-3,Project expenses
+project_hr_skills,Project - Skills,bridge,hr_skills + project,hr + hr_skills + project,project hr_skills,yes,,Services/Project,yes,LGPL-3,Project skills
+project_mail_plugin,Project Mail Plugin,extension,project,project,project mail_plugin,yes,,Services/Project,yes,LGPL-3,Integrate your inbox with projects
+project_mrp,MRP Project,bridge,mrp + project,mrp + project + stock,mrp project,yes,,Services/Project,yes,LGPL-3,Monitor MRP using project
+project_mrp_account,MRP Account Project,bridge,account + mrp + project,account + mrp + project + stock,mrp_account project_mrp project_stock_account,yes,,Services/Project,yes,LGPL-3,Monitor MRP account using project
+project_mrp_sale,MRP Project Sale,bridge,mrp + project + sale_management,account + mrp + project + sale_management + stock,project_mrp sale_mrp sale_project,yes,,Services/Project,yes,LGPL-3,Technical Bridge
+project_mrp_stock_landed_costs,Project MRP Landed Costs,bridge,mrp + project + purchase,account + mrp + project + purchase + stock,project_mrp_account mrp_landed_costs,yes,,Supply Chain/Manufacturing,yes,LGPL-3,Technical Bridge
+project_purchase,Project Purchase,bridge,project + purchase,account + project + purchase,purchase project_account,yes,,Services/Project,yes,LGPL-3,Monitor purchase in project
+project_purchase_stock,Project - Purchase - Stock,bridge,project + purchase + stock,account + project + purchase + stock,project_purchase project_stock,yes,,Services/Project,yes,LGPL-3,
+project_sale_expense,Project - Sale - Expense,bridge,hr_expense + project + sale_management,account + hr + hr_expense + project + sale_management,sale_project sale_expense project_hr_expense,yes,,Services/Project,yes,LGPL-3,
+project_sms,Project - SMS,extension,project,project,project sms,yes,,Services/Project,yes,LGPL-3,Send text messages when project/task stage move
+project_stock,Project Stock,bridge,project + stock,project + stock,stock project,yes,,Services/Project,yes,LGPL-3,Link Stock pickings to Project
+project_stock_account,Project Stock Account,bridge,account + project + stock,account + project + stock,stock_account project_stock,yes,,Services/Project,yes,LGPL-3,Handle analytics in Stock pickings with Project
+project_stock_landed_costs,Project Stock Landed Costs,bridge,project + purchase + stock,account + project + purchase + stock,project_stock_account stock_landed_costs,yes,,Supply Chain/Inventory,yes,LGPL-3,Technical Bridge
+project_timesheet_holidays,Timesheet when on Time Off,bridge,hr_holidays + project,hr + hr_holidays + project,hr_timesheet hr_holidays,yes,,Human Resources,yes,LGPL-3,Schedule timesheet when on time off
+project_todo,To-Do,app,project_todo,project + project_todo,project,yes,yes,Productivity/To-Do,yes,LGPL-3,Organize your work with memos and to-do lists
+purchase,Purchase,app,purchase,account + purchase,account,no,yes,Supply Chain/Purchase,yes,LGPL-3,"Purchase orders, tenders and agreements"
+purchase_alternative,Purchase Alternative,extension,purchase,account + purchase,purchase,no,,Supply Chain/Purchase,yes,LGPL-3,
+purchase_alternative_sale,Purchase Alternative Sale,bridge,purchase + sale_management,account + purchase + sale_management,purchase_alternative sale_purchase,yes,,Supply Chain/Purchase,yes,LGPL-3,
+purchase_alternative_stock,Purchase Alternative Stock,bridge,purchase + stock,account + purchase + stock,purchase_alternative purchase_stock,yes,,Supply Chain/Purchase,yes,LGPL-3,
+purchase_edi_ubl_bis3,Import/Export electronic orders with UBL,extension,purchase,account + purchase,purchase account_edi_ubl_cii,yes,,Supply Chain/Purchase,yes,LGPL-3,
+purchase_mrp,Purchase and MRP Management,bridge,mrp + purchase,account + mrp + purchase + stock,mrp purchase_stock,yes,,Supply Chain/Purchase,yes,LGPL-3,
+purchase_product_matrix,Purchase Matrix,extension,purchase,account + purchase,purchase product_matrix,no,,Supply Chain/Purchase,yes,LGPL-3,Add variants to your purchase orders through an Order Grid Entry.
+purchase_repair,Purchase Repair,bridge,purchase + repair,account + purchase + repair + sale_management + stock,repair purchase_stock,yes,,Supply Chain/Purchase,yes,LGPL-3,Keep track of linked purchase and repair orders
+purchase_requisition,Purchase Agreements,extension,purchase,account + purchase,purchase,no,,Supply Chain/Purchase,yes,LGPL-3,
+purchase_requisition_stock,Purchase Requisition Stock,bridge,purchase + stock,account + purchase + stock,purchase_requisition purchase_stock,yes,,Supply Chain/Purchase,yes,LGPL-3,
+purchase_stock,Purchase Stock,bridge,purchase + stock,account + purchase + stock,stock_account purchase,yes,,Supply Chain/Purchase,yes,LGPL-3,"Purchase Orders, Receipts, Vendor Bills for Stock"
+rating,Customer Rating,foundation,,,mail,no,,Productivity,yes,LGPL-3,
+repair,Repairs,app,repair,account + repair + sale_management + stock,sale_stock sale_management,no,yes,Supply Chain/Inventory,yes,LGPL-3,Repair damaged products
+resource,Resource,foundation,,,base web,no,,Hidden,yes,LGPL-3,
+resource_mail,Resource Mail,foundation,,,resource mail,yes,,Hidden,yes,LGPL-3,
+rpc,RPC endpoints,foundation,,,base,yes,,Extra Tools,yes,LGPL-3,
+sale,Sales,app core,sale_management,account + sale_management,sales_team account_payment utm,no,,Sales/Sales,yes,LGPL-3,Sales internal machinery
+sale_crm,Opportunity to Quotation,bridge,crm + sale_management,account + crm + sale_management,sale crm,yes,,Sales/Sales,yes,LGPL-3,
+sale_edi_ubl,Import electronic orders with UBL,extension,sale_management,account + sale_management,sale account_edi_ubl_cii,yes,,Sales/Sales,yes,LGPL-3,
+sale_expense,Sales Expense,bridge,hr_expense + sale_management,account + hr + hr_expense + sale_management,sale_management hr_expense,yes,,Sales/Sales,yes,LGPL-3,"Quotation, Sales Orders, Delivery & Invoicing Control"
+sale_expense_margin,Sales Expense Margin,bridge,hr_expense + sale_management,account + hr + hr_expense + sale_management,sale_expense sale_margin,yes,,Sales/Sales,yes,LGPL-3,
+sale_gelato,Gelato,extension,sale_management,account + sale_management,sale delivery,no,,Sales/Sales,yes,LGPL-3,Place orders through Gelato's print-on-demand service
+sale_gelato_stock,Gelato/Stock bridge,bridge,sale_management + stock,account + sale_management + stock,sale_gelato sale_stock,yes,,Sales/Sales,yes,LGPL-3,
+sale_loyalty,Sale Loyalty,extension,sale_management,account + sale_management,sale loyalty,yes,,Sales/Sales,yes,LGPL-3,Use discounts and loyalty programs in sales orders
+sale_loyalty_delivery,Sale Loyalty - Delivery,extension,sale_management,account + sale_management,sale_loyalty delivery,yes,,Sales/Sales,yes,LGPL-3,Adds free shipping mechanism in sales orders
+sale_management,Sales,app,sale_management,account + sale_management,sale digest,no,yes,Sales/Sales,yes,LGPL-3,From quotations to invoices
+sale_margin,Margins in Sales Orders,extension,sale_management,account + sale_management,sale_management,yes,,Sales/Sales,yes,LGPL-3,
+sale_mrp,Sales and MRP Management,bridge,mrp + sale_management,account + mrp + sale_management + stock,mrp sale_stock,yes,,Sales/Sales,yes,LGPL-3,
+sale_mrp_margin,Sale Mrp Margin,bridge,mrp + sale_management,account + mrp + sale_management + stock,sale_mrp sale_stock_margin,no,,Sales/Sales,yes,LGPL-3,
+sale_pdf_quote_builder,Sales PDF Quotation Builder,extension,sale_management,account + sale_management,sale_management,yes,,Sales/Sales,yes,LGPL-3,
+sale_product_matrix,Sale Matrix,extension,sale_management,account + sale_management,sale product_matrix,no,,Sales/Sales,yes,LGPL-3,Add variants to Sales Order through a grid entry.
+sale_project,Sales - Project,bridge,project + sale_management,account + project + sale_management,sale_management sale_service project_account,if sale_management+project_account,,Sales/Sales,yes,LGPL-3,Task Generation from Sales Orders
+sale_project_margin,Sales Margins in Projects,bridge,project + sale_management,account + project + sale_management,sale_margin sale_project,yes,,Sales/Sales,yes,LGPL-3,Bridge module between Sales Margin and Project
+sale_project_stock,Sale Project - Sale Stock,bridge,project + sale_management + stock,account + project + sale_management + stock,sale_project sale_stock project_stock_account,yes,,Sales,yes,LGPL-3,Adds a full traceability of inventory operations on the profitability report.
+sale_project_stock_account,Sale Project Stock Account,bridge,project + sale_management + stock,account + project + sale_management + stock,sale_project project_stock_account,yes,,Hidden,yes,LGPL-3,Technical Bridge
+sale_purchase,Sale Purchase,bridge,purchase + sale_management,account + purchase + sale_management,sale purchase,yes,,Sales/Sales,yes,LGPL-3,Sale based on service outsourcing.
+sale_purchase_project,Sale Purchase Project,bridge,project + purchase + sale_management,account + project + purchase + sale_management,sale_purchase project_purchase sale_project,yes,,Sales,yes,LGPL-3,Technical Bridge
+sale_purchase_stock,MTO Sale <-> Purchase,bridge,purchase + sale_management + stock,account + purchase + sale_management + stock,sale_stock purchase_stock sale_purchase,yes,,Sales/Sales,yes,LGPL-3,SO/PO relation in case of MTO
+sale_service,Sales - Service,extension,sale_management,account + sale_management,sale_management,no,,Sales/Sales,yes,LGPL-3,Interaction between Sales and services apps (project and planning)
+sale_sms,Sale - SMS,extension,sale_management,account + sale_management,sale sms,yes,,Sales/Sales,yes,LGPL-3,Ease SMS integration with sales capabilities
+sale_stock,Sales and Warehouse Management,bridge,sale_management + stock,account + sale_management + stock,sale stock_account,yes,,Sales/Sales,yes,LGPL-3,"Quotation, Sales Orders, Delivery & Invoicing Control"
+sale_stock_margin,Sale Stock Margin,bridge,sale_management + stock,account + sale_management + stock,sale_stock sale_margin,yes,,Sales/Sales,yes,LGPL-3,
+sale_stock_product_expiry,Sale Stock Product Expiry,bridge,sale_management + stock,account + sale_management + stock,sale_stock product_expiry,yes,,Sales/Sales,yes,LGPL-3,
+sale_timesheet,Sales Timesheet,bridge,hr + project + sale_management,account + hr + project + sale_management,sale_project hr_timesheet,yes,,Sales/Sales,yes,LGPL-3,Sell based on timesheets
+sale_timesheet_margin,Service Margins in Sales Orders,bridge,hr + project + sale_management,account + hr + project + sale_management,sale_margin sale_timesheet,yes,,Sales/Sales,yes,LGPL-3,Bridge module between Sales Margin and Sales Timesheet
+sales_team,Sales Teams,foundation,,,base mail,no,,Sales/Sales,yes,LGPL-3,Sales Teams
+sms,SMS gateway,foundation,,,base iap_mail mail phone_validation,yes,,Sales/Sales,yes,LGPL-3,SMS Text Messaging
+sms_twilio,Twilio SMS,foundation,,,sms,no,,Hidden/Tools,yes,LGPL-3,Send SMS messages using Twilio
+snailmail,Snail Mail,foundation,,,iap_mail mail,no,,Hidden/Tools,yes,LGPL-3,
+snailmail_account,Snail Mail - Account,extension,account,account,account snailmail,yes,,Hidden/Tools,yes,LGPL-3,
+social_media,Social Media,foundation,,,base,no,,Marketing/Social Marketing,yes,LGPL-3,Social media connectors for company settings.
+spreadsheet,Spreadsheet,foundation,,,bus web portal,no,,Productivity/Dashboard,yes,LGPL-3,Spreadsheet
+spreadsheet_account,Spreadsheet Accounting Formulas,extension,account,account,spreadsheet account,if account,,Accounting,yes,LGPL-3,Spreadsheet Accounting formulas
+spreadsheet_dashboard,Spreadsheet dashboard,foundation,,,spreadsheet,no,,Productivity/Dashboard,yes,LGPL-3,Spreadsheet
+spreadsheet_dashboard_account,Spreadsheet dashboard for accounting,extension,account,account,spreadsheet_dashboard spreadsheet_account,if spreadsheet_account,,Productivity/Dashboard,yes,LGPL-3,Spreadsheet
+spreadsheet_dashboard_event_sale,Spreadsheet dashboard for events,bridge,sale_management + website_event,account + sale_management + website + website_event,spreadsheet_dashboard event_sale,if event_sale,,Productivity/Dashboard,yes,LGPL-3,Spreadsheet
+spreadsheet_dashboard_hr_expense,Spreadsheet dashboard for expenses,bridge,hr_expense + sale_management,account + hr + hr_expense + sale_management,spreadsheet_dashboard sale_expense,if sale_expense,,Productivity/Dashboard,yes,LGPL-3,Spreadsheet
+spreadsheet_dashboard_hr_timesheet,Spreadsheet dashboard for time sheets,bridge,hr + project,hr + project,spreadsheet_dashboard hr_timesheet,if hr_timesheet,,Productivity/Dashboard,yes,LGPL-3,Spreadsheet
+spreadsheet_dashboard_im_livechat,Spreadsheet dashboard for live chat,extension,im_livechat,im_livechat,spreadsheet_dashboard im_livechat,if im_livechat,,Productivity/Dashboard,yes,LGPL-3,Spreadsheet
+spreadsheet_dashboard_pos_hr,Spreadsheet dashboard for point of sale,bridge,hr + point_of_sale,account + hr + point_of_sale,spreadsheet_dashboard pos_hr,if pos_hr,,Productivity/Dashboard,yes,LGPL-3,Spreadsheet
+spreadsheet_dashboard_pos_restaurant,Spreadsheet dashboard for restaurants,bridge,hr + pos_restaurant,account + hr + point_of_sale + pos_restaurant,spreadsheet_dashboard pos_hr pos_restaurant,if pos_hr+pos_restaurant,,Productivity/Dashboard,yes,LGPL-3,Spreadsheet
+spreadsheet_dashboard_sale,Spreadsheet dashboard for sales,extension,sale_management,account + sale_management,spreadsheet_dashboard sale,if sale,,Productivity/Dashboard,yes,LGPL-3,Spreadsheet
+spreadsheet_dashboard_sale_timesheet,Spreadsheet dashboard for time sheets,bridge,hr + project + sale_management,account + hr + project + sale_management,spreadsheet_dashboard sale_timesheet,if sale_timesheet,,Productivity/Dashboard,yes,LGPL-3,Spreadsheet
+spreadsheet_dashboard_stock_account,Spreadsheet dashboard for stock,bridge,account + stock,account + stock,spreadsheet_dashboard stock_account,if stock_account,,Productivity/Dashboard,yes,LGPL-3,Spreadsheet
+spreadsheet_dashboard_website_sale,Spreadsheet dashboard for eCommerce,extension,website_sale,account + sale_management + website + website_sale,spreadsheet_dashboard website_sale,if website_sale,,Productivity/Dashboard,yes,LGPL-3,Spreadsheet
+spreadsheet_dashboard_website_sale_slides,Spreadsheet dashboard for eLearning,bridge,website_sale + website_slides,account + sale_management + website + website_sale + website_slides,spreadsheet_dashboard website_sale_slides,if website_sale_slides,,Productivity/Dashboard,yes,LGPL-3,Spreadsheet
+stock,Inventory,app,stock,stock,product barcodes_gs1_nomenclature digest,no,yes,Supply Chain/Inventory,yes,LGPL-3,Manage your stock and logistics activities
+stock_account,WMS Accounting,bridge,account + stock,account + stock,stock account,yes,,Supply Chain/Inventory,yes,LGPL-3,"Inventory, Logistic, Valuation, Accounting"
+stock_delivery,Delivery - Stock,bridge,sale_management + stock,account + sale_management + stock,printer sale_stock delivery,if sale_stock+delivery,,Shipping Connectors,yes,LGPL-3,
+stock_dropshipping,Drop Shipping,bridge,purchase + sale_management + stock,account + purchase + sale_management + stock,sale_purchase_stock,no,,Supply Chain/Inventory,yes,LGPL-3,Drop Shipping
+stock_fleet,Stock Transport,bridge,fleet + stock,fleet + stock,stock fleet,no,,,yes,LGPL-3,Stock Transport Management
+stock_landed_costs,WMS Landed Costs,bridge,purchase + stock,account + purchase + stock,stock_account purchase_stock,no,,Supply Chain/Inventory,yes,LGPL-3,Landed Costs
+stock_maintenance,Stock - Maintenance,bridge,maintenance + stock,maintenance + stock,stock maintenance,yes,,Supply Chain/Inventory,yes,LGPL-3,See lots used in maintenance
+stock_sms,Stock - SMS,extension,stock,stock,stock sms,yes,,Supply Chain/Inventory,yes,LGPL-3,Send text messages when final stock move
+survey,Surveys,app,survey,survey,auth_signup http_routing mail web_tour gamification digest,no,yes,Marketing/Surveys,yes,LGPL-3,Send your surveys or share them live.
+survey_crm,Survey CRM,bridge,crm + survey,crm + survey,survey crm,yes,,Marketing/Surveys,yes,LGPL-3,Generate leads from surveys
+test_assetsbundle,test-assetsbundle,foundation,,,base,no,,Hidden/Tests,yes,LGPL-3,
+test_base,Test ORM,foundation,,,base,no,,Hidden/Tests,yes,LGPL-3,
+test_base_automation,Test - Base Automation,foundation,,,base_automation,no,,Hidden,yes,LGPL-3,Base Automation Tests: Ensure Flow Robustness
+test_crm_full,Test Full Crm Flow,bridge,crm + im_livechat + sale_management + website_event,account + crm + im_livechat + sale_management + website + website_event,crm crm_iap_enrich crm_iap_mine crm_sms event_crm sale_crm website_crm website_crm_iap_reveal website_crm_partner_assign website_crm_livechat,no,,Hidden/Tests,yes,LGPL-3,
+test_data_module,test module to test data only modules,foundation,,,,no,,Hidden/Tests,yes,LGPL-3,
+test_data_module_install,test installation of data module,foundation,,,test_data_module,no,,Hidden/Tests,yes,LGPL-3,
+test_discuss_full,Test Discuss (full),bridge,crm + fleet + hr_attendance + hr_holidays + im_livechat + project_todo + website_sale + website_slides,account + crm + fleet + hr + hr_attendance + hr_holidays + im_livechat + project + project_todo + sale_management + website + website_sale + website_slides,calendar crm crm_livechat hr_attendance hr_fleet hr_holidays im_livechat mail mail_bot microsoft_calendar project_todo website_livechat website_sale website_slides,no,,Productivity/Discuss,yes,LGPL-3,Test of Discuss with all possible overrides installed.
+test_event_full,Test Full Event Flow,bridge,crm + website_event + website_sale,account + crm + sale_management + website + website_event + website_sale,event event_booth event_crm event_crm_sale event_sale event_sms payment_demo website_event_booth_sale_exhibitor website_event_exhibitor website_event_sale website_event_track website_event_track_live website_event_track_quiz,no,,Hidden/Tests,yes,LGPL-3,
+test_html_field_history,Test - html_field_history,foundation,,,html_editor,no,,Hidden,yes,LGPL-3,
+test_http,Test HTTP,foundation,,,web web_tour mail rpc,no,,Hidden/Tests,yes,LGPL-3,
+test_import_export,Test - Import & Export,extension,website,website,web base_import website test_base,no,,Hidden,yes,LGPL-3,Base Import & Export Tests: Ensure Flow Robustness
+test_inherit,test-inherit,foundation,,,base test_base,no,,Hidden/Tests,yes,LGPL-3,
+test_inherit_depends,test-inherit-depends,foundation,,,test_inherit test_base,no,,Hidden/Tests,yes,LGPL-3,
+test_inherits_depends,test-inherits-depends,foundation,,,test_base,no,,Hidden/Tests,yes,LGPL-3,
+test_l10n,Test Localization,foundation,,,base,no,,Hidden/Tests,yes,LGPL-3,
+test_lint,Test Lint,foundation,,,base,no,,Hidden/Tests,yes,LGPL-3,
+test_mail,Mail Tests,foundation,,,mail test_base phone_validation mail_tracking,no,,Hidden,yes,LGPL-3,Mail Tests: performances and tests specific to mail
+test_mail_full,Mail Tests (Full),extension,mass_mailing_sms,mass_mailing + mass_mailing_sms,mail mail_bot mail_tracking_mass_mailing mass_mailing mass_mailing_sms phone_validation portal rating sms test_mail test_mail_sms test_mass_mailing,no,,Hidden,yes,LGPL-3,Mail Tests: performances and tests specific to mail with all sub-modules
+test_mail_sms,SMS Tests,foundation,,,mail mail_tracking_sms sms sms_twilio test_base,no,,Hidden,yes,LGPL-3,SMS Tests: performances and tests specific to SMS
+test_main_flows,Test Main Flow,bridge,crm + hr + mrp + project + purchase + sale_management,account + crm + hr + mrp + project + purchase + sale_management + stock,web_tour crm sale_timesheet purchase_stock mrp account,no,,Hidden/Tests,yes,LGPL-3,
+test_mass_mailing,Mass Mail Tests,extension,mass_mailing_sms,mass_mailing + mass_mailing_sms,mail_tracking_mass_mailing mass_mailing mass_mailing_sms sms_twilio test_mail test_mail_sms,no,,Marketing/Email Marketing,yes,LGPL-3,Mass Mail Tests: feature and performance tests for mass mailing
+test_populate,Odoo Populate Tests,foundation,,,populate,no,,Hidden/Tests,yes,LGPL-3,Test module for Odoo's Populate
+test_resource,Test - Resource,foundation,,,resource,no,,Hidden,yes,LGPL-3,
+test_sale_product_configurators,Sale Product Configurators Tests,bridge,sale_management + website_event,account + sale_management + website + website_event,event_sale sale_management sale_product_matrix,no,,Hidden,yes,LGPL-3,Test Suite for Sale Product Configurator
+test_sale_purchase_edi_ubl,Test - Sale & Purchase Order EDI,bridge,purchase + sale_management,account + purchase + sale_management,purchase_edi_ubl_bis3 sale_edi_ubl,no,,Hidden,yes,LGPL-3,Sale & Purchase Order EDI Tests: Ensure Flow Robustness
+test_spreadsheet,Spreadsheet Test,foundation,,,spreadsheet,no,,Hidden,yes,LGPL-3,"Spreadsheet Test, mainly to test the mixin behavior"
+test_tests,Test Tests,foundation,,,base web,no,,Hidden/Tests,yes,LGPL-3,
+test_translation,Test Translation,foundation,,,base web_tour,no,,Hidden/Tests,yes,LGPL-3,
+test_translation_mode,Translation Mode,foundation,,,web,no,,Hidden,yes,LGPL-3,In-context and interactive translation mode to streamline the module translation process using Weblate
+test_uninstall,test-uninstall,foundation,,,base,no,,Hidden/Tests,yes,LGPL-3,
+test_utm,UTM Tests,foundation,,,utm,no,,Hidden,yes,LGPL-3,UTM Tests: tests specific to the UTM module
+test_web,test_search_panel,foundation,,,web test_base,no,,Hidden/Tests,yes,LGPL-3,
+test_website,Website Test,extension,website,website,web_unsplash website theme_default,no,,Hidden,yes,LGPL-3,"Website Test, mainly for module install/uninstall tests"
+test_website_modules,Website Modules Test,bridge,crm + im_livechat + website_event + website_sale + website_slides,account + crm + im_livechat + sale_management + website + website_event + website_sale + website_slides,theme_default website website_blog website_event_sale website_slides website_livechat website_crm_iap_reveal website_sale,no,,Hidden,yes,LGPL-3,
+test_website_slides_full,Test Full eLearning Flow,bridge,survey + website_sale + website_slides,account + sale_management + survey + website + website_sale + website_slides,website_sale_slides website_slides_forum website_slides_survey,no,,Hidden/Tests,yes,LGPL-3,
+theme_default,Default Theme,extension,website,website,website,no,,Theme,yes,LGPL-3,
+uom,Units of measure,foundation,,,base,no,,Sales/Sales,yes,LGPL-3,
+utm,UTM Trackers,foundation,,,base web,no,,Marketing,yes,LGPL-3,
+web,Web,foundation,,,base,yes,,Hidden,yes,LGPL-3,
+web_hierarchy,Web Hierarchy,foundation,,,web,no,,Hidden,yes,LGPL-3,
+web_tour,Tours,foundation,,,web,yes,,Hidden,yes,LGPL-3,
+web_unsplash,Unsplash Image Library,foundation,,,base_setup html_editor,yes,,Hidden,yes,LGPL-3,Find free high-resolution images from Unsplash
+website,Website,app,website,website,digest web html_editor http_routing portal social_media auth_signup mail google_recaptcha utm html_builder,no,yes,Website/Website,yes,LGPL-3,Enterprise website builder
+website_address_autocomplete,Website Address Autocomplete,extension,website,website,website google_address_autocomplete,yes,,Website/Website,yes,LGPL-3,Assist your users with automatic completion & suggestions when filling their address
+website_blog,Blog,extension,website,website,website_mail website_partner html_builder,no,,Website/Website,yes,LGPL-3,"Publish blog posts, announces, news"
+website_cf_turnstile,Cloudflare Turnstile,extension,website,website,website,no,,Website/Website,yes,LGPL-3,
+website_crm,Contact Form,bridge,crm + website,crm + website,website crm,yes,,Website/Website,yes,LGPL-3,Generate leads from a contact form
+website_crm_iap_reveal,Lead Generation From Website Visits,bridge,crm + website,crm + website,iap_crm iap_mail crm_iap_mine website_crm,no,,Sales/CRM,yes,LGPL-3,Generate Leads/Opportunities from your website's traffic
+website_crm_livechat,Lead Livechat Sessions,bridge,crm + im_livechat + website,crm + im_livechat + website,website_crm website_livechat crm_livechat,yes,,Website/Website,yes,LGPL-3,View livechat sessions for leads
+website_crm_partner_assign,Resellers,bridge,crm + sale_management + website,account + crm + sale_management + website,base_geolocalize crm account website_partnership website_partner website_google_map portal,no,,Website/Website,yes,LGPL-3,Publish your resellers/partners and forward leads to them
+website_crm_sms,Send SMS to Visitor with leads,bridge,crm + website,crm + website,website_sms crm,yes,,Website/Website,yes,LGPL-3,Allows to send sms to website visitor that have lead
+website_customer,Customer References,bridge,crm + sale_management + website,account + crm + sale_management + website,website_crm_partner_assign website_partner website_google_map,no,,Website/Website,yes,LGPL-3,Publish your customer references
+website_event,Events,app,website_event,website + website_event,event website website_partner website_mail html_builder,no,yes,Marketing/Events,yes,LGPL-3,"Publish events, sell tickets"
+website_event_booth,Online Event Booths,extension,website_event,website + website_event,website_event event_booth,yes,,Marketing/Events,yes,LGPL-3,"Events, display your booths on your website"
+website_event_booth_exhibitor,Booths/Exhibitors Bridge,extension,website_event,website + website_event,website_event_exhibitor website_event_booth,yes,,Marketing/Events,yes,LGPL-3,"Event Booths, automatically create a sponsor."
+website_event_booth_sale,Online Event Booth Sale,bridge,website_event + website_sale,account + sale_management + website + website_event + website_sale,event_booth_sale website_event_booth website_sale,yes,,Marketing/Events,yes,LGPL-3,"Events, sell your booths online"
+website_event_booth_sale_exhibitor,Booths Sale/Exhibitors Bridge,bridge,website_event + website_sale,account + sale_management + website + website_event + website_sale,website_event_exhibitor website_event_booth_sale,yes,,Marketing/Events,yes,LGPL-3,Bridge module between website_event_booth_exhibitor and website_event_booth_sale.
+website_event_crm,Website Events CRM,bridge,crm + website_event,crm + website + website_event,event_crm website_event,yes,,Website/Website,yes,LGPL-3,
+website_event_exhibitor,Event Exhibitors,extension,website_event,website + website_event,website_event,no,,Marketing/Events,yes,LGPL-3,Event: manage sponsors and exhibitors
+website_event_sale,Online Event Ticketing,bridge,website_event + website_sale,account + sale_management + website + website_event + website_sale,website_event event_sale website_sale,yes,,Website/Website,yes,LGPL-3,Sell event tickets online
+website_event_track,Advanced Events,extension,website_event,website + website_event,website_event,no,,Marketing,yes,LGPL-3,"Sponsors, Tracks, Agenda, Event News"
+website_event_track_live,Live Event Tracks,extension,website_event,website + website_event,website_event_track,no,,Marketing/Events,yes,LGPL-3,"Support live tracks: streaming, participation, youtube"
+website_event_track_live_quiz,Quiz on Live Event Tracks,extension,website_event,website + website_event,website_event_track_live website_event_track_quiz,yes,,Marketing/Events,yes,LGPL-3,"Bridge module to support quiz features during ""live"" tracks."
+website_event_track_quiz,Quizzes on Tracks,extension,website_event,website + website_event,website_profile website_event_track,no,,Marketing/Events,yes,LGPL-3,Quizzes on tracks
+website_forum,Forum,extension,website,website,auth_signup website_mail website_profile,no,,Website/Website,yes,LGPL-3,Manage a forum with FAQ and Q&A
+website_google_map,Google Maps,extension,website,website,base_geolocalize website_partner,no,,Website/Website,yes,LGPL-3,Show your company address on Google Maps
+website_hr_recruitment,Online Jobs,app,website_hr_recruitment,hr + hr_recruitment + website + website_hr_recruitment,hr_recruitment website_mail,if hr_recruitment+website_mail,yes,Website/Website,yes,LGPL-3,Manage your online hiring process
+website_hr_recruitment_livechat,Website IM Livechat HR Recruitment,bridge,im_livechat + website_hr_recruitment,hr + hr_recruitment + im_livechat + website + website_hr_recruitment,website_hr_recruitment im_livechat,no,,Website/Live Chat,yes,LGPL-3,Chatbot for the HR Recruitment
+website_links,Link Tracker,extension,website,website,website link_tracker,yes,,Website/Website,yes,LGPL-3,Generate trackable & short URLs
+website_livechat,Website Live Chat,bridge,im_livechat + website,im_livechat + website,website im_livechat,yes,,Website/Live Chat,yes,LGPL-3,Chat with your website visitors
+website_mail,Website Mail,extension,website,website,website mail,yes,,Website/Website,yes,LGPL-3,Website Module for Mail
+website_mail_group,Website Mail Group,extension,website,website,mail_group website,yes,,,yes,LGPL-3,Add a website snippet for the mail groups.
+website_mass_mailing,Newsletter Subscribe Button,bridge,mass_mailing + website,mass_mailing + website,website mass_mailing google_recaptcha,if website+mass_mailing,,Website/Website,yes,LGPL-3,Attract visitors to subscribe to mailing lists
+website_mass_mailing_event,Mass mailing on website events,bridge,mass_mailing + website_event,mass_mailing + website + website_event,mass_mailing website_event,yes,,Marketing/Email Marketing/Website,yes,LGPL-3,Add pre-filled snippets in mass_mailing with an event snapshot
+website_mass_mailing_sms,Newsletter Subscribe SMS Template,bridge,mass_mailing_sms + website,mass_mailing + mass_mailing_sms + website,website_mass_mailing mass_mailing_sms,yes,,Website/Website,yes,LGPL-3,Attract visitors to subscribe to mailing lists
+website_partner,Website Partner,extension,website,website,website,no,,Website/Website,yes,LGPL-3,Partner module for website
+website_partnership,Website Partnership,bridge,crm + sale_management + website,account + crm + sale_management + website,partnership website_partner,no,,Website/Website,yes,LGPL-3,Publish your partners on your website
+website_payment,Website Payment,bridge,account + website,account + website,website account_payment portal,yes,,Website/Website,yes,LGPL-3,Payment integration with website
+website_profile,Website profile,extension,website,website,html_editor website_partner gamification,no,,Website/Website,yes,LGPL-3,Access the website profile of the users
+website_project,Online Task Submission,bridge,project + website,project + website,website project,yes,,Website/Website,yes,LGPL-3,Add a task suggestion form to your website
+website_sale,eCommerce,app,website_sale,account + sale_management + website + website_sale,website sale website_payment website_mail portal_rating digest delivery html_builder,no,yes,Website/Website,yes,LGPL-3,Sell your products online
+website_sale_collect,Click & Collect,bridge,stock + website_sale,account + sale_management + stock + website + website_sale,base_geolocalize payment_custom website_sale_stock,no,,Website/Website,yes,LGPL-3,
+website_sale_gelato,eCommerce/Gelato bridge,extension,website_sale,account + sale_management + website + website_sale,sale_gelato website_sale,yes,,Website/Website,yes,LGPL-3,
+website_sale_loyalty,"Coupons, Promotions, Gift Card and Loyalty for eCommerce",extension,website_sale,account + sale_management + website + website_sale,website_sale website_links sale_loyalty,if website_sale+sale_loyalty,,Website/Website,yes,LGPL-3,"Use coupon, promotion, gift cards and loyalty programs in your eCommerce store"
+website_sale_mass_mailing,Checkout Newsletter,bridge,mass_mailing + website_sale,account + mass_mailing + sale_management + website + website_sale,website_sale website_mass_mailing mass_mailing_sale,yes,,Website/Website,yes,LGPL-3,Let new customers sign up for a newsletter during checkout
+website_sale_mrp,Kit Availability,bridge,mrp + website_sale,account + mrp + sale_management + stock + website + website_sale,website_sale_stock sale_mrp,yes,,Website/Website,yes,LGPL-3,Manage Kit product inventory & availability
+website_sale_project,Website Sale - Project,bridge,project + website_sale,account + project + sale_management + website + website_sale,website_sale project,yes,,Website/Website,yes,LGPL-3,Bridge module between website_sale and project
+website_sale_slides,Sell Courses,bridge,website_sale + website_slides,account + sale_management + website + website_sale + website_slides,website_slides website_sale,no,,Website/eLearning,yes,LGPL-3,Sell your courses online
+website_sale_stock,Product Availability,bridge,stock + website_sale,account + sale_management + stock + website + website_sale,website_sale sale_stock stock_delivery,yes,,Website/Website,yes,LGPL-3,Manage product inventory & availability
+website_slides,eLearning,app,website_slides,website + website_slides,portal_rating website website_mail website_profile digest,no,yes,Website/eLearning,yes,LGPL-3,Manage and publish an eLearning platform
+website_slides_forum,Forum on Courses,extension,website_slides,website + website_slides,website_slides website_forum,yes,,Website/eLearning,yes,LGPL-3,Allows to link forum on a course
+website_slides_survey,Course Certifications,bridge,survey + website_slides,survey + website + website_slides,website_slides survey,yes,,Website/eLearning,yes,LGPL-3,Add certification capabilities to your courses
+website_sms,Send SMS to Visitor,extension,website,website,website sms,yes,,Website/Website,yes,LGPL-3,Allows to send sms to website visitor
+website_timesheet,Hide Portal Timesheet Information,bridge,hr + project + website,hr + project + website,website hr_timesheet,yes,,Website/Website,yes,LGPL-3,Allow hiding timesheet information in the portal
