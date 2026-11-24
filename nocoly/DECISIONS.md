@@ -326,3 +326,14 @@ the build is `build/roles.py` and the ids are in `build/ids.json` under `roles`.
 | 23 Sep 2026 | **Tax pickers offer active taxes only** — sale taxes on order lines, any active tax on invoice lines | Archived 10% G SC and 8% S OU were offered; an invoice line's tax use depends on the document |
 | 23 Sep 2026 | **The three business roles see To Invoice and To Upsell**; `roles.py` read-back and check honour the per-worksheet overrides | The views were added after the roles, so those roles could not open them; the scripts reported every correct role as wrong |
 | 23 Sep 2026 | **`orders.py check` no longer compares orders with the old casimir seed** (`SEED_CHECK = False`) | The seed was wiped; `demo.py check` owns the orders |
+
+## Open — proposed 24 Nov 2026 (draft, nothing decided)
+
+| Question | Proposal | Why |
+|---|---|---|
+| Several builders at once | Adopt `PARALLEL-BUILD.md`: owners in `MODULES.md`, claims in `CLAIMS.md`, module prefixes in names, a register scan at the start and end of every session | `save_controls` overwrites a concurrent save; the 7 Oct multi-agent sprint was stopped by concurrent edits; 65 of 83 worksheets are outside the ledger |
+| The reference after casimir.odoo.com | A local Odoo 20 Community with every open-source app and demo data (`tools/odoo20-local/`), plus an Odoo Online instance per Module Owner for screens and Enterprise-only features (`REFERENCES.md`); the choice per module written in `MODULES.md` | The tenant's trial expired on 22 Sep; the 15 Sep decision names a reference that no longer answers |
+| The plan | Re-base `plan/phases.json` on the app as it is | Inventory, Point of Sale and MyInvois were built outside the planned order |
+| Branches | Merge `codex/inventory-module-removal-plan` and `codex/crm-sales-relation-register`; review the two older CRM branches; delete the two already merged | An agent that reads only 19.0 misses their work |
+| This repo is public | Decide whether EMS work stays here, moves to a private repo, or is scrubbed | It carries the app and organisation ids and people's names |
+| The renamed app | Add "EMS" to `APP_NAMES` after deciding which build steps may run again | Today the guard stops every script; some steps would revert hand edits made since September |

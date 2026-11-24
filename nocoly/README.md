@@ -12,6 +12,9 @@ is where Odoo's behaviour is read from.
 | **Reviewing a worksheet** | [`REVIEWING.md`](REVIEWING.md) — access, how to review, the status of every worksheet |
 | **Building or changing one** | [`BUILDING.md`](BUILDING.md) — setup, the per-worksheet loop, conventions, HAP traps |
 | **Asking why** | [`DECISIONS.md`](DECISIONS.md) — every decision, with its reason and who made it |
+| **Starting now (Nov 2026)** | [`NEXT-STEPS.md`](NEXT-STEPS.md) — the plan from here, and a prompt that walks your AI through this hand-over; [`REFERENCES.md`](REFERENCES.md) — the local Odoo 20 and the online instance that replace casimir.odoo.com; [`tools/odoo20-local/`](tools/odoo20-local/) — set up the local Odoo 20 |
+| **Building beside other people or AI sessions** | [`PARALLEL-BUILD.md`](PARALLEL-BUILD.md) — owners, claims, naming, the register scan; [`MODULES.md`](MODULES.md) — who owns which module; [`CLAIMS.md`](CLAIMS.md) — who is writing what now (drafts, 24 Nov 2026) |
+| **Catching up on the app as it is** | [`STATE-2026-11-24.md`](STATE-2026-11-24.md) — the app, this repo and its branches on 24 Nov 2026; [`REVIEW-2026-11-24.md`](REVIEW-2026-11-24.md) — what to keep, what to add, how to re-review; [`TRAPS-HAP-CLI-0.9.md`](TRAPS-HAP-CLI-0.9.md) — traps found since hap-cli 0.8.31 (drafts) |
 
 ```
 worksheets/  one hand-off per worksheet: requirements, build, test results
@@ -26,6 +29,9 @@ sources/     page sources the two ground-up plan pages are built from
 ```
 
 ## Where the build stands
+
+**24 Nov 2026 (draft note):** the app, now named **EMS**, holds 83 worksheets, 11 pages and 298 workflows. This
+repo documents 18 of the worksheets, up to 23 Sep 2026. See `STATE-2026-11-24.md`.
 
 Phase 1 — the seven core worksheets — is in progress, one worksheet at a time; optional feature bundles are excluded
 for now. The per-worksheet state, with links to each hand-off, is kept in one place: the **Status** table in

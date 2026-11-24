@@ -1,0 +1,29 @@
+# Local Odoo 20 Community for reference only (UI and flows of the open-source modules).
+# Runs on this computer only; ports are bound to 127.0.0.1. The database password is a local test value
+# (set ODOO_DB_PASSWORD to change it, and change odoo-cli.conf to match). Never put real data in it.
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: odoo
+      POSTGRES_PASSWORD: ${ODOO_DB_PASSWORD:-odoo}
+      POSTGRES_DB: postgres
+    volumes:
+      - odoo20-db:/var/lib/postgresql/data
+    restart: unless-stopped
+  odoo:
+    image: ${ODOO_IMAGE:-odoo:20.0}
+    depends_on:
+      - db
+    environment:
+      HOST: db
+      USER: odoo
+      PASSWORD: ${ODOO_DB_PASSWORD:-odoo}
+    ports:
+      - "127.0.0.1:8069:8069"
+    volumes:
+      - odoo20-data:/var/lib/odoo
+    restart: unless-stopped
+volumes:
+  odoo20-db:
+  odoo20-data:

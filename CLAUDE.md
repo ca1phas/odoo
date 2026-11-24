@@ -2,7 +2,8 @@
 
 This is an Odoo 19.0 fork. **Everything Claude works on lives in `nocoly/`** — building the Nocoly HAP app
 **ERP Master** as a replica of Odoo. (The owner renamed the app **"CRM odoo"** on 23 Sep 2026; guards accept
-both through `hap.APP_NAMES`. "ERP Master" below means that app.) Nothing here asks you to change Odoo itself; `addons/` is read as the
+both through `hap.APP_NAMES`. It is now named **EMS**, which `APP_NAMES` does not include yet, so the guards
+stop every script until the owner decides which steps may run again (`nocoly/REVIEW-2026-11-24.md`). "ERP Master" below means that app.) Nothing here asks you to change Odoo itself; `addons/` is read as the
 reference for Odoo's own behaviour.
 
 **The reference tenant casimir.odoo.com is gone** — its trial expired on 22 Sep 2026 and it answers only with a
@@ -129,3 +130,17 @@ controls added after the record existed. **Read both before concluding a field i
 
 They build in the browser at the same time, so **app state moves under you**. Read it; do not trust a brief's
 control count. Report what you found instead of adjusting to it silently.
+
+## Working beside other builders (draft, 24 Nov 2026)
+
+Several people and AI sessions now build EMS at once. Start with `nocoly/NEXT-STEPS.md`. Odoo's facts now come from
+the local Odoo 20 and an online instance (`nocoly/REFERENCES.md`). Until the owner settles `nocoly/PARALLEL-BUILD.md`:
+
+- **Write only to your own module** (`nocoly/MODULES.md`); anything else is read-only. Ask its owner instead.
+- **Claim before the first write** in `nocoly/CLAIMS.md`: the worksheets you change, the ones joined to them, and the
+  workflows that write to them. One writer per cluster.
+- **Re-read before every change**: the app moves under you.
+- **Name workflows `<Module> - <what>`**; never reuse a name within a module.
+- **Silent traps found since 0.8.31** (`nocoly/TRAPS-HAP-CLI-0.9.md`): OR filters in a get-single-record step are
+  ignored when written in the old slot (P41); "equals" on a multi-record relation compares the whole set; do not
+  save V3-made roles in the role editor (P43).
