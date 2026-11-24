@@ -2,7 +2,7 @@
 
 **Status: draft for the owner's review, 24 Nov 2026.** Nothing here is a decision until the owner agrees and
 `DECISIONS.md` records it. **EMS** is the app this repo calls ERP Master (renamed "CRM odoo" on 23 Sep, then
-"EMS"); the app id has not changed. Companion files: `NEXT-STEPS.md` (the plan from here), `MODULES.md` (who owns what), `CLAIMS.md` (who is writing
+"EMS"); the app id has not changed. Companion files: `NEXT-STEPS.md` (the plan from here), `BUILD-RULES.md` (how a module is built), `MODULES.md` (who owns what), `CLAIMS.md` (who is writing
 what now), `REFERENCES.md` (where Odoo's facts come from),
 `STATE-2026-11-24.md` (what the app and this repo hold today), `TRAPS-HAP-CLI-0.9.md` (traps found since 0.8.31).
 

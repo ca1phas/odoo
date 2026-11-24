@@ -44,6 +44,8 @@ Output per module: `worksheets/NN-<module>-review.md`, a review page, an updated
 
 ## Material you can reuse
 
+**How a module is built and when it is done:** `BUILD-RULES.md`.
+
 The Odoo Replica (AI) programme rebuilds Odoo's modules natively in a separate app with the same organisation.
 Its public copy is on branch `claude/odoo-native-replica`, folder `nocoly/native-replica/`:
 
@@ -60,7 +62,7 @@ Read the EMS hand-over from the repo github.com/ca1phas/odoo, branch claude/ems-
 (or 19.0 once it is merged). Check out only CLAUDE.md and nocoly/ (sparse checkout; the rest is Odoo itself).
 
 Read, in this order: CLAUDE.md, nocoly/NEXT-STEPS.md, nocoly/REVIEW-2026-11-24.md,
-nocoly/PARALLEL-BUILD.md, nocoly/MODULES.md, nocoly/CLAIMS.md, nocoly/STATE-2026-11-24.md,
+nocoly/PARALLEL-BUILD.md, nocoly/BUILD-RULES.md, nocoly/MODULES.md, nocoly/CLAIMS.md, nocoly/STATE-2026-11-24.md,
 nocoly/REFERENCES.md, nocoly/TRAPS-HAP-CLI-0.9.md, nocoly/tools/odoo20-local/README.md.
 Then skim nocoly/BUILDING.md by section, and nocoly/DECISIONS.md.
 

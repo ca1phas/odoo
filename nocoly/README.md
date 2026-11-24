@@ -13,6 +13,7 @@ is where Odoo's behaviour is read from.
 | **Building or changing one** | [`BUILDING.md`](BUILDING.md) — setup, the per-worksheet loop, conventions, HAP traps |
 | **Asking why** | [`DECISIONS.md`](DECISIONS.md) — every decision, with its reason and who made it |
 | **Starting now (Nov 2026)** | [`NEXT-STEPS.md`](NEXT-STEPS.md) — the plan from here, and a prompt that walks your AI through this hand-over; [`REFERENCES.md`](REFERENCES.md) — the local Odoo 20 and the online instance that replace casimir.odoo.com; [`tools/odoo20-local/`](tools/odoo20-local/) — set up the local Odoo 20 |
+| **Rebuilding an Odoo module** | [`BUILD-RULES.md`](BUILD-RULES.md) — the rules of the Odoo Replica (AI) programme: plan first, native first, laid-out forms, every step tested in the UI, nothing of Odoo cut silently, and when a module is done |
 | **Building beside other people or AI sessions** | [`PARALLEL-BUILD.md`](PARALLEL-BUILD.md) — owners, claims, naming, the register scan; [`MODULES.md`](MODULES.md) — who owns which module; [`CLAIMS.md`](CLAIMS.md) — who is writing what now (drafts, 24 Nov 2026) |
 | **Catching up on the app as it is** | [`STATE-2026-11-24.md`](STATE-2026-11-24.md) — the app, this repo and its branches on 24 Nov 2026; [`REVIEW-2026-11-24.md`](REVIEW-2026-11-24.md) — what to keep, what to add, how to re-review; [`TRAPS-HAP-CLI-0.9.md`](TRAPS-HAP-CLI-0.9.md) — traps found since hap-cli 0.8.31 (drafts) |
 

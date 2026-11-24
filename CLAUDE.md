@@ -133,7 +133,8 @@ control count. Report what you found instead of adjusting to it silently.
 
 ## Working beside other builders (draft, 24 Nov 2026)
 
-Several people and AI sessions now build EMS at once. Start with `nocoly/NEXT-STEPS.md`. Odoo's facts now come from
+Several people and AI sessions now build EMS at once. Start with `nocoly/NEXT-STEPS.md`; build by
+`nocoly/BUILD-RULES.md`. Odoo's facts now come from
 the local Odoo 20 and an online instance (`nocoly/REFERENCES.md`). Until the owner settles `nocoly/PARALLEL-BUILD.md`:
 
 - **Write only to your own module** (`nocoly/MODULES.md`); anything else is read-only. Ask its owner instead.
