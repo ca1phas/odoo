@@ -4,7 +4,7 @@
 `README.md`) for how EMS is built now: several people and their AI sessions, one shared app, and no live reference
 tenant. Why: `REVIEW-2026-11-24.md`. Rules: `PARALLEL-BUILD.md`.
 
-## Week 1: get ready (no writes to EMS)
+## Stage 1: get ready (no writes to EMS)
 
 | # | Step | Who | Done when |
 |---|---|---|---|
@@ -17,7 +17,7 @@ tenant. Why: `REVIEW-2026-11-24.md`. Rules: `PARALLEL-BUILD.md`.
 | 7 | Make this repo private and add the builders as collaborators (agreed 25 Nov) | Repo owner | Only collaborators can open it |
 | 8 | List which build steps may run again on today's worksheets, then add "EMS" to `APP_NAMES` | Repo owner | The list is in `BUILDING.md`; the scripts run again |
 
-## Weeks 2–3: read-only re-review, one module at a time
+## Stage 2: read-only re-review, one module at a time
 
 Order (dependencies first): Contacts → Products → Invoicing → Sales → CRM → Activities → Inventory → Point of Sale.
 Each builder reviews one module at a time; two builders may review different modules at once.
@@ -33,7 +33,7 @@ For each module:
 
 Output per module: `worksheets/NN-<module>-review.md`, a review page, an updated row in `MODULES.md`.
 
-## After the review: changes, one module at a time
+## Stage 3: changes, one module at a time
 
 1. The Module Owner approves the fix list or the rebuild plan.
 2. The builder claims the cluster (`CLAIMS.md`), builds with a re-runnable script, records every id, reads every
