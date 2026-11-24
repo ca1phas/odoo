@@ -5,7 +5,7 @@
 - Add your line and push it **before** the first HAP write of a session; delete it when you finish.
 - A claim covers a cluster: the worksheets you change, every worksheet joined to them (Relation, rollup, lookup,
   subform) and every workflow that writes to any of them. If any of those is already claimed, wait or ask.
-- Write the worksheet and workflow **names**, not ids; this repo is public.
+- Write the worksheet and workflow **names**, not ids, so a claim can be read at a glance.
 - A claim past its *Until* time may be taken over only after asking its holder.
 
 ## Active claims

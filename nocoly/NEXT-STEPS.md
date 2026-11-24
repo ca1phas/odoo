@@ -9,12 +9,12 @@ tenant. Why: `REVIEW-2026-11-24.md`. Rules: `PARALLEL-BUILD.md`.
 | # | Step | Who | Done when |
 |---|---|---|---|
 | 1 | Read this branch with your AI (prompt below) | Every builder | Each builder has read it and raised questions |
-| 2 | Agree `PARALLEL-BUILD.md`; fill in the owners in `MODULES.md` | App Owner, Module Owners | Owners filled in; the decision is in `DECISIONS.md` |
+| 2 | Agree `PARALLEL-BUILD.md`; confirm the owners and the app-wide classification in `MODULES.md` (filled in by role on 25 Nov) | App Owner, Module Owners | The decision is in `DECISIONS.md` |
 | 3 | Merge this branch and the two up-to-date branches into 19.0; delete the two already merged (`STATE-2026-11-24.md`, *Branches*) | Repo owner | 19.0 holds them; an agent reading 19.0 sees everything |
 | 4 | Set up the local Odoo 20 (`tools/odoo20-local/`) | Every builder | The sign-in page answers; the demo counts match its README |
 | 5 | Set up the online instance for your module (`REFERENCES.md`) | Each Module Owner | The module is installed; captures start in `reference/` |
 | 6 | Decide the reference for each module | App Owner | The *Reference* column in `MODULES.md` is filled |
-| 7 | Decide whether EMS work stays in this public repo | App Owner, repo owner | Recorded in `DECISIONS.md` |
+| 7 | Make this repo private and add the builders as collaborators (agreed 25 Nov) | Repo owner | Only collaborators can open it |
 | 8 | List which build steps may run again on today's worksheets, then add "EMS" to `APP_NAMES` | Repo owner | The list is in `BUILDING.md`; the scripts run again |
 
 ## Weeks 2–3: read-only re-review, one module at a time

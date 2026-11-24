@@ -37,7 +37,8 @@ Owners and approvers are named by role here. Who holds each role is in `MODULES.
 | **Module Owner** | One per menu group. Approves changes to the module's objects and signs off its tests |
 | **Builder** | A person or an AI session building in one module, under that module's owner |
 | **Reviewer** | Checks a hand-off independently of the builder (`REVIEWING.md`) |
-| **App Administrator** | Roles, members, app settings; the only one who edits roles |
+| **App Administrator** | Roles, members, app settings; the only one who edits roles. By default the App Owner holds it |
+| **Repo owner** | Reviews and merges into 19.0; repo settings and collaborators |
 
 ## The rules
 
@@ -113,7 +114,7 @@ To use them on EMS:
 ## Questions for the App Owner
 
 1. Adopt these rules for every builder, people and AI sessions alike?
-2. Fill in the role holders in `MODULES.md`.
+2. Confirm the role holders and the app-wide classification in `MODULES.md` (filled in on 25 Nov).
 3. Claims as a file in this repo (simple, needs a push before writing) or as GitHub issues (one per claim)?
 4. Rename the existing unprefixed workflows now, or only when their module is next touched?
 5. Which branch is the integration branch, and when are the unmerged branches merged or closed
