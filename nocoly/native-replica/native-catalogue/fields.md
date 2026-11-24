@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Purpose | Every field type in the Nocoly HAP field designer today, with its settings, tried live, so that each Odoo field kind maps to a native HAP field |
-| Rule | Native first (Li Wei, 23 Nov 2026). Try the native option before designing; custom fields and Compute only where no native field fits |
+| Rule | Native first (programme rule, 23 Nov 2026). Try the native option before designing; custom fields and Compute only where no native field fits |
 | Status | Survey, 23 Nov 2026, about 14:20–15:25 MYT. Only the probe sheet was changed. Nothing was deleted |
 | Target app | Odoo Replica (AI) `<uuid>`, Nocoly SaaS, CLI profile `<profile>`, hap-cli 0.9.14, English UI |
 | Probe sheet | **Native Field Probe** `<id>`, alias `x_system__native_probe`, group System Tables `<id>`. 62 fields (inventory in §10). One record, `TEST probe` (`<uuid>`) |

@@ -1,4 +1,4 @@
-"""Form layouts for the wave 0 sheets (Li Wei, 24 Nov 2026: "不要一个行就一个field罢了，那些短短的field甚至可以一行四个，整体要保持整齐").
+"""Form layouts for the wave 0 sheets (Module Owner, 24 Nov 2026: "不要一个行就一个field罢了，那些短短的field甚至可以一行四个，整体要保持整齐").
 
 HAP forms are a 12-column grid: size 3 = four per row, 4 = three, 6 = two, 9 + 3, 12 = full width.
 Each LAYOUT entry is a list of rows. A row is a list of (field alias, size); a string row "§ Title" is a divider

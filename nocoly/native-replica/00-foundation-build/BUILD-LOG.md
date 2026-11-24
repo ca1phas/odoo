@@ -4,7 +4,7 @@ Plan: `../00-foundation.md` (approved 23 Nov 2026).
 App: `<uuid>`, Nocoly SaaS, profile `<profile>`.
 Ledger of created objects: `ids.json`. Scripts: `step*.py` (re-runnable: they read live state first and read back every write).
 
-**Rules set by Li Wei on 23 Nov 2026**
+**Rules set by the Module Owner on 23 Nov 2026**
 1. A step counts as done only after it has been opened and tested in the HAP UI. MCP and skill results can differ from what was really built.
 2. Native first. Use Nocoly's native field types and native workflow nodes. Before each build, try the native option first. A code block needs a written reason why no native combination works.
 
@@ -44,7 +44,7 @@ Ledger of created objects: `ids.json`. Scripts: `step*.py` (re-runnable: they re
 | Currencies | 13 fields | Form: fields, descriptions and required marks shown; Active is on by default | not loaded yet |
 | Currency Rates | 3 fields, plus reverse "Rates" on Currencies as a tab table | — | not loaded yet |
 | Countries | 9 fields, plus native **Region** (`x_base__region`) and the reverse tabs | Region picker lists 249 countries in the international range | not loaded yet |
-| States | 3 fields | — | **Superseded by the native Region field.** Empty; to be deleted when Li Wei agrees |
+| States | 3 fields | — | **Superseded by the native Region field.** Empty; to be deleted when the App Administrator agrees |
 | Country Groups | 3 fields, plus the reverse on Countries | — | not loaded yet |
 | Industries | 3 fields | List shows all 21 rows | 21 loaded; readback 21 active |
 
@@ -57,7 +57,7 @@ Ledger of created objects: `ids.json`. Scripts: `step*.py` (re-runnable: they re
 | Countries | 251 | Native Region set for 249. XI (Northern Ireland) and XK (Kosovo) are not in Nocoly's list |
 | Country Groups | 11 | |
 
-**Paused 23 Nov, about 14:10.** Li Wei: "货币也是有啊原生的…你全部先查看用原生的field". Nothing more is built until every native field type and workflow node has been surveyed. The survey goes to `../native-catalogue/fields.md` and `workflow-nodes.md`. Wave 0 is then redesigned and shown for approval. The sheets and data above stay as they are until that review; nothing is deleted without Li Wei's OK.
+**Paused 23 Nov, about 14:10.** Module Owner: "货币也是有啊原生的…你全部先查看用原生的field". Nothing more is built until every native field type and workflow node has been surveyed. The survey goes to `../native-catalogue/fields.md` and `workflow-nodes.md`. Wave 0 is then redesigned and shown for approval. The sheets and data above stay as they are until that review; nothing is deleted without the App Administrator's OK.
 
 **Native currency, tried in the field designer** (unsaved probe field on Currencies, discarded; readback confirms no new field):
 - The Currency (amount) field has a **Currency Type** chosen per field from Nocoly's built-in world list, for example "MYR-RM Malaysian Ringgit".
@@ -111,7 +111,7 @@ Ledger of created objects: `ids.json`. Scripts: `step*.py` (re-runnable: they re
 
 ## Restart, 23 Nov 2026 about 15:50
 
-Li Wei: "把你之前做错的或者拿来测试的 worksheets那些 删掉吧，重新开始". Also: no multi-agent work, because parallel creation causes problems.
+Module Owner: "把你之前做错的或者拿来测试的 worksheets那些 删掉吧，重新开始". Also: no multi-agent work, because parallel creation causes problems.
 
 - Deleted all 7 worksheets of the first attempt, dependents first: Currency Rates, States, Country Groups, Countries, Currencies, Industries, and Native Field Probe (the probe sheet behind `native-catalogue/fields.md`). The CLI returned success for each.
 - **Checked:**
@@ -141,17 +141,17 @@ Li Wei: "把你之前做错的或者拿来测试的 worksheets那些 删掉吧�
   - Created with `enumDefault` 1 / `enumDefault2` 1. The server added `chooserange` "CN", which was cleared to "" to match the UI-saved Global field.
   - **UI:** the picker lists 249 countries, with Malaysia, Singapore, Indonesia… first, in English.
 - **Data** (`step4a_load_reference.py`): Currencies 170, Rates 163, Countries 251 (Region set for all but XI and XK), Country Groups 11, Industries 21.
-  - Li Wei stopped the first run during the countries step, so the countries load was rerun without parallel region lookups.
+  - The Module Owner stopped the first run during the countries step, so the countries load was rerun without parallel region lookups.
   - Readback checks:
     - spot checks of MYR, EUR, Malaysia and Kosovo;
     - each rate links to its currency;
     - all 11 groups have the same country counts as Odoo. `record list` previews only 5 related rows; `record get` gives the true count.
-- **Waiting:** the UI check of the loaded data. The built-in browser lost its Nocoly sign-in and needs Li Wei to sign in again.
+- **Waiting:** the UI check of the loaded data. The built-in browser lost its Nocoly sign-in and needs a person to sign in again.
 - **Next:**
   1. Unique indexes (currency name; rate currency + date; country code), set in the UI and tested.
   2. Bank Accounts and Contacts (Region at state level, Phone, Email, Members, the Contact Tags multi-select), then Companies.
 
-**UI check of the reference data: done** (Li Wei's Chrome, 23 Nov evening; the built-in browser had lost its sign-in).
+**UI check of the reference data: done** (the Module Owner's Chrome, 23 Nov evening; the built-in browser had lost its sign-in).
 - **List totals:** Countries 251, Country Groups 11, Industries 21, Currencies 170, Currency Rates 163. All match the readback.
 - **Malaysia:** name, code MY, phone prefix 60, currency MYR, zip Required, name position "Before Address", address layout. **Region shows "Malaysia"**, in English. It belongs to none of Odoo's 11 country groups, and the tab correctly shows 0.
 - **European Union:** "Countries (27)". At first the tab showed "No visible fields": the forward multi-relation had empty `showControls`. Fixed with field.update to show Country Name + Country Code, and the UI now lists all 27 countries with codes. The reverse fields (Country Groups on Countries, Rates on Currencies) already had two display fields by default.
@@ -168,7 +168,7 @@ Li Wei: "把你之前做错的或者拿来测试的 worksheets那些 删掉吧�
 - Each starts "In Queue", then becomes active.
 - **Tested through the API:** a duplicate country MY, a duplicate currency MYR and a duplicate rate (XCG, 2025-01-15) were all refused with resultCode 11 "values must be unique". No test record was written, so nothing needed cleaning.
 - **Platform issue P1:** the message lists *field* ids, not the conflicting record.
-- **New file `../PLATFORM-ISSUES.md`** (Li Wei, 23 Nov): every CLI/MCP-vs-UI difference and bug-like behaviour, ticket-ready, for Li Wei to file. 16 platform items and 12 doc items so far.
+- **New file `../PLATFORM-ISSUES.md`** (Module Owner, 23 Nov): every CLI/MCP-vs-UI difference and bug-like behaviour, ticket-ready, for the Platform Liaison to file once approved. 16 platform items and 12 doc items so far.
 
 **Contacts (`res_partner`, `<id>`), built with `step4b_contacts.py`:** 31 fields, all native.
 
@@ -229,7 +229,7 @@ Built with `step4c_companies_banks.py`. All field types are native; no code.
 
 **Next:** Units (`uom_uom`), then Product Categories, Attributes, Products and Variants (plan v2 §3).
 
-## Units and Product Categories (23 Nov 2026, from about 21:40; Li Wei: "帮我把 0 的全部完成吧")
+## Units and Product Categories (23 Nov 2026, from about 21:40; Module Owner: "帮我把 0 的全部完成吧")
 
 Built with `step4d_units_categories.py` (new helpers in `sheetlib.py`: `add_once`, `set_show`, `ensure_self_relation`, `HIDDEN`); data with `step5_load_data.py`.
 
@@ -326,7 +326,7 @@ Helper `wflib.py` (create once via the ledger, `batch-add` from a JSON file, pub
 - Function results are referenced as `string_fx_id` even for numbers (the UI stores it that way); `number_fx_id` gives an invalid output mapping. Date calculations are `date_fx_id`.
 - A PBP's output is the built-in "Output Parameters" node (type 20, action 502): `subProcessVariables` + `fields`, saved with `node save`.
 - A deleted record still blocks unique index values (P26): the TEST SGD rate could not be created again after deletion.
-- **Paused 23:00, resumed 23:10**: Li Wei asked why Countries / Currencies sheets exist instead of native Region and Currency fields. After the explanation (the native Currency field is fixed per field and holds no rates; the native Region holds no country data or groups and reads as a Chinese path in workflows), Li Wei: "噢 明白了，继续吧" — the sheets stay.
+- **Paused 23:00, resumed 23:10**: The Module Owner asked why Countries / Currencies sheets exist instead of native Region and Currency fields. After the explanation (the native Currency field is fixed per field and holds no rates; the native Region holds no country data or groups and reads as a Chinese path in workflows), Module Owner: "噢 明白了，继续吧" — the sheets stay.
 
 **Product flows (23 Nov 2026, about 23:10–23:25):**
 
@@ -378,7 +378,7 @@ Helper `wflib.py` (create once via the ledger, `batch-add` from a JSON file, pub
 | **Launch Plan** (Contacts) | Dialog: a new Plan Launch (plan, plan date, who gets "Ask at launch" steps); Contacts got the reverse tab **Plan Launches** `x_mail__plan_launch_ids` | `Activities - Launch plan` `<id>` (inner "one plan step") | Refused, with a message, when the plan has "Ask at launch" steps and nobody is chosen; otherwise one activity per step (due = plan date ± interval, Specific User or the chosen person; Manager / Employee / Role fall back to the chosen person), then the launch is Done and named "Plan: Contact" |
 | **Rebuild Variants** (Products) | Confirmation | `<id>` | Adds a Variant Request |
 
-- **Tests:** buttons with a dialog can only be pressed in the app (`record run-action` refuses them), so their flows were run with `workflow trigger -s <record>` after writing the dialog fields. Mark Done: archived, Done, 2026-11-24, Li Wei. Done & Schedule Next (To-Do → To-Do, no date): new "To-Do" due 2026-11-28 (deadline + 5 days). TEST plan (Call +2 days Specific User; Email −1 week Ask at launch) on Wood Corner, plan date 2026-12-10: activities due 2026-12-12 and 2026-12-03, Planned, automated; the launch without anyone chosen was Refused. Rebuild Variants (`run-action -y`) on Office Chair kept its variant; on Customizable Desk it kept the 5 and added "(Black, Aluminium)" (deleted again). All TEST records deleted.
+- **Tests:** buttons with a dialog can only be pressed in the app (`record run-action` refuses them), so their flows were run with `workflow trigger -s <record>` after writing the dialog fields. Mark Done: archived, Done, 2026-11-24, done by the tester. Done & Schedule Next (To-Do → To-Do, no date): new "To-Do" due 2026-11-28 (deadline + 5 days). TEST plan (Call +2 days Specific User; Email −1 week Ask at launch) on Wood Corner, plan date 2026-12-10: activities due 2026-12-12 and 2026-12-03, Planned, automated; the launch without anyone chosen was Refused. Rebuild Variants (`run-action -y`) on Office Chair kept its variant; on Customizable Desk it kept the 5 and added "(Black, Aluminium)" (deleted again). All TEST records deleted.
 - **Fix found by the Rebuild test:** an empty Combination Key cannot be matched by a query ("equals empty"), so a product without attributes got a duplicate variant. Keys now start with `*` (no attributes: `*`; otherwise `*|<PTAV>|<PTAV>`); the seed writes `*` and the 48 variants were re-keyed.
 - The UI check of the button dialogs waits for the screens step (Chrome stopped answering screenshots at about 00:20; page text still reads).
 
@@ -392,7 +392,7 @@ Helper `wflib.py` (create once via the ledger, `batch-add` from a JSON file, pub
 - **Roles:** Employee = view all, manage own (50); Read Only = view all (20); **Master Data Manager recreated** with "manage all records" (80) and every app-wide switch on, because `role set-permissions --permission-way 80` turned all its switches (add, import, export, log…) off (P31). The role had no members.
 - **To-do pilot** "Activities - To-do pilot" (`<id>`): a new active "To-Do" activity creates a fill-in task for its "Assigned to" person (form: summary, type, due date, note, contact read-only; Feedback required; button "Mark Done"); on submit the activity is archived, Done, with Done Date and Done By. Test: the task appeared in the To-Do centre (`approval todo --type 3`), was submitted with feedback by CLI, and the activity became Done. The deadline and reminders of the task (time limit) are not set yet (needs the UI).
 - **Still open for the screens step:** relation pickers filtered (Related Company to companies, line Values to the line's attribute, Other Pricelist excluding loops via Chain), Contacts sheet first in the sidebar, the map view, a rate-history chart, form layouts (field order, tabs), the System Tables group hidden from members, and a UI pass with screenshots once Chrome renders again.
-- **Roles, 24 Nov (replaces the Employee line above):** the per-sheet **Employee** role (`<uuid>`, `step7_roles.py`) reads all master data and System Tables (no add, edit, delete or import) and adds, edits and deletes its own Activities, Plan Launches and Price Checks (scope "own", which includes activities where the person is in "Assigned to"); app-wide: add, export, discussion, log, print, attachment download on; import and share off. The old Employee (HAP's default member role, renamed in step 2, no members) is now **"Member (HAP default)"**, back on "view all, manage own"; Li Wei decides whether to delete it. **Role Debug** was switched on for the app (users page) to test the role and is left on.
+- **Roles, 24 Nov (replaces the Employee line above):** the per-sheet **Employee** role (`<uuid>`, `step7_roles.py`) reads all master data and System Tables (no add, edit, delete or import) and adds, edits and deletes its own Activities, Plan Launches and Price Checks (scope "own", which includes activities where the person is in "Assigned to"); app-wide: add, export, discussion, log, print, attachment download on; import and share off. The old Employee (HAP's default member role, renamed in step 2, no members) is now **"Member (HAP default)"**, back on "view all, manage own"; the App Administrator decides whether to delete it. **Role Debug** was switched on for the app (users page) to test the role and is left on.
 
 ## Acceptance (24 Nov 2026, about 00:45–01:40)
 
@@ -433,13 +433,13 @@ Every test used TEST records, deleted afterwards (contacts, rules, checks, curre
 
 ## UI pass of the button dialogs, and form layouts (24 Nov 2026, from about 10:00)
 
-Li Wei asked for the button dialogs to be tested in the UI, and added a rule: forms need a real layout (short fields up to four per row, tidy rows, never one field per row), and views stay native unless native truly can't.
+The Module Owner asked for the button dialogs to be tested in the UI, and added a rule: forms need a real layout (short fields up to four per row, tidy rows, never one field per row), and views stay native unless native truly can't.
 
 **Button dialogs, pressed in the app** (TEST contact, plan, activities and product, all deleted afterwards):
 
 | Button | Result |
 |---|---|
-| Mark Done | Dialog with Feedback → activity archived, State Done, Done Date 2026-11-24, Done By Li Wei, feedback kept |
+| Mark Done | Dialog with Feedback → activity archived, State Done, Done Date 2026-11-24, Done By = the tester, feedback kept |
 | Done & Schedule Next | Feedback + Next Activity Type "Email" (date and summary left empty) → original Done; new "Email" activity due 2026-11-25 (Email type: 0 days after the previous deadline), Planned, same contact |
 | Launch Plan | **Did nothing when clicked** (P38): the CLI had saved the button as "fill in a related record" with no relation, and with no "Active Button" choice. Fixed in the button editor: "In the current record, create Plan Launches", Always. Then: TEST plan (Call +2 days for a specific user; Email −1 week, Ask at launch), plan date 2026-12-10, me as Assigned to → launch Done, activities due 12-12 and 12-03, automated. Without anyone chosen → launch Refused with "This plan has steps assigned at launch: choose who gets them, then launch again." |
 | Rebuild Variants | Confirmation dialog → request "Rebuild requested: TEST Dialog Product" Done; still one active variant |

@@ -97,7 +97,7 @@ def load_countries():
     have = {r.get('code') for r in rows_of(WS['countries'], 'code')}
     todo = [c for c in data('countries') if c['code'] not in have]
     # All 251 codes were looked up one by one on 23 Nov 2026: only XI and XK are missing from Nocoly's region list.
-    # No parallel lookups (Li Wei: no parallel work); use region_ok(code) again only for codes not seen before.
+    # No parallel lookups (Module Owner: no parallel work); use region_ok(code) again only for codes not seen before.
     NOT_IN_REGION_LIST = {'XI', 'XK'}
     valid = {c['code']: (None if c['code'] in NOT_IN_REGION_LIST else c['code']) for c in todo}
     missing = sorted(k for k, v in valid.items() if not v)

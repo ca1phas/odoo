@@ -1,6 +1,6 @@
 # Native catalogue: what Nocoly HAP can do natively
 
-Built on 23 Nov 2026 for the Odoo module programme. Rule from Li Wei: **native first**. Use HAP's native field types, views, rules, buttons and workflow nodes. Code (code blocks, custom fields, Compute pages) is a last resort, with a written reason. Before every module plan, look the needed features up here, then **try them live** in the sandbox app before fixing the design.
+Built on 23 Nov 2026 for the Odoo module programme. Programme rule set by the Module Owner: **native first**. Use HAP's native field types, views, rules, buttons and workflow nodes. Code (code blocks, custom fields, Compute pages) is a last resort, with a written reason. Before every module plan, look the needed features up here, then **try them live** in the sandbox app before fixing the design.
 
 ## Files
 

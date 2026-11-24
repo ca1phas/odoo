@@ -1,10 +1,10 @@
 # Odoo modules on HAP + Compute: programme plan
 
-**Status:** draft, 23 Nov 2026, for Li Wei and the manager to review. Nothing has been built from it. Each module gets its own plan (`TEMPLATE.md`), and building a module starts only after that plan is approved.
+**Status:** updated 24 Nov 2026. Wave 0 is built and accepted (`00-foundation-build/BUILD-LOG.md`); the CRM plan is approved and not built yet (`01-crm.md`). Owners are recorded by role (`HANDOVER.md` §2); anyone taking over starts with `HANDOVER.md`. Each module gets its own plan (`TEMPLATE.md`), and building a module starts only after that plan is approved.
 
 ## 1. Goal
 
-- **The manager's idea:** rebuild Odoo's modules in Nocoly HAP, with AI and MCP doing the build work.
+- **The Programme Lead's idea:** rebuild Odoo's modules in Nocoly HAP, with AI and MCP doing the build work.
 - **Use HAP Compute for the user interface** where HAP's standard screens are weaker. The aim is to be easier to use than Odoo without cutting features.
 - **Plan every module before building it.** Keep the modules separable, so they can later be sold one by one.
 
@@ -28,7 +28,7 @@
 
 | Reference | What it gives | Limits and rules |
 |---|---|---|
-| **candy99.odoo.com** (20.0+e) | Real Odoo screens, including Enterprise-only apps | Only **one app can be installed at a time**; a second one triggers payment. Switching means uninstalling the current app (its data there is deleted), then installing the next. Li Wei allowed switching without asking (23 Nov). Before each switch, export the screens and data the plans need. **Never** subscribe, upgrade or install a second app |
+| **candy99.odoo.com** (20.0+e) | Real Odoo screens, including Enterprise-only apps | Only **one app can be installed at a time**; a second one triggers payment. Switching means uninstalling the current app (its data there is deleted), then installing the next. The Module Owner allowed switching without asking (23 Nov). Before each switch, export the screens and data the plans need. **Never** subscribe, upgrade or install a second app |
 | **Local Odoo 20 Community** (`external/odoo20-local/`, Docker, set up 23 Nov) | Every open-source app installed together with demo data, on this PC only | No Enterprise apps; for reading screens and flows, not for customers |
 | **Odoo 20.0 source** (`catalogue/`, `github.com/odoo/odoo`) | Exact rules and computations of the open-source modules | No Enterprise code |
 
@@ -130,15 +130,21 @@ Change the order when a deal needs something earlier. For example, a partner's e
 
 | File | What it is |
 |---|---|
+| `HANDOVER.md` | **Read first when taking over:** roles, working rules, environment, file map, planning and building a module, publishing, open items |
+| `ROLE-HOLDERS.md` | Who holds each role today (private: never published) |
+| `SPLIT-GUIDE.md` | How to take modules out of a customer copy with the register; per-module notes in each `*-build/SPLIT-GUIDE.md` |
+| `PLATFORM-ISSUES.md` | Platform issues P1–P38, ticket-ready in Simplified Chinese, and documentation errors D1–D12; nothing is filed without approval |
+| `publish/` | `make_public.py` and the public README: builds the shareable copy for the public repo (private: never published) |
 | `TEMPLATE.md` | The module plan template (12 sections) |
 | `compute-for-ui.md` | Compute facts, the rules for using it, the checks to run first, candidate screens |
 | `sept-plan-comparison.md` | Casimir's September replica: what was built, the problems met, his plan against this one |
 | `native-catalogue/` | **Start here for every module (23 Nov 2026).** What HAP does natively: every field type tested live (`fields.md`), workflow triggers and nodes (`workflow-nodes.md`), digests of all 359 pages of help.nocoly.com (`docs/`), Odoo → native mapping, limits, run rules, plan gates, open live tests (`README.md`) |
-| `00-foundation.md` | Wave 0 module plan **v2, native first** (draft, 23 Nov): a new master app, native fields and nodes, the sandbox for live tests |
+| `00-foundation.md` | Wave 0 module plan **v2, native first**: built and accepted 24 Nov 2026 in Odoo Replica (AI), 21 of 21 acceptance tests |
 | `00-foundation-v1.md` | Wave 0 plan v1, approved and then superseded the same day |
 | `01-wave1.md` | Wave 1 order and scope (draft, 24 Nov): CRM → Invoicing → Sales → Inventory → Point of Sale, from the Odoo 20 dependencies |
-| `01-crm.md` | Wave 1 module plan **CRM** (draft, 24 Nov; Li Wei chose CRM first): `crm`, `sales_team`, `utm`, native only, Phase A and B |
-| `00-foundation-build/` | Build log, scripts, ledger (`ids.json`) and reference data exported from the local Odoo |
+| `01-crm.md` | Wave 1 module plan **CRM**, **approved** 24 Nov 2026 with the defaults of its §12, not built yet: `crm`, `sales_team`, `utm`, native only, Phase A and B |
+| `01-crm-build/` | The CRM knowledge base (`KNOWLEDGE.md`: Odoo 20 behaviour rule by rule, access rules, seed data, native mapping and traps, September lessons), its split guide and Odoo 20 reference extracts |
+| `00-foundation-build/` | Build log (`BUILD-LOG.md`), step and acceptance scripts, field decisions, the review page, the ledger (`ids.json`, private) and reference data exported from the local Odoo |
 | `register/` | Register tools: Odoo export, HAP scan, join, diff, prune prediction, coverage |
 | `catalogue/odoo-20.0/foundation-fields.csv`, `foundation-fields-by-owner.md` | Every field of the foundation models in the local Odoo 20, with the module that defines it (generated) |
 | `catalogue/odoo-20.0/apps.md` | Apps, dependencies and bridges by app pair (generated) |

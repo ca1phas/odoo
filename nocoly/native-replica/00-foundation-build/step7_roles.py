@@ -9,7 +9,7 @@ Why a new role, and why in-process:
 - The old "Employee" was HAP's default member role, renamed, with "view all + manage own" (50) on every sheet.
   `app role set-permissions --permission-way 0 -P ...` cannot give it per-sheet rules: the server answers success and
   keeps the old sheet levels, in either shape (PLATFORM-ISSUES P36). It is renamed "Member (HAP default)" (no members;
-  Li Wei decides whether to delete it).
+  the App Administrator decides whether to delete it).
 - `app role create-fine` stores per-sheet scopes but sends no globalPermissions, so every app-wide switch (add record,
   export, discussion, log...) comes out off; a sheet with read scope 0 falls back to 20/20/20 with everything allowed
   (P37). The role is therefore created with the CLI's own V3 call plus the 8 global switches.

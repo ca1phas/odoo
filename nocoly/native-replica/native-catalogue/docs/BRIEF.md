@@ -1,6 +1,6 @@
 # Brief for the Nocoly docs digests (23 Nov 2026)
 
-**Why:** we are rebuilding Odoo 20's open-source modules (contacts, products, sales, CRM, inventory, purchase, invoicing and more) inside Nocoly HAP SaaS (www.nocoly.com). The lead, Li Wei, set the rule: **use native HAP features wherever possible**. That means field types, views, forms, business rules, buttons, workflow nodes, approvals, pages, charts, roles, portal, print templates and integrations. Custom code (code blocks, custom fields, Compute pages) is used only when native truly can't do the job. These digests tell the builders, human or AI, what native features exist, how each is set up and where it stops.
+**Why:** we are rebuilding Odoo 20's open-source modules (contacts, products, sales, CRM, inventory, purchase, invoicing and more) inside Nocoly HAP SaaS (www.nocoly.com). The Module Owner set the rule: **use native HAP features wherever possible**. That means field types, views, forms, business rules, buttons, workflow nodes, approvals, pages, charts, roles, portal, print templates and integrations. Custom code (code blocks, custom fields, Compute pages) is used only when native truly can't do the job. These digests tell the builders, human or AI, what native features exist, how each is set up and where it stops.
 
 Context, optional: `../../README.md` (programme plan) and `../../00-foundation.md` (wave 0: contacts, products, units, pricelists, currencies, activities).
 

@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Purpose | What Nocoly HAP's native workflow triggers and nodes can do today, so that the 16 Odoo behaviours in `../00-foundation.md` §4 can be built natively |
-| Rule | Native first (Li Wei, 23 Nov 2026). A code block is allowed only when no native combination works, and then with a written reason |
+| Rule | Native first (programme rule, 23 Nov 2026). A code block is allowed only when no native combination works, and then with a written reason |
 | Status | Survey only, written 23 Nov 2026. Read-only: no workflow, node, record or setting was created, changed, published or triggered in any app |
 | Target app | Odoo Replica (AI) `<uuid>`, Nocoly SaaS, CLI profile `<profile>` |
 | Companion | `fields.md` (native field types), written separately |
@@ -366,7 +366,7 @@ EMS has 205 code nodes in 108 flows. 64 of those flows are Inventory flows [EMS]
 
 ## 7. Open questions that only a live test can settle
 
-Run each in a scratch flow on a `TEST …` record in Odoo Replica (AI), after Li Wei approves it. Read back, check in the UI, then delete.
+Run each in a scratch flow on a `TEST …` record in Odoo Replica (AI), after the Module Owner approves it. Read back, check in the UI, then delete.
 
 | # | Question | Matters for | Smallest test |
 |---|---|---|---|

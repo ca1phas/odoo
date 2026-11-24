@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Status | **Draft v2**, 23 Nov 2026, for Li Wei's review. Replaces v1 (`00-foundation-v1.md`, approved earlier the same day), after Li Wei asked to rebuild the master app with native fields and to read the full Nocoly docs first |
+| Status | **v2, built and accepted** 24 Nov 2026: 21 of 21 acceptance tests (`00-foundation-build/BUILD-LOG.md`). Built in the existing app Odoo Replica (AI), with no separate sandbox app (restart of 23 Nov in the build log), so the Target row and decisions 1–2 below are the proposal as first written. Replaces v1 (`00-foundation-v1.md`, approved earlier the same day), after the Module Owner asked to rebuild the master app with native fields and to read the full Nocoly docs first |
 | What changed | Every field and behaviour was re-chosen from the native catalogue (`native-catalogue/`): live tests of all field types, the 16 behaviours mapped to native nodes, and all 359 pages of help.nocoly.com. Code is a last resort with a written reason |
 | Target | A **new** master app (name: decision 1), Nocoly SaaS organisation Nocoly (Professional edition), profile `<profile>`. The current "Odoo Replica (AI)" becomes the sandbox for live tests (decision 2) |
 | Odoo reference | Odoo 20.0 source (`catalogue/odoo-20.0`) and the local Odoo 20 Community with demo data (`external/odoo20-local`); field lists come from it |

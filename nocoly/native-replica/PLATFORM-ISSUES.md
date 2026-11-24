@@ -1,11 +1,11 @@
 # Platform issues found while building (for product tickets)
 
-Started 23 Nov 2026 at Li Wei's request: record every difference between CLI/MCP and the UI, and anything that behaves like a bug, so it can be raised with the product team. Platform: Nocoly SaaS (www.nocoly.com), organisation on Professional, hap-cli 0.9.14, test app "Odoo Replica (AI)".
+Started 23 Nov 2026 at the Module Owner's request: record every difference between CLI/MCP and the UI, and anything that behaves like a bug, so it can be raised with the product team. Platform: Nocoly SaaS (www.nocoly.com), organisation on Professional, hap-cli 0.9.14, test app "Odoo Replica (AI)".
 
 **How to use:**
 - Each "P" item has ticket-ready fields in Simplified Chinese (labelled fields, 3W, steps, expected vs actual, impact), the format our Mingdao tickets use.
 - "D" items are documentation errors, with sources.
-- Status: **Open** = not filed. Li Wei decides what to file; nothing is submitted without approval.
+- Status: **Open** = not filed. The Module Owner decides what to file and the Platform Liaison files it (roles: `HANDOVER.md` §2); nothing is submitted without approval.
 
 | # | Area | Kind | Severity | Status |
 |---|---|---|---|---|
@@ -53,7 +53,7 @@ Started 23 Nov 2026 at Li Wei's request: record every difference between CLI/MCP
 
 ### P1 唯一索引报错信息中的 ID 不是冲突记录
 
-- **谁 / 何时 / 做什么：** Li Wei 团队，2026-11-23，在 Nocoly SaaS 的测试应用中，通过 hap-cli 写入重复值，测试唯一索引。
+- **谁 / 何时 / 做什么：** Odoo 复刻项目的 Builder，2026-11-23，在 Nocoly SaaS 的测试应用中，通过 hap-cli 写入重复值，测试唯一索引。
 - **复现步骤：**
   1. 在 Countries 表的 Country Code 字段上建立唯一索引（表单设置 › 搜索加速 › 新建索引 › 勾选唯一索引）。
   2. 用 `hap worksheet record create` 新增一条 Country Code = MY 的记录（MY 已存在）。
@@ -189,7 +189,7 @@ Started 23 Nov 2026 at Li Wei's request: record every difference between CLI/MCP
 
 ### P18 他表字段引用地区字段时，record get 返回 JSON 字符串，而源字段返回对象
 
-- **谁 / 何时 / 做什么：** Li Wei 团队，2026-11-23，在 Companies 表新增他表字段（type 30，仅显示 strDefault "10"），引用联系人的地区字段，然后用 hap-cli 读回记录。
+- **谁 / 何时 / 做什么：** Odoo 复刻项目的 Builder，2026-11-23，在 Companies 表新增他表字段（type 30，仅显示 strDefault "10"），引用联系人的地区字段，然后用 hap-cli 读回记录。
 - **复现步骤：**
   1. 关联记录的地区字段值为 `MY|MY-10`。
   2. 用 `hap worksheet record get` 读取引用它的记录。
@@ -212,7 +212,7 @@ Started 23 Nov 2026 at Li Wei's request: record every difference between CLI/MCP
 
 ### P20 隐藏字段在 record list 中读出为空，record get 才有值
 
-- **谁 / 何时 / 做什么：** Li Wei 团队，2026-11-23，在 Product Categories 表设置了隐藏的辅助字段（fieldPermission "011"），用 hap-cli 写入后读回。
+- **谁 / 何时 / 做什么：** Odoo 复刻项目的 Builder，2026-11-23，在 Product Categories 表设置了隐藏的辅助字段（fieldPermission "011"），用 hap-cli 写入后读回。
 - **复现步骤：**
   1. 用 `hap worksheet record update ... --ignore-rules` 写入隐藏文本字段（Ancestor Key 1）。
   2. 用 `hap worksheet record list --fields x_product__ancestor_1` 读取。
@@ -224,7 +224,7 @@ Started 23 Nov 2026 at Li Wei's request: record every difference between CLI/MCP
 
 ### P21 CLI 工作流 DSL：日期计算节点的结果被引用为 string_fx_id，界面和服务器使用 date_fx_id
 
-- **谁 / 何时 / 做什么：** Li Wei 团队，2026-11-23，用 `hap workflow node batch-add` 建"活动状态"工作流：一个日期计算节点（当前时间 +0d，输出日期），分支条件比较"到期日 早于 / 等于 计算结果"。
+- **谁 / 何时 / 做什么：** Odoo 复刻项目的 Builder，2026-11-23，用 `hap workflow node batch-add` 建"活动状态"工作流：一个日期计算节点（当前时间 +0d，输出日期），分支条件比较"到期日 早于 / 等于 计算结果"。
 - **复现步骤：**
   1. 在 batch-add 的分支条件里引用计算节点结果 `{"kind":"field","node":"today","fieldId":"string_fx_id"}`（hap-cli 0.9.14 自检和文档都说文本、日期结果用 string_fx_id，没有 date_fx_id）。
   2. 发布。
@@ -258,7 +258,7 @@ Started 23 Nov 2026 at Li Wei's request: record every difference between CLI/MCP
 
 ### P25 CLI 建的函数计算节点默认 0 位小数，数值结果被取整
 
-- **谁 / 何时 / 做什么：** Li Wei 团队，2026-11-23，用 batch-add 建计算节点（函数模式，输出数字），例如反向汇率 `1 / 汇率`。
+- **谁 / 何时 / 做什么：** Odoo 复刻项目的 Builder，2026-11-23，用 batch-add 建计算节点（函数模式，输出数字），例如反向汇率 `1 / 汇率`。
 - **复现步骤：**
   1. 建函数计算节点，`output_type: number`。
   2. 运行，结果写入 6 位小数的数字字段。

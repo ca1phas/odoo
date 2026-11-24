@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Status | **Draft** for Li Wei, 24 Nov 2026. Li Wei chose **CRM first** (24 Nov); its plan is `01-crm.md`. Each module gets its own plan from `TEMPLATE.md`, approved before it is built |
+| Status | **Draft** for the Programme Lead and the Module Owners, 24 Nov 2026. **CRM first** was chosen on 24 Nov; its plan `01-crm.md` is approved (24 Nov) and not built yet. Each module gets its own plan from `TEMPLATE.md`, approved before it is built |
 | Odoo reference | 20.0 open source (`catalogue/odoo-20.0/`: dependencies from `modules.csv`, field counts from `odoo-fields.csv`); candy99 (20.0+e) for screens |
 | Builds on | Wave 0 in Odoo Replica (AI), accepted 24 Nov 2026 (`00-foundation-build/BUILD-LOG.md`) |
 

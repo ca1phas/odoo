@@ -4,7 +4,7 @@
 |---|---|
 | Slice | `read_pages.py --prefix integration,api,ai,getting-started`: 22 help.nocoly.com pages, cached 3 Nov 2026. All 22 were read in full |
 | Purpose | What HAP offers natively for external connectors, APIs, data sync and AI, and what can replace Odoo 20's automatic currency rates, e-invoicing and other connectors, vendor-bill OCR and email-to-record |
-| Rule | Native first (Li Wei, 23 Nov 2026). Code blocks, custom fields and Compute only where native cannot do the job |
+| Rule | Native first (programme rule, 23 Nov 2026). Code blocks, custom fields and Compute only where native cannot do the job |
 | Status | Desk survey, written 23 Nov 2026. Read-only: no app, connection, workflow, record or setting was created or changed, and no browser was used |
 | Target app | Odoo Replica (AI) `<uuid>`, Nocoly SaaS, CLI profile `<profile>` |
 | Companions | `../workflow-nodes.md` (workflow triggers and nodes) and `../../00-foundation.md` (behaviour #13 and decision 7: automatic currency rates) |
