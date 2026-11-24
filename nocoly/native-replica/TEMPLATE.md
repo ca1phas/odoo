@@ -6,7 +6,7 @@
 |---|---|
 | Status | Draft / In review / **Approved** (by …, date) / Building / Accepted |
 | Odoo reference | 20.0 open source, commit … (`catalogue/odoo-20.0/`), and/or candy99 (20.0+e) screens. For Enterprise-only parts there is no source: say so. |
-| Owner in Nocoly | who builds and owns it (a colleague's module is not changed without them) |
+| Owner in Nocoly | **by role**, never by name (`HANDOVER.md` §2): Module Owner, Builder, App Administrator, Programme Lead. Holders are kept outside the repo. A module owned by another team is not changed without its Module Owner |
 | Depends on | modules that must exist first |
 | Size | S / M / L, with the main cost drivers |
 

@@ -1,0 +1,363 @@
+model,field,type,relation,stored,required,computed,label,owner_module,all_modules
+calendar.event,opportunity_id,many2one,crm.lead,t,f,f,Opportunity,crm,crm
+crm.lead,id,integer,,t,f,f,ID,crm,crm crm_livechat event_crm iap_crm mass_mailing_crm website_crm crm_iap_enrich crm_iap_mine website_crm_livechat sale_crm crm_sale_project
+crm.lead,display_name,char,,f,f,f,Display Name,crm,crm crm_livechat event_crm iap_crm mass_mailing_crm website_crm crm_iap_enrich crm_iap_mine website_crm_livechat sale_crm crm_sale_project
+crm.lead,message_is_follower,boolean,,f,f,f,Is Follower,crm,crm
+crm.lead,message_follower_ids,one2many,mail.followers,t,f,f,Followers,crm,crm
+crm.lead,message_partner_ids,many2many,res.partner,f,f,f,Followers (Partners),crm,crm
+crm.lead,message_ids,one2many,mail.message,t,f,f,Messages,crm,crm
+crm.lead,has_message,boolean,,f,f,f,Has Message,crm,crm
+crm.lead,message_needaction,boolean,,f,f,f,Action Needed,crm,crm
+crm.lead,message_needaction_counter,integer,,f,f,f,Number of Actions,crm,crm
+crm.lead,message_has_error,boolean,,f,f,f,Message Delivery error,crm,crm
+crm.lead,message_has_error_counter,integer,,f,f,f,Number of errors,crm,crm
+crm.lead,message_attachment_count,integer,,f,f,f,Attachment Count,crm,crm
+crm.lead,rating_ids,one2many,rating.rating,t,f,f,Ratings,crm,crm
+crm.lead,message_has_sms_error,boolean,,f,f,f,SMS Delivery error,crm,crm
+crm.lead,duration_tracking,json,,t,f,f,Status time,crm,crm
+crm.lead,rotting_days,integer,,f,f,f,Days Rotting,crm,crm
+crm.lead,is_rotting,boolean,,f,f,f,Rotting,crm,crm
+crm.lead,campaign_id,many2one,utm.campaign,t,f,f,Campaign,crm,crm
+crm.lead,source_id,many2one,utm.source,t,f,f,Source,crm,crm
+crm.lead,medium_id,many2one,utm.medium,t,f,f,Medium,crm,crm
+crm.lead,utm_reference,reference,,t,f,f,UTM Reference,crm,crm
+crm.lead,activity_ids,one2many,mail.activity,t,f,f,Activities,crm,crm
+crm.lead,activity_state,selection,,f,f,f,Activity State,crm,crm
+crm.lead,activity_user_id,many2one,res.users,f,f,f,Responsible User,crm,crm
+crm.lead,activity_type_id,many2one,mail.activity.type,f,f,f,Next Activity Type,crm,crm
+crm.lead,activity_type_icon,char,,f,f,f,Activity Type Icon,crm,crm
+crm.lead,activity_date_deadline,date,,f,f,f,Next Activity Deadline,crm,crm
+crm.lead,my_activity_date_deadline,date,,f,f,f,My Activity Deadline,crm,crm
+crm.lead,activity_summary,char,,f,f,f,Next Activity Summary,crm,crm
+crm.lead,activity_exception_decoration,selection,,f,f,f,Activity Exception Decoration,crm,crm
+crm.lead,activity_exception_icon,char,,f,f,f,Icon,crm,crm
+crm.lead,activity_plans_ids,many2many,mail.activity.plan,f,f,f,Activity Plans,crm,crm
+crm.lead,activity_calendar_event_id,many2one,calendar.event,f,f,f,Next Activity Calendar Event,crm,crm
+crm.lead,phone_sanitized,char,,t,f,f,Sanitized Number,crm,crm
+crm.lead,phone_formatted,char,,f,f,f,Formatted Number,crm,crm
+crm.lead,phone_sanitized_blacklisted,boolean,,f,f,f,Phone Blacklisted,crm,crm
+crm.lead,phone_blacklisted,boolean,,f,f,f,Blacklisted Phone is Phone,crm,crm
+crm.lead,phone_mobile_search,char,,f,f,f,Phone Number,crm,crm
+crm.lead,email_normalized,char,,t,f,f,Normalized Email,crm,crm
+crm.lead,is_blacklisted,boolean,,f,f,f,Blacklist,crm,crm
+crm.lead,message_bounce,integer,,t,f,f,Bounce,crm,crm
+crm.lead,name,char,,t,t,f,Opportunity,crm,crm
+crm.lead,user_id,many2one,res.users,t,f,f,Salesperson,crm,crm
+crm.lead,user_company_ids,many2many,res.company,f,f,f,User Company,crm,crm
+crm.lead,team_id,many2one,crm.team,t,f,f,Sales Team,crm,crm
+crm.lead,lead_properties,properties,,t,f,f,Properties,crm,crm
+crm.lead,company_id,many2one,res.company,t,f,f,Company,crm,crm
+crm.lead,referred,char,,t,f,f,Referred By,crm,crm
+crm.lead,description,html,,t,f,f,Notes,crm,crm
+crm.lead,active,boolean,,t,f,f,Active,crm,crm
+crm.lead,type,selection,,t,t,f,Type,crm,crm
+crm.lead,priority,selection,,t,f,f,Priority,crm,crm
+crm.lead,stage_id,many2one,crm.stage,t,f,f,Stage,crm,crm
+crm.lead,tag_ids,many2many,crm.tag,t,f,f,Tags,crm,crm
+crm.lead,color,integer,,t,f,f,Color Index,crm,crm
+crm.lead,expected_revenue,monetary,,t,f,f,Expected Revenue,crm,crm
+crm.lead,prorated_revenue,monetary,,t,f,f,Prorated Revenue,crm,crm
+crm.lead,recurring_revenue,monetary,,t,f,f,Recurring Revenues,crm,crm
+crm.lead,recurring_plan,many2one,crm.recurring.plan,t,f,f,Recurring Plan,crm,crm
+crm.lead,recurring_revenue_monthly,monetary,,t,f,f,Expected MRR,crm,crm
+crm.lead,recurring_revenue_monthly_prorated,monetary,,t,f,f,Prorated MRR,crm,crm
+crm.lead,recurring_revenue_prorated,monetary,,t,f,f,Prorated Recurring Revenues,crm,crm
+crm.lead,company_currency,many2one,res.currency,f,f,f,Currency,crm,crm
+crm.lead,date_closed,datetime,,t,f,f,Closed Date,crm,crm
+crm.lead,date_automation_last,datetime,,t,f,f,Last Action,crm,crm
+crm.lead,date_open,datetime,,t,f,f,Assignment Date,crm,crm
+crm.lead,day_open,float,,t,f,f,Days to Assign,crm,crm
+crm.lead,day_close,float,,t,f,f,Days to Close,crm,crm
+crm.lead,date_last_stage_update,datetime,,t,f,f,Last Stage Update,crm,crm
+crm.lead,date_conversion,datetime,,t,f,f,Conversion Date,crm,crm
+crm.lead,date_deadline,date,,t,f,f,Expected Closing,crm,crm
+crm.lead,partner_id,many2one,res.partner,t,f,f,Contact,crm,crm
+crm.lead,partner_is_blacklisted,boolean,,f,f,f,Partner is blacklisted,crm,crm
+crm.lead,contact_name,char,,t,f,f,Contact Name,crm,crm
+crm.lead,partner_name,char,,t,f,f,Company Name,crm,crm
+crm.lead,function,char,,t,f,f,Job Position,crm,crm
+crm.lead,email_from,char,,t,f,f,Email,crm,crm
+crm.lead,email_domain_criterion,char,,t,f,f,Email Domain Criterion,crm,crm
+crm.lead,phone,char,,t,f,f,Phone,crm,crm
+crm.lead,phone_state,selection,,t,f,f,Phone Quality,crm,crm
+crm.lead,email_state,selection,,t,f,f,Email Quality,crm,crm
+crm.lead,website,char,,t,f,f,Website,crm,crm
+crm.lead,lang_id,many2one,res.lang,t,f,f,Language,crm,crm
+crm.lead,lang_code,char,,f,f,f,Locale Code,crm,crm
+crm.lead,lang_active_count,integer,,f,f,f,Lang Active Count,crm,crm
+crm.lead,street,char,,t,f,f,Street,crm,crm
+crm.lead,street2,char,,t,f,f,Street2,crm,crm
+crm.lead,zip,char,,t,f,f,Zip,crm,crm
+crm.lead,city,char,,t,f,f,City,crm,crm
+crm.lead,state_id,many2one,res.country.state,t,f,f,State,crm,crm
+crm.lead,country_id,many2one,res.country,t,f,f,Country,crm,crm
+crm.lead,probability,float,,t,f,f,Probability,crm,crm
+crm.lead,automated_probability,float,,t,f,f,Automated Probability,crm,crm
+crm.lead,is_automated_probability,boolean,,f,f,f,Is automated probability?,crm,crm
+crm.lead,won_status,selection,,t,f,f,Won/Lost,crm,crm
+crm.lead,lost_reason_id,many2one,crm.lost.reason,t,f,f,Lost Reason,crm,crm
+crm.lead,calendar_event_ids,one2many,calendar.event,t,f,f,Meetings,crm,crm
+crm.lead,duplicate_lead_ids,many2many,crm.lead,f,f,f,Potential Duplicate Lead,crm,crm
+crm.lead,duplicate_lead_count,integer,,f,f,f,Potential Duplicate Lead Count,crm,crm
+crm.lead,meeting_display_date,date,,f,f,f,Meeting Display Date,crm,crm
+crm.lead,meeting_display_label,char,,f,f,f,Meeting Display Label,crm,crm
+crm.lead,partner_email_update,boolean,,f,f,f,Partner Email will Update,crm,crm
+crm.lead,partner_phone_update,boolean,,f,f,f,Partner Phone will Update,crm,crm
+crm.lead,create_uid,many2one,res.users,t,f,f,Created by,crm,crm
+crm.lead,create_date,datetime,,t,f,f,Created on,crm,crm
+crm.lead,write_uid,many2one,res.users,t,f,f,Last Updated by,crm,crm
+crm.lead,write_date,datetime,,t,f,f,Last Updated on,crm,crm
+crm.lead,origin_channel_id,many2one,discuss.channel,t,f,f,Live chat from which the lead was created,crm_livechat,crm_livechat
+crm.lead,event_lead_rule_id,many2one,event.lead.rule,t,f,f,Registration Rule,event_crm,event_crm
+crm.lead,event_id,many2one,event.event,t,f,f,Source Event,event_crm,event_crm
+crm.lead,registration_ids,many2many,event.registration,t,f,f,Source Registrations,event_crm,event_crm
+crm.lead,registration_count,integer,,f,f,f,# Registrations,event_crm,event_crm
+crm.lead,reveal_id,char,,t,f,f,Reveal ID,iap_crm,iap_crm
+crm.lead,visitor_ids,many2many,website.visitor,t,f,f,Web Visitors,website_crm,website_crm
+crm.lead,visitor_page_count,integer,,f,f,f,# Page Views,website_crm,website_crm
+crm.lead,iap_enrich_done,boolean,,t,f,f,Enrichment done,crm_iap_enrich,crm_iap_enrich
+crm.lead,show_enrich_button,boolean,,f,f,f,Allow manual enrich,crm_iap_enrich,crm_iap_enrich
+crm.lead,lead_mining_request_id,many2one,crm.iap.lead.mining.request,t,f,f,Lead Mining Request,crm_iap_mine,crm_iap_mine
+crm.lead,visitor_sessions_count,integer,,f,f,f,# Sessions,website_crm_livechat,website_crm_livechat
+crm.lead,sale_amount_total,monetary,,f,f,f,Sum of Orders,sale_crm,sale_crm
+crm.lead,quotation_count,integer,,f,f,f,Number of Quotations,sale_crm,sale_crm
+crm.lead,sale_order_count,integer,,f,f,f,Number of Sale Orders,sale_crm,sale_crm
+crm.lead,order_ids,one2many,sale.order,t,f,f,Orders,sale_crm,sale_crm
+crm.lead,project_ids,one2many,project.project,t,f,f,Project,crm_sale_project,crm_sale_project
+crm.lead,project_count,integer,,f,f,f,Project Count,crm_sale_project,crm_sale_project
+crm.lead,task_count,integer,,f,f,f,Task Count,crm_sale_project,crm_sale_project
+crm.lead.scoring.frequency,id,integer,,t,f,f,ID,crm,crm
+crm.lead.scoring.frequency,display_name,char,,f,f,f,Display Name,crm,crm
+crm.lead.scoring.frequency,variable,char,,t,f,f,Variable,crm,crm
+crm.lead.scoring.frequency,value,char,,t,f,f,Value,crm,crm
+crm.lead.scoring.frequency,won_count,float,,t,f,f,Won Count,crm,crm
+crm.lead.scoring.frequency,lost_count,float,,t,f,f,Lost Count,crm,crm
+crm.lead.scoring.frequency,team_id,many2one,crm.team,t,f,f,Sales Team,crm,crm
+crm.lead.scoring.frequency,create_uid,many2one,res.users,t,f,f,Created by,crm,crm
+crm.lead.scoring.frequency,create_date,datetime,,t,f,f,Created on,crm,crm
+crm.lead.scoring.frequency,write_uid,many2one,res.users,t,f,f,Last Updated by,crm,crm
+crm.lead.scoring.frequency,write_date,datetime,,t,f,f,Last Updated on,crm,crm
+crm.lead.scoring.frequency.field,id,integer,,t,f,f,ID,crm,crm
+crm.lead.scoring.frequency.field,display_name,char,,f,f,f,Display Name,crm,crm
+crm.lead.scoring.frequency.field,name,char,,f,f,f,Field Label,crm,crm
+crm.lead.scoring.frequency.field,field_id,many2one,ir.model.fields,t,t,f,Field,crm,crm
+crm.lead.scoring.frequency.field,color,integer,,t,f,f,Color,crm,crm
+crm.lead.scoring.frequency.field,create_uid,many2one,res.users,t,f,f,Created by,crm,crm
+crm.lead.scoring.frequency.field,create_date,datetime,,t,f,f,Created on,crm,crm
+crm.lead.scoring.frequency.field,write_uid,many2one,res.users,t,f,f,Last Updated by,crm,crm
+crm.lead.scoring.frequency.field,write_date,datetime,,t,f,f,Last Updated on,crm,crm
+crm.lost.reason,id,integer,,t,f,f,ID,crm,crm
+crm.lost.reason,display_name,char,,f,f,f,Display Name,crm,crm
+crm.lost.reason,name,char,,t,t,f,Description,crm,crm
+crm.lost.reason,active,boolean,,t,f,f,Active,crm,crm
+crm.lost.reason,leads_count,integer,,f,f,f,Leads Count,crm,crm
+crm.lost.reason,create_uid,many2one,res.users,t,f,f,Created by,crm,crm
+crm.lost.reason,create_date,datetime,,t,f,f,Created on,crm,crm
+crm.lost.reason,write_uid,many2one,res.users,t,f,f,Last Updated by,crm,crm
+crm.lost.reason,write_date,datetime,,t,f,f,Last Updated on,crm,crm
+crm.recurring.plan,id,integer,,t,f,f,ID,crm,crm
+crm.recurring.plan,display_name,char,,f,f,f,Display Name,crm,crm
+crm.recurring.plan,name,char,,t,t,f,Plan Name,crm,crm
+crm.recurring.plan,number_of_months,integer,,t,t,f,# Months,crm,crm
+crm.recurring.plan,active,boolean,,t,f,f,Active,crm,crm
+crm.recurring.plan,sequence,integer,,t,f,f,Sequence,crm,crm
+crm.recurring.plan,create_uid,many2one,res.users,t,f,f,Created by,crm,crm
+crm.recurring.plan,create_date,datetime,,t,f,f,Created on,crm,crm
+crm.recurring.plan,write_uid,many2one,res.users,t,f,f,Last Updated by,crm,crm
+crm.recurring.plan,write_date,datetime,,t,f,f,Last Updated on,crm,crm
+crm.stage,id,integer,,t,f,f,ID,crm,crm
+crm.stage,display_name,char,,f,f,f,Display Name,crm,crm
+crm.stage,name,char,,t,t,f,Stage Name,crm,crm
+crm.stage,sequence,integer,,t,f,f,Sequence,crm,crm
+crm.stage,is_won,boolean,,t,f,f,Is Won Stage?,crm,crm
+crm.stage,rotting_threshold_days,integer,,t,f,f,Days to rot,crm,crm
+crm.stage,requirements,text,,t,f,f,Requirements,crm,crm
+crm.stage,team_ids,many2many,crm.team,t,f,f,Sales Teams,crm,crm
+crm.stage,fold,boolean,,t,f,f,Folded in Pipeline,crm,crm
+crm.stage,team_count,integer,,f,f,f,team_count,crm,crm
+crm.stage,create_uid,many2one,res.users,t,f,f,Created by,crm,crm
+crm.stage,create_date,datetime,,t,f,f,Created on,crm,crm
+crm.stage,write_uid,many2one,res.users,t,f,f,Last Updated by,crm,crm
+crm.stage,write_date,datetime,,t,f,f,Last Updated on,crm,crm
+crm.tag,id,integer,,t,f,f,ID,sales_team,sales_team
+crm.tag,display_name,char,,f,f,f,Display Name,sales_team,sales_team
+crm.tag,name,char,,t,t,f,Tag Name,sales_team,sales_team
+crm.tag,color,integer,,t,f,f,Color,sales_team,sales_team
+crm.tag,create_uid,many2one,res.users,t,f,f,Created by,sales_team,sales_team
+crm.tag,create_date,datetime,,t,f,f,Created on,sales_team,sales_team
+crm.tag,write_uid,many2one,res.users,t,f,f,Last Updated by,sales_team,sales_team
+crm.tag,write_date,datetime,,t,f,f,Last Updated on,sales_team,sales_team
+crm.team,id,integer,,t,f,f,ID,sales_team,sales_team crm sale sale_crm pos_sale website_sale
+crm.team,display_name,char,,f,f,f,Display Name,sales_team,sales_team crm sale sale_crm pos_sale website_sale
+crm.team,message_is_follower,boolean,,f,f,f,Is Follower,sales_team,sales_team
+crm.team,message_follower_ids,one2many,mail.followers,t,f,f,Followers,sales_team,sales_team
+crm.team,message_partner_ids,many2many,res.partner,f,f,f,Followers (Partners),sales_team,sales_team
+crm.team,message_ids,one2many,mail.message,t,f,f,Messages,sales_team,sales_team
+crm.team,has_message,boolean,,f,f,f,Has Message,sales_team,sales_team
+crm.team,message_needaction,boolean,,f,f,f,Action Needed,sales_team,sales_team
+crm.team,message_needaction_counter,integer,,f,f,f,Number of Actions,sales_team,sales_team
+crm.team,message_has_error,boolean,,f,f,f,Message Delivery error,sales_team,sales_team
+crm.team,message_has_error_counter,integer,,f,f,f,Number of errors,sales_team,sales_team
+crm.team,message_attachment_count,integer,,f,f,f,Attachment Count,sales_team,sales_team
+crm.team,rating_ids,one2many,rating.rating,t,f,f,Ratings,sales_team,sales_team
+crm.team,name,char,,t,t,f,Sales Team,sales_team,sales_team
+crm.team,sequence,integer,,t,f,f,Sequence,sales_team,sales_team
+crm.team,active,boolean,,t,f,f,Active,sales_team,sales_team
+crm.team,company_id,many2one,res.company,t,f,f,Company,sales_team,sales_team
+crm.team,currency_id,many2one,res.currency,f,f,f,Currency,sales_team,sales_team
+crm.team,user_id,many2one,res.users,t,f,f,Team Leader,sales_team,sales_team
+crm.team,is_membership_multi,boolean,,f,f,f,Multiple Memberships Allowed,sales_team,sales_team
+crm.team,member_ids,many2many,res.users,f,f,f,Salespersons,sales_team,sales_team
+crm.team,member_company_ids,many2many,res.company,f,f,f,Member Company,sales_team,sales_team
+crm.team,member_warning,text,,f,f,f,Membership Issue Warning,sales_team,sales_team
+crm.team,crm_team_member_ids,one2many,crm.team.member,t,f,f,Sales Team Members,sales_team,sales_team
+crm.team,crm_team_member_all_ids,one2many,crm.team.member,t,f,f,Sales Team Members (incl. inactive),sales_team,sales_team
+crm.team,color,integer,,t,f,f,Color Index,sales_team,sales_team
+crm.team,favorite_user_ids,many2many,res.users,t,f,f,Favorite Members,sales_team,sales_team
+crm.team,is_favorite,boolean,,f,f,f,Show on dashboard,sales_team,sales_team
+crm.team,dashboard_button_name,char,,f,f,f,Dashboard Button,sales_team,sales_team
+crm.team,create_uid,many2one,res.users,t,f,f,Created by,sales_team,sales_team
+crm.team,create_date,datetime,,t,f,f,Created on,sales_team,sales_team
+crm.team,write_uid,many2one,res.users,t,f,f,Last Updated by,sales_team,sales_team
+crm.team,write_date,datetime,,t,f,f,Last Updated on,sales_team,sales_team
+crm.team,message_has_sms_error,boolean,,f,f,f,SMS Delivery error,sms,sms
+crm.team,alias_id,many2one,mail.alias,t,t,f,Alias,crm,crm
+crm.team,alias_name,char,,f,f,f,Alias Name,crm,crm
+crm.team,alias_domain_id,many2one,mail.alias.domain,f,f,f,Alias Domain,crm,crm
+crm.team,alias_domain,char,,f,f,f,Alias Domain Name,crm,crm
+crm.team,alias_defaults,text,,f,t,f,Default Values,crm,crm
+crm.team,alias_email,char,,f,f,f,Email Alias,crm,crm
+crm.team,use_leads,boolean,,t,f,f,Leads,crm,crm
+crm.team,use_opportunities,boolean,,t,f,f,Pipeline,crm,crm
+crm.team,alias_full_name,char,,f,f,f,Alias Email,crm,crm
+crm.team,assignment_enabled,boolean,,f,f,f,Lead Assign,crm,crm
+crm.team,assignment_auto_enabled,boolean,,f,f,f,Auto Assignment,crm,crm
+crm.team,assignment_optout,boolean,,t,f,f,Pause auto assignment,crm,crm
+crm.team,assignment_max,integer,,f,f,f,Lead Average Capacity,crm,crm
+crm.team,assignment_domain,char,,t,f,f,Assignment Domain,crm,crm
+crm.team,show_assignment_max,boolean,,f,f,f,Show Assignment Max,crm,crm
+crm.team,lead_unassigned_count,integer,,f,f,f,# Unassigned Leads,crm,crm
+crm.team,lead_all_assigned_month_count,integer,,f,f,f,# Leads/Opps assigned this month,crm,crm
+crm.team,lead_all_assigned_month_exceeded,boolean,,f,f,f,Maximum Leads To Assign,crm,crm
+crm.team,opportunity_count,integer,,f,f,f,Number of assigned opportunities,crm,crm
+crm.team,lead_properties_definition,properties_definition,,t,f,f,Lead Properties,crm,crm
+crm.team,alias_model_id,many2one,ir.model,f,t,f,Aliased Model,crm,crm
+crm.team,alias_force_thread_id,integer,,f,f,f,Record Thread ID,crm,crm
+crm.team,alias_parent_model_id,many2one,ir.model,f,f,f,Parent Model,crm,crm
+crm.team,alias_parent_thread_id,integer,,f,f,f,Parent Record Thread ID,crm,crm
+crm.team,alias_contact,selection,,f,t,f,Alias Contact Security,crm,crm hr
+crm.team,alias_incoming_local,boolean,,f,f,f,Local-part based incoming detection,crm,crm
+crm.team,alias_bounced_content,html,,f,f,f,Custom Bounced Message,crm,crm
+crm.team,alias_status,selection,,f,f,f,Alias Status,crm,crm
+crm.team,sale_order_count,integer,,f,f,f,# Sale Orders,sale,sale
+crm.team,pos_config_ids,one2many,pos.config,t,f,f,Point of Sales,pos_sale,pos_sale
+crm.team,website_ids,one2many,website,t,f,f,Websites,website_sale,website_sale
+crm.team,abandoned_carts_amount,integer,,f,f,f,Amount of Abandoned Carts,website_sale,website_sale
+crm.team,abandoned_carts_count,integer,,f,f,f,Number of Abandoned Carts,website_sale,website_sale
+crm.team.member,id,integer,,t,f,f,ID,sales_team,sales_team crm
+crm.team.member,display_name,char,,f,f,f,Display Name,sales_team,sales_team crm
+crm.team.member,message_is_follower,boolean,,f,f,f,Is Follower,sales_team,sales_team
+crm.team.member,message_follower_ids,one2many,mail.followers,t,f,f,Followers,sales_team,sales_team
+crm.team.member,message_partner_ids,many2many,res.partner,f,f,f,Followers (Partners),sales_team,sales_team
+crm.team.member,message_ids,one2many,mail.message,t,f,f,Messages,sales_team,sales_team
+crm.team.member,has_message,boolean,,f,f,f,Has Message,sales_team,sales_team
+crm.team.member,message_needaction,boolean,,f,f,f,Action Needed,sales_team,sales_team
+crm.team.member,message_needaction_counter,integer,,f,f,f,Number of Actions,sales_team,sales_team
+crm.team.member,message_has_error,boolean,,f,f,f,Message Delivery error,sales_team,sales_team
+crm.team.member,message_has_error_counter,integer,,f,f,f,Number of errors,sales_team,sales_team
+crm.team.member,message_attachment_count,integer,,f,f,f,Attachment Count,sales_team,sales_team
+crm.team.member,rating_ids,one2many,rating.rating,t,f,f,Ratings,sales_team,sales_team
+crm.team.member,crm_team_id,many2one,crm.team,t,t,f,Sales Team,sales_team,sales_team
+crm.team.member,user_id,many2one,res.users,t,t,f,Salesperson,sales_team,sales_team
+crm.team.member,user_in_teams_ids,many2many,res.users,f,f,f,User In Teams,sales_team,sales_team
+crm.team.member,user_company_ids,many2many,res.company,f,f,f,User Company,sales_team,sales_team
+crm.team.member,active,boolean,,t,f,f,Active,sales_team,sales_team
+crm.team.member,is_membership_multi,boolean,,f,f,f,Multiple Memberships Allowed,sales_team,sales_team
+crm.team.member,member_warning,text,,f,f,f,Member Warning,sales_team,sales_team
+crm.team.member,image_1920,binary,,f,f,f,Image,sales_team,sales_team
+crm.team.member,image_128,binary,,f,f,f,Image (128),sales_team,sales_team
+crm.team.member,name,char,,f,f,f,Name,sales_team,sales_team
+crm.team.member,email,char,,f,f,f,Email,sales_team,sales_team
+crm.team.member,phone,char,,f,f,f,Phone,sales_team,sales_team
+crm.team.member,company_id,many2one,res.company,f,f,f,Company,sales_team,sales_team
+crm.team.member,create_uid,many2one,res.users,t,f,f,Created by,sales_team,sales_team
+crm.team.member,create_date,datetime,,t,f,f,Created on,sales_team,sales_team
+crm.team.member,write_uid,many2one,res.users,t,f,f,Last Updated by,sales_team,sales_team
+crm.team.member,write_date,datetime,,t,f,f,Last Updated on,sales_team,sales_team
+crm.team.member,message_has_sms_error,boolean,,f,f,f,SMS Delivery error,sms,sms
+crm.team.member,assignment_enabled,boolean,,f,f,f,Lead Assign,crm,crm
+crm.team.member,assignment_domain,char,,t,f,f,Assignment Domain,crm,crm
+crm.team.member,assignment_domain_preferred,char,,t,f,f,Preference assignment Domain,crm,crm
+crm.team.member,assignment_max,integer,,t,f,f,Average Leads Capacity (on 30 days),crm,crm
+crm.team.member,assignment_rules,selection,,f,f,f,Auto-Assignment Rules,crm,crm
+crm.team.member,lead_day_count,integer,,f,f,f,Leads (last 24h),crm,crm
+crm.team.member,lead_month_count,integer,,f,f,f,Leads (30 days),crm,crm
+res.partner,opportunity_ids,one2many,crm.lead,t,f,f,Opportunities,crm,crm
+res.partner,opportunity_count,integer,,f,f,f,Opportunity Count,crm,crm
+utm.campaign,id,integer,,t,f,f,ID,utm,utm link_tracker crm mass_mailing hr_recruitment mass_mailing_crm mass_mailing_sms mass_mailing_crm_sms sale mass_mailing_sale mass_mailing_sale_sms
+utm.campaign,display_name,char,,f,f,f,Display Name,utm,utm link_tracker crm mass_mailing hr_recruitment mass_mailing_crm mass_mailing_sms mass_mailing_crm_sms sale mass_mailing_sale mass_mailing_sale_sms
+utm.campaign,active,boolean,,t,f,f,Active,utm,utm
+utm.campaign,name,char,,t,t,f,Campaign Identifier,utm,utm
+utm.campaign,title,char,,t,t,f,Campaign Name,utm,utm
+utm.campaign,user_id,many2one,res.users,t,t,f,Responsible,utm,utm
+utm.campaign,stage_id,many2one,utm.stage,t,t,f,Stage,utm,utm
+utm.campaign,tag_ids,many2many,utm.tag,t,f,f,Tags,utm,utm
+utm.campaign,is_auto_campaign,boolean,,t,f,f,Automatically Generated Campaign,utm,utm
+utm.campaign,color,integer,,t,f,f,Color Index,utm,utm
+utm.campaign,create_uid,many2one,res.users,t,f,f,Created by,utm,utm
+utm.campaign,create_date,datetime,,t,f,f,Created on,utm,utm
+utm.campaign,write_uid,many2one,res.users,t,f,f,Last Updated by,utm,utm
+utm.campaign,write_date,datetime,,t,f,f,Last Updated on,utm,utm
+utm.campaign,click_count,integer,,f,f,f,Number of clicks generated by the campaign,link_tracker,link_tracker
+utm.campaign,use_leads,boolean,,f,f,f,Use Leads,crm,crm
+utm.campaign,crm_lead_count,integer,,f,f,f,Leads/Opportunities count,crm,crm
+utm.campaign,mailing_mail_ids,one2many,mailing.mailing,t,f,f,Mass Mailings,mass_mailing,mass_mailing
+utm.campaign,mailing_mail_count,integer,,f,f,f,Number of Mass Mailing,mass_mailing,mass_mailing
+utm.campaign,is_mailing_campaign_activated,boolean,,f,f,f,Is Mailing Campaign Activated,mass_mailing,mass_mailing
+utm.campaign,ab_testing_mailings_count,integer,,f,f,f,A/B Test Mailings #,mass_mailing,mass_mailing
+utm.campaign,ab_testing_completed,boolean,,t,f,f,A/B Testing Campaign Finished,mass_mailing,mass_mailing
+utm.campaign,ab_testing_winner_mailing_id,many2one,mailing.mailing,t,f,f,A/B Campaign Winner Mailing,mass_mailing,mass_mailing
+utm.campaign,ab_testing_schedule_datetime,datetime,,t,f,f,Send Final On,mass_mailing,mass_mailing
+utm.campaign,ab_testing_winner_selection,selection,,t,f,f,Winner Selection,mass_mailing,mass_mailing mass_mailing_crm mass_mailing_sale
+utm.campaign,received_ratio,float,,f,f,f,Received Ratio,mass_mailing,mass_mailing
+utm.campaign,opened_ratio,float,,f,f,f,Opened Ratio,mass_mailing,mass_mailing
+utm.campaign,replied_ratio,float,,f,f,f,Replied Ratio,mass_mailing,mass_mailing
+utm.campaign,bounced_ratio,float,,f,f,f,Bounced Ratio,mass_mailing,mass_mailing
+utm.campaign,mailing_sms_ids,one2many,mailing.mailing,t,f,f,Mass SMS,mass_mailing_sms,mass_mailing_sms
+utm.campaign,mailing_sms_count,integer,,f,f,f,Number of Mass SMS,mass_mailing_sms,mass_mailing_sms
+utm.campaign,ab_testing_mailings_sms_count,integer,,f,f,f,A/B Test Mailings SMS #,mass_mailing_sms,mass_mailing_sms
+utm.campaign,ab_testing_sms_winner_selection,selection,,t,f,f,SMS Winner Selection,mass_mailing_sms,mass_mailing_sms mass_mailing_crm_sms mass_mailing_sale_sms
+utm.campaign,quotation_count,integer,,f,f,f,Quotation Count,sale,sale
+utm.campaign,invoiced_amount,monetary,,f,f,f,Revenues generated by the campaign,sale,sale
+utm.campaign,currency_id,many2one,res.currency,f,f,f,Currency,sale,sale
+utm.medium,id,integer,,t,f,f,ID,utm,utm mass_mailing
+utm.medium,display_name,char,,f,f,f,Display Name,utm,utm mass_mailing
+utm.medium,name,char,,t,t,f,Medium Name,utm,utm
+utm.medium,active,boolean,,t,f,f,Active,utm,utm
+utm.medium,create_uid,many2one,res.users,t,f,f,Created by,utm,utm
+utm.medium,create_date,datetime,,t,f,f,Created on,utm,utm
+utm.medium,write_uid,many2one,res.users,t,f,f,Last Updated by,utm,utm
+utm.medium,write_date,datetime,,t,f,f,Last Updated on,utm,utm
+utm.source,id,integer,,t,f,f,ID,utm,utm mass_mailing hr_recruitment marketing_card
+utm.source,display_name,char,,f,f,f,Display Name,utm,utm mass_mailing hr_recruitment marketing_card
+utm.source,name,char,,t,t,f,Source Name,utm,utm
+utm.source,create_uid,many2one,res.users,t,f,f,Created by,utm,utm
+utm.source,create_date,datetime,,t,f,f,Created on,utm,utm
+utm.source,write_uid,many2one,res.users,t,f,f,Last Updated by,utm,utm
+utm.source,write_date,datetime,,t,f,f,Last Updated on,utm,utm
+utm.stage,id,integer,,t,f,f,ID,utm,utm
+utm.stage,display_name,char,,f,f,f,Display Name,utm,utm
+utm.stage,name,char,,t,t,f,Name,utm,utm
+utm.stage,sequence,integer,,t,f,f,Sequence,utm,utm
+utm.stage,create_uid,many2one,res.users,t,f,f,Created by,utm,utm
+utm.stage,create_date,datetime,,t,f,f,Created on,utm,utm
+utm.stage,write_uid,many2one,res.users,t,f,f,Last Updated by,utm,utm
+utm.stage,write_date,datetime,,t,f,f,Last Updated on,utm,utm
+utm.tag,id,integer,,t,f,f,ID,utm,utm
+utm.tag,display_name,char,,f,f,f,Display Name,utm,utm
+utm.tag,name,char,,t,t,f,Name,utm,utm
+utm.tag,color,integer,,t,f,f,Color Index,utm,utm
+utm.tag,create_uid,many2one,res.users,t,f,f,Created by,utm,utm
+utm.tag,create_date,datetime,,t,f,f,Created on,utm,utm
+utm.tag,write_uid,many2one,res.users,t,f,f,Last Updated by,utm,utm
+utm.tag,write_date,datetime,,t,f,f,Last Updated on,utm,utm

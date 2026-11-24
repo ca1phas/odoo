@@ -323,7 +323,7 @@ Each field's panel has four tabs [UI]:
 - **Raw:**
   - `options[]` = `{key (uuid), value, index, isDeleted, color (hex), score, hide}`;
   - **`enumDefault2 1` = colours on; `enumDefault 1` = scores on.** Colours are stored even with the toggle off;
-  - `showtype` "0" dropdown, "2" progress bar ("1" tiled [Inferred]);
+  - `showtype` "0" dropdown, "2" progress bar ("1" tiled [Inferred]). **Correction, 24 Nov [UI]:** on a type 9 Single-select, `showtype` "0" still renders tiles. The designer's View Mode "Dropdown list" changes the field to **type 11** with `showtype` "0" (option keys unchanged; a workflow condition stored with type 9 still matched after the change);
   - **`allowadd "1"`** = open to add. Switching to Progress bar reset it to "0";
   - `otherhint` for the Others option;
   - multi-select: `checktype "1"` in Dropdown mode, `direction`, `showselectall`, `readonlyshowall`, `checkrange` + `min`/`max`;
@@ -822,4 +822,17 @@ Native Field Probe `<id>`, read back at 15:20 MYT. Text in brackets describes th
 | Tabs | 52 | 0 / 0 | `<id>` |
 | Remarks | 10010 | 0 / 0 | `<id>` |
 
-The sheet stays as a scratch reference. Delete it only with Li Wei's OK.
+The probe sheet was deleted at the restart on 23 Nov 2026 (15:49) and is in the app recycle bin; the ids above are for reference only.
+
+## 12. Confirmed while building wave 0
+
+Live results from the real sheets (Companies, Bank Accounts, Contacts), 23 Nov 2026. [Rec] = readback, [UI] = checked in the form.
+
+- **Foreign Field, display only** (type 30, `strDefault "10"`, `dataSource "$<relation id>$"`, `sourceControlId`, `sourceControlType`) can be added with `worksheet add-fields`. It works for Region (24), Text (2), Email (5), Phone (3) sources [Rec] [UI]. Two quirks: `record get` returns the Region value as a JSON *string* (P18), and the form shows a Phone source unformatted, "+60123456789" (P19).
+- **Function formula in a unique index.** The index dialog offers a type 53 field. A composite unique index on a formula plus a relation is enforced on API writes (resultCode 11) and in the new-record form ("Duplicates are not allowed", shown under the formula's source field) [UI].
+- **Function formula recomputes on form edits.** `UPPER(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE($id$," ",""),"-",""),".",""),"/",""))` turned "5140.1234/5678 xy" into "514012345678XY" after Save [UI]. There is no regex function; strip characters one by one.
+- **Hidden field:** `fieldPermission "011"` (visible / editable / shown on create). `worksheet fields` then reports `isHidden` and `isHiddenOnCreate` true; the field is absent from the record and new-record forms [UI]. It can be sent in `add-fields --controls`.
+- **Image-only attachment:** `advancedSetting.filetype '{"type":"1","values":[]}'` is accepted by `worksheet create --fields` [Rec].
+- **Two-way relation to another sheet** through `worksheet create --fields` with `config.bidirectional` creates the reverse field (unlike a self-relation through `add-fields`, P17). Its display columns still have to be set (P5) [Rec] [UI].
+- **Form layout** [UI], 24 Nov: each control has `row`, `col` and `size` on a 12-column grid (3 = four per row, 4 = three, 6 = two, 12 = full). A field added later lands at row 9999 with size 0. Fields hidden by a rule or on create leave no gap: the rest of the row moves left. Divider (分段) = type 22 with a title; tabs = type 52 (not used yet). Relation lists shown as tabs (`showtype` "6") render in the tab bar at the bottom wherever their row is. The whole layout is written in one go with `worksheet update-fields --controls @file` (the raw controls as read, only row / col / size changed); `--check` also lists what is already wrong on the sheet (for example "dangling source field" on one-way relations), so compare its "proposed" list with "current".
+- **`fieldPermission` third digit = shown on the new-record form.** "101" read-only and shown on create, "100" read-only and hidden on create, "110" editable but hidden on create. A custom-button dialog edits the existing record, so "110" fields still appear in it [UI].

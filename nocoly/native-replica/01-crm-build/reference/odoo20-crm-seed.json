@@ -1,0 +1,345 @@
+{
+ "crm.stage": [
+  {
+   "module": "crm",
+   "name": "New",
+   "sequence": 1,
+   "is_won": null,
+   "fold": null,
+   "rotting_threshold_days": 0,
+   "requirements": null
+  },
+  {
+   "module": "crm",
+   "name": "Qualified",
+   "sequence": 2,
+   "is_won": null,
+   "fold": null,
+   "rotting_threshold_days": 0,
+   "requirements": null
+  },
+  {
+   "module": "crm",
+   "name": "Proposition",
+   "sequence": 3,
+   "is_won": null,
+   "fold": null,
+   "rotting_threshold_days": 5,
+   "requirements": null
+  },
+  {
+   "module": "crm",
+   "name": "Won",
+   "sequence": 70,
+   "is_won": true,
+   "fold": false,
+   "rotting_threshold_days": 0,
+   "requirements": null
+  }
+ ],
+ "crm.lost.reason": [
+  {
+   "module": "crm",
+   "name": "Too expensive",
+   "active": true
+  },
+  {
+   "module": "crm",
+   "name": "We don't have people/skills",
+   "active": true
+  },
+  {
+   "module": "crm",
+   "name": "Not enough stock",
+   "active": true
+  }
+ ],
+ "crm.recurring.plan": [
+  {
+   "module": "crm",
+   "name": "Monthly",
+   "number_of_months": 1,
+   "sequence": 10
+  },
+  {
+   "module": "crm",
+   "name": "Yearly",
+   "number_of_months": 12,
+   "sequence": 10
+  },
+  {
+   "module": "crm",
+   "name": "Over 3 years",
+   "number_of_months": 36,
+   "sequence": 10
+  },
+  {
+   "module": "crm",
+   "name": "Over 5 years ",
+   "number_of_months": 60,
+   "sequence": 10
+  }
+ ],
+ "crm.tag": [
+  {
+   "module": "sales_team",
+   "name": "Product",
+   "color": 1
+  },
+  {
+   "module": "sales_team",
+   "name": "Software",
+   "color": 2
+  },
+  {
+   "module": "sales_team",
+   "name": "Services",
+   "color": 3
+  },
+  {
+   "module": "sales_team",
+   "name": "Information",
+   "color": 4
+  },
+  {
+   "module": "sales_team",
+   "name": "Design",
+   "color": 5
+  },
+  {
+   "module": "sales_team",
+   "name": "Training",
+   "color": 6
+  },
+  {
+   "module": "sales_team",
+   "name": "Consulting",
+   "color": 7
+  },
+  {
+   "module": "sales_team",
+   "name": "Other",
+   "color": 8
+  }
+ ],
+ "crm.team": [
+  {
+   "module": "pos_self_order_sale",
+   "name": "Kiosk Sale Team",
+   "sequence": 10,
+   "active": true,
+   "use_leads": null,
+   "use_opportunities": true
+  },
+  {
+   "module": "sales_team",
+   "name": "Sales",
+   "sequence": 0,
+   "active": true,
+   "use_leads": null,
+   "use_opportunities": true
+  },
+  {
+   "module": "sales_team",
+   "name": "Website",
+   "sequence": 10,
+   "active": true,
+   "use_leads": null,
+   "use_opportunities": false
+  },
+  {
+   "module": "sales_team",
+   "name": "Point of Sale",
+   "sequence": 10,
+   "active": true,
+   "use_leads": null,
+   "use_opportunities": false
+  },
+  {
+   "module": "sales_team",
+   "name": "Pre-Sales",
+   "sequence": 10,
+   "active": true,
+   "use_leads": true,
+   "use_opportunities": true
+  }
+ ],
+ "utm.stage": [
+  {
+   "module": "utm",
+   "name": "New",
+   "sequence": 10
+  },
+  {
+   "module": "utm",
+   "name": "Schedule",
+   "sequence": 10
+  },
+  {
+   "module": "utm",
+   "name": "Design",
+   "sequence": 20
+  },
+  {
+   "module": "utm",
+   "name": "Sent",
+   "sequence": 30
+  }
+ ],
+ "utm.medium": [
+  {
+   "module": "mass_mailing_sms",
+   "name": "SMS",
+   "active": true
+  },
+  {
+   "module": "utm",
+   "name": "Website",
+   "active": true
+  },
+  {
+   "module": "utm",
+   "name": "Phone",
+   "active": true
+  },
+  {
+   "module": "utm",
+   "name": "Direct",
+   "active": true
+  },
+  {
+   "module": "utm",
+   "name": "Email",
+   "active": true
+  },
+  {
+   "module": "utm",
+   "name": "Social Media",
+   "active": true
+  },
+  {
+   "module": "utm",
+   "name": "Messaging",
+   "active": true
+  }
+ ],
+ "utm.source": [
+  {
+   "module": "im_livechat",
+   "name": "Chatbot"
+  },
+  {
+   "module": "mass_mailing_sms",
+   "name": "Mass SMS"
+  },
+  {
+   "module": "sale",
+   "name": "Sale Promotion 1"
+  },
+  {
+   "module": "utm",
+   "name": "Google"
+  },
+  {
+   "module": "utm",
+   "name": "Mass Mailing"
+  },
+  {
+   "module": "utm",
+   "name": "Newsletter"
+  },
+  {
+   "module": "utm",
+   "name": "Monster"
+  },
+  {
+   "module": "utm",
+   "name": "Glassdoor"
+  },
+  {
+   "module": "utm",
+   "name": "Craigslist"
+  },
+  {
+   "module": "utm",
+   "name": "Survey"
+  },
+  {
+   "module": "utm",
+   "name": "Referral"
+  },
+  {
+   "module": "utm",
+   "name": "Livechat"
+  },
+  {
+   "module": "utm",
+   "name": "Facebook"
+  },
+  {
+   "module": "utm",
+   "name": "X"
+  },
+  {
+   "module": "utm",
+   "name": "LinkedIn"
+  },
+  {
+   "module": "utm",
+   "name": "Instagram"
+  },
+  {
+   "module": "utm",
+   "name": "YouTube"
+  }
+ ],
+ "utm.campaign": [
+  {
+   "module": "hr_recruitment",
+   "title": "Job Campaign",
+   "name": "Job Campaign"
+  },
+  {
+   "module": "mass_mailing",
+   "title": "Newsletter",
+   "name": "Newsletter"
+  },
+  {
+   "module": "utm",
+   "title": "Black Friday Sales",
+   "name": "Black Friday Sales"
+  },
+  {
+   "module": "utm",
+   "title": "Christmas Special",
+   "name": "Christmas Special"
+  }
+ ],
+ "crm.lead (counts)": [
+  {
+   "type": "lead",
+   "won_status": "lost",
+   "count": 4
+  },
+  {
+   "type": "lead",
+   "won_status": "pending",
+   "count": 22
+  },
+  {
+   "type": "opportunity",
+   "won_status": "lost",
+   "count": 1
+  },
+  {
+   "type": "opportunity",
+   "won_status": "pending",
+   "count": 14
+  },
+  {
+   "type": "opportunity",
+   "won_status": "won",
+   "count": 3
+  }
+ ]
+}

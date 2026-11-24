@@ -86,7 +86,7 @@
 
 1. **Draft** the plan from the catalogue, the Odoo source (or candy99 for Enterprise parts) and the current EMS register.
    - Capture reference extracts of the module's models from candy99 early, because a tenant can disappear, as casimir.odoo.com did on 22 Sep.
-2. **Review** it with Li Wei and the manager, and record the approval in the plan.
+2. **Review** it with the Module Owner and the Programme Lead (roles, `HANDOVER.md` §2), and record the approval in the plan.
 3. **Build:** data → workflows → native screens → Compute screens. Compute screens wait until the Compute checks have passed.
    - Inside the module, use the September worksheet loop (`sept-plan-comparison.md` §3): requirements with *Not built now* → re-runnable build script → CLI readback → UI test → review page.
    - Check the platform trap list before building.
@@ -99,15 +99,15 @@ Change the order when a deal needs something earlier. For example, a partner's e
 
 | Wave | Module plans | Why in this wave | In EMS now |
 |---|---|---|---|
-| 0 | **Register and foundation:** Contacts, Products (variants, units, categories, pricelists, combos), company, currencies and rates, countries, Activities. **Plan: `00-foundation.md`** (v2 native-first draft, 23 Nov) | Every other module uses them; ownership must be tagged before splitting. Taxes moved to Invoicing (wave 1), because in Odoo the Invoicing module adds them to products | To build in a new master app (v2 decision 1); "Odoo Replica (AI)" becomes the sandbox; EMS has its own |
-| 1 | **Gap plans for what exists:** Inventory, Sales, CRM, Invoicing, Point of Sale | Compare with 20.0; pick the Compute screens; finish open items (Inventory: multi-step routes, waves, nested packages, labels) | Exists |
+| 0 | **Register and foundation:** Contacts, Products (variants, units, categories, pricelists, combos), company, currencies and rates, countries, Activities. **Plan: `00-foundation.md`** (v2 native-first, built and accepted 24 Nov) | Every other module uses them; ownership must be tagged before splitting. Taxes moved to Invoicing (wave 1), because in Odoo the Invoicing module adds them to products | To build in a new master app (v2 decision 1); "Odoo Replica (AI)" becomes the sandbox; EMS has its own |
+| 1 | **Since 23 Nov: native builds in Odoo Replica (AI)** of CRM, Invoicing, Sales, Inventory, Point of Sale, in that order (`01-wave1.md`; first plan `01-crm.md`). Earlier wording: gap plans for what exists | Compare with 20.0; pick the Compute screens; finish open items (Inventory: multi-step routes, waves, nested packages, labels) | Exists |
 | 2 | **Purchase**, then **Manufacturing** | Inventory needs Purchase (buy route, receipts from orders, landed costs). Manufacturing needs both | Missing |
 | 3 | **Accounting depth** (beyond Invoicing: valuation entries, reconciliation, reports) | Highest risk: postings must be exact, and HAP workflows have no transactions. Full Accounting is Enterprise-only | Invoicing exists |
 | 4 | **Services and HR:** Project, Timesheets, Employees, Time Off, Attendances, Expenses | A separate business area with its own bridges to Sales | Missing |
 | 5 | **Website, eCommerce and customer portal; marketing** (Email/SMS, Events, Surveys); Live Chat | Public screens suit Compute well, but the website builder is very large | Missing |
 | Later | **Enterprise-only apps** (Helpdesk, Planning, Subscriptions, Rental, Quality, Barcode, …) | Only when a customer asks; no source to plan from | Missing |
 
-## 6. Decisions needed from the manager
+## 6. Decisions needed from the Programme Lead
 
 0. **Decided 23 Nov:** build in the new app Odoo Replica (AI) on Nocoly SaaS; keep EMS as the baseline; use the local Odoo 20 Community alongside candy99.
 1. **Target version:** Odoo 20.0, the same as candy99, re-checked once a year.
@@ -117,7 +117,7 @@ Change the order when a deal needs something earlier. For example, a partner's e
    - Li Wei's Inventory removal plan (`nocoly/modules/inventory-removal.md`, 12 Oct, never executed) is the worked example of that method.
    - **Test:** run it on a copy of EMS and check that it predicted everything that breaks.
 4. **Compute:** run the checks in `compute-for-ui.md` with one pilot screen before any module's screens depend on Compute, and wait for the official version before production.
-5. **Owners:** who owns each module (Products and Sales already belong to colleagues).
+5. **Owners: by role, not by name** (decided 24 Nov 2026, for easier handover). Each module has a Module Owner, a Builder, an App Administrator and the Programme Lead (`HANDOVER.md` §2); who holds each role is kept outside the repo. In ERP Master, Products and Sales already have Module Owners in other teams.
 6. **Priorities** from current deals.
 7. **Effort:** give a figure per module only after its plan. For scale:
    - The September plan estimated about 233 worksheets and 1,500 hours (~38 weeks at 40 h/week) for the Community apps. It predates the Inventory build.
@@ -136,6 +136,8 @@ Change the order when a deal needs something earlier. For example, a partner's e
 | `native-catalogue/` | **Start here for every module (23 Nov 2026).** What HAP does natively: every field type tested live (`fields.md`), workflow triggers and nodes (`workflow-nodes.md`), digests of all 359 pages of help.nocoly.com (`docs/`), Odoo → native mapping, limits, run rules, plan gates, open live tests (`README.md`) |
 | `00-foundation.md` | Wave 0 module plan **v2, native first** (draft, 23 Nov): a new master app, native fields and nodes, the sandbox for live tests |
 | `00-foundation-v1.md` | Wave 0 plan v1, approved and then superseded the same day |
+| `01-wave1.md` | Wave 1 order and scope (draft, 24 Nov): CRM → Invoicing → Sales → Inventory → Point of Sale, from the Odoo 20 dependencies |
+| `01-crm.md` | Wave 1 module plan **CRM** (draft, 24 Nov; Li Wei chose CRM first): `crm`, `sales_team`, `utm`, native only, Phase A and B |
 | `00-foundation-build/` | Build log, scripts, ledger (`ids.json`) and reference data exported from the local Odoo |
 | `register/` | Register tools: Odoo export, HAP scan, join, diff, prune prediction, coverage |
 | `catalogue/odoo-20.0/foundation-fields.csv`, `foundation-fields-by-owner.md` | Every field of the foundation models in the local Odoo 20, with the module that defines it (generated) |
@@ -168,7 +170,7 @@ Reviewed 23 Nov 2026, read-only, in `external/ca1phas-odoo/nocoly/`. This is an 
 
 ## 9. Next steps
 
-1. Li Wei and the manager review this plan and answer §6.
+1. The Module Owner and the Programme Lead review this plan and answer §6.
 2. **Build the EMS register scan,** read-only, in the format of the Inventory removal manifest:
    - cover sheets, fields, relations, workflows (with the sub-processes they call), views, pages, print templates and rules;
    - tag each with its Odoo module and its kind (core / foundation / bridge A+B);

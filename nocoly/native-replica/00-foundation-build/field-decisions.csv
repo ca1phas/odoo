@@ -1,0 +1,272 @@
+model,field,decision,reason
+res.company,additional_identifiers,native:contact,Kept on the company's contact (Other Identifiers); Odoo relates it to the partner too
+res.company,all_child_ids,later:multi-company,Branches come with multi-company
+res.company,available_additional_identifiers_metadata,skip,Odoo form helper for identifier formats
+res.company,bank_ids,native:contact,The contact's Bank Accounts tab; Odoo relates it to the partner too
+res.company,child_ids,later:multi-company,Branches come with multi-company
+res.company,color,skip,Kanban colour index; HAP views colour by options
+res.company,country_code,native:x_base__region,First part of the contact's Region value
+res.company,country_id,native:x_base__region,Shown by the Address foreign field from the contact
+res.company,external_report_layout_id,hap,HAP print templates set the document layout
+res.company,font,hap,HAP print templates set the font
+res.company,has_vat,skip,Form helper (is the Tax ID filled)
+res.company,is_company_details_empty,skip,Form helper
+res.company,logo,native:logo_web,One Logo attachment field (Odoo: logo is the partner image and logo_web its stored copy)
+res.company,paperformat_id,hap,HAP print templates set the paper size
+res.company,parent_id,later:multi-company,Branches come with multi-company
+res.company,parent_ids,later:multi-company,Branches come with multi-company
+res.company,parent_path,later:multi-company,Branches come with multi-company
+res.company,report_tables_id,hap,HAP print templates set the table design
+res.company,root_id,later:multi-company,Branches come with multi-company
+res.company,state_id,native:x_base__region,Shown by the Address foreign field from the contact
+res.company,uninstalled_l10n_module_ids,skip,Odoo module installer helper
+res.company,user_ids,hap,App members and roles decide who works for the company
+res.company,uses_default_logo,skip,Form helper
+res.country,address_view_id,skip,Odoo address input view; the native Region picker is used
+res.country,country_group_codes,skip,Computed helper; the Country Groups tab shows the groups
+res.country,image_url,skip,Flag icon only
+res.country,state_ids,native:x_base__region,States come from the native region list (not loaded as a sheet)
+res.currency,is_current_company_currency,skip,Form helper; the company's Currency field holds it
+res.currency,rate_string,skip,Display text such as 1 MYR = 0.21 USD; a formula can add it later if wanted
+res.currency.rate,company_currency_id,later:multi-company,One company currency (MYR) until multi-company
+res.currency.rate,company_id,later:multi-company,Rates are shared while there is one company
+res.currency.rate,company_rate,later:multi-company,Equals the Technical Rate while there is one company
+res.currency.rate,inverse_company_rate,later:multi-company,Equals the inverse rate while there is one company
+res.partner,active_lang_count,skip,Form helper
+res.partner,address,hap,Formatted address text; print templates build it from the fields
+res.partner,address_inline,hap,Formatted address text; print templates build it from the fields
+res.partner,application_statistics,skip,Odoo statistics helper
+res.partner,available_additional_identifiers_metadata,skip,Odoo form helper for identifier formats
+res.partner,avatar_1024,hap,Resized copy; HAP shows the record image
+res.partner,avatar_128,hap,Resized copy; HAP shows the record image
+res.partner,avatar_1920,hap,Resized copy; HAP shows the record image
+res.partner,avatar_256,hap,Resized copy; HAP shows the record image
+res.partner,avatar_512,hap,Resized copy; HAP shows the record image
+res.partner,color,skip,Kanban colour index; HAP views colour by options
+res.partner,contact_address,hap,Formatted address text; print templates build it from the fields
+res.partner,contact_address_inline,hap,Formatted address text; print templates build it from the fields
+res.partner,country_code,native:x_base__region,First part of the Region value
+res.partner,email_formatted,skip,Name <email> text for mail headers
+res.partner,has_vat,skip,Form helper (is the Tax ID filled)
+res.partner,image_1024,hap,Resized copy; HAP keeps one image
+res.partner,image_128,hap,Resized copy; HAP keeps one image
+res.partner,image_256,hap,Resized copy; HAP keeps one image
+res.partner,image_512,hap,Resized copy; HAP keeps one image
+res.partner,is_company,native:company_type,Company Type radio (Person / Company) replaces the flag
+res.partner,is_public,skip,Odoo public-user flag
+res.partner,main_user_id,hap,HAP members
+res.partner,parent_name,native:parent_id,Shown in the Related Company field
+res.partner,partner_latitude,native:x_base__location,The Location field holds the coordinates
+res.partner,partner_longitude,native:x_base__location,The Location field holds the coordinates
+res.partner,partner_share,hap,Portal users are HAP external portal members
+res.partner,properties,skip,No HAP equivalent for per-parent dynamic fields (plan v2)
+res.partner,properties_base_definition_id,skip,No HAP equivalent for per-parent dynamic fields (plan v2)
+res.partner,same_vat_partner_id,later:step 5,Duplicate Tax ID hint (Query Records field) with the views
+res.partner,self,skip,Technical
+res.partner,state_id,native:x_base__region,Address (Region) holds the state
+res.partner,type_address_label,skip,Form helper
+res.partner,tz,hap,HAP members have time zones (plan v2)
+res.partner,tz_offset,hap,HAP members have time zones (plan v2)
+res.partner,user_ids,hap,HAP members and portal users
+res.partner,vat_label,later:step 5,Foreign field from Country (Vat Label) when the form layout is done
+res.partner.bank,account_type,skip,Computed bank / IBAN type from the number
+res.partner.bank,clearing_label_id,skip,Country-specific clearing codes (plan v2); not used in Malaysia
+res.partner.bank,clearing_number,skip,Country-specific clearing codes (plan v2); not used in Malaysia
+res.partner.bank,color,skip,Kanban colour index; HAP views colour by options
+res.partner.bank,country_code,native:x_base__region,First part of the Bank Address (Region) value
+res.partner.bank,country_id,native:x_base__region,Bank Address (Region) holds the country
+res.partner.bank,show_clearing_number,skip,Form helper for clearing codes
+res.partner.bank,state_id,native:x_base__region,Bank Address (Region) holds the state
+mail.activity,can_write,hap,HAP role permissions decide who can edit
+mail.activity,icon,skip,"Icon of the activity type, display only"
+mail.activity,mail_template_ids,later:mail,Email templates come with the email module
+mail.activity,phone,skip,"The related contact's phone, read through the Contact relation"
+mail.activity,res_access_create,hap,HAP role permissions decide access
+mail.activity,res_access_read,hap,HAP role permissions decide access
+mail.activity,res_access_unlink,hap,HAP role permissions decide access
+mail.activity,res_access_write,hap,HAP role permissions decide access
+mail.activity,res_model_id,native:res_model,Stored as Related Document Model text plus the Contact relation
+mail.activity,res_model_name,skip,"Display name of the model, display only"
+mail.activity,role_id,later:roles,"Activity roles (assign by role) come with HR roles; plans use a person or ""Ask at launch"""
+mail.activity,state,native:x_mail__state,"Built as State (stored), set on save and refreshed daily by #14"
+mail.activity,technical_usage,skip,Technical marker for system activities
+mail.activity,user_tz,hap,HAP members carry their own time zone
+mail.activity.plan,has_user_on_demand,native:responsible_type,"Steps with ""Ask at launch"" make the launch ask for a person"
+mail.activity.plan,res_model_id,skip,Plans apply to Contacts only in wave 0
+mail.activity.plan,steps_count,hap,Count shown on the Plan Steps tab
+mail.activity.plan.template,company_id,later:multi-company,Comes with multi-company
+mail.activity.plan.template,icon,skip,"Icon of the activity type, display only"
+mail.activity.plan.template,res_model,skip,"The plan's model, fixed to Contacts in wave 0"
+mail.activity.plan.template,role_id,later:roles,"Activity roles (assign by role) come with HR roles; plans use a person or ""Ask at launch"""
+mail.activity.plan.template,suggested_next_type_id,skip,Read through the Activity Type
+mail.activity.type,default_role_id,later:roles,"Activity roles (assign by role) come with HR roles; plans use a person or ""Ask at launch"""
+mail.activity.type,delay_label,skip,Display text of the delay
+mail.activity.type,initial_res_model,skip,"Odoo form or onchange helper, not data"
+mail.activity.type,kpi_provider_visibility,skip,"Visibility in Odoo KPI digests, which HAP does not have"
+mail.activity.type,mail_template_ids,later:mail,Email templates come with the email module
+mail.activity.type,res_model_change,skip,"Odoo form or onchange helper, not data"
+product.attribute,attribute_line_ids,skip,Reverse list; open the related sheet filtered by this record
+product.attribute,number_related_products,skip,"Count of products using the attribute, display only"
+product.attribute,product_tmpl_ids,skip,Reverse list; open the related sheet filtered by this record
+product.attribute,template_value_ids,skip,Reverse list; open the related sheet filtered by this record
+product.attribute.value,color,skip,Kanban colour index; the value keeps its HTML colour
+product.attribute.value,default_extra_price_changed,skip,"Odoo form or onchange helper, not data"
+product.attribute.value,display_type,skip,Read through the Attribute relation
+product.attribute.value,image,later:ecommerce,Value images are for the e-shop configurator
+product.attribute.value,is_used_on_products,skip,Delete guard; HAP keeps the relation and warns
+product.attribute.value,pav_attribute_line_ids,skip,Reverse list; open the related sheet filtered by this record
+product.category,company_id,later:multi-company,Comes with multi-company
+product.category,product_properties_definition,skip,No HAP equivalent for per-parent dynamic fields (plan v2)
+product.combo,base_price,later:sale,"Lowest item price, used when combos are sold (wave 1)"
+product.combo,combo_item_count,hap,Count shown on the Combo Items tab
+product.combo,currency_id,skip,Company currency (MYR); one company in wave 0
+product.combo.item,company_id,later:multi-company,Comes with multi-company
+product.combo.item,currency_id,skip,Company currency (MYR); one company in wave 0
+product.combo.item,lst_price,skip,Read through the Product relation
+product.pricelist,my_activity_date_deadline,skip,Activity mixin helper; HAP shows activities through the Activities sheet
+product.pricelist.item,allowed_uom_ids,skip,"Odoo form or onchange helper, not data"
+product.pricelist.item,company_id,later:multi-company,Comes with multi-company
+product.pricelist.item,currency_id,skip,"The pricelist's currency, read through the Pricelist relation"
+product.pricelist.item,is_plain_discount,skip,"Odoo form or onchange helper, not data"
+product.pricelist.item,is_pricelist_required,skip,"Odoo form or onchange helper, not data"
+product.pricelist.item,product_uom_name,skip,"Odoo form or onchange helper, not data"
+product.pricelist.item,product_variant_count,skip,"Odoo form or onchange helper, not data"
+product.pricelist.item,rule_tip,native:price,The rule texts Applies To and Price are written by the rule flow
+product.product,all_product_tag_ids,native:additional_product_tag_ids,The product's tags through the relation plus the variant's Additional Tags
+product.product,attribute_line_ids,native:template,Variant reads it through its Product relation (Odoo _inherits)
+product.product,base_unit_count,later:ecommerce,Price per base unit is shown by the e-shop and POS
+product.product,base_unit_id,later:ecommerce,Price per base unit is shown by the e-shop and POS
+product.product,base_unit_name,later:ecommerce,Price per base unit is shown by the e-shop and POS
+product.product,base_unit_price,later:ecommerce,Price per base unit is shown by the e-shop and POS
+product.product,can_image_1024_be_zoomed,skip,Resized copy of the image; HAP makes its own thumbnails
+product.product,can_image_variant_1024_be_zoomed,skip,Resized copy of the image; HAP makes its own thumbnails
+product.product,catalog_is_in_order,skip,Order catalog helper
+product.product,categ_id,native:template,Variant reads it through its Product relation (Odoo _inherits)
+product.product,code,skip,"Odoo form or onchange helper, not data"
+product.product,color,skip,Kanban colour index
+product.product,combo_ids,native:template,Variant reads it through its Product relation (Odoo _inherits)
+product.product,company_id,native:template,Variant reads it through its Product relation (Odoo _inherits)
+product.product,cost_currency_id,skip,Company currency (MYR); one company in wave 0
+product.product,currency_id,skip,Company currency (MYR); one company in wave 0
+product.product,description,native:template,Variant reads it through its Product relation (Odoo _inherits)
+product.product,description_purchase,native:template,Variant reads it through its Product relation (Odoo _inherits)
+product.product,description_sale,native:template,Variant reads it through its Product relation (Odoo _inherits)
+product.product,extra_uom_ids,later:uom,Extra units per variant come with packaging rules
+product.product,fixed_pricelist_rule_ids,skip,Reverse list; open the related sheet filtered by this record
+product.product,free_qty,later:stock,Stock quantities come with the Inventory module
+product.product,has_configurable_attributes,skip,"Odoo form or onchange helper, not data"
+product.product,image_1024,skip,Resized copy of the image; HAP makes its own thumbnails
+product.product,image_128,skip,Resized copy of the image; HAP makes its own thumbnails
+product.product,image_1920,native:template,Variant reads it through its Product relation (Odoo _inherits)
+product.product,image_256,skip,Resized copy of the image; HAP makes its own thumbnails
+product.product,image_512,skip,Resized copy of the image; HAP makes its own thumbnails
+product.product,image_variant_1024,skip,Resized copy of the image; HAP makes its own thumbnails
+product.product,image_variant_128,skip,Resized copy of the image; HAP makes its own thumbnails
+product.product,image_variant_256,skip,Resized copy of the image; HAP makes its own thumbnails
+product.product,image_variant_512,skip,Resized copy of the image; HAP makes its own thumbnails
+product.product,import_attribute_values,skip,Import helper
+product.product,incoming_qty,later:stock,Stock quantities come with the Inventory module
+product.product,is_dynamically_created,skip,"Odoo form or onchange helper, not data"
+product.product,is_product_variant,skip,"Odoo form or onchange helper, not data"
+product.product,is_storable,native:template,Variant reads it through its Product relation (Odoo _inherits)
+product.product,list_price,native:template,Variant reads it through its Product relation (Odoo _inherits)
+product.product,my_activity_date_deadline,skip,Activity mixin helper; HAP shows activities through the Activities sheet
+product.product,name,native:template,Variant reads it through its Product relation (Odoo _inherits)
+product.product,outgoing_qty,later:stock,Stock quantities come with the Inventory module
+product.product,partner_ref,skip,"Odoo form or onchange helper, not data"
+product.product,pricelist_rule_ids,skip,Reverse list; open the related sheet filtered by this record
+product.product,product_document_count,hap,The Documents attachment field shows its files
+product.product,product_document_ids,hap,The Documents attachment field holds the files
+product.product,product_properties,skip,No HAP equivalent for per-parent dynamic fields (plan v2)
+product.product,product_tag_ids,native:template,Variant reads it through its Product relation (Odoo _inherits)
+product.product,product_template_variant_value_ids,skip,"Odoo form or onchange helper, not data"
+product.product,product_tooltip,skip,"Odoo form or onchange helper, not data"
+product.product,product_uom_ids,native:template,Packagings are kept on the product
+product.product,product_variant_count,hap,Count shown on the Variants tab
+product.product,product_variant_id,skip,"Odoo form or onchange helper, not data"
+product.product,product_variant_ids,hap,The Variants tab of the product
+product.product,purchase_ok,native:template,Variant reads it through its Product relation (Odoo _inherits)
+product.product,qty_available,later:stock,Stock quantities come with the Inventory module
+product.product,sale_ok,native:template,Variant reads it through its Product relation (Odoo _inherits)
+product.product,seller_ids,later:purchase,Vendor prices come with the Purchase module
+product.product,sequence,native:template,Variant reads it through its Product relation (Odoo _inherits)
+product.product,service_tracking,later:sale,"What a sold service creates (task, project) comes with Sales and Project"
+product.product,show_qty_update_button,skip,"Odoo form or onchange helper, not data"
+product.product,show_sales_price_page,skip,"Odoo form or onchange helper, not data"
+product.product,type,native:template,Variant reads it through its Product relation (Odoo _inherits)
+product.product,uom_id,native:template,Variant reads it through its Product relation (Odoo _inherits)
+product.product,uom_ids,native:template,Units are kept on the product
+product.product,uom_name,skip,"Odoo form or onchange helper, not data"
+product.product,valid_product_template_attribute_line_ids,skip,"Odoo form or onchange helper, not data"
+product.product,variant_seller_ids,later:purchase,Vendor prices come with the Purchase module
+product.product,virtual_available,later:stock,Stock quantities come with the Inventory module
+product.product,volume_uom_name,skip,"Odoo form or onchange helper, not data"
+product.product,weight_uom_name,skip,"Odoo form or onchange helper, not data"
+product.template,base_unit_count,later:ecommerce,Price per base unit is shown by the e-shop and POS
+product.template,base_unit_id,later:ecommerce,Price per base unit is shown by the e-shop and POS
+product.template,base_unit_name,later:ecommerce,Price per base unit is shown by the e-shop and POS
+product.template,base_unit_price,later:ecommerce,Price per base unit is shown by the e-shop and POS
+product.template,can_image_1024_be_zoomed,skip,Resized copy of the image; HAP makes its own thumbnails
+product.template,color,skip,Kanban colour index
+product.template,cost_currency_id,skip,Company currency (MYR); one company in wave 0
+product.template,currency_id,skip,Company currency (MYR); one company in wave 0
+product.template,fixed_pricelist_rule_ids,skip,Reverse list; open the related sheet filtered by this record
+product.template,free_qty,later:stock,Stock quantities come with the Inventory module
+product.template,has_configurable_attributes,skip,"Odoo form or onchange helper, not data"
+product.template,image_1024,skip,Resized copy of the image; HAP makes its own thumbnails
+product.template,image_128,skip,Resized copy of the image; HAP makes its own thumbnails
+product.template,image_256,skip,Resized copy of the image; HAP makes its own thumbnails
+product.template,image_512,skip,Resized copy of the image; HAP makes its own thumbnails
+product.template,import_attribute_values,skip,Import helper
+product.template,incoming_qty,later:stock,Stock quantities come with the Inventory module
+product.template,is_dynamically_created,skip,"Odoo form or onchange helper, not data"
+product.template,is_product_variant,skip,"Odoo form or onchange helper, not data"
+product.template,my_activity_date_deadline,skip,Activity mixin helper; HAP shows activities through the Activities sheet
+product.template,outgoing_qty,later:stock,Stock quantities come with the Inventory module
+product.template,pricelist_rule_ids,skip,Reverse list; open the related sheet filtered by this record
+product.template,product_document_count,hap,The Documents attachment field shows its files
+product.template,product_properties,skip,No HAP equivalent for per-parent dynamic fields (plan v2)
+product.template,product_tooltip,skip,"Odoo form or onchange helper, not data"
+product.template,product_variant_count,hap,Count shown on the Variants tab
+product.template,product_variant_id,skip,"Odoo form or onchange helper, not data"
+product.template,qty_available,later:stock,Stock quantities come with the Inventory module
+product.template,seller_ids,later:purchase,Vendor prices come with the Purchase module
+product.template,service_tracking,later:sale,"What a sold service creates (task, project) comes with Sales and Project"
+product.template,show_qty_update_button,skip,"Odoo form or onchange helper, not data"
+product.template,show_sales_price_page,skip,"Odoo form or onchange helper, not data"
+product.template,uom_name,skip,"Odoo form or onchange helper, not data"
+product.template,valid_product_template_attribute_line_ids,skip,"Odoo form or onchange helper, not data"
+product.template,variant_seller_ids,later:purchase,Vendor prices come with the Purchase module
+product.template,virtual_available,later:stock,Stock quantities come with the Inventory module
+product.template,volume_uom_name,skip,"Odoo form or onchange helper, not data"
+product.template,weight_uom_name,skip,"Odoo form or onchange helper, not data"
+product.template.attribute.line,product_template_value_ids,native:x_product__build,The variant build flow keeps the Product Attribute Values
+product.template.attribute.line,value_count,skip,"Count of values, display only"
+product.template.attribute.value,color,skip,Kanban colour index
+product.template.attribute.value,currency_id,skip,Company currency (MYR); one company in wave 0
+product.template.attribute.value,display_type,skip,Read through the Attribute relation
+product.template.attribute.value,excluded_value_ids,later:exclusions,Attribute exclusions are out of scope for wave 0
+product.template.attribute.value,html_color,skip,Read through the Attribute Value relation
+product.template.attribute.value,image,skip,Read through the Attribute Value relation
+product.template.attribute.value,is_custom,skip,Read through the Attribute Value relation
+product.template.attribute.value,show_price_extra,skip,"Odoo form or onchange helper, not data"
+res.company,alias_domain_id,hap,HAP sends email through its own mail service and organisation settings
+res.company,bounce_email,hap,HAP sends email through its own mail service and organisation settings
+res.company,bounce_formatted,hap,HAP sends email through its own mail service and organisation settings
+res.company,catchall_email,hap,HAP sends email through its own mail service and organisation settings
+res.company,catchall_formatted,hap,HAP sends email through its own mail service and organisation settings
+res.company,default_from_email,hap,HAP sends email through its own mail service and organisation settings
+res.company,email_formatted,hap,HAP sends email through its own mail service and organisation settings
+res.company,email_primary_color,hap,HAP sends email through its own mail service and organisation settings
+res.company,email_secondary_color,hap,HAP sends email through its own mail service and organisation settings
+res.partner,channel_ids,hap,HAP chat and record discussions replace Odoo Discuss
+res.partner,channel_member_ids,hap,HAP chat and record discussions replace Odoo Discuss
+res.partner,email_normalized,skip,Search helper; the Email field is validated by HAP
+res.partner,is_blacklisted,later:mass-mailing,Comes with email marketing
+res.partner,is_in_call,hap,HAP chat and record discussions replace Odoo Discuss
+res.partner,is_pricelist_manually_set,later:sale,The customer's pricelist comes with Sales (wave 1)
+res.partner,my_activity_date_deadline,skip,Activity mixin helper; HAP shows activities through the Activities sheet
+res.partner,property_product_pricelist,later:sale,The customer's pricelist comes with Sales (wave 1)
+res.partner,rtc_session_ids,hap,HAP chat and record discussions replace Odoo Discuss
+res.partner,specific_property_product_pricelist,later:sale,The customer's pricelist comes with Sales (wave 1)
+uom.uom,product_uom_ids,skip,Reverse list; open the related sheet filtered by this record
