@@ -78,7 +78,7 @@ hand-edits these worksheets in the browser while builds run — three times in o
 
 `2` text · `6` number · `8` currency · `11` dropdown · `14` attachment · `15` date · `16` date-time ·
 `22` divider · `26` member · `29` relation · `30` lookup · `31` formula · `33` auto-number · `34` subtable ·
-`36` checkbox · `37` rollup (汇总) · `41` rich text · `42` signature · `49` search button · `52` section.
+`36` checkbox · `37` rollup · `41` rich text · `42` signature · `49` search button · `52` section.
 Full map: `hap_cli/core/worksheet.py` `_TYPES`.
 
 **`fieldPermission` is three inverted flags** — hidden / read-only / hidden-on-create, where `0` turns the
@@ -107,9 +107,9 @@ these notes.
 - A **function default** (`advancedSetting.defaulttype "1"` + `defaultfunc`) is evaluated **client-side, in
   the form only**. A seeded or API-written record stores it **empty**. Anything not typed by a person must be
   a **Formula (type 31)**.
-- A control that reads a **汇总** must likewise be a Formula — a roll-up is computed server-side and has no
+- A control that reads a **rollup** must likewise be a Formula — a roll-up is computed server-side and has no
   value while the form is open.
-- A 汇总 needs `dataSource='$<relation control id>$'` and `sourceControlId='<child control id>'`;
+- A rollup needs `dataSource='$<relation control id>$'` and `sourceControlId='<child control id>'`;
   `enumDefault` 5 = sum, 6 = count. Its own `advancedSetting.filters` writes a single select's "is" as
   `filterType` **51**, where a business rule writes **2**.
 
