@@ -13,8 +13,8 @@ The full material is on branch `claude/odoo-native-replica`, folder `nocoly/nati
 | `TEMPLATE.md` | The module plan template |
 | `native-catalogue/` | What HAP can do natively (fields, views, rules, buttons, workflow nodes), from tests and the help pages |
 | `00-foundation.md`, `00-foundation-build/` | A worked example, start to finish: plan, step scripts, build log, acceptance |
-| `01-crm.md`, `01-crm-build/` | The CRM plan, its knowledge file and split guide. Its build scripts, build log and acceptance results (24 Nov) are not in that copy yet |
-| `PLATFORM-ISSUES.md` | Platform issues P1–P38, ticket-ready; the later ones are summarised in `TRAPS-HAP-CLI-0.9.md` |
+| `01-crm.md`, `01-crm-build/` | The CRM plan, its knowledge file and split guide, and the Phase A build: step scripts, build log, acceptance tests and their results (all 18 pass) |
+| `PLATFORM-ISSUES.md` | Platform issues P1–P47 (steps, expected and actual result, workaround) and documentation errors D1–D12; the ones that matter most for EMS are summarised in `TRAPS-HAP-CLI-0.9.md` |
 
 ## The rules
 

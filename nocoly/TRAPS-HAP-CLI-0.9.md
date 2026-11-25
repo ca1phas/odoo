@@ -3,7 +3,7 @@
 **Status: draft, 24 Nov 2026.** `BUILDING.md` lists the traps verified in September on hap-cli 0.8.31. These were
 found in November on 0.9.x while building the Odoo Replica (AI) app, on the same Nocoly SaaS organisation. Each "P"
 number has steps, expected and actual results in that programme's `PLATFORM-ISSUES.md` (public copy on branch
-`claude/odoo-native-replica`, folder `nocoly/native-replica/`; P39–P43 are not pushed yet). Most of them are
+`claude/odoo-native-replica`, folder `nocoly/native-replica/`; P1–P47, in English since 25 Nov). Most of them are
 silent: the build, the publish and the run all report success.
 
 ## Workflows
@@ -13,7 +13,7 @@ silent: the build, the publish and the run all report success.
 | **P41.** A *get single record* step whose filter has OR groups ignores the whole filter when the groups sit in the old `conditions` slot, which is where the CLI writes them. It returns the first record by its sort | Store each OR group as `filters = [{"spliceType": 2, "conditions": [group]}]` with `conditions = []`, as the editor's "use and/or filters" switch does. One-group filters work in either slot |
 | **"Equals" on a multi-record relation** compares the whole set: a record linked to two teams does not "equal" either | Use **is any of** (`33`) for "includes this record"; `9` / `10` are whole-set equals / not equals |
 | **P42.** Date-difference units: the product numbers Year 1, Month 2, Day 3, Hour 4, Minute 5, Second 6; the CLI's `out_unit` names map differently, so "hour" is saved as Month and gives 0 | Set `outUnit` raw. A difference in hours is whole hours: for a duration use minutes / 60 |
-| **P33.** A query whose dynamic filter value is empty fails the whole run ("筛选条件值为空") | Put the query behind a branch or a trigger condition that checks the value first |
+| **P33.** A query whose dynamic filter value is empty fails the whole run (the run log says the filter value is empty) | Put the query behind a branch or a trigger condition that checks the value first |
 | **P25.** A function calculation made by the CLI has 0 decimals, so numeric results are rounded | Set the decimals on the step, or read the result as text (`string_fx_id`) |
 | **P29.** A formula error gives an empty result and the run still shows success | Test each formula on a record and read the result in `approval history-detail` |
 | **P21.** A date calculation's result is referenced as `string_fx_id`; the server uses `date_fx_id`, so later conditions break | Reference `date_fx_id` |
