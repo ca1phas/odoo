@@ -283,8 +283,8 @@ Each field's panel has four tabs [UI]:
 | Mandatory full-level selection ticked | `anylevel "1"`, despite the name |
 
 - **Stored** [Rec]:
-  - `{"code":"MY|MY-10|MY-10-28","path":"雪兰莪/乌鲁冷岳县"}` (Selangor / Hulu Langat);
-  - `{"code":"MY|MY-10","path":"马来西亚/雪兰莪"}`.
+  - `{"code":"MY|MY-10|MY-10-28","path":"<Selangor/Hulu Langat in Simplified Chinese>"}`;
+  - `{"code":"MY|MY-10","path":"<Malaysia/Selangor in Simplified Chinese>"}`.
 
   The codes are ISO-based: MY-10 = Selangor, matching ISO 3166-2 and the MyInvois state codes [Earlier]. **The API path is Simplified Chinese; the UI shows `Selangor/Hulu Langat` and `Malaysia/Selangor`.**
 - **Renders:**
@@ -680,7 +680,7 @@ Each field's panel has four tabs [UI]:
 
 ## 8. Differences between the UI and the CLI readback
 
-1. **Region path language.** The UI shows `Selangor/Hulu Langat` and `Malaysia/Selangor`. The CLI returns `雪兰莪/乌鲁冷岳县` and `马来西亚/雪兰莪`. The `code` (`MY|MY-10|MY-10-28`) is the stable value to build on.
+1. **Region path language.** The UI shows `Selangor/Hulu Langat` and `Malaysia/Selangor`. The CLI returns the same paths in Simplified Chinese. The `code` (`MY|MY-10|MY-10-28`) is the stable value to build on.
 2. **Amount in words.** The unsaved form preview read "… TWO HUNDRED THIRTY FOUR …". The stored value reads "… TWO HUNDRED AND THIRTY-FOUR …". Client and server word it differently.
 3. **Percent and phone formats.** The UI shows `15%` and stores `0.15`. The UI shows `012-345 6789` and stores `+60123456789`. The landline was stored as typed (`03-1234 5678`); the record page showed `03-12345678`.
 4. **Type numbers versus CLI names.**
@@ -834,5 +834,5 @@ Live results from the real sheets (Companies, Bank Accounts, Contacts), 23 Nov 2
 - **Hidden field:** `fieldPermission "011"` (visible / editable / shown on create). `worksheet fields` then reports `isHidden` and `isHiddenOnCreate` true; the field is absent from the record and new-record forms [UI]. It can be sent in `add-fields --controls`.
 - **Image-only attachment:** `advancedSetting.filetype '{"type":"1","values":[]}'` is accepted by `worksheet create --fields` [Rec].
 - **Two-way relation to another sheet** through `worksheet create --fields` with `config.bidirectional` creates the reverse field (unlike a self-relation through `add-fields`, P17). Its display columns still have to be set (P5) [Rec] [UI].
-- **Form layout** [UI], 24 Nov: each control has `row`, `col` and `size` on a 12-column grid (3 = four per row, 4 = three, 6 = two, 12 = full). A field added later lands at row 9999 with size 0. Fields hidden by a rule or on create leave no gap: the rest of the row moves left. Divider (分段) = type 22 with a title; tabs = type 52 (not used yet). Relation lists shown as tabs (`showtype` "6") render in the tab bar at the bottom wherever their row is. The whole layout is written in one go with `worksheet update-fields --controls @file` (the raw controls as read, only row / col / size changed); `--check` also lists what is already wrong on the sheet (for example "dangling source field" on one-way relations), so compare its "proposed" list with "current".
+- **Form layout** [UI], 24 Nov: each control has `row`, `col` and `size` on a 12-column grid (3 = four per row, 4 = three, 6 = two, 12 = full). A field added later lands at row 9999 with size 0. Fields hidden by a rule or on create leave no gap: the rest of the row moves left. Divider = type 22 with a title; tabs = type 52 (not used yet). Relation lists shown as tabs (`showtype` "6") render in the tab bar at the bottom wherever their row is. The whole layout is written in one go with `worksheet update-fields --controls @file` (the raw controls as read, only row / col / size changed); `--check` also lists what is already wrong on the sheet (for example "dangling source field" on one-way relations), so compare its "proposed" list with "current".
 - **`fieldPermission` third digit = shown on the new-record form.** "101" read-only and shown on create, "100" read-only and hidden on create, "110" editable but hidden on create. A custom-button dialog edits the existing record, so "110" fields still appear in it [UI].

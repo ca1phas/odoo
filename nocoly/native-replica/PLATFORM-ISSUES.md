@@ -1,9 +1,9 @@
 # Platform issues found while building (for product tickets)
 
-Started 23 Nov 2026 at the Module Owner's request: record every difference between CLI/MCP and the UI, and anything that behaves like a bug, so it can be raised with the product team. Platform: Nocoly SaaS (www.nocoly.com), organisation on Professional, hap-cli 0.9.14, test app "Odoo Replica (AI)".
+Started 23 Nov 2026 at the Module Owner's request: every difference between the CLI/MCP and the UI, and anything that behaves like a bug, is recorded so it can be raised with the product team. Platform: Nocoly SaaS (www.nocoly.com), organisation on Professional, hap-cli 0.9.14, test app "Odoo Replica (AI)".
 
 **How to use:**
-- Each "P" item has ticket-ready fields in Simplified Chinese (labelled fields, 3W, steps, expected vs actual, impact), the format our Mingdao tickets use.
+- Each "P" item gives the context, the steps, the expected and actual result, the impact and, where one was found, the workaround used. The tickets themselves are written in Simplified Chinese, the product team's format, and are kept outside this repository; the facts are the same.
 - "D" items are documentation errors, with sources.
 - Status: **Open** = not filed. The Module Owner decides what to file and the Platform Liaison files it (roles: `HANDOVER.md` §2); nothing is submitted without approval.
 
@@ -47,338 +47,454 @@ Started 23 Nov 2026 at the Module Owner's request: record every difference betwe
 | P36 | CLI role set-permissions -P | Per-sheet rules are not saved, the command reports success | High | Open |
 | P37 | CLI role create-fine | The role is created with every app-wide switch off; a sheet with read scope 0 falls back to "own, everything allowed" | High | Open |
 | P38 | CLI create-custom-action, createRelatedRecord | The button shows but does nothing: target saved as "related record" with no relation, and no "Active Button" choice | High | Open |
+| P39 | CLI app-editor field.update, option fields | An option added without a key is saved with an empty key; picking it stores nothing | Medium | Open |
+| P40 | CLI record create / update, relation range check | The pre-check ignores an "is empty" group of a relation's selection limit and refuses values the form offers | Medium | Open |
+| P41 | Workflow query step (get single record), OR filter groups | Written by the CLI in the old condition slot: the editor shows the OR groups, but the run ignores the whole filter and returns the first record by the sort | High | Open |
+| P42 | CLI workflow DSL, date difference | `out_unit` numbers differ from the product: "hour" is stored as Month, so the result is 0 | Medium | Open |
+| P43 | Role editor, roles created through V3 | The editor shows the per-sheet rights as view / edit / delete **All** where the stored role (API readback, Role Debug) is read-only; saving there would likely write what it shows | High | Open |
+| P44 | CLI worksheet create --fields, form layout | The fields' row / column / size are ignored: one field per row | Medium | Open |
+| P45 | New sheet with its default fields replaced | The "All" view still lists the deleted default fields and looks empty | Low | Open |
+| P46 | CLI view update --view-spec, table view | `tableFields` has no effect; the command reports success | Medium | Open |
+| P47 | CLI app create --sections | An extra empty group with no name ("Unnamed Group") | Low | Open |
 | D1–D12 | Help docs | Conflicts and outdated content | — | Open |
 
 ---
 
-### P1 唯一索引报错信息中的 ID 不是冲突记录
-
-- **谁 / 何时 / 做什么：** Odoo 复刻项目的 Builder，2026-11-23，在 Nocoly SaaS 的测试应用中，通过 hap-cli 写入重复值，测试唯一索引。
-- **复现步骤：**
-  1. 在 Countries 表的 Country Code 字段上建立唯一索引（表单设置 › 搜索加速 › 新建索引 › 勾选唯一索引）。
-  2. 用 `hap worksheet record create` 新增一条 Country Code = MY 的记录（MY 已存在）。
-- **预期结果：** 被拒绝，并指出冲突的字段名称和已有记录。
-- **实际结果：** 正确拒绝（resultCode 11），但提示 "another record already has them: <id>"。这个 ID 是 Country Code **字段**的 ID，不是已有记录的 ID。组合索引会列出两个字段 ID。
-- **影响：** 排查重复数据时会被误导，以为是记录 ID。
-- **证据：** `00-foundation-build/BUILD-LOG.md`（23 Nov 唯一索引测试）。
-
-### P2 CLI 创建"国际"范围的地区字段时，服务器自动写入 chooserange = "CN"
-
-- **谁 / 何时 / 做什么：** 2026-11-23，用 `worksheet create --fields` 创建地区字段（type 24，enumDefault 1 = 国际，enumDefault2 1 = 国家）。
-- **复现步骤：**
-  1. 用 CLI 创建上述字段。
-  2. `hap worksheet fields --raw` 读回。
-- **预期结果：** 与界面保存的"国际"字段一致，即 `chooserange: ""`。
-- **实际结果：** 读回为 `chooserange: "CN"`。在界面中选择"国际"保存的字段则为 `""`。
-- **影响：** 两种方式建出的同一设置，存储值不同。目前界面显示正常，但行为是否一致不明，需要手动清空。
-- **证据：** BUILD-LOG（Countries 的 Region 字段）。
-
-### P3 API 读取的地区路径语言不随用户语言
+### P1 The id in the unique-index error message is not the conflicting record
+
+- **Context:** the Builder of the Odoo replica, 23 Nov 2026, on the test app in Nocoly SaaS, writing a duplicate value through hap-cli to test a unique index.
+- **Steps:**
+  1. Create a unique index on the Country Code field of Countries (form settings › Retrieval acceleration › New index › Unique index).
+  2. Add a record with Country Code = MY (MY exists already) with `hap worksheet record create`.
+- **Expected:** refused, naming the conflicting field and the existing record.
+- **Actual:** correctly refused (resultCode 11), but the message says "another record already has them: <id>". That id is the Country Code **field's** id, not the existing record's. A composite index lists two field ids.
+- **Impact:** misleading when tracing duplicates: it looks like a record id.
+- **Evidence:** `00-foundation-build/BUILD-LOG.md` (23 Nov, unique index test).
+
+### P2 A Region field created by the CLI with the "International" scope gets chooserange = "CN" from the server
+
+- **Context:** 23 Nov 2026, a Region field (type 24, enumDefault 1 = International, enumDefault2 1 = Country) created with `worksheet create --fields`.
+- **Steps:**
+  1. Create the field with the CLI.
+  2. Read it back with `hap worksheet fields --raw`.
+- **Expected:** the same as an "International" field saved in the UI: `chooserange: ""`.
+- **Actual:** it reads back as `chooserange: "CN"`. A field saved as "International" in the UI has `""`.
+- **Impact:** the same setting is stored differently depending on how it was made. The UI shows it correctly for now, but whether it behaves the same is unknown; it has to be cleared by hand.
+- **Evidence:** BUILD-LOG (Region field of Countries).
+
+### P3 Region paths read through the API do not follow the user's language
 
-- **谁 / 何时 / 做什么：** 2026-11-23，读取 Countries 记录中的地区字段。
-- **复现步骤：**
-  1. 账户界面语言为英文。
-  2. 打开记录：地区显示 "Malaysia"。
-  3. 用 `hap worksheet record list` 读取同一字段。
-- **预期结果：** path 与用户语言一致（Malaysia）。
-- **实际结果：** API 返回 `{"code":"MY","path":"马来西亚"}`（简体中文）。同一天字段调查中，CLI 返回的县市路径也是简体中文，而界面显示英文。
-- **影响：** 用 API 或 MCP 生成报表、打印文本或对外接口时，地名语言错误。海外客户（马来西亚）尤其明显。
+- **Context:** 23 Nov 2026, reading the Region field of Countries records.
+- **Steps:**
+  1. The account's UI language is English.
+  2. Open a record: the region shows "Malaysia".
+  3. Read the same field with `hap worksheet record list`.
+- **Expected:** the path in the user's language (Malaysia).
+- **Actual:** the API returns `{"code":"MY","path":"<Malaysia in Simplified Chinese>"}`. In the field survey the same day, the CLI also returned state and district paths in Simplified Chinese while the UI showed English.
+- **Impact:** reports, printed text and interfaces made through the API or MCP show place names in the wrong language, which is very visible for customers outside China (Malaysia).
 
-### P4 地区字段类型编号与 CLI 类型表不一致
-
-- **谁 / 何时 / 做什么：** 2026-11-23，`worksheet add-fields` 以 type 19（省）创建地区字段。
-- **复现步骤：**
-  1. 用 add-fields 以 type 19 新增地区字段。
-  2. 读回。
-- **预期结果：** type 19，或者 CLI 说明只使用 24 加层级。
-- **实际结果：** 存为 type 24，enumDefault2 = 1。`hap worksheet field-types` 仍列出 19/23/24。
-- **影响：** 按文档或 CLI 表写的脚本，读回比对会失败。
-
-### P5 用 CLI 创建的多条关联字段没有显示字段，标签页表格显示 "No visible fields"
-
-- **谁 / 何时 / 做什么：** 2026-11-23，`worksheet create --fields` 创建双向多条关联（Country Groups › Countries，displayMode tabTable，未传 showFields）。
-- **复现步骤：**
-  1. 用 CLI 创建上述字段。
-  2. 打开一条 Country Group 记录。
-- **预期结果：** 与界面新建关联一样，默认显示目标表的前几个字段。
-- **实际结果：** showControls = []，标签页显示 27 行，但每行都是 "No visible fields"。系统自动生成的反向字段则默认带两个显示字段。
-- **影响：** 用户看得到行，却看不出是哪些记录。必须再用 field.update 设置 showControls。
-
-### P6 record list 的多条关联只返回前 5 条，且与 record get 的格式不同
-
-- **谁 / 何时 / 做什么：** 2026-11-23，读回 Country Groups（欧盟有 27 个国家）。
-- **复现步骤：**
-  1. `hap worksheet record list` 读取多条关联字段。
-  2. `hap worksheet record get` 读取同一记录。
-- **预期结果：** 返回完整列表，或明确给出总数和截断标记，两个命令格式一致。
-- **实际结果：** list 只返回 5 条关联记录，没有提示；get 返回一个整数（27），不是列表。
-- **影响：** 校验数据时容易误判为导入缺失。我们一度以为每组只存了 5 个国家。
-
-### P7 新建空的选项集被拒，错误信息为空
-
-- **谁 / 何时 / 做什么：** 2026-11-23，`hap app optionset create --options-json '[]'`。
-- **预期结果：** 允许先建空选项集，或者提示"至少需要一个选项"。
-- **实际结果：** "The server refused the request (error None)"。
-- **影响：** 需要反复试才知道原因。
-
-### P8 应用没有工作表时，按工作表授权的角色创建被拒，错误信息为空
-
-- **谁 / 何时 / 做什么：** 2026-11-23，`hap app role create --type 0 --permission-scope 0`，应用还没有工作表。
-- **预期结果：** 允许创建空权限的角色，或者给出明确原因。
-- **实际结果：** "The server refused the request (error None)"。改用 permission-scope 20 才成功。
-- **影响：** 新应用初始化角色时会卡住。
-
-### P9 CLI 参数在命令之间不一致
-
-- **谁 / 何时 / 做什么：** 2026-11-23，使用 hap-cli 0.9.14。
-- **问题：**
-  - `worksheet create --fields` 不接受 `@文件`（报 "not valid JSON"），而 `worksheet update-fields --fields @文件` 可以。
-  - `worksheet add-fields` 没有 `-a/--app-id`，其他 worksheet 命令都有。
-- **影响：** 脚本需要为每个命令写不同的参数形式，长字段列表还会受命令行长度限制。
-- 补充（2026-11-23）：`record create` 接受 `--no-workflow`，`record update` 却拒绝它（"Workflows cannot be suppressed for this write"）；隐藏字段的普通更新被拒，需要 `--ignore-rules`。
-
-### P10 field.add 报超时，但字段实际已创建
-
-- **谁 / 何时 / 做什么：** 2026-11-20 首次记录（另一个演示应用）；2026-11-23 字段调查中再次发生，产生了一个重复的电话字段。
-- **实际结果：** 报 "Read timed out (read timeout=30)"，CLI 停止，但字段已经存在。
-- **影响：** 按提示重试就会建出重复字段。
-
-### P11 大写金额：表单预览与保存值不同
-
-- **谁 / 何时 / 做什么：** 2026-11-23，字段调查（Uppercase 字段，英文）。
-- **实际结果：** 预览显示 "TWO HUNDRED THIRTY FOUR"，保存后为 "TWO HUNDRED AND THIRTY-FOUR"。
-- **影响：** 打印的金额大写与界面不一致。
-
-### P12 字段类型编号与 CLI 名称对不上
-
-- **对应关系（实际存储 → CLI 名称）：**
-  - API 查询（按钮模式）存为 49，CLI 叫 Button；
-  - 标签页存为 52，CLI 叫 Section；
-  - 分段存为 22，CLI 叫 Divider；
-  - 自由连接 21 叫 DynamicLink；
-  - 自定义字段存为 type 2 + customtype，CLI 却列 54；
-  - 单选无论什么显示方式都存为 11，CLI 还列 9。
-- **影响：** 按 CLI 表生成或比对字段，会出错。
+### P4 Region field type numbers do not match the CLI type table
+
+- **Context:** 23 Nov 2026, a Region field created with `worksheet add-fields` as type 19 (province).
+- **Steps:**
+  1. Add a Region field of type 19 with add-fields.
+  2. Read it back.
+- **Expected:** type 19, or the CLI saying that only 24 with a level is used.
+- **Actual:** stored as type 24 with enumDefault2 = 1. `hap worksheet field-types` still lists 19/23/24.
+- **Impact:** scripts written from the docs or the CLI table fail their readback comparison.
+
+### P5 Multi-record relations created by the CLI have no display fields; the tab table shows "No visible fields"
+
+- **Context:** 23 Nov 2026, a two-way multi-record relation (Country Groups › Countries, displayMode tabTable, no showFields) created with `worksheet create --fields`.
+- **Steps:**
+  1. Create the field with the CLI.
+  2. Open a Country Group record.
+- **Expected:** as with a relation made in the UI, the first few fields of the target sheet are shown by default.
+- **Actual:** showControls = []; the tab shows 27 rows, each reading "No visible fields". The reverse field the system generates gets two display fields by default.
+- **Impact:** users see rows but cannot tell which records they are. showControls has to be set afterwards with field.update.
+
+### P6 `record list` returns only the first 5 linked records of a multi-record relation, in a different shape from `record get`
+
+- **Context:** 23 Nov 2026, reading back Country Groups (the European Union has 27 countries).
+- **Steps:**
+  1. Read the multi-record relation with `hap worksheet record list`.
+  2. Read the same record with `hap worksheet record get`.
+- **Expected:** the full list, or a total and a truncation flag; the same shape from both commands.
+- **Actual:** list returns 5 linked records with no notice; get returns an integer (27), not a list.
+- **Impact:** checks mistake it for missing imports. We briefly believed each group had stored only 5 countries.
+
+### P7 Creating an empty option set is refused with an empty error
+
+- **Context:** 23 Nov 2026, `hap app optionset create --options-json '[]'`.
+- **Expected:** an empty option set is allowed, or the message says that at least one option is needed.
+- **Actual:** "The server refused the request (error None)".
+- **Impact:** the cause is found only by trial and error.
+
+### P8 Creating a role with per-sheet rights on an app with no sheets is refused with an empty error
+
+- **Context:** 23 Nov 2026, `hap app role create --type 0 --permission-scope 0` on an app with no worksheets yet.
+- **Expected:** a role with no rights is created, or the reason is given.
+- **Actual:** "The server refused the request (error None)". It worked with permission-scope 20.
+- **Impact:** setting up the roles of a new app gets stuck.
+
+### P9 CLI options differ between commands
+
+- **Context:** 23 Nov 2026, hap-cli 0.9.14.
+- **Problem:**
+  - `worksheet create --fields` does not take `@file` ("not valid JSON"), while `worksheet update-fields --fields @file` does.
+  - `worksheet add-fields` has no `-a/--app-id`; every other worksheet command has it.
+- **Impact:** scripts need a different option form for each command, and long field lists hit the command-line length limit.
+- Added 23 Nov 2026: `record create` takes `--no-workflow` but `record update` refuses it ("Workflows cannot be suppressed for this write"); an ordinary update of a hidden field is refused and needs `--ignore-rules`.
+
+### P10 field.add reports a timeout, but the field is created
+
+- **Context:** first recorded on 20 Nov 2026 (another demo app); again on 23 Nov 2026 in the field survey, where it produced a duplicate Phone field.
+- **Actual:** "Read timed out (read timeout=30)"; the CLI stops, but the field exists.
+- **Impact:** retrying as the message suggests creates duplicate fields.
+
+### P11 Amount in words: the form preview differs from the stored value
+
+- **Context:** 23 Nov 2026, field survey (Uppercase field, English).
+- **Actual:** the preview shows "TWO HUNDRED THIRTY FOUR"; once saved it is "TWO HUNDRED AND THIRTY-FOUR".
+- **Impact:** printed amounts in words differ from the screen.
+
+### P12 Field type numbers do not match the CLI names
+
+- **Stored number → CLI name:**
+  - API query (button mode) is stored as 49, the CLI calls it Button;
+  - tab is stored as 52, the CLI calls it Section;
+  - divider is stored as 22, the CLI calls it Divider;
+  - free link 21 is called DynamicLink;
+  - custom fields are stored as type 2 + customtype, while the CLI lists 54;
+  - a single select is stored as 11 whatever its display, while the CLI also lists 9.
+- **Impact:** fields generated or compared from the CLI table come out wrong.
+
+### P13 A subtable's reverse field is not listed by `worksheet fields`
+
+- **Impact:** a read-modify-write script can miss it, or overwrite it.
+
+### P14 The landline field stores Hong Kong settings the UI never shows
+
+- **Actual:** the raw type 4 field holds `commcountries` / `defaultarea` (Hong Kong), but the settings panel shows no such options.
+
+### P15 Option colours are still saved after "option colours" is switched off
+
+- **Impact:** switching it back on brings the old colours back, which looks accidental.
+
+### P16 Switching a single select to the "progress bar" display silently turns off "allow users to add options"
+
+- **Actual:** `allowadd` goes from 1 to 0 with no notice.
+- **Impact:** users suddenly cannot add options.
+
+### P17 A two-way relation to the same sheet made with add-fields gets no reverse field
+
+- **Context:** 23 Nov 2026, a relation field added to Contacts with `hap worksheet add-fields`: dataSource = the same sheet, advancedSetting.bidirectional = "1".
+- **Steps:**
+  1. Add a "Related Company" field that way.
+  2. Read the field list back.
+- **Expected:** as with a same-sheet relation made in the UI, the multi-record field on the other side is generated.
+- **Actual:** the field is flagged bidirectional 1 and a sourceControlId is reserved, but the sheet has no reverse field. It appears only after `hap worksheet pair-relation`.
+- **Impact:** the script believes the relation is two-way while it is one-way. The list of a company's contacts is missing, and the UI gives no clue why.
+
+### P18 A foreign field showing a Region field returns a JSON string in record get; the source field returns an object
+
+- **Context:** the Builder of the Odoo replica, 23 Nov 2026, added a foreign field (type 30, display only, strDefault "10") on Companies showing the contact's Region field, then read records back with hap-cli.
+- **Steps:**
+  1. The linked record's Region value is `MY|MY-10`.
+  2. Read the record that shows it with `hap worksheet record get`.
+  3. Read a record with a Region field of its own, for comparison.
+- **Expected:** both in the same shape, a `{"code": ..., "path": ...}` object.
+- **Actual:** the foreign field returns the string `"{\n  \"code\": \"MY|MY-10\",\n  \"path\": \"<Malaysia/Selangor in Simplified Chinese>\"\n}"` (with line breaks); the Region field itself returns the object `{"code": "MY|MY-14", "path": "<Malaysia/Kuala Lumpur in Simplified Chinese>"}`.
+- **Impact:** integrations and scripts need two parsers for the same kind of value.
+- **Evidence:** BUILD-LOG (23 Nov, test records of Companies and Bank Accounts).
+
+### P19 A foreign field showing a Phone field shows the unformatted number on the form
+
+- **Context:** 23 Nov 2026, a display-only foreign field on Companies showing the contact's phone (mobile type, Malaysia by default).
+- **Steps:**
+  1. The contact's phone is 012-345 6789; the contact form shows "+60 012 345 6789".
+  2. Open the Companies record that refers to the contact.
+- **Expected:** the foreign field is formatted like the source field.
+- **Actual:** it shows the stored value "+60123456789", with no separate country code and no number format.
+- **Impact:** the same number looks different on two sheets, and users think the data disagree.
+- **Evidence:** a check of the screen in Chrome (23 Nov, TEST Company).
+
+### P20 Hidden fields read as empty in record list; only record get has the values
+
+- **Context:** the Builder of the Odoo replica, 23 Nov 2026, hidden helper fields (fieldPermission "011") on Product Categories, written and read back with hap-cli.
+- **Steps:**
+  1. Write the hidden text field (Ancestor Key 1) with `hap worksheet record update ... --ignore-rules`.
+  2. Read it with `hap worksheet record list --fields x_product__ancestor_1`.
+  3. Read the same record with `hap worksheet record get`.
+- **Expected:** both reads return the same value (the reader is an app administrator).
+- **Actual:** list returns an empty string "" for all 7 records; get returns the correct record id. Nothing says that the field was left out because it is hidden.
+- **Impact:** integrations and scripts that check or export through the list call believe the data is missing, or overwrite real data with empty values.
+- **Evidence:** BUILD-LOG (23 Nov, Units and Product Categories).
+
+### P21 CLI workflow DSL: a date calculation's result is referenced as string_fx_id; the UI and the server use date_fx_id
+
+- **Context:** the Builder of the Odoo replica, 23 Nov 2026, built the "activity state" workflow with `hap workflow node batch-add`: a date calculation step (now + 0d, date output), and branch conditions comparing "due date before / equal to the result".
+- **Steps:**
+  1. In the batch-add branch condition, reference the calculation's result as `{"kind":"field","node":"today","fieldId":"string_fx_id"}` (hap-cli 0.9.14's self-check and docs say that text and date results use string_fx_id, and there is no date_fx_id).
+  2. Publish.
+- **Expected:** the condition references the result, and the flow publishes.
+- **Actual:** publishing is refused ("step(s) have no valid operation, or its content is wrong"), and the UI shows the condition value as "Today-Field Deleted". Picked again in the UI, the reference reads back as `controlId: "date_fx_id"`; with date_fx_id the flow publishes and runs correctly.
+- **Impact:** every date comparison built through the CLI or MCP fails to publish, with an error that does not show why.
+- **Evidence:** BUILD-LOG (23 Nov, workflow #14); flow "Activities - State on save".
+
+### P22 The CLI workflow DSL cannot write "relation field is not empty"
+
+- **Context:** 23 Nov 2026, the contact sync flow built with batch-add, with the branch condition "Parent company is not empty".
+- **Steps:**
+  1. Write the condition as `{"node":"trigger","field":"<relation field>","op":"not_empty"}`.
+  2. Write the raw condition number instead, `"op":"31"`.
+- **Expected:** "is empty / is not empty" can be chosen, as in the UI.
+- **Actual:** step 1 is refused ("A relation column has no 'not_empty' comparison. It takes: all_contains, eq, ne"), and so is step 2 ("'31' is not a comparison this filter understands"). The CLI maps not_empty to condition 7, while "is not empty" on a relation is 31 ("is empty" is 32). The only way is to build with a placeholder condition and then write the stored form (conditionId 31) with `node save`; the UI then shows "Related Company is not empty".
+- **Impact:** whether a relation is empty is one of the most common checks, and it cannot be built through the CLI or MCP.
+
+### P23 batch-add branches: paths with a condition lose their names
+
+- **Actual:** only the default path, without a condition, keeps its `name`; paths with a condition have an empty name and the UI shows "Branch". `node rename` puts the names back.
+- **Impact:** the flow chart is hard to read, and the paths cannot be told apart when maintaining it.
+
+### P24 A Region field read in a workflow function gives a Simplified Chinese path
+
+- **Context:** 23 Nov 2026, a calculation step reading the contact's Region (value MY|MY-10) with `CONCAT("[", Region, "]")` and `LEFT(Region, 2)` into a text field.
+- **Expected:** the region code (MY|MY-10), or at least the path in the user's UI language (English).
+- **Actual:** the result is the Chinese path in brackets, and its first two Chinese characters.
+- **Impact:** a workflow cannot get the country code from a region, nor write address text for users who do not read Chinese. The only way is a query condition "Countries.Region contains Contact.Region" (tested, works). Same cause as P3.
+
+### P25 Function calculation steps made by the CLI default to 0 decimals, so numeric results are rounded
+
+- **Context:** the Builder of the Odoo replica, 23 Nov 2026, calculation steps built with batch-add (function mode, number output), for example the inverse rate `1 / Rate`.
+- **Steps:**
+  1. Build a function calculation step with `output_type: number`.
+  2. Run it, writing the result to a number field with 6 decimals.
+- **Expected:** 1 / 0.204553 = 4.888709.
+- **Actual:** 5.000000 is written. The step's settings read back `"number": 0` (decimal places). The DSL has no option for decimals, and the UI's default is unclear; after `node save` with `"number": 6` the result is right.
+- **Impact:** unit conversions (1/12, 0.016667), exchange rates and price calculations are all rounded silently, so amounts are wrong with no warning. High risk.
+- **Evidence:** BUILD-LOG (23 Nov, workflow #13); flow "Settings - Current rate on change".
+
+### P26 Unique index: a deleted record (in the recycle bin) still holds its unique values
+
+- **Context:** 23 Nov 2026, the rates sheet has a unique index (date + currency). A TEST rate for SGD on 2026-11-23 was created and deleted (into the recycle bin), then a rate with the same date and currency was created.
+- **Expected:** after the deletion it can be created again.
+- **Actual:** refused (resultCode 11, "values must be unique and another record already has them"), while `record list` no longer shows the record.
+- **Impact:** a user who deletes a wrong record cannot recreate it without deleting it for good from the recycle bin, and the message does not say that the conflict is in the recycle bin.
+
+### P27 CLI workflow DSL: "clear the field" writes are dropped or refused
+
+- **Context:** 23 Nov 2026, an "update record" step built with batch-add, with the field write `{"fieldId": ..., "op": "clear"}` (or `{"kind": "empty"}`, as the guide writes it).
+- **Actual:**
+  1. When it is the step's only write, the CLI reports "The step was saved but none of its 1 field write(s) were kept", and the whole batch is rolled back.
+  2. Together with other writes, the clear is silently dropped and the other fields are saved. This is how the contact flow's "clear the company name" was lost.
+  3. `save-action` with the expanded form `{"fieldValue": "", "isClear": true}` gives the same error.
+- **For comparison:** a "clear" set in the UI reads back as `{"type": 2, "fieldValue": "", "isClear": true, "addType": 0}`. Written as is with `node save`, it publishes and runs. The fields of the "calibrate single record" step use the same form (isClear true).
+- **Impact:** flows built through the CLI or MCP cannot clear a field, and with mixed writes there is no error.
+
+### P28 CLI workflow DSL: a sum over a "get multiple records" result is saved as a count
+
+- **Context:** 23 Nov 2026, a rollup step built with batch-add: `data_source` a get-multiple step, `aggregate: "sum"`, `field: <extra price field>`.
+- **Actual:** the step reads back with no field and no aggregation, and the UI shows "Total count of the multiple data objects obtained". The run gives the number of records (2), not the sum of the extra prices.
+- **Impact:** prices go wrong silently (every variant's sales price was 2 too high). In the UI this step can only count, but the CLI accepts the sum option without an error.
+
+### P29 Workflow function calculation: a formula error gives an empty result, and the run shows success
+
+- **Context:** 24 Nov 2026, the price calculation step in the PBP.
+- **Steps:**
+  1. Write `IF(<option field>="Cost", 1, 2)` (a single equals sign), use `STRING()` on an empty option field, or subtract an empty number.
+  2. Run the flow.
+- **Expected:** the step fails with the reason when the formula is wrong, or the editor warns when it is saved.
+- **Actual:** the step shows success and the result is an empty string; the next steps get an empty value and the final price is empty. The cause was found only by writing each part of the formula into the record one by one (equality is `==`; options must be turned into text).
+- **Impact:** amount calculations go wrong silently, and tracing them is expensive.
+
+### P30 Publishing refuses a step that reads a step inside a branch, with an unspecific message
+
+- **Actual:** a calculation step after a branch read a step inside one of its paths (the result of a PBP call); publishing gave "step(s) have no valid operation, or its content is wrong", without saying that it is a reference across branches.
+- **Impact:** with a "calculate inside the branch, combine after it" design, it is hard to find out why the flow does not publish.
+
+### P31 hap-cli `app role set-permissions --permission-way` turns off every app-wide switch of the role
+
+- **Context:** 24 Nov 2026, the role "Master Data Manager" changed from "view all" (20) to "manage all records" (80).
+- **Steps:** `hap app role set-permissions <appId> <roleId> --permission-way 80`, then read back with `app role permissions`.
+- **Expected:** only the record scope changes; everything else stays.
+- **Actual:** the scope becomes 80, but every globalPermissions switch becomes false: add records, import, export, discussion, print, attachment download, logs. The CLI has no option to set these switches on their own, so the only way is to delete the role and recreate it with `create --global-permissions-json`.
+- **Impact:** the role's members suddenly cannot add records or export, while the command reports success. High risk (a role with members cannot simply be recreated).
+
+### P32 CLI workflow DSL: a wrongly shaped field-permission list in a fill-in step gives HTTP 500
+
+- **Actual:** with `formProperties` written as an object `{<field>: "readonly"}`, the server answers "Internal Server Error" and the CLI rolls the batch back; the correct shape is a list, `[{"id": <field>, "permission": "readonly"}]`.
+- **Impact:** the error does not show the cause; the shape was found only in the CLI's source.
+
+### P33 Workflow "query worksheet" step: an empty dynamic filter value fails the whole run
+
+- **Context:** 24 Nov 2026 00:48, during acceptance tests, two contacts (companies) were created with no Region.
+- **Steps:**
+  1. In a worksheet-event flow (contact added or updated), add a "get single record / query worksheet" step on Countries, filtered by "Countries.Region contains the trigger record's Region" (a dynamic value).
+  2. After it, add an "update record" step (display name and so on).
+  3. Create a contact with an empty Region.
+- **Expected:** a configurable way to handle an empty dynamic value (for example treated as "no data found", following the step's "continue when no data is found" setting), or at least a warning when building or publishing.
+- **Actual:** the run fails with the reason "the filter value is empty: Region" (shown in Chinese), and none of the later steps run. Building and publishing both report success with no warning; setting the step to "continue when no data is found" makes no difference.
+- **Impact:** a single record without an optional field stops the whole flow halfway, and the record's other automatic fields (here the display name and the commercial entity) are never written. The only way round is a separate flow with the trigger condition "Region is not empty".
+- **Workaround (used):** the country query moved to its own flow, "Contacts - Country from Region", triggered only when Region is not empty.
+
+### P34 hap-cli `record create` is refused by a "hide" business rule because a hidden field has a default value
+
+- **Context:** 24 Nov 2026 00:47, a contact of type company created with the CLI, writing only the name, the type and Active.
+- **Steps:**
+  1. The Contacts sheet has the business rule "Company: hide person fields": when the type is company, Address Type is hidden (that field has the default value Contact).
+  2. `hap worksheet record create <Contacts sheet> --fields-json '[{"id":"name",...},{"id":"company_type","value":"<Company>"}]'`.
+- **Expected:** as in the UI, the record is saved (a company created in the UI stores the hidden field's default as usual).
+- **Actual:** RuleBlocked: "Company: hide person fields" makes Address Type hidden on this record, so it cannot be written. The request did not write Address Type; the default value was counted as a write.
+- **Impact:** scripts must add `--ignore-rules`, which also skips every other rule check.
+
+### P35 hap-cli `record update`: writing an option text that does not exist stores a dangling key
+
+- **Context:** 24 Nov 2026 01:15, the "new tag" acceptance test: a new tag written with the CLI to a TEST contact's Tags (multi-select, option set Contact Tags, users may add options).
+- **Steps:** `hap worksheet record update <Contacts sheet> <record> --fields-json '[{"id":"category_id","value":["TEST Tag"]}]'`, then read back with `record get` and open the record in the UI.
+- **Expected:** as in the UI: when the field allows new options, the new option is added to the option set (with a colour) and written to the record; otherwise an error.
+- **Actual:** the command succeeds and the record stores `{"key": "TEST Tag", "value": null}`; the option set gets no new option; the UI shows an empty blue tag. Typing the same new tag in the UI adds it properly (colour #1677ff).
+- **Impact:** new tags written by imports or integrations become invisible junk data, and filters and counts do not add up.
+
+### P36 hap-cli `app role set-permissions --permission-way 0 -P`: per-sheet rights are not saved, and the command reports success
+
+- **Context:** 24 Nov 2026 01:20, the Employee role changed from "view all + manage own" to per-sheet rights (master data read-only; activities: own only).
+- **Steps:**
+  1. `hap app role set-permissions <appId> <roleId> --permission-way 0 -P '<per-sheet rules JSON>'`. Both the V3 shape that `app role permissions` reads (id / recordDataScope) and the older `sheets` shape that the CLI source actually sends (sheetId / readLevel / editLevel / removeLevel / canAdd) were tried.
+  2. Read back with `app role permissions` and GetRoleDetail.
+- **Expected:** each sheet's scope is saved as given.
+- **Actual:** both shapes return success (EditAppRole returns 1), but every sheet keeps its old scope (20/20/20); only the overall "custom" switch takes effect, so the role ends up seeing only its own records on every sheet. Also, `-P` does not take `@file`, and the full rules exceed the Windows command-line length.
+- **Impact:** adjusting an existing role's per-sheet rights through the CLI breaks the role, invisibly. High risk (a role with members affects them at once).
+- **Workaround (used):** set it back to 50 first; create new roles through V3 (see P37) and keep the old role, renamed.
+
+### P37 hap-cli `app role create-fine`: the new role has every app-wide switch off; a sheet with read scope 0 falls back to "own, everything allowed"
+
+- **Context:** 24 Nov 2026 01:25, a per-sheet Employee role created with `create-fine`.
+- **Steps:** `hap app role create-fine <appId> -n Employee --worksheet-permissions '[{"worksheetId":...,"recordDataScope":{"read":100,"edit":0,"delete":0},...}, {"worksheetId":<system sheet>,"recordDataScope":{"read":0,"edit":0,"delete":0}}]'`, then read back with `app role permissions`.
+- **Expected:** as the help says, "items not given are allowed by default": the app-wide switches (add records, export, discussion, logs, print, attachment download) are on, and a sheet with read scope 0 has no rights.
+- **Actual:** every globalPermissions switch is false (members cannot add any record); the two sheets with read scope 0 become 20/20/20, with add and import allowed. The V3 request that the CLI sends has no globalPermissions.
+- **Impact:** the new role's members cannot add records, and the sheets meant to be hidden can be added to and imported into.
+- **Workaround (used):** create the role through the same V3 endpoint with the 8 globalPermissions switches in the request; system sheets read-only.
+
+### P38 hap-cli `create-custom-action` (createRelatedRecord): the button shows but does nothing when clicked
+
+- **Context:** 24 Nov 2026 10:10, a UI test of the "Launch Plan" button on Contacts. The CLI created it at 00:22 with `hap worksheet create-custom-action <Contacts sheet> --action-spec '{"type":"createRelatedRecord","relationField":"<Plan Launches relation field>"}'`.
+- **Steps:**
+  1. Create a "create related record" button with that command.
+  2. Open any contact and click the button.
+  3. Open form settings › Custom actions and edit the button.
+- **Expected:** a new Plan Launch form opens (a related record created from the current record).
+- **Actual:** nothing happens, and there is no error. The button editor shows "At linked record 'Associated records have been deleted' Create Plan Launches", and neither "Always" nor "When conditions are met" is selected for when the button is available. The stored settings: writeObject 2 (related record), relationControl empty, showType 0. Changed in the editor to "current record" with "Always" (writeObject 1, showType 1), the dialog opens, and the flow runs after submitting.
+- **Impact:** testing the flow with `workflow trigger` shows nothing wrong, but users cannot use the button; only a test in the UI finds it.
+- **Workaround (used):** corrected in the button editor and saved. Another button, "Rebuild Variants" (runs at once, with a confirmation), also has showType 0 but works.
+
+### P39 hap-cli `app-editor` field.update: an option added without a key is saved with an empty key
+
+- **Context:** the Builder of the Odoo replica, 24 Nov 2026 13:50, used field.update through `app-editor apply` to add the option "Leads" to the single select "Applies to" of Activity Types and Activity Plans (the existing options kept their keys; the new one had none).
+- **Steps:**
+  1. Read the single-select field and append `{"value":"Leads","index":5,"isDeleted":false}` (no key) to its options.
+  2. Write the whole options list back with field.update.
+  3. Read the field back.
+- **Expected:** the server gives the new option a key (as when an option is added in the UI), or refuses the save and says that the key is missing.
+- **Actual:** saved; the new option reads back with an empty key ""; a record that picks it cannot store a valid value.
+- **Impact:** options added through the CLI or MCP look fine but cannot be used; this shows only on readback, or when the option is picked in the UI.
+- **Workaround (used):** generate a UUID as the key when adding an option (the script does now).
+
+### P40 hap-cli record writes: the pre-check of a relation's selection limit ignores an "is empty" group and refuses valid values
+
+- **Context:** the Builder of the Odoo replica, 24 Nov 2026 17:00, set a selection limit on the Stage relation of Leads / Opportunities: "the stage's Sales Teams include the record's Sales Team" or "the stage's Sales Teams are empty" (two groups, OR). Then a record's Stage was changed to Won (Won has no Sales Teams) with `hap worksheet record update`.
+- **Steps:**
+  1. Give the relation field the selection limit above (two OR groups).
+  2. Write `hap worksheet record update <sheet> <record> --fields-json '[{"id":"stage_id","value":["<Won stage row id>"]}]'`.
+- **Expected:** the write succeeds (Won is offered in the form's dropdown).
+- **Actual:** the CLI refuses: "\"Stage\": <id> is outside what this field offers (and a condition on <Sales Teams> this version cannot compute was left out of the check …)". The pre-check evaluated only the first group and left the "is empty" group out, so a valid value was refused. With `--ignore-rules` it is written.
+- **Impact:** once a selection limit has an "is empty" condition, ordinary CLI and script writes fail, and the check has to be bypassed.
+- **Workaround (used):** the test scripts write with `--ignore-rules` (as a workflow writes); the form's dropdown was tested in the UI separately.
+
+### P41 Workflow "get single record": with OR groups in the old condition slot, the whole filter is ignored at run time
+
+- **Context:** the Builder of the Odoo replica, 24 Nov 2026 16:50–17:20, built 13 "get single record from worksheet" steps in 5 flows (the Won button on Leads, the new-lead defaults and others) with hap-cli 0.9.14's workflow DSL (`batch-add`, get_single, a filter of two OR groups).
+- **Steps:**
+  1. Build a "get single record" step on Stages, filtered by (Is Won Stage checked and Sequence > the previous step's Sequence and Sales Teams equals the trigger record's Sales Team) or (Is Won Stage checked and Sequence > the previous step's Sequence and Sales Teams is empty), sorted by Sequence ascending.
+  2. The CLI stores the conditions in the old `conditions` slot (two groups), with `filters` empty. The editor shows both groups and the "or" correctly, with a notice that filters now support and/or combinations.
+  3. Publish and run (button trigger, record in the Proposition stage).
+- **Expected:** the Won stage (the only stage with Is Won Stage checked).
+- **Actual:** the New stage (Is Won Stage not checked, Sequence condition not met), which is the first record by the sort: the whole filter was ignored. The run shows success, with no error. The same fault made "default stage of a new lead" return another team's stage. Steps of the same kind with one group run correctly.
+- **Impact:** the flow silently takes the wrong record and writes business data from it; building, publishing and running give no warning.
+- **Workaround (used):** in the editor, switch to the supported and/or combined filters and save (the conditions move to `filters`, each group with `spliceType` 2): the run is then correct. The script `crmwf.group_filters()` does the same conversion for every multi-group "get single record" step (13 steps converted and published).
+- **Suggestion:** make the run match the editor (support the old multi-group conditions, or refuse or warn at publish); have the CLI write new steps straight into `filters`, as it already does for "get multiple records".
+
+### P42 hap-cli workflow DSL: the date difference's `out_unit` numbers differ from the product; "hour" is stored as "month"
+
+- **Context:** the Builder of the Odoo replica, 24 Nov 2026 17:20, built a "date/time difference" step with the DSL (`mode: date_diff`, `out_unit: "hour"`) for the hours from a meeting's start to its end.
+- **Steps:**
+  1. Build a date difference step with `out_unit: "hour"`, start = Start, end = End.
+  2. Create a meeting from 10:00 to 11:30 (and another that spans 2 days).
+  3. Open the step in the editor.
+- **Expected:** output unit "hour"; results 1.5 (or 1) and 48.
+- **Actual:** both results are 0. The editor shows the output unit as "month". The step stores `outUnit: 2`; the editor's dropdown order is year, month, day, hour, minute, second (1–6), while the CLI maps minute 1, hour 2, day 3, month 4, year 5, second 6, week 7. Only "day" (3) agrees.
+- **Also seen (not judged a bug):** with "hour" output the result is in whole hours (48.5 hours gives 48).
+- **Impact:** every date difference built through the CLI has the wrong unit except "day", and the result is silently 0 or wrong.
+- **Workaround (used):** read all of the step's settings and write `outUnit` back with the product's numbers (`crmwf.save_compute`, `DATE_DIFF_UNITS`); the meeting duration is now counted in minutes and divided by 60, giving 1.50 / 48.00 (tested).
+
+### P43 Role editor: for roles created through V3, the per-sheet rights show as view / edit / delete "All", unlike what is stored
+
+- **Context:** the Builder of the Odoo replica, 24 Nov 2026 22:40, opened the Salesperson role under the app's Users › Roles (the role was created the same day with V3 `POST /v3/app/roles`, with per-sheet rights).
+- **Steps:**
+  1. Create the role through V3, with Countries, Contacts and other sheets set to: view all, edit 0 (Contacts 20, own), delete 0.
+  2. Read back with `hap app role permissions` / V3 `GET /v3/app/roles/{id}`: as set. Enter the app as that role with Role Debug: Stages has no Add button and its records are read-only, and opportunities cannot be deleted; the behaviour matches what is stored.
+  3. Open the role's edit page under Users › Roles.
+- **Expected:** the edit page shows the stored rights (Countries read-only, Contacts edit own, no delete).
+- **Actual:** on the edit page, the rows of Countries, Country Groups, Industries, Bank Accounts, Contacts, Units, Product Categories and others have view / edit / delete ticked and set to "All". Not saved (to avoid widening the rights); saving would presumably write what is shown.
+- **Impact:** an administrator who changes anything in the editor (opening a page, for example) and saves may unknowingly turn a read-only role into one that can edit and delete all data.
+- **Workaround (used):** these roles are never saved in the editor. Page rights went through V3 instead: `PUT /v3/app/roles/{id}` returns 405; `PATCH` with only `pagePermissions` returns "parameter invalid"; `PATCH` with the whole role (the GET result without its id) works, and a key-by-key comparison shows that no other right changed (`01-crm-build/step4_roles.py`, `grant_pages`).
+
+The next four items come from a separate small demo app built on Nocoly SaaS on 24–25 Nov 2026 (hap-cli 0.9.14). It is not part of the Odoo programme.
+
+### P44 hap-cli `worksheet create --fields`: the fields' `layout` (row / col / size) is ignored
+
+- **Context:** the demo app's Builder, 24 Nov 2026 23:55, created a sheet with `hap worksheet create <APP> Devices --fields '[...]'`, each field with `"layout": {"row": r, "col": c, "size": s}` (for example, two fields of size 6 on one row).
+- **Steps:**
+  1. Create the sheet that way, with layouts on the fields.
+  2. Read back with `hap worksheet fields <WS> --raw`, or open the form designer.
+- **Expected:** the fields are placed in the rows, columns and widths given.
+- **Actual:** the command succeeds, but every layout is ignored: text fields each take a whole row (size 12), some fields pair up by themselves, and the rows run on in order. `update-fields --help` says that `layout` "places the field on the form".
+- **Impact:** every sheet created through the CLI has one field per row, and needs a second, full layout write.
+- **Workaround (used):** read all controls, change only row / col / size, and write them back with `update-fields --controls @file` (after `--check`); the readback and the UI are both correct.
+
+### P45 A new sheet whose default fields were replaced with `--fields`: the "All" view still lists the deleted defaults
+
+- **Context:** as above; the sheet was created on 24 Nov 2026 at 23:56 and checked in the UI on 25 Nov 2026 at 00:10.
+- **Steps:**
+  1. `hap worksheet create <APP> <name> --fields '[...]'` (the default Name / Description / Attachment fields are replaced).
+  2. Open the generated "All" table view, and check `displayControls` with `hap worksheet view info <WS> <VIEW>`.
+- **Expected:** the "All" view shows the new fields (or at least does not reference fields that no longer exist).
+- **Actual:** `displayControls` still holds the ids of two deleted default fields, and the list shows only the title column.
+- **Impact:** every new sheet created through the CLI has a default list view that looks empty, and it must be fixed by hand before a demo.
+- **Workaround (used):** `hap worksheet view update <WS> <VIEW> --view-json '{"displayControls":[...],"customDisplay":true}' --edit-attrs displayControls,customDisplay`; it reads back correctly.
+
+### P46 hap-cli `worksheet view update --view-spec`: `tableFields` has no effect on a table view, and the command reports success
+
+- **Context:** as above, 25 Nov 2026 00:11, fixing P45 first with `--view-spec '{"tableFields":[...]}'` to set a table view's columns.
+- **Steps:**
+  1. Run `view update --view-spec '{"tableFields":["<id>", ...]}'` on a table view (viewType 0).
+  2. Read `displayControls` back with `view info`.
+- **Expected:** the columns become the fields given (`hap guide worksheet` 4.2 lists `tableFields` as a view-spec key).
+- **Actual:** the command reports success, and `displayControls` is unchanged. The same `tableFields` does set the card fields when a board view is created (`view create --view-spec`).
+- **Impact:** a silent failure: it looks fixed, but the UI has not changed.
+- **Workaround (used):** as in P45, `--view-json` with `--edit-attrs`.
+
+### P47 hap-cli `app create --sections`: an extra empty group with no name; the navigation shows "Unnamed Group"
+
+- **Context:** as above, 24 Nov 2026 23:50, `hap app create ... --sections '["Maintenance"]'`.
+- **Steps:**
+  1. Create an app with `--sections`, giving one group name.
+  2. Create the sheets in that group, and open the app in the UI.
+- **Expected:** the navigation has one group, "Maintenance".
+- **Actual:** there is also a group with no name and no content (name "" in `app info`), and the top bar shows "Unnamed Group".
+- **Impact:** the demo app looks unfinished; the group has to be deleted by hand.
+- **Workaround (used):** `hap app delete-section <APP> <empty group id> -y`.
 
-### P13 子表的反向字段不出现在 `worksheet fields` 中
-
-- **影响：** 脚本做读改写时，可能漏掉它，或者把它覆盖掉。
-
-### P14 座机字段存有界面看不到的香港国家设置
-
-- **实际结果：** type 4 的 raw 中有 `commcountries` / `defaultarea`（香港），但设置面板不显示这些选项。
-
-### P15 关闭"选项颜色"后，颜色仍被保存
-
-- **影响：** 再次开启时出现旧颜色，看起来像意外。
-
-### P16 单选切换为"进度条"显示后，"允许用户新增选项"被静默关闭
-
-- **实际结果：** `allowadd` 从 1 变为 0，没有提示。
-- **影响：** 用户突然不能新增选项。
-
-### P17 用 add-fields 建立指向本表的双向关联时，没有生成反向字段
-
-- **谁 / 何时 / 做什么：** 2026-11-23，在 Contacts 表用 `hap worksheet add-fields` 新增关联字段：dataSource = 本表，advancedSetting.bidirectional = "1"。
-- **复现步骤：**
-  1. 用上述方式新增"Related Company"字段。
-  2. 读回字段列表。
-- **预期结果：** 与在界面中新建本表关联一样，自动生成另一侧的多条字段。
-- **实际结果：** 字段标记为 bidirectional 1，并预留了 sourceControlId，但表中没有反向字段。要再执行 `hap worksheet pair-relation` 才会建出来。
-- **影响：** 脚本以为已经是双向，实际只有单向。上下级联系人列表缺失，界面上也看不出原因。
-
-### P18 他表字段引用地区字段时，record get 返回 JSON 字符串，而源字段返回对象
-
-- **谁 / 何时 / 做什么：** Odoo 复刻项目的 Builder，2026-11-23，在 Companies 表新增他表字段（type 30，仅显示 strDefault "10"），引用联系人的地区字段，然后用 hap-cli 读回记录。
-- **复现步骤：**
-  1. 关联记录的地区字段值为 `MY|MY-10`。
-  2. 用 `hap worksheet record get` 读取引用它的记录。
-  3. 同时读取一条直接含地区字段的记录作对照。
-- **预期结果：** 两者格式相同，都是 `{"code": ..., "path": ...}` 对象。
-- **实际结果：** 他表字段返回字符串 `"{\n  \"code\": \"MY|MY-10\",\n  \"path\": \"马来西亚/雪兰莪\"\n}"`（带换行），直接的地区字段返回对象 `{"code": "MY|MY-14", "path": "马来西亚/吉隆坡"}`。
-- **影响：** 集成方和脚本要为同一种值写两套解析。
-- **证据：** BUILD-LOG（23 Nov，Companies 与 Bank Accounts 测试记录）。
-
-### P19 他表字段引用电话字段时，表单显示未格式化的号码
-
-- **谁 / 何时 / 做什么：** 2026-11-23，在 Companies 表用他表字段（仅显示）显示联系人的电话（手机类型，默认马来西亚）。
-- **复现步骤：**
-  1. 联系人电话填 012-345 6789，联系人表单显示 "+60 012 345 6789"。
-  2. 打开引用该联系人的 Companies 记录。
-- **预期结果：** 他表字段与源字段的显示格式一致。
-- **实际结果：** 他表字段显示存储值 "+60123456789"，没有国家区号分隔和号码格式。
-- **影响：** 同一个号码在两张表上显示不同，用户会以为数据不一致。
-- **证据：** Chrome 界面截图检查（23 Nov，TEST Company）。
-
-### P20 隐藏字段在 record list 中读出为空，record get 才有值
-
-- **谁 / 何时 / 做什么：** Odoo 复刻项目的 Builder，2026-11-23，在 Product Categories 表设置了隐藏的辅助字段（fieldPermission "011"），用 hap-cli 写入后读回。
-- **复现步骤：**
-  1. 用 `hap worksheet record update ... --ignore-rules` 写入隐藏文本字段（Ancestor Key 1）。
-  2. 用 `hap worksheet record list --fields x_product__ancestor_1` 读取。
-  3. 用 `hap worksheet record get` 读取同一条记录。
-- **预期结果：** 两种读取返回相同的值（读取者是应用管理员）。
-- **实际结果：** list 对全部 7 条记录都返回空字符串 ""，get 返回正确的记录 ID。没有任何提示说明字段被隐藏而未返回。
-- **影响：** 集成和脚本用列表接口做校验或导出时，会以为数据丢失，或者用空值覆盖真实数据。
-- **证据：** BUILD-LOG（23 Nov，Units and Product Categories）。
-
-### P21 CLI 工作流 DSL：日期计算节点的结果被引用为 string_fx_id，界面和服务器使用 date_fx_id
-
-- **谁 / 何时 / 做什么：** Odoo 复刻项目的 Builder，2026-11-23，用 `hap workflow node batch-add` 建"活动状态"工作流：一个日期计算节点（当前时间 +0d，输出日期），分支条件比较"到期日 早于 / 等于 计算结果"。
-- **复现步骤：**
-  1. 在 batch-add 的分支条件里引用计算节点结果 `{"kind":"field","node":"today","fieldId":"string_fx_id"}`（hap-cli 0.9.14 自检和文档都说文本、日期结果用 string_fx_id，没有 date_fx_id）。
-  2. 发布。
-- **预期结果：** 条件引用计算结果，可以发布。
-- **实际结果：** 发布被拒（"step(s) have no valid operation, or its content is wrong"），界面显示条件值为"Today-Field Deleted"。在界面重新选择后，读回的引用是 `controlId: "date_fx_id"`；改用 date_fx_id 后发布成功，运行结果正确。
-- **影响：** 用 CLI 或 MCP 建的日期比较全部发布失败，错误提示看不出原因。
-- **证据：** BUILD-LOG（23 Nov，workflow #14）；流程 "Activities - State on save"。
-
-### P22 CLI 工作流 DSL 无法写"关联字段 不为空"条件
-
-- **谁 / 何时 / 做什么：** 2026-11-23，用 batch-add 建联系人同步流程，分支条件为"上级公司 不为空"。
-- **复现步骤：**
-  1. 条件写 `{"node":"trigger","field":"<关联字段>","op":"not_empty"}`。
-  2. 改写原始条件号 `"op":"31"`。
-- **预期结果：** 与界面一样可以选择"为空 / 不为空"。
-- **实际结果：** 第 1 步被拒（"A relation column has no 'not_empty' comparison. It takes: all_contains, eq, ne"），第 2 步也被拒（"'31' is not a comparison this filter understands"）。CLI 把 not_empty 映射为条件号 7，而关联字段的"不为空"是 31（"为空"是 32）。只能先用占位条件建好，再用 `node save` 写存储格式（conditionId 31），界面显示"Related Company is not empty"。
-- **影响：** 关联字段是否为空是最常见的判断之一，用 CLI / MCP 建不出来。
-
-### P23 batch-add 建分支时，带条件的分支丢失名称
-
-- **实际结果：** 只有不带条件的默认分支保留了 `name`，带条件的分支名称为空，界面显示为"Branch"。用 `node rename` 可以补上。
-- **影响：** 流程图难读，维护时分不清分支。
-
-### P24 工作流函数中读取地区字段，得到简体中文路径
-
-- **谁 / 何时 / 做什么：** 2026-11-23，在计算节点中用 `CONCAT("[", 地区, "]")` 和 `LEFT(地区, 2)` 读取联系人地区（值 MY|MY-10），写入文本字段。
-- **预期结果：** 取得地区代码（MY|MY-10），或至少取得用户界面语言（英文）的路径。
-- **实际结果：** 得到 "[马来西亚/雪兰莪] [马来]"。
-- **影响：** 无法在工作流里从地区取得国家代码，也无法给非中文用户生成地址文本。只能改用查询条件"国家.地区 包含 联系人.地区"（实测可用）。与 P3 同源。
-
-
-### P25 CLI 建的函数计算节点默认 0 位小数，数值结果被取整
-
-- **谁 / 何时 / 做什么：** Odoo 复刻项目的 Builder，2026-11-23，用 batch-add 建计算节点（函数模式，输出数字），例如反向汇率 `1 / 汇率`。
-- **复现步骤：**
-  1. 建函数计算节点，`output_type: number`。
-  2. 运行，结果写入 6 位小数的数字字段。
-- **预期结果：** 1 / 0.204553 = 4.888709。
-- **实际结果：** 写入 5.000000。读回节点配置为 `"number": 0`（小数位数）。DSL 没有设置小数位的参数，界面上的默认值也不清楚；用 `node save` 改为 `"number": 6` 后结果正确。
-- **影响：** 单位换算（1/12、0.016667）、汇率、价格计算全部被静默取整，金额错误且没有任何提示。高风险。
-- **证据：** BUILD-LOG（23 Nov，workflow #13）；流程 "Settings - Current rate on change"。
-
-### P26 唯一索引：已删除（回收站中）的记录仍占用唯一值
-
-- **谁 / 何时 / 做什么：** 2026-11-23，汇率表有唯一索引（日期 + 货币）。新建一条 SGD 2026-11-23 测试汇率后删除（进回收站），再新建同一日期和货币的汇率。
-- **预期结果：** 删除后可以重新建立。
-- **实际结果：** 被拒（resultCode 11，"values must be unique and another record already has them"），而 `record list` 里已经没有这条记录。
-- **影响：** 用户删掉一条写错的记录后无法重建，只能去回收站彻底删除；报错信息也没有说明冲突的是回收站里的记录。
-
-### P27 CLI 工作流 DSL："清空字段"写入被丢弃或被拒
-
-- **谁 / 何时 / 做什么：** 2026-11-23，用 batch-add 建"更新记录"节点，字段写入 `{"fieldId": ..., "op": "clear"}`（或 `{"kind": "empty"}`，guide 文档的写法）。
-- **实际结果：**
-  1. 节点只有这一个写入时，CLI 报错 "The step was saved but none of its 1 field write(s) were kept"，整个批次回滚。
-  2. 和其他写入放在一起时，"清空"被静默丢弃，其他字段正常保存。联系人流程的"清空公司名称"就是这样丢失的。
-  3. `save-action` 用展开格式 `{"fieldValue": "", "isClear": true}` 也报同样的错误。
-- **对照：** 界面设置"清空"后，读回为 `{"type": 2, "fieldValue": "", "isClear": true, "addType": 0}`。用 `node save` 原样写入后可以发布并正常运行。"校准单条数据"节点的字段也是这个格式（isClear true）。
-- **影响：** 用 CLI / MCP 建的工作流无法清空字段，而且在混合写入时不会报错。
-
-### P28 CLI 工作流 DSL：对"获取多条数据"结果做求和，只保存成计数
-
-- **谁 / 何时 / 做什么：** 2026-11-23，batch-add 建 rollup 节点：`data_source` 为获取多条的节点，`aggregate: "sum"`，`field: <附加价格字段>`。
-- **实际结果：** 读回节点没有汇总字段和方式，界面显示"Total count of the multiple data objects obtained"。运行结果是记录数（2），不是附加价格之和。
-- **影响：** 价格计算悄悄出错（每个变体售价都多了 2）。界面上这种节点本身只能计数，CLI 却接受 sum 参数而不报错。
-
-### P29 工作流函数计算：公式出错时结果为空，运行记录显示成功
-
-- **谁 / 何时 / 做什么：** 2026-11-24，价格 PBP 的函数计算节点。
-- **复现步骤：**
-  1. 函数中写 `IF(<选项字段>="Cost", 1, 2)`（单个等号），或对空记录的选项字段使用 `STRING()`，或对空数字做减法。
-  2. 运行流程。
-- **预期结果：** 公式有错时节点失败并给出原因，或编辑器在保存时提示。
-- **实际结果：** 节点状态为成功，结果为空字符串；后续节点拿到空值，最终价格为空。只有逐项拆开公式写入记录才能找到原因（等号要写 `==`，选项要转文字）。
-- **影响：** 金额类计算静默出错，排查成本很高。
-
-### P30 发布时，引用分支内部节点的步骤被拒，提示不具体
-
-- **实际结果：** 分支之后的计算节点引用了某条分支内部的节点（调用 PBP 的结果），发布报 "step(s) have no valid operation, or its content is wrong"，没有说明是跨分支引用。
-- **影响：** 设计"分支内计算、分支后汇总"的流程时，很难知道为什么不能发布。
-
-### P31 hap-cli `app role set-permissions --permission-way` 会关闭角色的全部应用级开关
-
-- **谁 / 何时 / 做什么：** 2026-11-24，把角色 "Master Data Manager" 从"查看全部"（20）改为"管理全部记录"（80）。
-- **复现步骤：** `hap app role set-permissions <appId> <roleId> --permission-way 80`，再用 `app role permissions` 读回。
-- **预期结果：** 只改记录范围，其他设置保持不变。
-- **实际结果：** 范围变为 80，但 globalPermissions 全部变成 false：新增记录、导入、导出、讨论、打印、附件下载、日志。CLI 也没有单独设置这些开关的选项，只能删除角色后用 `create --global-permissions-json` 重建。
-- **影响：** 角色成员突然不能新增记录或导出，而且命令报的是成功。高风险（已有成员的角色不能简单重建）。
-
-### P32 CLI 工作流 DSL：填写节点的字段权限格式写错时返回 HTTP 500
-
-- **实际结果：** `formProperties` 写成对象 `{字段: "readonly"}` 时，服务器返回 "Internal Server Error"，CLI 回滚批次；正确格式是列表 `[{"id": 字段, "permission": "readonly"}]`。
-- **影响：** 报错看不出原因，需要读 CLI 源码才能找到格式。
-
-### P33 工作流"查询工作表"节点：筛选条件的动态值为空时，整个流程失败
-
-- **谁 / 何时 / 做什么：** 2026-11-24 00:48，验收测试中新建两条没有填写"地区"的联系人（公司）。
-- **复现步骤：**
-  1. 工作表事件流程（新增或更新联系人）中，加"获取单条数据 / 查询工作表"节点（Countries 表），筛选条件为"Countries.地区 包含 触发记录.地区"（动态值）。
-  2. 节点之后再加"更新记录"节点（写显示名称等）。
-  3. 新建一条"地区"为空的联系人。
-- **预期结果：** 动态值为空时，有可配置的处理方式（例如视为"未获取到数据"，按节点的"未获取到数据时继续执行"设置继续），或者至少在搭建 / 发布时提示这种风险。
-- **实际结果：** 运行状态为"失败"，原因"筛选条件值为空 Region"，后续节点全部不执行。搭建和发布都显示成功，没有任何提示；节点设为"未获取到数据时继续执行"也没有作用。
-- **影响：** 只要有一条记录缺少某个可选字段，整个流程就停在中间，记录的其他自动字段（这里是显示名称、商业实体）都没有写入。只能另建流程，用触发条件"地区不为空"绕开。
-- **绕开方法（已用）：** 国家查询拆成独立流程 "Contacts - Country from Region"，触发条件为"地区不为空"。
-
-### P34 hap-cli `record create`：因"隐藏"业务规则拒绝写入，原因是被隐藏字段有默认值
-
-- **谁 / 何时 / 做什么：** 2026-11-24 00:47，用 CLI 新建一条"公司"类型的联系人，只写名称、类型和 Active。
-- **复现步骤：**
-  1. 联系人表有业务规则"Company: hide person fields"：类型 = 公司时隐藏 Address Type（该字段有默认值 Contact）。
-  2. `hap worksheet record create <联系人表> --fields-json '[{"id":"name",...},{"id":"company_type","value":"<公司>"}]'`。
-- **预期结果：** 与界面一致，记录保存成功（界面新建公司时，隐藏字段的默认值照常写入）。
-- **实际结果：** 报 RuleBlocked："Company: hide person fields" makes Address Type hidden on this record, so it cannot be written。请求中并没有写 Address Type，是默认值被当作写入。
-- **影响：** 脚本必须加 `--ignore-rules`，而这个参数同时跳过所有其他规则检查。
-
-### P35 hap-cli `record update`：选项字段写入不存在的选项文字时，保存为无效 key
-
-- **谁 / 何时 / 做什么：** 2026-11-24 01:15，验收"新标签"测试，用 CLI 给 TEST 联系人的"标签"（多选，选项集 Contact Tags，允许用户新增选项）写入新标签。
-- **复现步骤：** `hap worksheet record update <联系人表> <记录> --fields-json '[{"id":"category_id","value":["TEST Tag"]}]'`，再用 `record get` 读回，并在界面打开记录。
-- **预期结果：** 与界面一致：字段允许新增选项时，新选项加入选项集（带颜色）并写入记录；不允许时报错。
-- **实际结果：** 命令成功，记录里保存为 `{"key": "TEST Tag", "value": null}`；选项集没有新增；界面显示一个空白的蓝色标签。在界面输入同样的新标签则正常新增（颜色 #1677ff）。
-- **影响：** 导入或集成写入的新标签变成看不见的脏数据，筛选和统计都对不上。
-
-### P36 hap-cli `app role set-permissions --permission-way 0 -P`：每表权限没有保存，命令仍报成功
-
-- **谁 / 何时 / 做什么：** 2026-11-24 01:20，把角色 Employee 从"查看全部 + 管理自己"改为按表授权（主数据只读、活动只管自己的）。
-- **复现步骤：**
-  1. `hap app role set-permissions <appId> <roleId> --permission-way 0 -P '<每表规则 JSON>'`。分别试过 `app role permissions` 读出的 V3 格式（id / recordDataScope），和 CLI 源码实际发送的旧版 `sheets` 格式（sheetId / readLevel / editLevel / removeLevel / canAdd）。
-  2. 用 `app role permissions` 和 GetRoleDetail 读回。
-- **预期结果：** 每张表的范围按规则保存。
-- **实际结果：** 两种格式都返回成功（EditAppRole 返回 1），但每张表的范围保持原值（20/20/20）；只有"自定义"这个总开关生效，结果角色变成"每张表只看自己的"。另外 `-P` 不接受 `@文件`，完整规则又超过 Windows 命令行长度。
-- **影响：** 用 CLI 调整已有角色的按表权限会把角色改坏，而且看不出失败。高风险（有成员的角色会马上影响使用）。
-- **绕开方法（已用）：** 先改回 50；用 V3 新建角色（见 P37），旧角色改名保留。
-
-### P37 hap-cli `app role create-fine`：新角色的应用级开关全部关闭；读取范围 0 的表退回"本人、全部允许"
-
-- **谁 / 何时 / 做什么：** 2026-11-24 01:25，用 `create-fine` 新建按表授权的 Employee 角色。
-- **复现步骤：** `hap app role create-fine <appId> -n Employee --worksheet-permissions '[{"worksheetId":...,"recordDataScope":{"read":100,"edit":0,"delete":0},...}, {"worksheetId":<系统表>,"recordDataScope":{"read":0,"edit":0,"delete":0}}]'`，再用 `app role permissions` 读回。
-- **预期结果：** 帮助说明"未指定的项默认允许"；应用级开关（新增记录、导出、讨论、日志、打印、附件下载）为开；读取范围 0 的表无权限。
-- **实际结果：** globalPermissions 全部为 false（成员不能新增任何记录）；读取范围 0 的两张表变成 20/20/20，且新增、导入都允许。CLI 发送的 V3 请求里没有 globalPermissions。
-- **影响：** 新角色的成员不能新增记录；想隐藏的表反而可以新增和导入。
-- **绕开方法（已用）：** 用同一个 V3 接口在请求中带上 8 个 globalPermissions 开关新建；系统表设为只读。
-
-### P38 hap-cli `create-custom-action`（createRelatedRecord）：按钮显示但点击无反应
-
-- **谁 / 何时 / 做什么：** 2026-11-24 10:10，在界面补测联系人上的 "Launch Plan" 按钮。该按钮由 CLI 在 00:22 创建：`hap worksheet create-custom-action <联系人表> --action-spec '{"type":"createRelatedRecord","relationField":"<Plan Launches 关联字段>"}'`。
-- **复现步骤：**
-  1. 用上面的命令创建"新建关联记录"按钮。
-  2. 打开任意一条联系人，点击按钮。
-  3. 打开表单设置 › 自定义动作 › 编辑该按钮。
-- **预期结果：** 弹出新建 Plan Launch 的表单（在当前记录中新建关联记录）。
-- **实际结果：** 点击没有任何反应，也没有报错。按钮编辑器显示 "At linked record 'Associated records have been deleted' Create Plan Launches"，"按钮可用"的"总是 / 满足条件"都没有选中。读取配置：writeObject 2（关联记录）、relationControl 为空、showType 0。在编辑器里改成"当前记录"并选"总是"后（writeObject 1、showType 1），弹窗正常，提交后流程正常运行。
-- **影响：** 用 `workflow trigger` 测流程时一切正常，但用户在界面上无法使用这个按钮，只有在界面实测才会发现。
-- **绕开方法（已用）：** 在按钮编辑器里改正后保存。另一个按钮 "Rebuild Variants"（立即执行 + 二次确认）的 showType 也是 0，但能正常使用。
 ---
 
 ### Documentation issues (help.nocoly.com, cached 3 Nov 2026)

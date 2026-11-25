@@ -1,8 +1,8 @@
-"""Form layouts for the wave 0 sheets (Module Owner, 24 Nov 2026: "不要一个行就一个field罢了，那些短短的field甚至可以一行四个，整体要保持整齐").
+"""Form layouts for the wave 0 sheets (Module Owner, 24 Nov 2026: "Not one field per row: short fields can even go four to a row, and the whole form should stay tidy").
 
 HAP forms are a 12-column grid: size 3 = four per row, 4 = three, 6 = two, 9 + 3, 12 = full width.
 Each LAYOUT entry is a list of rows. A row is a list of (field alias, size); a string row "§ Title" is a divider
-(native 分段, type 22, created once). Sizes in a row add up to 12. Relation lists shown as tabs (showtype 6) and hidden
+(native dividers, type 22, created once). Sizes in a row add up to 12. Relation lists shown as tabs (showtype 6) and hidden
 helper fields go after the listed rows. Read-only fields the workflows maintain (fieldPermission "101") become "100":
 still shown on the record, but not on the new-record form, so dialogs such as Launch Plan show only what people fill in.
 

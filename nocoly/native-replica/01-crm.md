@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Status | **Approved** 24 Nov 2026 by the Module Owner, with the defaults in §12 (first wave 1 plan; CRM chosen first on 24 Nov). **Not built yet** |
+| Status | **Approved** 24 Nov 2026 by the Module Owner, with the defaults in §12 (first wave 1 plan; CRM chosen first on 24 Nov). **Phase A built and tested 24 Nov 2026** (`01-crm-build/BUILD-LOG.md`, Acceptance); waiting for the Module Owner's sign-off. Phase B not started |
 | Odoo reference | 20.0 open source: `crm`, `sales_team`, `utm` source in the local Odoo 20 container (`odoo20-local`), field lists in `catalogue/odoo-20.0/`, demo data from the local database. Lessons: the September CRM build in ERP Master and its conformance review against Odoo saas~19.4 (`external/ca1phas-odoo-crm/nocoly/worksheets/14-crm-conformance.md`, `reference/odoo-19.4/crm.*.md`) |
 | Owner in Nocoly | **By role** (`HANDOVER.md` §2): Module Owner (accountable: plan, decisions, acceptance), Builder (builds and tests), App Administrator (roles, members, deletions), Programme Lead (priorities). Who holds each role is kept outside the repo |
 | Depends on | Wave 0 in Odoo Replica (AI): Contacts, Countries, Companies, Currencies, Activities with plans |

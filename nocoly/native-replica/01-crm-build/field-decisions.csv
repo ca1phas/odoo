@@ -1,0 +1,71 @@
+model,field,decision,reason
+crm.lead,color,skip,Kanban colour index; HAP boards colour cards by an option field
+crm.lead,company_currency,skip,Company currency (MYR); one company
+crm.lead,date_automation_last,later:crm-phase-b,Rule-based assignment: phase B
+crm.lead,duplicate_lead_count,native:duplicate_lead_ids,The Similar Leads tab shows the count
+crm.lead,duration_tracking,skip,Odoo's time-in-stage tracking; HAP keeps each record's field log
+crm.lead,email_domain_criterion,skip,"Company e-mail domain for duplicates; Similar Leads compares e-mail, customer and phone"
+crm.lead,email_normalized,skip,Normalised e-mail for duplicates and blacklists; Similar Leads compares the e-mail
+crm.lead,email_state,later:crm-phase-b,Predictive lead scoring: phase B (decision 4)
+crm.lead,is_automated_probability,later:crm-phase-b,Predictive lead scoring: phase B (decision 4)
+crm.lead,is_blacklisted,later:mass_mailing,Blacklists come with mass mailing and SMS marketing
+crm.lead,lang_active_count,skip,Form helper: how many languages are active
+crm.lead,lang_code,skip,Display helper of the language; HAP uses a dropdown
+crm.lead,lead_properties,skip,No per-team dynamic fields in HAP (plan §1)
+crm.lead,my_activity_date_deadline,native:activity_date_deadline,Next Activity rollup and the My Activities board
+crm.lead,partner_email_update,hap,Odoo form warning; CRM - E-mail and phone to the customer writes the change
+crm.lead,partner_is_blacklisted,later:mass_mailing,Blacklists come with mass mailing and SMS marketing
+crm.lead,partner_phone_update,hap,Odoo form warning; CRM - E-mail and phone to the customer writes the change
+crm.lead,phone_blacklisted,later:mass_mailing,Blacklists come with mass mailing and SMS marketing
+crm.lead,phone_formatted,skip,Display helper
+crm.lead,phone_mobile_search,skip,Search helper
+crm.lead,phone_sanitized,skip,Normalised phone for duplicates and blacklists; the HAP phone field stores the international number
+crm.lead,phone_sanitized_blacklisted,later:mass_mailing,Blacklists come with mass mailing and SMS marketing
+crm.lead,phone_state,later:crm-phase-b,Predictive lead scoring: phase B (decision 4)
+crm.lead,recurring_plan,later:crm-phase-b,Recurring revenues: phase B (decision 2)
+crm.lead,recurring_revenue,later:crm-phase-b,Recurring revenues: phase B (decision 2)
+crm.lead,recurring_revenue_monthly,later:crm-phase-b,Recurring revenues: phase B (decision 2)
+crm.lead,recurring_revenue_monthly_prorated,later:crm-phase-b,Recurring revenues: phase B (decision 2)
+crm.lead,recurring_revenue_prorated,later:crm-phase-b,Recurring revenues: phase B (decision 2)
+crm.lead,state_id,native:x_crm__region,The state is part of the native Region field (Address)
+crm.lead,user_company_ids,hap,Companies of the salesperson; one company
+crm.lead,utm_reference,later:mass_mailing,Reference to the mailing or event that made the lead; comes with those bridges
+crm.stage,team_count,skip,"Number of teams, used by Odoo to hide the Teams field; HAP always shows it"
+crm.team,alias_bounced_content,skip,Mail alias: HAP has no inbound e-mail; the public form replaces it (decision 6)
+crm.team,alias_contact,skip,Mail alias: HAP has no inbound e-mail; the public form replaces it (decision 6)
+crm.team,alias_defaults,skip,Mail alias: HAP has no inbound e-mail; the public form replaces it (decision 6)
+crm.team,alias_domain,skip,Mail alias: HAP has no inbound e-mail; the public form replaces it (decision 6)
+crm.team,alias_domain_id,skip,Mail alias: HAP has no inbound e-mail; the public form replaces it (decision 6)
+crm.team,alias_email,skip,Mail alias: HAP has no inbound e-mail; the public form replaces it (decision 6)
+crm.team,alias_force_thread_id,skip,Mail alias: HAP has no inbound e-mail; the public form replaces it (decision 6)
+crm.team,alias_full_name,skip,Mail alias: HAP has no inbound e-mail; the public form replaces it (decision 6)
+crm.team,alias_id,skip,Mail alias: HAP has no inbound e-mail; the public form replaces it (decision 6)
+crm.team,alias_incoming_local,skip,Mail alias: HAP has no inbound e-mail; the public form replaces it (decision 6)
+crm.team,alias_model_id,skip,Mail alias: HAP has no inbound e-mail; the public form replaces it (decision 6)
+crm.team,alias_name,skip,Mail alias: HAP has no inbound e-mail; the public form replaces it (decision 6)
+crm.team,alias_parent_model_id,skip,Mail alias: HAP has no inbound e-mail; the public form replaces it (decision 6)
+crm.team,alias_parent_thread_id,skip,Mail alias: HAP has no inbound e-mail; the public form replaces it (decision 6)
+crm.team,alias_status,skip,Mail alias: HAP has no inbound e-mail; the public form replaces it (decision 6)
+crm.team,assignment_auto_enabled,later:crm-phase-b,Rule-based assignment: phase B
+crm.team,assignment_domain,later:crm-phase-b,Rule-based assignment: phase B
+crm.team,assignment_enabled,later:crm-phase-b,Rule-based assignment: phase B
+crm.team,assignment_max,later:crm-phase-b,Rule-based assignment: phase B
+crm.team,color,skip,Kanban colour index; HAP boards colour cards by an option field
+crm.team,crm_team_member_all_ids,later:crm-phase-b,Rule-based assignment: phase B
+crm.team,crm_team_member_ids,later:crm-phase-b,Rule-based assignment: phase B
+crm.team,currency_id,skip,Company currency (MYR); one company
+crm.team,dashboard_button_name,skip,Dashboard helper
+crm.team,favorite_user_ids,skip,Odoo dashboard favourites; HAP has its own favourites
+crm.team,is_favorite,skip,Odoo dashboard favourites; HAP has its own favourites
+crm.team,is_membership_multi,hap,HAP lets a member be in several teams
+crm.team,lead_all_assigned_month_count,later:crm-phase-b,Rule-based assignment: phase B
+crm.team,lead_all_assigned_month_exceeded,later:crm-phase-b,Rule-based assignment: phase B
+crm.team,lead_properties_definition,skip,No per-team dynamic fields in HAP (plan §1)
+crm.team,lead_unassigned_count,later:crm-phase-b,Rule-based assignment: phase B
+crm.team,member_company_ids,hap,One company
+crm.team,member_warning,skip,Odoo form warning about members in other teams
+crm.team,opportunity_count,native:x_crm__lead_ids,The team's Opportunities tab shows them
+crm.team,show_assignment_max,later:crm-phase-b,Rule-based assignment: phase B
+utm.campaign,color,skip,Kanban colour index; HAP boards colour cards by an option field
+utm.campaign,is_auto_campaign,later:mass_mailing,Marks campaigns made automatically by mailings and other apps
+utm.campaign,use_leads,skip,Tells Odoo whether to label the count Leads or Opportunities

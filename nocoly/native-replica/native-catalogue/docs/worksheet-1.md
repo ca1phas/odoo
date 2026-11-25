@@ -100,7 +100,7 @@ Source for this whole subsection: https://help.nocoly.com/worksheet/controls
   - **Restrictions:** allowed weekdays, a time range (for example 9:00–18:00), a time interval from 1 minute to 1 hour, and a start and end date.
   - **Other:** default values, and ISO, US, EU, Chinese or custom display formats.
   - **Write formats** for workflows, APIs, functions and imports:
-    - accepted: `YYYY年MM月DD日 HH:mm:ss`, `YYYY-MM-DD HH:mm:ss`, `YYYY/MM/DD HH:mm:ss` and `MM/DD/YYYY HH:mm:ss`;
+    - accepted: `YYYY<year>MM<month>DD<day> HH:mm:ss` (with the Chinese characters for year, month and day), `YYYY-MM-DD HH:mm:ss`, `YYYY/MM/DD HH:mm:ss` and `MM/DD/YYYY HH:mm:ss`;
     - `DD/MM/YYYY` is not supported, and is read as `MM/DD/YYYY`;
     - `YYYYMMDD` saves an empty value or clears the existing one;
     - function defaults accept Year-Month-Day only;

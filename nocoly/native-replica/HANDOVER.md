@@ -38,6 +38,11 @@ Ownership and decisions are recorded **by role, never by name**, so the work can
 8. **Read before write.** Other people edit the app too: re-read a field, rule, button or flow just before changing it.
 9. **Log platform differences** (CLI / MCP vs UI, or anything that behaves like a bug) in `PLATFORM-ISSUES.md`, ticket-ready. Nothing is filed without approval.
 10. **Keep the register current.** Ledger entries for every object; a register scan and coverage (0 OPEN) at the end of a module.
+11. **Plans in stages.** A plan's steps are stages with a "done when", never fixed weeks or dates; an effort guide per step is fine.
+12. **Owners by role.** Plans, logs and guides name roles; who holds each role is kept in one place (`ROLE-HOLDERS.md`, private).
+13. **Dialogs and roles are tested too.** No visibility rule may empty a button's dialog (rules apply inside it). Every role is checked with Role Debug, pages included, and Role Debug is switched off before scripts run (it changes the account's API rights).
+
+The same rules, adapted for EMS where several builders share one app, are in the shared repo: `nocoly/BUILD-RULES.md` on branch `claude/ems-parallel-build`.
 
 ## 4. Environment
 
@@ -56,9 +61,9 @@ README.md            the programme: goal, sources, waves, decisions
 HANDOVER.md          this file
 SPLIT-GUIDE.md       how to take modules out of a customer copy
 TEMPLATE.md          the 12-section module plan
-PLATFORM-ISSUES.md   P1–P38 ticket-ready platform issues, D1–D12 documentation errors
+PLATFORM-ISSUES.md   P1–P47 ticket-ready platform issues, D1–D12 documentation errors (English version for the repo: publish/PLATFORM-ISSUES.en.md)
 00-foundation.md     wave 0 plan; 00-foundation-build/ its build (BUILD-LOG.md, scripts, field-decisions.csv)
-01-wave1.md          wave 1 order; 01-crm.md the CRM plan; 01-crm-build/ its knowledge base and split guide
+01-wave1.md          wave 1 order; 01-crm.md the CRM plan; 01-crm-build/ its build (BUILD-LOG.md, scripts, acceptance tests), knowledge base and split guide
 native-catalogue/    what HAP can do natively (fields, workflow nodes, the help-site digests)
 catalogue/           Odoo 20 modules, models and fields with their owner module
 register/            the register scan, coverage and prune prediction
@@ -91,6 +96,7 @@ Known traps are in `PLATFORM-ISSUES.md` and in the KNOWLEDGE file of each module
 
 The repo `github.com/ca1phas/odoo` is **public**. The shareable copy goes to `nocoly/native-replica/` on branch `claude/odoo-native-replica`.
 - **Script:** `publish/make_public.py` (in the private workspace, never published itself). It copies the listed files and replaces customer and partner names, organisation and app ids, record ids, profiles, e-mail addresses and local paths. It prints every replaced name line for review.
+- **English only** (Module Owner, 25 Nov 2026: no mixed languages in the repo). `PLATFORM-ISSUES.md` is published from its English version, `publish/PLATFORM-ISSUES.en.md`: add each new issue there too. Other Chinese text is translated through the script's `ENGLISH` list. The script stops if an issue has no English version or if any published line still contains Chinese.
 - **Never published:** ledgers (`ids.json`), backups, scan outputs, exported data, the role-holder list, customer files.
 - **Before every push:** check the diff for names and ids; push only with the Module Owner's or Programme Lead's go-ahead.
 

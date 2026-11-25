@@ -28,7 +28,7 @@ Ledger of created objects: `ids.json`. Scripts: `step*.py` (re-runnable: they re
 **Step 2 notes**
 - Activity types and plans go to Activities › Configuration instead of Settings › Activities, the same way Odoo puts them under each app's Configuration menu.
 - Roles:
-  - Employee and Read Only are HAP's default roles 成员 and 只读, renamed.
+  - Employee and Read Only are HAP's default roles Member and Read-only (named in Chinese by the platform), renamed.
   - Master Data Manager is new. It is view-only until step 6, because a per-sheet role is refused while the app has no sheets.
 
 **Step 3 notes:** rows owned by other Odoo modules stay out of wave 0.
@@ -57,7 +57,7 @@ Ledger of created objects: `ids.json`. Scripts: `step*.py` (re-runnable: they re
 | Countries | 251 | Native Region set for 249. XI (Northern Ireland) and XK (Kosovo) are not in Nocoly's list |
 | Country Groups | 11 | |
 
-**Paused 23 Nov, about 14:10.** Module Owner: "货币也是有啊原生的…你全部先查看用原生的field". Nothing more is built until every native field type and workflow node has been surveyed. The survey goes to `../native-catalogue/fields.md` and `workflow-nodes.md`. Wave 0 is then redesigned and shown for approval. The sheets and data above stay as they are until that review; nothing is deleted without the App Administrator's OK.
+**Paused 23 Nov, about 14:10.** Module Owner: "Currency has a native field too… look through everything first and use the native fields". Nothing more is built until every native field type and workflow node has been surveyed. The survey goes to `../native-catalogue/fields.md` and `workflow-nodes.md`. Wave 0 is then redesigned and shown for approval. The sheets and data above stay as they are until that review; nothing is deleted without the App Administrator's OK.
 
 **Native currency, tried in the field designer** (unsaved probe field on Currencies, discarded; readback confirms no new field):
 - The Currency (amount) field has a **Currency Type** chosen per field from Nocoly's built-in world list, for example "MYR-RM Malaysian Ringgit".
@@ -111,7 +111,7 @@ Ledger of created objects: `ids.json`. Scripts: `step*.py` (re-runnable: they re
 
 ## Restart, 23 Nov 2026 about 15:50
 
-Module Owner: "把你之前做错的或者拿来测试的 worksheets那些 删掉吧，重新开始". Also: no multi-agent work, because parallel creation causes problems.
+Module Owner: "Delete the worksheets you got wrong or made for testing, and start again". Also: no multi-agent work, because parallel creation causes problems.
 
 - Deleted all 7 worksheets of the first attempt, dependents first: Currency Rates, States, Country Groups, Countries, Currencies, Industries, and Native Field Probe (the probe sheet behind `native-catalogue/fields.md`). The CLI returned success for each.
 - **Checked:**
@@ -229,7 +229,7 @@ Built with `step4c_companies_banks.py`. All field types are native; no code.
 
 **Next:** Units (`uom_uom`), then Product Categories, Attributes, Products and Variants (plan v2 §3).
 
-## Units and Product Categories (23 Nov 2026, from about 21:40; Module Owner: "帮我把 0 的全部完成吧")
+## Units and Product Categories (23 Nov 2026, from about 21:40; Module Owner: "Finish all of wave 0 for me")
 
 Built with `step4d_units_categories.py` (new helpers in `sheetlib.py`: `add_once`, `set_show`, `ensure_self_relation`, `HIDDEN`); data with `step5_load_data.py`.
 
@@ -304,7 +304,7 @@ Helper `wflib.py` (create once via the ledger, `batch-add` from a JSON file, pub
 | 5 | Contacts - Language from company (`<id>`) | Contacts create with a company | Copies the company's language | TEST Person's "Malay" became the company's "English" |
 
 **Findings while building:**
-- A **Region value read in a workflow function is a Chinese path** ("马来西亚/雪兰莪"), not the code and not in the user's language, so the country code cannot be cut out of it. The country is found instead with a query on Countries where **Countries.Region contains the contact's Region** (tested: Selangor → MY; "belongs" finds nothing).
+- A **Region value read in a workflow function is a Chinese path** (Malaysia/Selangor, in Simplified Chinese), not the code and not in the user's language, so the country code cannot be cut out of it. The country is found instead with a query on Countries where **Countries.Region contains the contact's Region** (tested: Selangor → MY; "belongs" finds nothing).
 - **Date calculation results are `date_fx_id`** (the UI's reference); the CLI writes `string_fx_id`, which shows "Field Deleted" and blocks publishing (P21).
 - The CLI cannot write **"relation is not empty"** (P22): the condition is built with a placeholder and then saved in stored form (`conditionId` 31, `filedTypeId` 29). The UI shows "Related Company is not empty".
 - `batch-add` keeps no **name on a path that has a condition** (P23); names are set with `node rename`.
@@ -326,7 +326,7 @@ Helper `wflib.py` (create once via the ledger, `batch-add` from a JSON file, pub
 - Function results are referenced as `string_fx_id` even for numbers (the UI stores it that way); `number_fx_id` gives an invalid output mapping. Date calculations are `date_fx_id`.
 - A PBP's output is the built-in "Output Parameters" node (type 20, action 502): `subProcessVariables` + `fields`, saved with `node save`.
 - A deleted record still blocks unique index values (P26): the TEST SGD rate could not be created again after deletion.
-- **Paused 23:00, resumed 23:10**: The Module Owner asked why Countries / Currencies sheets exist instead of native Region and Currency fields. After the explanation (the native Currency field is fixed per field and holds no rates; the native Region holds no country data or groups and reads as a Chinese path in workflows), Module Owner: "噢 明白了，继续吧" — the sheets stay.
+- **Paused 23:00, resumed 23:10**: The Module Owner asked why Countries / Currencies sheets exist instead of native Region and Currency fields. After the explanation (the native Currency field is fixed per field and holds no rates; the native Region holds no country data or groups and reads as a Chinese path in workflows), Module Owner: "Oh, I see. Carry on" — the sheets stay.
 
 **Product flows (23 Nov 2026, about 23:10–23:25):**
 
@@ -423,7 +423,7 @@ Every test used TEST records, deleted afterwards (contacts, rules, checks, curre
 | v2 | New tag typed on a contact | In the form, "Add new option: TESTUITag" added the option to "Contact Tags" with colour #1677ff and saved it on the record; the TEST option was then marked deleted. **Pass** (every new tag gets the same default blue; Odoo picks a random colour) | UI + option set readback |
 
 **Fixes made because of the tests:**
-- **Contacts - Sync from company failed for every contact without a Region** (00:48 runs: "筛选条件值为空 Region", P33): no display name, no commercial entity. The two country queries were taken out of it and moved to the new flow **Contacts - Country from Region**, whose trigger condition is "Address is not empty". Retest: 0 failed runs in C1–C4 and the circle flow.
+- **Contacts - Sync from company failed for every contact without a Region** (00:48 runs: "the filter value is empty: Region", P33): no display name, no commercial entity. The two country queries were taken out of it and moved to the new flow **Contacts - Country from Region**, whose trigger condition is "Address is not empty". Retest: 0 failed runs in C1–C4 and the circle flow.
 - **A company under a parent company** took the parent's display name and commercial entity. Odoo keeps a company's own name and makes it its own commercial entity, so the "With a company" path now also requires Company Type = Person (renamed "Person with a company"). Path names lost by `batch-add` were set.
 - **Employee role** rebuilt per sheet (see Roles above).
 
@@ -445,7 +445,7 @@ The Module Owner asked for the button dialogs to be tested in the UI, and added 
 | Rebuild Variants | Confirmation dialog → request "Rebuild requested: TEST Dialog Product" Done; still one active variant |
 
 **Form layouts** (`step9_form_layouts.py`, all 28 sheets):
-- Rows on HAP's 12-column grid: short fields four per row (size 3), three per row (4) or two (6); long text, rich text, sub-tables full width. Dividers (分段) group the fields, for example Contacts: Contact / Address / Tax and references / Notes / Kept up to date automatically.
+- Rows on HAP's 12-column grid: short fields four per row (size 3), three per row (4) or two (6); long text, rich text, sub-tables full width. Dividers group the fields, for example Contacts: Contact / Address / Tax and references / Notes / Kept up to date automatically.
 - Read-only fields the workflows maintain are now hidden on the new-record form ("101" → "100"); on Activities the fields only the buttons or flows fill (feedback, next activity, source, plan links) are hidden on create too ("110" / "100"). The Launch Plan dialog therefore shows only Plan, Plan Date and Assigned to.
 - Address Type is a dropdown now. Setting `showtype` "0" on the single-select did nothing; the designer's "Dropdown list" changes the field type from 9 to 11. The Contacts sync condition "Address Type is Contact" (stored with type 9) still matches: a TEST person under a TEST company took the company's address (records deleted).
 - Product Type stays a radio but gets half a row, so its three options fit on one line.

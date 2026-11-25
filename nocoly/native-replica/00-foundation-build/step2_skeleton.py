@@ -52,7 +52,7 @@ if current != order:
 rs = roles()
 backup('step2-roles-before', rs)
 names = {r['name']: r for r in rs}
-for old, new in (('成员', 'Employee'), ('只读', 'Read Only')):
+for old, new in (('\u6210\u5458', 'Employee'), ('\u53ea\u8bfb', 'Read Only')):  # HAP's default role names, stored in Chinese
     if new not in names and old in names:
         hap('app', 'role', 'rename', APP, names[old]['id'], '-n', new)
         log.append(f'renamed role {old} to {new}')

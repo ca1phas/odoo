@@ -8,7 +8,7 @@ C2 "Contacts - Push company changes to people" (update of a company's name, disp
    industry or address): rewrite its people (#1/#2) and the address of its Contact-type people (#3).
 C3 "Contacts - Language from company" (create with a company): the person takes the company's language (#5).
 Country from Region: a query on Countries where Countries.Region *contains* the contact's Region. A Region value
-read in a function is a Chinese path ("马来西亚/雪兰莪"), not the code, so the code cannot be cut out of it.
+read in a function is a Chinese path (Malaysia/Selangor, in Simplified Chinese), not the code, so the code cannot be cut out of it.
 Run: python step6_wf_contacts.py
 """
 import json
@@ -163,7 +163,7 @@ def patch_has_company(pid, people_only=False):
 
 def c4():
     """C4 "Contacts - Country from Region" (24 Nov fix). A query whose filter value is empty fails the whole run
-    ("筛选条件值为空 Region", PLATFORM-ISSUES P33), so the country queries inside C1 stopped C1 for every contact without a
+    ("the filter value is empty: Region", PLATFORM-ISSUES P33), so the country queries inside C1 stopped C1 for every contact without a
     Region: no display name, no commercial entity. The country now has its own flow whose trigger condition is
     "Region is not empty"; C1 keeps only the company copy (a Contact-type person takes the company's country)."""
     from lib import hap

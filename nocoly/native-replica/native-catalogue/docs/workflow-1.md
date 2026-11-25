@@ -248,7 +248,7 @@ The trigger pages themselves are in part 2. This slice says:
   - runs in the background, so later nodes cannot use the refreshed values;
   - ≤ 100,000 records per run (split by filters for more);
   - ≥ 120 minutes between runs, otherwise the node is skipped.
-- **[Project]** Manual calibration (校准) in the UI is also limited to app admins and to once per worksheet per 2 hours (memory note `hap-foreign-field-storage-modes`, 23 Nov 2026). Whether the node and the manual action share that window is unknown.
+- **[Project]** Manual calibration in the UI is also limited to app admins and to once per worksheet per 2 hours (memory note `hap-foreign-field-storage-modes`, 23 Nov 2026). Whether the node and the manual action share that window is unknown.
 - **ERP use [Inference]:** refresh an order's rollup total before an amount-based approval branch; refresh stored lookups overnight after master-data changes.
 
 ### 2.5 Logic and time
@@ -892,7 +892,7 @@ None of these has been tested. Run them in a sandbox app, not in EMS or a custom
     - which time zone the Delay node's default 8:00 AM uses: the app's or the server's UTC+8 (part 2 has the time pages).
 11. **Calibrate** (`node-calibrate`; [Project] memory note).
     - After Calibrate Single Record, does a rollup read straight away return the new value?
-    - Does Calibrate Worksheet share the 120-minute window with manual calibration (校准)?
+    - Does Calibrate Worksheet share the 120-minute window with manual calibration?
 12. **Approval data updates** (`node-approve`). Confirm that subform and related-sheet fields cannot be set, and that "Update when approval starts" runs again after a return.
 13. **Required fields in bulk and e-mail approval** (`node-approve`). Confirm that batch, check-list and e-mail quick approval skip required fields and comments on Nocoly SaaS, then decide the setting per flow.
 14. **Approval status in views** (`node-initiate-approval-flow`; not stated). Can a view filter and sort on Status or Node Owner, for a "To Approve" list?

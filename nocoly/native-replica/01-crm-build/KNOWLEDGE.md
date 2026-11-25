@@ -191,6 +191,42 @@ All in `crm/models/crm_lead.py` unless stated.
 | — | A deleted record still blocks unique values (P26) | — |
 | — | Forms | `../00-foundation-build/step9_form_layouts.py` (rows on a 12-column grid; `fieldPermission` "100" / "110" for hidden on create). A single-select shown as a dropdown is field type 11 (the designer switches 9 → 11) |
 
+### 7.1 Found while building Phase A (24 Nov 2026)
+
+**Odoo 20 facts the plan's first draft had differently**
+- **Convert to Opportunity has no dialog** on a single lead (`action_convert_to_opportunity`; the old `crm.lead2opportunity.partner` wizard is gone, only the mass wizard remains). It links the contact with the same e-mail, else creates one from the lead (`_create_customer`: a person named after the contact name, else after the lead), then sets type, conversion date and, when empty, the team's first stage (`_stage_find` without the fold filter).
+- **Days to assign / close** are whole days (`abs(timedelta.days)`), not fractions.
+- **Rotting** is computed live (`mail.tracking.duration.mixin`): pending opportunities whose stage has Days to Rot > 0 and whose last stage change is older; `rotting_days` = whole days since then.
+- **Leaving a won stage** recomputes the probability only through lead scoring; with no scoring (phase A) the probability stays 100.
+
+**HAP settings with no CLI option, found by setting them once in the UI and reading them back**
+
+| What | Stored as |
+|---|---|
+| Field description as a tooltip | `advancedSetting.hinttype` "1" (0 auto, 2 below) |
+| Rollup "Earliest" of a date | `enumDefault` 3, `enumDefault2` 15; filter in `advancedSetting.filters` |
+| Query Records, empty dynamic value | `emptyRule` 3 = "no results for this condition" (per group) |
+| Board column order | view `advancedSetting.navsorts` = `[{"controlId": <field of the related sheet>, "isAsc": true}]` |
+| Chart dimension in a custom order | chart `sorts` = `[{<dimension field id>: [row ids in order]}]` |
+| Member field that gives edit rights | `userPermission` 2 ("Owner (edit and delete records)"); 1 = view |
+| Public-form records | creator (`caid`) = `user-publicform`; a flow trigger condition "Creator is Public form" selects them |
+
+**CLI traps met** (details in `../PLATFORM-ISSUES.md`)
+- **P41 (High): OR groups in a "get single record" step are ignored at run time** when they sit in the old condition slot, which is where the CLI writes them. The editor shows the groups and "or", the run reports success, but the step returns the first record by the sort (the Won button picked New). Fix, as the editor's own switch does: each OR group becomes a filter group, `filters = [{"spliceType": 2, "conditions": [group]}]`, `conditions = []`. `crmwf.group_filters()` does it, and `done()` runs it before every publish. One-group filters in the old slot work.
+- **P42: date-difference units.** The product numbers them Year 1, Month 2, Day 3, Hour 4, Minute 5, Second 6; hap-cli's `out_unit` uses other numbers, so "hour" is stored as Month and gives 0. Only "day" agrees. Set the unit with `crmwf.save_compute(..., outUnit=DATE_DIFF_UNITS[...])`. A difference in hours is whole hours, so the meeting duration is minutes / 60.
+- **"Equals" on a multi-record relation compares the whole set.** Odoo's `team_ids = team` ("the stage's teams include this team") is the designer's **is any of** (33), not equals (9). `crmwf.multi_relation_any()` fixes every query and branch; test 15d checks it with a stage of two teams.
+- **Rules also apply inside a button's dialog.** A "show only when archived" rule emptied the Lost dialog, which opens on an active record. Keep dialog fields free of visibility rules.
+- **Role Debug acts on the API too.** While a role is being debugged, the build account's CLI calls run with that role (role list refused). Switch it off before running scripts.
+- **P43: the role editor misreads roles made through V3** (shows view / edit / delete All). Never save them there. Change them with V3 `PATCH /v3/app/roles/{id}` and the complete body from `GET` (PUT gives 405; a partial PATCH is refused), then compare every key.
+- **A list view's order is `moreSort`** (`[{controlId, isAsc}]`); `sortCid` / `sortType` alone do not change what the list shows. `sortType` 1 = descending, 2 = ascending.
+- P39: an option added by `field.update` without a key is saved with an empty key: give it a UUID.
+- P40: the CLI's relation range check ignores an "is empty" group of a selection limit and refuses valid values: write with `--ignore-rules`.
+- A function step's result is read as `string_fx_id`, even into a number field; `number_fx_id` from a function step is refused at publish.
+- A condition on a related-record step (`get_relation`) needs its field type stated (`"type": n`).
+- Query filters are OR-of-AND only; a whole-step save clears every setting it does not name.
+- A path's stored condition is in the flow map (`node list`), not in `node get`.
+- The CLI refuses to write fields hidden on the new-record form: loaders use `--ignore-rules`.
+
 ## 8. Lessons from the September CRM build (ERP Master, 18–21 Sep)
 
 The conformance review found 19 divergences, 5 that mattered. Its findings are built into this plan:

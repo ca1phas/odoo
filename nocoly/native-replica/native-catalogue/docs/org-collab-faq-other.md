@@ -191,7 +191,7 @@
 - This page is unlisted on the Nocoly site **[live 23 Nov]** and is written for mainland China (WeChat facial verification, China carriers). *Inference:* it may not apply to Nocoly as written.
 - **Restricted features:** inviting users (Free users need personal verification); inviting into groups and inviting organisation members (Free/Trial); buying credits (Free/Trial); changing SMS signatures (enterprise verification, everyone); publishing to the Marketplace; **sharing externally** (Free/Trial organisations need enterprise verification for record, view, custom page and chart shares, public forms, public queries, the external portal, the Get Link node and ChatBot sharing).
 - **Multiple business entities** can be verified; SMS signatures and e-invoicing tax IDs are set per entity.
-- **SMS signatures:** reviewed by carriers in about 5 business days (10 for trademarks). The default signature is 明道云. Messages whose links use a HAP domain must use 明道云.
+- **SMS signatures:** reviewed by carriers in about 5 business days (10 for trademarks). The default signature is the Chinese name of Mingdao Cloud. Messages whose links use a HAP domain must use that signature.
 - Source: https://help.nocoly.com/org/certification
 
 #### Integrations page (Org Admin > Integration)
@@ -286,10 +286,10 @@
 
 ### 2.5 Worksheet indexes (from the zh-Hans page)
 - **What it does:** speeds up queries and sorting on large worksheets. The docs suggest it once a sheet reaches tens of thousands of rows or filters become slow.
-- **Where:** worksheet editor > 【更多设置】>【检索加速】> **创建索引** (More settings > Retrieval acceleration > Create index; the English label is on the worksheet slice's page).
+- **Where:** worksheet editor > **More settings** > **Retrieval acceleration** > **Create index** (translated from the Chinese page; the English label is on the worksheet slice's page).
 - **Types:**
   - normal and composite indexes;
-  - **唯一索引 (unique index):** the combination of the indexed fields cannot repeat (example: Name + Created date allows one record per person per day);
+  - **Unique index:** the combination of the indexed fields cannot repeat (example: Name + Created date allows one record per person per day);
   - the old full-text index on all text fields can no longer be created.
 - **Limits:**
   - up to 5 indexes per worksheet;
@@ -297,7 +297,7 @@
   - at most 1 multi-value field per index. Multi-value types include member, department, role, option, relation and array fields.
   - With a unique index, a field that allows empty values may be empty in **only one record** of the whole worksheet.
 - **Editing:** add or remove fields, change the order and sort direction, rename, delete. The system index `index_rowid` cannot be renamed.
-- **Creating a unique index fails** when duplicates exist, and the check includes the recycle bin. Records deleted more than 60 days ago, and some batch deletions, are not visible there; empty the recycle bin (立即清空) and retry.
+- **Creating a unique index fails** when duplicates exist, and the check includes the recycle bin. Records deleted more than 60 days ago, and some batch deletions, are not visible there; empty the recycle bin (Empty now) and retry.
 - **Auto-indexing:** on the public cloud, HAP learns frequent queries from daily logs and creates indexes itself. Do not change or delete indexes you did not create. Server installs do not auto-index.
 - **Query advice:**
   - follow the leftmost-prefix rule;
@@ -623,7 +623,7 @@
 | 1 | Plan gates: Code Block, Loop, PBP API response, global variables, condition groups, extended user information, Super Search, data encryption are Professional only | Decides which native tools the build and customer copies can use | `Org Admin > Home`: edition of the organisation; open the workflow node list and the worksheet settings |
 | 2 | 200 fields per worksheet on SaaS | Shared sheets (Contacts, Products, Companies) grow with every module | Count fields on EMS's largest sheet; on a test sheet, see whether field 201 is refused |
 | 3 | Unique index: composite, a relation field allowed, one empty value, enforced for workflow and API writes | Could replace workflow duplicate checks (state code per country, barcode) | On a test sheet: create a unique index, then write duplicates through the form, a workflow and the API; note the error |
-| 4 | The English label and place of the index tool (【更多设置】>【检索加速】) | Builders need the path | Open a worksheet's More settings |
+| 4 | The English label and place of the index tool (More settings > Retrieval acceleration) | Builders need the path | Open a worksheet's More settings |
 | 5 | Rollups, Get Multiple Data through a relation and stored foreign fields stop at 1,000 related records | Customer totals and stock sums | Test sheet with 1,001 child rows |
 | 6 | Update Record node: 100 records per run on SaaS | Batch postings and stock moves | Run a test flow on 150 rows and count the updates |
 | 7 | Approver options: department manager, manager (org chart), org-role members, the role member responsible for the department; the primary-department option | Odoo approvals (purchase, expenses, time off) | Open an approval node's approver picker |
@@ -739,8 +739,8 @@ Every page of the slice, in `read_pages.py` order (`#` = `--offset`). All 88 wer
 | 83 | https://help.nocoly.com/task/start-end | Planned vs. Actual Start and End Times of Tasks | Planned and actual dates, Start Now, status rules |
 | 84 | https://help.nocoly.com/wecom/disable-integration | Disable WeCom Integration | No text in the cache; live it is unlisted with no English body |
 | 85 | https://help.nocoly.com/wecom/integration-note | WeCom Integration Notes | No text in the cache; live it is unlisted with no English body |
-| 86 | https://help.nocoly.com/zh-Hans/org/cloud-service | 云服务 | Chinese version of Cloud Services, same content as #43 |
-| 87 | https://help.nocoly.com/zh-Hans/worksheet/index-acceleration | 工作表索引 | Worksheet indexes: up to 5, unique and composite indexes, query advice, auto-indexing on SaaS (English page in the worksheet slice) |
+| 86 | https://help.nocoly.com/zh-Hans/org/cloud-service | Cloud Services (Chinese page) | Chinese version of Cloud Services, same content as #43 |
+| 87 | https://help.nocoly.com/zh-Hans/worksheet/index-acceleration | Worksheet indexes (Chinese page) | Worksheet indexes: up to 5, unique and composite indexes, query advice, auto-indexing on SaaS (English page in the worksheet slice) |
 
 ## 7. New since 3 Nov (live check, 23 Nov 2026)
 

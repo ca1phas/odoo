@@ -1,6 +1,6 @@
 # Odoo modules on HAP + Compute: programme plan
 
-**Status:** updated 24 Nov 2026. Wave 0 is built and accepted (`00-foundation-build/BUILD-LOG.md`); the CRM plan is approved and not built yet (`01-crm.md`). Owners are recorded by role (`HANDOVER.md` §2); anyone taking over starts with `HANDOVER.md`. Each module gets its own plan (`TEMPLATE.md`), and building a module starts only after that plan is approved.
+**Status:** updated 24 Nov 2026. Wave 0 is built and accepted (`00-foundation-build/BUILD-LOG.md`); CRM Phase A is built and tested, waiting for sign-off (`01-crm.md`, `01-crm-build/BUILD-LOG.md`). Owners are recorded by role (`HANDOVER.md` §2); anyone taking over starts with `HANDOVER.md`. Each module gets its own plan (`TEMPLATE.md`), and building a module starts only after that plan is approved.
 
 ## 1. Goal
 
@@ -133,8 +133,8 @@ Change the order when a deal needs something earlier. For example, a partner's e
 | `HANDOVER.md` | **Read first when taking over:** roles, working rules, environment, file map, planning and building a module, publishing, open items |
 | `ROLE-HOLDERS.md` | Who holds each role today (private: never published) |
 | `SPLIT-GUIDE.md` | How to take modules out of a customer copy with the register; per-module notes in each `*-build/SPLIT-GUIDE.md` |
-| `PLATFORM-ISSUES.md` | Platform issues P1–P38, ticket-ready in Simplified Chinese, and documentation errors D1–D12; nothing is filed without approval |
-| `publish/` | `make_public.py` and the public README: builds the shareable copy for the public repo (private: never published) |
+| `PLATFORM-ISSUES.md` | Platform issues P1–P47, ticket-ready in Simplified Chinese, and documentation errors D1–D12; nothing is filed without approval. The repo gets the English version, `publish/PLATFORM-ISSUES.en.md` |
+| `publish/` | `make_public.py`, the public README and the English issue list: builds the shareable copy for the repo, in English only (private: never published itself) |
 | `TEMPLATE.md` | The module plan template (12 sections) |
 | `compute-for-ui.md` | Compute facts, the rules for using it, the checks to run first, candidate screens |
 | `sept-plan-comparison.md` | Casimir's September replica: what was built, the problems met, his plan against this one |
@@ -142,8 +142,8 @@ Change the order when a deal needs something earlier. For example, a partner's e
 | `00-foundation.md` | Wave 0 module plan **v2, native first**: built and accepted 24 Nov 2026 in Odoo Replica (AI), 21 of 21 acceptance tests |
 | `00-foundation-v1.md` | Wave 0 plan v1, approved and then superseded the same day |
 | `01-wave1.md` | Wave 1 order and scope (draft, 24 Nov): CRM → Invoicing → Sales → Inventory → Point of Sale, from the Odoo 20 dependencies |
-| `01-crm.md` | Wave 1 module plan **CRM**, **approved** 24 Nov 2026 with the defaults of its §12, not built yet: `crm`, `sales_team`, `utm`, native only, Phase A and B |
-| `01-crm-build/` | The CRM knowledge base (`KNOWLEDGE.md`: Odoo 20 behaviour rule by rule, access rules, seed data, native mapping and traps, September lessons), its split guide and Odoo 20 reference extracts |
+| `01-crm.md` | Wave 1 module plan **CRM**, **approved** 24 Nov 2026 with the defaults of its §12; **Phase A built and tested 24 Nov 2026**: `crm`, `sales_team`, `utm`, native only; Phase B not started |
+| `01-crm-build/` | The CRM build: `BUILD-LOG.md` (status, every step, acceptance), the step scripts and acceptance scripts, `field-decisions.csv`, the knowledge base (`KNOWLEDGE.md`: Odoo 20 behaviour rule by rule, access rules, seed data, native mapping and traps, September lessons, traps found while building), the split guide and Odoo 20 reference extracts |
 | `00-foundation-build/` | Build log (`BUILD-LOG.md`), step and acceptance scripts, field decisions, the review page, the ledger (`ids.json`, private) and reference data exported from the local Odoo |
 | `register/` | Register tools: Odoo export, HAP scan, join, diff, prune prediction, coverage |
 | `catalogue/odoo-20.0/foundation-fields.csv`, `foundation-fields-by-owner.md` | Every field of the foundation models in the local Odoo 20, with the module that defines it (generated) |

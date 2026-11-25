@@ -402,10 +402,10 @@ The overview page lists nine trigger types. A tenth kind of flow, the loop proce
   - Create New Template. Templates can be edited or deleted; a deleted template stays in nodes that already use it.
 - *Limits:*
   - If any selected user has no valid number, the node fails and **stops the workflow**.
-  - Avoid `【】`.
+  - Avoid full-width square brackets (U+3010, U+3011).
   - From the SMS troubleshooting page:
     - ≤ 500 characters including the signature.
-    - Symbols such as ￥ ★ ✓ ※ may come out garbled.
+    - Symbols such as the full-width yen sign (U+FFE5), ★, ✓ and ※ may come out garbled.
     - Outside Mainland China, **custom SMS requires the organisation's own Twilio account**, billed by Twilio.
     - Verification SMS without Twilio cost 2.3 credits each.
     - Mainland China: messages with links or phone numbers are likely to be blocked, and China Unicom and China Telecom may restrict delivery at night (about 23:00 to 07:00).
@@ -670,7 +670,7 @@ The "Native in HAP" column is from the docs. The "Falls short" column is partly 
 
 **Messaging and portal**
 25. Send Email (docs): at most 10 e-mails an hour per address (a shared inbox such as accounts@ hits this quickly), a fixed platform sender, and inline CSS only.
-26. Send SMS (docs): one selected user without a number stops the whole flow. Outside Mainland China, custom SMS needs Twilio. `【】` is reserved. 500-character limit.
+26. Send SMS (docs): one selected user without a number stops the whole flow. Outside Mainland China, custom SMS needs Twilio. Full-width square brackets (U+3010, U+3011) are reserved. 500-character limit.
 27. Invite External User (docs): SMS only, never to overseas numbers, no e-mail invitations.
 28. Audio Notification is silent for indirect triggers: a flow started by another flow, a button flow calling a PBP, scheduled, date and webhook flows (docs).
 29. WeChat recipients must follow the Official Service Account (docs).

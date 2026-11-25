@@ -210,7 +210,7 @@ These belong to the worksheet and workflow digests. They are listed here because
 
 **ChatBot** (`ai/chatbot`) [Doc]:
 - **What it is:** an app item. With **Access to All App Items** everyone can use it; with **Access to Selected App Items** a role needs **View**. External users follow the same rules.
-- **Creating it:** **＋ Create** > **ChatBot**, then describe its purpose; the configuration is generated for you.
+- **Creating it:** **+ Create** > **ChatBot**, then describe its purpose; the configuration is generated for you.
 - **Settings:**
   - Name, Avatar (PNG or JPG), Welcome Message, **Suggested Questions (up to 5)**, Share Chat, Setup Process.
   - **File Uploads:** PNG, JPG, JPEG, PDF, Word and Excel; up to 5 per message; images ≤ 5 MB; documents ≤ 10 MB.

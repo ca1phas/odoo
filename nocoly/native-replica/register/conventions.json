@@ -6,6 +6,10 @@
     "Units": "uom",
     "Products": "product",
     "Activities": "mail",
-    "Register": "system"
+    "Register": "system",
+    "CRM": "crm",
+    "UTM": "utm",
+    "Meetings": "calendar",
+    "Sales Teams": "sales_team"
   }
 }
