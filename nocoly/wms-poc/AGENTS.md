@@ -6,7 +6,10 @@ The rules in the repository's root `CLAUDE.md` (Never, Always, Saving controls) 
 
 ## Before you start
 
-1. Take the next step from `STATUS.md`. Write your role and the date under **Working on it**, and clear it when you stop.
+1. Take the next step from `STATUS.md`. Write your role, your name and the date under **Working on it**, for example `Builder (Travis), 27 Nov 2026`, and clear it when you stop. Use the same `Role (Name)` in the **Who** column of the log.
+   - **Set your name once** on your computer: `git config --global wmspoc.name "<your name>"`.
+   - **AI sessions fill it in for you.** They read `git config wmspoc.name`, or `git config user.name` if that is empty, and ask you only when both are empty.
+   - **Write only your own name,** never someone else's. Older rows name roles only.
 2. One Builder works in the POC app at a time, and never with several AI agents in parallel. HAP does not protect concurrent edits: a later save silently overwrites an earlier one.
 3. Read every element (field, business rule, button, workflow, view, page) again before you change or delete it, even one you made. Someone may have changed it in the UI since.
 
@@ -44,7 +47,7 @@ The rules in the repository's root `CLAUDE.md` (Never, Always, Saving controls) 
 - No client name while the repository is public. Use the code name "WMS POC".
 - No passwords, API keys, tokens, AppKey/Sign pairs or personal contact details. Write where a secret is kept, never the secret.
 - No export packages (`.mdy`) or other binaries. They carry the app's configuration and records.
-- Roles, not names (see [`README.md`](README.md#roles)).
+- Roles, plus the name each person sets for themselves in `STATUS.md` (see **Before you start**). The repository is public, so that name is public too: a first name or a nickname is enough. No other personal details.
 - Commit to branch `claude/wms-poc`, or another branch the POC Lead agrees. The repository owner merges.
 
 ## When you stop

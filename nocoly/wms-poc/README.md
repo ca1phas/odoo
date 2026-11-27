@@ -31,7 +31,7 @@ This folder is the working file for a client's proof of concept (POC): a warehou
 
 ## Roles
 
-Files here name roles, not people. The POC Lead keeps the list of who holds each role.
+Files here name roles. `STATUS.md` adds the name each person sets for themselves (see [`AGENTS.md`](AGENTS.md#before-you-start)), so it shows who is working and who did what. The POC Lead keeps the list of who holds each role.
 
 | Role | Does |
 |---|---|
