@@ -6,10 +6,12 @@ Last updated: 27 Nov 2026.
 
 - **Stage:** 1, preparing the POC app ([`PLAN.md`](PLAN.md#stage-1-the-poc-app)).
 - **Working on it:** Builder (Travis), 27 Nov 2026.
-- **Next step:** Stage 1 from step 4 of the checklist: trim the modules, clean up, demo data and language. Three things come first:
-  - **Module deletion:** deleting CRM and Activities waits for a go-ahead. Point of Sale waits for the Account Lead's answer on over-the-counter sales.
+- **Next step:** Stage 1, steps 4 to 7 of the checklist. CRM and Activities are removed (see **POC app** below). Still to do:
+  - **Re-test in the UI:** run the core flow (receipt → sales order → delivery → return) after the trim. Also run a receipt with a new lot name and a scrap of a lot-tracked product, to check the two fixes.
+  - **Point of Sale:** it waits for the Account Lead's answer on over-the-counter sales.
   - **Test transactions:** the POC Lead chooses how to clean them up ([`PLAN.md`](PLAN.md#stage-1-the-poc-app), step 5).
   - **UI-only checks:** someone checks in the HAP UI what the CLI cannot read: the print templates on Transfer, the portal settings and portal users, and the members named in workflow notifications.
+  - **Demo data and language:** steps 6 and 7.
 - **Waiting on the Account Lead:** the questions in [`REQUIREMENTS.md`](REQUIREMENTS.md#questions-for-the-account-lead).
 
 ## Environment
@@ -32,6 +34,17 @@ Last updated: 27 Nov 2026.
     - **Custom pages:** the 9 pages have the same components as in EMS.
     - **Roles:** the same 12 roles as in EMS. Members were not checked, because the CLI's role list does not return them.
     - **Not checked yet (HAP UI only):** the print templates on Transfer, the portal settings and portal users, the members named in workflow notifications, and the MyInvois and API credentials.
+  - **Trimmed on 27 Nov: CRM and Activities removed** *(Verified 27 Nov, HAP CLI: read back; not yet re-tested in the UI)*:
+    - **Backup first:** an app backup with data was made before anything was removed (27 Nov, 21:07, 4,481 records).
+    - **Removed:**
+      - the 8 CRM worksheets and the 6 Activities worksheets, and their sections;
+      - their 22 workflows, among them `Calculated Probability`;
+      - the CRM Pipeline and Sales Manager dashboards (both showed only CRM data);
+      - the CRM tab and the Activities buttons on the Configuration Dashboard;
+      - the two Orders fields that pointed at CRM (Tags and Sales Teams), and Sales Teams in the Orders rule "A template shows only what it hands on".
+    - **What points at the removed sheets now:** nothing. This was checked with the CLI's reference lists and by reading the Orders and app-level workflows, the dashboard charts, and the Orders and Contacts views and rules.
+    - **Restoring:** the worksheets and pages are in the app's recycle bin, the two fields in the Orders field recycle bin, and the workflows in the workflow recycle bin.
+    - **The app now holds:** 7 modules, 68 worksheets, 7 custom pages and 261 workflows (236 on).
   - **Scheduled flows:** after the import, three were on in the copy: `MyInvois: Document Synchronization`, `Stock availability: hourly` and `Inventory - daily reservation run`. They were turned off on 27 Nov and read back as off, so that the copy neither uses workflow quota nor calls MyInvois. The EMS master was not touched.
 
 ## Log
@@ -50,6 +63,7 @@ Last updated: 27 Nov 2026.
 | 27 Nov 2026 | Builder (Travis) | Fixed the two faults of the 17 Nov export in the POC app (details under Environment) | HAP CLI, read back against EMS; not yet run in the UI |
 | 27 Nov 2026 | Builder (Travis) | Stage 1 checks of workflows, pages and roles. `Put In Pack` cannot be published | HAP CLI, 27 Nov |
 | 27 Nov 2026 | Builder (Travis) | Names next to roles in this file ([`AGENTS.md`](AGENTS.md#before-you-start)) | — |
+| 27 Nov 2026 | Builder (Travis) | Trimmed CRM and Activities from the POC app, after an app backup with data (details under Environment) | HAP CLI, read back; not yet re-tested in the UI |
 
 ## Findings for the EMS App Owner
 
