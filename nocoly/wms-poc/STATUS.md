@@ -5,12 +5,8 @@ Last updated: 27 Nov 2026.
 ## Now
 
 - **Stage:** 1, preparing the POC app ([`PLAN.md`](PLAN.md#stage-1-the-poc-app)).
-- **Working on it:** nobody. Write your role and the date here when you start.
-- **Next step:** the POC app imported on 27 Nov came from the 17 Nov export, not the 27 Nov one (see **POC app** below). The POC Lead chooses one of two ways:
-  - **Re-import** the export of 27 Nov 2026 (below) as a new app, in the HAP UI, and retire the current copy (rename it `ZZ obsolete – …`, or delete it with the POC Lead's approval). Recommended: it follows the decision of 27 Nov and brings the 17 Nov additions and fixes with it.
-  - **Keep** the current copy: fix the two faults by hand ([`EMS-BASELINE.md`](EMS-BASELINE.md#faults-in-the-17-nov-export)) and rebuild the 17 Nov additions.
-
-  Then work through the Stage 1 checklist.
+- **Working on it:** Builder (AI session), 27 Nov 2026.
+- **Next step:** the POC continues in the current copy, which came from the 17 Nov export ([`PLAN.md`](PLAN.md#decisions), 27 Nov). Fix its two faults by hand ([`EMS-BASELINE.md`](EMS-BASELINE.md#faults-in-the-17-nov-export)), then work through the Stage 1 checklist. The 17 Nov additions are rebuilt only where the demo needs them.
 - **Waiting on the Account Lead:** the questions in [`REQUIREMENTS.md`](REQUIREMENTS.md#questions-for-the-account-lead).
 
 ## Environment
@@ -42,6 +38,7 @@ Last updated: 27 Nov 2026.
 | 27 Nov 2026 | Builder | This folder | — |
 | 27 Nov 2026 | Builder | POC app imported from a `.mdy` file and renamed | App log, 20:23 |
 | 27 Nov 2026 | Builder (AI session) | Compared the POC app with EMS: it is the 17 Nov export (details under Environment). Turned off its three scheduled flows; nothing else changed | HAP CLI, 27 Nov, read back |
+| 27 Nov 2026 | Builder | Decision: keep the current copy and patch it, instead of re-importing ([`PLAN.md`](PLAN.md#decisions)) | Builder's instruction to the AI session |
 
 ## Findings for the EMS App Owner
 

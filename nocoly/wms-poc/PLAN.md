@@ -119,6 +119,7 @@ At demo depth: one example of each, end to end, on demo data.
 | 27 Nov 2026 | The POC runs in a copy of EMS; the EMS master is not changed | The master is shared by several module owners | POC Lead |
 | 27 Nov 2026 | The copy comes from a fresh export with data, not the 17 Nov export | The 17 Nov export lacks later work and has two faults. Inventory needs EMS's configuration records (warehouses, locations, operation types) | POC Lead |
 | 27 Nov 2026 | Working assumption: the full system is designed anew, with EMS as a reference | EMS's measured limits and gaps (`EMS-BASELINE.md`) | POC Lead, not final |
+| 27 Nov 2026 | The POC continues in the copy imported on 27 Nov, although it came from the 17 Nov export. Its two faults are fixed by hand, and the 17 Nov additions are rebuilt only where the demo needs them. This replaces the decision to use a fresh export | The copy already exists, and both faults are known and fixable (`EMS-BASELINE.md`) | Builder; the POC Lead to confirm |
 
 ## Risks
 
