@@ -4,11 +4,13 @@ Last updated: 27 Nov 2026.
 
 ## Now
 
-- **Stage:** 1, preparing the POC app ([`PLAN.md`](PLAN.md#stage-1-the-poc-app)).
+- **Stage:** 1 is nearly done, and Stage 2 has started early on the Builder's instruction ([`PLAN.md`](PLAN.md#stage-2-the-four-demo-areas)). Built so far: daily exchange rates and the management dashboard (see **Stage 2 builds** below).
 - **Working on it:** Builder (Travis), 27 Nov 2026.
-- **Next step:** Stage 1, steps 4 to 7 of the checklist. CRM and Activities are removed, and the core flow and both fixes passed a re-test through the CLI (see **POC app** below). Still to do:
-  - **Document numbering:** in the HAP UI, set the start value of each of the 18 auto-number fields above the highest imported number (see **POC app** below). Do this before any demo data is entered.
-  - **UI walk-through:** a Reviewer runs the same flow in the HAP UI, which no one has done yet.
+- **Next step:**
+  - **Stage 2:** e-commerce order intake, then the supplier and customer portal roles.
+  - **Stage 1 leftovers:**
+    - **Document numbering:** the start values were raised on 27 Nov (see **POC app** below). Confirm in the UI that the next new record takes the new number.
+    - **UI walk-through:** a Reviewer runs the same flow in the HAP UI, which no one has done yet.
   - **Point of Sale:** it waits for the Account Lead's answer on over-the-counter sales.
   - **Test transactions:** the POC Lead chooses how to clean them up ([`PLAN.md`](PLAN.md#stage-1-the-poc-app), step 5).
   - **UI-only checks:** someone checks in the HAP UI what the CLI cannot read: the print templates on Transfer, the portal settings and portal users, and the members named in workflow notifications.
@@ -67,7 +69,37 @@ Last updated: 27 Nov 2026.
   - **Document numbering restarted at 1 after the import** *(Verified 27 Nov)*:
     - **What happens:** the 18 auto-number fields (Transfer, Orders, Order Lines, Stock Move Lines, Stock Balances, Scrap, Packages, Batch Transfers, Reordering Rules, Putaway Rules and the POS and pricing tables) began again at 1. New records repeat numbers that imported records already carry: S00001, SML/00001 and SML/00002 now each exist twice.
     - **Impact:** the re-test found no flow that looks records up by these numbers, but the repeats confuse people and the demo.
-    - **Fix:** set each start value above the highest imported number. That is a field setting in the HAP UI; the CLI can only change it through a whole-table field save, which the build rules avoid.
+    - **Fixed on 27 Nov** *(Verified 27 Nov, HAP CLI: read back; the next number itself not yet seen)*. The start value of 16 auto-numbers was raised above the highest number in use, through `hap app-editor` `field.update`, which reads the whole field set and writes it back with only that change:
+      - Transfer and Stock Move Lines start at 300;
+      - Orders and Stock Balances at 200;
+      - POS Order Lines at 100;
+      - Batch Transfers, Scrap, Packages, Reordering Rules, Putaway Rules, Storage Capacity Lines, Sessions, POS Orders and POS Payments at 50;
+      - Pricelists and Fiscal Positions at 10.
+
+      Order Lines and Price Rules hold no numbers and were left as they are.
+- **Stage 2 builds** *(Verified 27 Nov, HAP CLI: read back and published; not run, on the Builder's instruction)*:
+  - **Daily exchange rates:**
+    - **Sheets:** two new sheets in Invoicing.
+      - Currencies: Code, Currency Name, Symbol, Active and Base Currency. Seeded with MYR (base), USD, SGD, CNY, EUR, GBP and JPY.
+      - Currency Rates: Currency Code, Rate Date, Rate (MYR per unit, 6 decimals) and Source.
+    - **`Currency - daily rates (BNM)`:** runs daily at 12:30. For each active foreign currency, its sub-process `Currency Sub - store one rate` fetches Bank Negara Malaysia's 12:00 middle rate (RM per unit, divided by BNM's unit), and stores it unless a rate for that date is already stored. On days without a new rate, nothing is added and the last stored rate stays in use.
+    - **Why a Code Block:** the fetch is a Code Block, because a native API step cannot pick one currency out of BNM's reply. The block calls the public BNM API and needs no key.
+    - **Orders:** five new fields:
+      - Order Currency, a link to Currencies;
+      - Order Currency Code;
+      - Exchange Rate (MYR per unit);
+      - Rate Date;
+      - Total in Order Currency, a formula: Total ÷ rate, because order prices stay in MYR.
+    - **`Currency - order exchange rate`:** runs when an order is created or its currency or date changes.
+      - MYR gets rate 1.
+      - A foreign currency gets the latest stored rate on or before the order date.
+      - If no rate is stored yet, the order keeps the rate it had. A step that clears it could not be built through the CLI.
+    - **Open:** the new Orders fields sit at the end of the form; a person should place them in the layout.
+  - **Management dashboard:** a new page in Dashboards with 13 charts copied from the existing dashboards.
+    - Sales and finance KPIs: sales revenue (YTD), confirmed sales, receivables overdue, and cash received this month.
+    - Inventory KPIs: late transfers, waiting transfers, open backorders, and products to replenish.
+    - Larger charts: monthly sales, stock lines by location, top products, top customers, and transfers by status.
+    - Margin is not shown, because it needs a costing decision first ([`PLAN.md`](PLAN.md#finance-functions-and-a-management-dashboard)).
   - **Cancelling a sales order leaves its delivery open** *(Verified 27 Nov, HAP CLI)*: when a confirmed order was cancelled, its delivery stayed Ready with the stock still reserved. Cancel Transfer on the delivery released it. EMS uses the same flows, so it most likely behaves the same; that was not checked.
   - **`Auto Update/Create Route` turned off on 27 Nov:**
     - **The problem:** this flow runs whenever a warehouse is created or changed. Its code step holds a literal API key and sign, and the worksheet IDs of the EMS master, so in any copy of EMS it writes to the master's Routes and Warehouses.
@@ -93,6 +125,7 @@ Last updated: 27 Nov 2026.
 | 27 Nov 2026 | Builder (Travis) | Names next to roles in this file ([`AGENTS.md`](AGENTS.md#before-you-start)) | — |
 | 27 Nov 2026 | Builder (Travis) | Trimmed CRM and Activities from the POC app, after an app backup with data (details under Environment) | HAP CLI, read back; not yet re-tested in the UI |
 | 27 Nov 2026 | Builder (Travis) | Re-test of the core flow and both fixes with TEST records: passed. Found that document numbering restarted at 1, that cancelling an order leaves its delivery reserved, and that `Auto Update/Create Route` writes to the EMS master (turned off) | HAP CLI, 27 Nov; the Chrome extension was not connected, so no UI run |
+| 27 Nov 2026 | Builder (Travis) | Raised the start values of 16 auto-numbers. Stage 2 started early: daily exchange rates (2 sheets, 2 flows and 5 Orders fields) and the management dashboard (13 charts) | HAP CLI, read back and published; not run |
 
 ## Findings for the EMS App Owner
 
