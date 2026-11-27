@@ -4,10 +4,12 @@ Last updated: 27 Nov 2026.
 
 ## Now
 
-- **Stage:** 1 is nearly done, and Stage 2 has started early on the Builder's instruction ([`PLAN.md`](PLAN.md#stage-2-the-four-demo-areas)). Built so far: daily exchange rates and the management dashboard (see **Stage 2 builds** below).
+- **Stage:** 1 is nearly done, and Stage 2 has started early on the Builder's instruction ([`PLAN.md`](PLAN.md#stage-2-the-four-demo-areas)). Built so far: daily exchange rates, the management dashboard and e-commerce order intake (see **Stage 2 builds** below).
 - **Working on it:** Builder (Travis), 27 Nov 2026.
 - **Next step:**
-  - **Stage 2:** e-commerce order intake, then the supplier and customer portal roles.
+  - **Stage 2, in the HAP UI:** the supplier and customer portal (recipe under **Stage 2 builds**). The CLI cannot create portal roles.
+  - **Stage 2, needs a sandbox store:** stock and fulfilment updates back to the store. The platform is a question for the Account Lead.
+  - **Stage 2, run once:** each build, which has not been run yet.
   - **Stage 1 leftovers:**
     - **Document numbering:** the start values were raised on 27 Nov (see **POC app** below). Confirm in the UI that the next new record takes the new number.
     - **UI walk-through:** a Reviewer runs the same flow in the HAP UI, which no one has done yet.
@@ -100,6 +102,29 @@ Last updated: 27 Nov 2026.
     - Inventory KPIs: late transfers, waiting transfers, open backorders, and products to replenish.
     - Larger charts: monthly sales, stock lines by location, top products, top customers, and transfers by status.
     - Margin is not shown, because it needs a costing decision first ([`PLAN.md`](PLAN.md#finance-functions-and-a-management-dashboard)).
+  - **E-commerce order intake:**
+    - **Sheets:** two new sheets in Sales.
+      - Online Orders: Store Order ID, Platform, Customer Name, Customer Email, Customer Phone, Status, Message and a link to the Sales Order. Status is one of Received, Ready, Processed, Duplicate or Failed.
+      - Online Order Lines: SKU, Quantity, Unit Price, Result, a link to the Online Order, and the Store Order ID looked up from it.
+    - **How an order arrives:** the store, or a middleware such as n8n or Zapier, writes through HAP API V3. It creates the Online Order with Status Received, then its lines linked to it, then sets Status to Ready. Ready starts the flow, so the lines are always in place first.
+    - **`E-commerce - online order in`:** runs when an Online Order is set to Ready.
+      - If a sales order already carries the Store Order ID (in Customer Reference), the Online Order is marked Duplicate and linked to it, so a repeated call creates nothing.
+      - Otherwise it finds the customer by email, or creates one. It then creates the sales order: Customer Reference = Store Order ID, Tax Excluded, salesperson = whoever created the Online Order. The warehouse is left empty, so the order ships from Shah Alam (WH).
+      - Its sub-process `E-commerce Sub - add one line` matches each line's SKU to a variant's Internal Reference and adds the order line with Unit = Units. It marks the line "Added to the sales order" or "SKU not found".
+      - It then confirms the order. The Status change starts the existing delivery creation and reservation.
+      - Finally it marks the Online Order Processed and links the sales order.
+    - **Not built yet:**
+      - pushing stock per SKU back to the store;
+      - sending the delivery status and tracking number back.
+
+      Both need a sandbox store and its API. The Online Orders sheet can serve as the integration log for incoming orders; outgoing calls will need a log of their own.
+  - **Supplier and customer portal (HAP UI only):** the CLI cannot create external portal roles. Recipe:
+    1. Turn on the external portal of the POC app.
+    2. Add to the portal user sheet a field that links each portal user to their company in Contacts.
+    3. Create two portal roles:
+       - **Supplier:** sees Transfer receipts whose Contact is the user's company, and may upload a delivery note and confirm quantities.
+       - **Customer:** sees Orders and deliveries whose Customer or Contact is the user's company, and the Delivery Slip.
+    4. Create one test portal user per role, without sending invitations to anyone outside Nocoly.
   - **Cancelling a sales order leaves its delivery open** *(Verified 27 Nov, HAP CLI)*: when a confirmed order was cancelled, its delivery stayed Ready with the stock still reserved. Cancel Transfer on the delivery released it. EMS uses the same flows, so it most likely behaves the same; that was not checked.
   - **`Auto Update/Create Route` turned off on 27 Nov:**
     - **The problem:** this flow runs whenever a warehouse is created or changed. Its code step holds a literal API key and sign, and the worksheet IDs of the EMS master, so in any copy of EMS it writes to the master's Routes and Warehouses.
@@ -126,6 +151,7 @@ Last updated: 27 Nov 2026.
 | 27 Nov 2026 | Builder (Travis) | Trimmed CRM and Activities from the POC app, after an app backup with data (details under Environment) | HAP CLI, read back; not yet re-tested in the UI |
 | 27 Nov 2026 | Builder (Travis) | Re-test of the core flow and both fixes with TEST records: passed. Found that document numbering restarted at 1, that cancelling an order leaves its delivery reserved, and that `Auto Update/Create Route` writes to the EMS master (turned off) | HAP CLI, 27 Nov; the Chrome extension was not connected, so no UI run |
 | 27 Nov 2026 | Builder (Travis) | Raised the start values of 16 auto-numbers. Stage 2 started early: daily exchange rates (2 sheets, 2 flows and 5 Orders fields) and the management dashboard (13 charts) | HAP CLI, read back and published; not run |
+| 27 Nov 2026 | Builder (Travis) | E-commerce order intake: Online Orders and Online Order Lines sheets, and a flow with a sub-process that creates and confirms the sales order. Portal recipe written for the UI | HAP CLI, read back and published; not run |
 
 ## Findings for the EMS App Owner
 
