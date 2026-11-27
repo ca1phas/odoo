@@ -6,7 +6,11 @@ Last updated: 27 Nov 2026.
 
 - **Stage:** 1, preparing the POC app ([`PLAN.md`](PLAN.md#stage-1-the-poc-app)).
 - **Working on it:** nobody. Write your role and the date here when you start.
-- **Next step:** import the export of 27 Nov 2026 (below) as a new app, in the HAP UI; the HAP CLI cannot import. Then work through the Stage 1 checklist.
+- **Next step:** the POC app imported on 27 Nov came from the 17 Nov export, not the 27 Nov one (see **POC app** below). The POC Lead chooses one of two ways:
+  - **Re-import** the export of 27 Nov 2026 (below) as a new app, in the HAP UI, and retire the current copy (rename it `ZZ obsolete – …`, or delete it with the POC Lead's approval). Recommended: it follows the decision of 27 Nov and brings the 17 Nov additions and fixes with it.
+  - **Keep** the current copy: fix the two faults by hand ([`EMS-BASELINE.md`](EMS-BASELINE.md#faults-in-the-17-nov-export)) and rebuild the 17 Nov additions.
+
+  Then work through the Stage 1 checklist.
 - **Waiting on the Account Lead:** the questions in [`REQUIREMENTS.md`](REQUIREMENTS.md#questions-for-the-account-lead).
 
 ## Environment
@@ -18,7 +22,13 @@ Last updated: 27 Nov 2026.
   - On 27 Nov every one of the 83 worksheets was under that limit: 5,557 records in all, and the largest, States, has 2,130. So no table should be cut.
   - *Verified 27 Nov:* the export is listed with a download link. Whether the records are really inside is confirmed only at import.
 - **Older exports in the same history:** 17 Nov, 6 Oct and 30 Sep 2026. Do not use them. The 17 Nov one lacks the 17 Nov additions and has two faults ([`EMS-BASELINE.md`](EMS-BASELINE.md#faults-in-the-17-nov-export)).
-- **POC app:** not created yet.
+- **POC app:** imported from a `.mdy` file on 27 Nov 2026 at 20:23 (UTC+8), then renamed. Its name carries the client name, so it is not written here; ask the POC Lead.
+  - **It is the 17 Nov export, not the 27 Nov one** *(Verified 27 Nov, HAP CLI, compared with EMS)*:
+    - It lacks what EMS gained after that export: the Forecast and Inventory at Date pages, the Stock Ledger worksheet, and the 15 workflows created in EMS after it. Among them are the daily replenishment run, the stock report sync and the lot expiry alerts.
+    - Both faults of that export are in it. The step "Lot from name - current lot" in `Inventory - Lot/Serial from name` is still a single-record lookup. The Scrap Math step of `Validate Scrap (Native)` and `Continue Scrap` still holds the `known_untracked` check.
+    - It has 82 worksheets, 9 custom pages and 283 workflows; EMS has 83, 11 and 298.
+    - `Put In Pack` is off in the copy and on in EMS.
+  - **Scheduled flows:** after the import, three were on in the copy: `MyInvois: Document Synchronization`, `Stock availability: hourly` and `Inventory - daily reservation run`. They were turned off on 27 Nov and read back as off, so that the copy neither uses workflow quota nor calls MyInvois. The EMS master was not touched.
 
 ## Log
 
@@ -30,6 +40,8 @@ Last updated: 27 Nov 2026.
 | 27 Nov 2026 | Builder | Read-only check of EMS: 9 modules, 83 worksheets, 11 custom pages, record counts. The scheduled flows added on 17 Nov are enabled; the multi-step routes draft is disabled | HAP CLI, 27 Nov |
 | 27 Nov 2026 | Builder | Fresh export of EMS with data, for the POC app | Export in EMS history, 19:41 |
 | 27 Nov 2026 | Builder | This folder | — |
+| 27 Nov 2026 | Builder | POC app imported from a `.mdy` file and renamed | App log, 20:23 |
+| 27 Nov 2026 | Builder (AI session) | Compared the POC app with EMS: it is the 17 Nov export (details under Environment). Turned off its three scheduled flows; nothing else changed | HAP CLI, 27 Nov, read back |
 
 ## Findings for the EMS App Owner
 
