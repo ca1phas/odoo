@@ -7,6 +7,10 @@ Last updated: 27 Nov 2026.
 - **Stage:** 1 is nearly done, and Stage 2 has started early on the Builder's instruction ([`PLAN.md`](PLAN.md#stage-2-the-four-demo-areas)). Built so far: daily exchange rates, the management dashboard and e-commerce order intake (see **Stage 2 builds** below).
 - **Working on it:** Builder (Travis), 27 Nov 2026.
 - **Next step:**
+  - **Caution before any invoice is confirmed in the copy:**
+    - `Invoices: Send To MyInvois on Confirm` is on *(Verified 29 Nov, HAP CLI)*, so a confirmed invoice is sent to MyInvois with the settings copied from EMS.
+    - Switch it off, or clear the copied MyInvois settings, first. That is a Builder change, with the POC Lead's OK.
+    - The buttons Send To MyInvois, Submit To MyInvois, Update MyInvois Status and Generate a Payment Link act only when clicked.
   - **Stage 2, in the HAP UI:** the supplier and customer portal (recipe under **Stage 2 builds**). The CLI cannot create portal roles.
   - **Stage 2, needs a sandbox store:** stock and fulfilment updates back to the store. The platform is a question for the Account Lead.
   - **Stage 2, run once:** each build, which has not been run yet.
@@ -28,7 +32,7 @@ Last updated: 27 Nov 2026.
   - On 27 Nov every one of the 83 worksheets was under that limit: 5,557 records in all, and the largest, States, has 2,130. So no table should be cut.
   - *Verified 27 Nov:* the export is listed with a download link. Whether the records are really inside is confirmed only at import.
 - **Older exports in the same history:** 17 Nov, 6 Oct and 30 Sep 2026. Do not use them. The 17 Nov one lacks the 17 Nov additions and has two faults ([`EMS-BASELINE.md`](EMS-BASELINE.md#faults-in-the-17-nov-export)).
-- **POC app:** imported from a `.mdy` file on 27 Nov 2026 at 20:23 (UTC+8), then renamed. Its name carries the client name, so it is not written here; ask the POC Lead. It came from the 17 Nov export. The decision of 27 Nov is to keep it and patch it ([`PLAN.md`](PLAN.md#decisions)).
+- **POC app:** imported from a `.mdy` file on 27 Nov 2026 at 20:23 (UTC+8), then renamed. Its name carries the client name, so it is not written here; ask the POC Lead. It came from the 17 Nov export. The decision of 27 Nov, confirmed by the POC Lead on 29 Nov, is to keep it and patch it ([`PLAN.md`](PLAN.md#decisions)).
   - **Faults of the 17 Nov export, fixed on 27 Nov** *(Verified 27 Nov, HAP CLI: read back and compared step by step with EMS; not yet run in the UI)*:
     - **`Inventory - Lot/Serial from name`:** the step "Lot from name - current lot" now gets the line's related Lot/Serial Number record and continues when there is none. The decide step reads the lot's name from that step, as in EMS. Published without warnings.
     - **`Validate Scrap (Native)` and `Continue Scrap`:** Scrap Math now takes Tracking from the Template step and posts with serial, lot or none to match. The `known_untracked` check is gone, and the step's code and inputs are the same as in EMS. Both flows published without warnings.
@@ -152,6 +156,8 @@ Last updated: 27 Nov 2026.
 | 27 Nov 2026 | Builder (Travis) | Re-test of the core flow and both fixes with TEST records: passed. Found that document numbering restarted at 1, that cancelling an order leaves its delivery reserved, and that `Auto Update/Create Route` writes to the EMS master (turned off) | HAP CLI, 27 Nov; the Chrome extension was not connected, so no UI run |
 | 27 Nov 2026 | Builder (Travis) | Raised the start values of 16 auto-numbers. Stage 2 started early: daily exchange rates (2 sheets, 2 flows and 5 Orders fields) and the management dashboard (13 charts) | HAP CLI, read back and published; not run |
 | 27 Nov 2026 | Builder (Travis) | E-commerce order intake: Online Orders and Online Order Lines sheets, and a flow with a sub-process that creates and confirms the sales order. Portal recipe written for the UI | HAP CLI, read back and published; not run |
+| 29 Nov 2026 | POC Lead | Confirmed the decision to keep the copy and patch it ([`PLAN.md`](PLAN.md#decisions)) | — |
+| 29 Nov 2026 | POC Lead (AI session) | Read-only check of the copy: `Invoices: Send To MyInvois on Confirm` and the MyInvois and Stripe buttons are on; nothing in the copy changed after 27 Nov | HAP CLI, 29 Nov |
 
 ## Findings for the EMS App Owner
 

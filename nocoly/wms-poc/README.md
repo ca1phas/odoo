@@ -4,7 +4,7 @@ This folder is the working file for a client's proof of concept (POC): a warehou
 
 **Client name:** not written in this repository while it is public. "WMS POC" is the code name; ask the POC Lead which client it is.
 
-**Status on 27 Nov 2026:** Stage 1 has started. A fresh export of the EMS app was made for the POC; it has not been imported yet. Details are in [`STATUS.md`](STATUS.md).
+**Status:** Stage 1 is nearly done, and Stage 2 started on 27 Nov 2026. The POC runs in a patched copy of EMS. Details are in [`STATUS.md`](STATUS.md).
 
 ## Start here
 
