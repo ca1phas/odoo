@@ -9,7 +9,7 @@ Last updated: 27 Nov 2026.
 - **Next step:**
   - **Caution before any invoice is confirmed in the copy:**
     - `Invoices: Send To MyInvois on Confirm` is on *(Verified 29 Nov, HAP CLI)*, so a confirmed invoice is sent to MyInvois with the settings copied from EMS.
-    - Switch it off, or clear the copied MyInvois settings, first. That is a Builder change, with the POC Lead's OK.
+    - Switch it off, or clear the copied MyInvois settings, first. The POC Lead left this to the Builder on 29 Nov.
     - The buttons Send To MyInvois, Submit To MyInvois, Update MyInvois Status and Generate a Payment Link act only when clicked.
   - **Stage 2, in the HAP UI:** the supplier and customer portal (recipe under **Stage 2 builds**). The CLI cannot create portal roles.
   - **Stage 2, needs a sandbox store:** stock and fulfilment updates back to the store. The platform is a question for the Account Lead.
